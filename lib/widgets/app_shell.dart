@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kust/widgets/more_floating_menu.dart';
 
-import 'package:kust/widgets/more_drawer.dart';
-
-class AppShell extends StatefulWidget {
+class AppShell extends StatelessWidget {
   final Widget child;
 
   const AppShell({super.key, required this.child});
-
-  @override
-  State<AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<AppShell> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +17,16 @@ class _AppShellState extends State<AppShell> {
     }
 
     return Scaffold(
-      key: _scaffoldKey,
-      body: widget.child,
-      endDrawer: const MoreDrawer(),
+      body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
           if (index == 2) {
-            _scaffoldKey.currentState?.openEndDrawer();
+            showDialog(
+              context: context,
+              barrierColor: Colors.transparent,
+              builder: (context) => const MoreFloatingMenu(),
+            );
             return;
           }
 
@@ -47,9 +41,9 @@ class _AppShellState extends State<AppShell> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.play_circle_outline),
-            selectedIcon: Icon(Icons.play_circle),
-            label: 'Play',
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home_filled),
+            label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.extension_outlined),
