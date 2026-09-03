@@ -1,6 +1,6 @@
 name: kust
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -24,11 +24,28 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
 
-flutter:
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/android-icon-background.png"
 
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/android-icon-foreground.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#111111"
+  image: "assets/icons/splash.png"
+  image_dark: "assets/icons/splash.png"
+
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#111111"
+    image: "assets/icons/splash.png"
+    image_dark: "assets/icons/splash.png"
+
+flutter:
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/icons/
