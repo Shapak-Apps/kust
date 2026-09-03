@@ -3,5 +3,5 @@ import 'package:kust/app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const ProviderScope(child: ));
+  runApp(const ProviderScope(child: MyApp()));
 }
