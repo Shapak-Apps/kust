@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,7 +124,7 @@ class _PlayScreenState extends State<PlayScreen> {
     PickOpponentModal.show(
       context,
       onPlay: (bot) {
-        debugPrint('Selected ${bot.name} (${bot.elo} Elo)');
+        context.push('/game', extra: bot);
       },
     );
   }
