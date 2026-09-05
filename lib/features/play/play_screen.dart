@@ -24,7 +24,6 @@ class _PlayScreenState extends State<PlayScreen> {
 
   Future<void> _showWelcomeDialog() async {
     final prefs = await SharedPreferences.getInstance();
-
     final alreadyShown = prefs.getBool('welcome_modal_shown') ?? false;
 
     if (alreadyShown || !mounted) return;
@@ -56,9 +55,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     icon: const Icon(Icons.close_rounded),
                   ),
                 ),
-
                 const SizedBox(height: 2),
-
                 Container(
                   width: 72,
                   height: 72,
@@ -72,9 +69,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     color: Colors.black,
                   ),
                 ),
-
                 const SizedBox(height: 22),
-
                 const Text(
                   'Welcome to Kust!',
                   textAlign: TextAlign.center,
@@ -84,9 +79,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     letterSpacing: -0.5,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 Text(
                   'Everything is ready. Find an opponent, '
                   'play a game and start improving your chess.',
@@ -99,9 +92,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 22),
-
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -133,8 +124,6 @@ class _PlayScreenState extends State<PlayScreen> {
       context,
       onPlay: (bot) {
         debugPrint('Selected ${bot.name} (${bot.elo} Elo)');
-
-        // TODO : Navigate to the game screen with the selected bot
       },
     );
   }
@@ -143,52 +132,68 @@ class _PlayScreenState extends State<PlayScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppBar(),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Hello Guest!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-            ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Hello Guest!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
 
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                const Expanded(
-                  child: Text('You have played 10 games, wanna play again?'),
-                ),
-
-                const SizedBox(width: 8),
-
-                SizedBox(
-                  width: 120,
-                  child: TextButton(
-                    onPressed: _openOpponentPicker,
-                    style: ButtonStyle(
-                      minimumSize: WidgetStateProperty.all(
-                        const Size(double.infinity, 50),
-                      ),
-                      backgroundColor: WidgetStateProperty.all(kAccentColor),
-                      foregroundColor: WidgetStateProperty.all(Colors.black),
-                      shape: WidgetStateProperty.all(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('You have played 10 games, wanna play again?'),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 120,
+                    child: TextButton(
+                      onPressed: _openOpponentPicker,
+                      style: ButtonStyle(
+                        minimumSize: WidgetStateProperty.all(
+                          const Size(double.infinity, 50),
+                        ),
+                        backgroundColor: WidgetStateProperty.all(kAccentColor),
+                        foregroundColor: WidgetStateProperty.all(Colors.black),
+                        shape: WidgetStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
-                    ),
-                    child: const Text(
-                      'Play a game',
-                      style: TextStyle(color: Color(0xFF181A1B)),
+                      child: const Text(
+                        'Play a game',
+                        style: TextStyle(color: Color(0xFF181A1B)),
+                      ),
                     ),
                   ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+              const Text(
+                'Announcements',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.asset(
+                    'assets/images/banner.png',
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

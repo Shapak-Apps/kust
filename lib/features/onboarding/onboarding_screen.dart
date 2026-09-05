@@ -622,9 +622,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     );
                   },
                   child: showSkip
-                      ? Padding(
+                      ? Center(
                           key: const ValueKey('skip'),
-                          padding: const EdgeInsets.only(top: 4),
+
                           child: TextButton(
                             onPressed: skipAuth,
                             child: const Text(
