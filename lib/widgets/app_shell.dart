@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kust/widgets/more_floating_menu.dart';
+import 'package:Kust/widgets/more_floating_menu.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;

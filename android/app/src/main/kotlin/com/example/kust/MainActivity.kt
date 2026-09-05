@@ -1,4 +1,4 @@
-package com.example.kust
+package com.example.Kust
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:kust/features/play/play_screen.dart';
-import 'package:kust/features/puzzles/puzzles_screen.dart';
-import 'package:kust/widgets/app_shell.dart';
+import 'package:Kust/features/play/play_screen.dart';
+import 'package:Kust/features/puzzles/puzzles_screen.dart';
+import 'package:Kust/widgets/app_shell.dart';
 
 final router = GoRouter(
   initialLocation: '/play',
@@ -9,14 +9,8 @@ final router = GoRouter(
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
-        GoRoute(
-          path: '/play',
-          builder: (context, state) => PlayScreen(),
-        ),
-        GoRoute(
-          path: '/puzzles',
-          builder: (context, state) => PuzzlesScreen(),
-        ),
+        GoRoute(path: '/play', builder: (context, state) => PlayScreen()),
+        GoRoute(path: '/puzzles', builder: (context, state) => PuzzlesScreen()),
       ],
     ),
   ],

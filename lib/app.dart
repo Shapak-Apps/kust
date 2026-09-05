@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:kust/router.dart';
-import 'package:kust/theme.dart';
+import 'package:Kust/router.dart';
+import 'package:Kust/theme.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,12 +12,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: appTheme,
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.dark,
-        ),
-      ),
+      darkTheme: appDarkTheme,
       themeMode: ThemeMode.system,
     );
   }

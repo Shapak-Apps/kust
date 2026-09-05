@@ -1,4 +1,4 @@
-name: kust
+name: Kust
 description: "A new Flutter project."
 publish_to: "none"
 version: 1.0.0+1
@@ -15,6 +15,11 @@ dependencies:
   flutter_riverpod: ^3.4.2
   flutter_svg: ^2.3.0
   dartchess: ^0.13.1
+  shared_preferences: ^2.5.5
+
+dependency_overrides:
+  stockfish:
+    path: packages/stockfish
 
 dev_dependencies:
   flutter_test:
