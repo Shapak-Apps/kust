@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key, required this.onFinished});
-
-  final VoidCallback onFinished;
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -149,7 +148,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return true;
   }
 
-  void finishOnboarding() async {
+  Future<void> finishOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool('onboarding_completed', true);
@@ -157,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (!mounted) return;
 
-    widget.onFinished();
+    context.go('/play');
   }
 
   void showMessage(String message) {
