@@ -59,3 +59,5 @@ flutter:
     - assets/icons/
     - assets/bots/
     - assets/images/
+    - assets/pieces/
+    - assets/sounds/
