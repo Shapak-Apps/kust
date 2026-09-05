@@ -623,18 +623,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   },
                   child: showSkip
                       ? Center(
-                          key: const ValueKey('skip'),
-
-                          child: TextButton(
-                            onPressed: skipAuth,
-                            child: const Text(
-                              'Skip for now',
-                              style: TextStyle(
-                                color: kAccentColor,
-                                fontWeight: FontWeight.w600,
+                        key: const ValueKey('skip'),
+                          
+                            child: TextButton(
+                              onPressed: skipAuth,
+                              child: const Text(
+                                'Skip for now',
+                                style: TextStyle(
+                                  color: kAccentColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
                         )
                       : const SizedBox(key: ValueKey('empty')),
                 ),
