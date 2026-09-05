@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:Kust/features/play/announcements.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -143,7 +144,6 @@ class _PlayScreenState extends State<PlayScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   const Expanded(
@@ -174,24 +174,9 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-              const Text(
-                'Announcements',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.asset(
-                    'assets/images/banner.png',
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              const Announcements(),
+              const SizedBox(height: 16),
             ],
           ),
         ),

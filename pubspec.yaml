@@ -16,6 +16,9 @@ dependencies:
   flutter_svg: ^2.3.0
   dartchess: ^0.13.1
   shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
+  dio: ^5.11.1
+  xml: ^7.0.1
 
 dependency_overrides:
   stockfish:
