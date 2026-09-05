@@ -72,21 +72,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         case GameStatus.resigned:
           _showResultDialog('Game over', 'You resigned.');
         case GameStatus.playing:
+        case GameStatus.loading:
           break;
       }
     });
 
     final gameState = ref.watch(chessControllerProvider);
     final theme = Theme.of(context);
+    final notifier = ref.read(chessControllerProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
         title: Text('vs ${widget.bot.name}'),
         actions: [
           IconButton(
-            onPressed: () =>
-                ref.read(chessControllerProvider.notifier).resign(),
-            icon: const Icon(Icons.flag_outlined),
+            tooltip: 'Resign',
+            onPressed: gameState.status == GameStatus.playing
+                ? notifier.resign
+                : null,
+            icon: const Icon(Icons.flag_rounded),
           ),
         ],
       ),
@@ -125,8 +129,45 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: kBoardMaxWidth),
-                  child: const AspectRatio(aspectRatio: 1, child: ChessBoard()),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: gameState.status == GameStatus.loading
+                        ? const Center(child: CircularProgressIndicator())
+                        : const ChessBoard(),
+                  ),
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    tooltip: 'Take back',
+                    onPressed: gameState.canUndo ? notifier.undoLastMove : null,
+                    icon: const Icon(Icons.undo_rounded),
+                  ),
+                  IconButton(
+                    tooltip: 'Hint',
+                    onPressed:
+                        gameState.isPlayerTurn && !gameState.isHintThinking
+                        ? notifier.requestHint
+                        : null,
+                    icon: gameState.isHintThinking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.lightbulb_rounded),
+                  ),
+                  IconButton(
+                    tooltip: 'More',
+                    onPressed: () {},
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
+                ],
               ),
             ),
           ],

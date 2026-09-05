@@ -10,6 +10,7 @@ const Color kLightSquare = Color(0xFFF0E6D2);
 const Color kDarkSquare = Color(0xFFB58863);
 const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
+const Color kHintHighlight = Color(0x552ECC71);
 
 class ChessBoard extends ConsumerWidget {
   const ChessBoard({super.key});
@@ -43,6 +44,8 @@ class ChessBoard extends ConsumerWidget {
                       _BoardSquare(
                         square: squareAt(file, rank),
                         size: squareSize,
+                        isBottomRow: rank == (flipped ? 7 : 0),
+                        isLeftColumn: file == (flipped ? 7 : 0),
                       ),
                   ],
                 ),
@@ -55,10 +58,17 @@ class ChessBoard extends ConsumerWidget {
 }
 
 class _BoardSquare extends ConsumerWidget {
-  const _BoardSquare({required this.square, required this.size});
+  const _BoardSquare({
+    required this.square,
+    required this.size,
+    required this.isBottomRow,
+    required this.isLeftColumn,
+  });
 
   final Square square;
   final double size;
+  final bool isBottomRow;
+  final bool isLeftColumn;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,14 +79,20 @@ class _BoardSquare extends ConsumerWidget {
     final isSelected = gameState.selectedSquare == square;
     final isLegalTarget = gameState.legalDestinations.contains(square);
     final isLastMove = gameState.moveSquares.contains(square);
+    final isHint = gameState.hintSquares.contains(square);
 
     var background = isLight ? kLightSquare : kDarkSquare;
     if (isLastMove) {
       background = Color.alphaBlend(kLastMoveHighlight, background);
     }
+    if (isHint) {
+      background = Color.alphaBlend(kHintHighlight, background);
+    }
     if (isSelected) {
       background = Color.alphaBlend(kHighlight, background);
     }
+
+    final coordinateColor = isLight ? kDarkSquare : kLightSquare;
 
     return GestureDetector(
       onTap: () =>
@@ -90,7 +106,7 @@ class _BoardSquare extends ConsumerWidget {
           children: [
             if (piece != null)
               Padding(
-                padding: EdgeInsets.all(size * 0.08),
+                padding: EdgeInsets.all(size * 0.04),
                 child: SvgPicture.asset(_assetForPiece(piece)),
               ),
             if (isLegalTarget && piece == null)
@@ -110,6 +126,32 @@ class _BoardSquare extends ConsumerWidget {
                   border: Border.all(
                     color: Colors.black.withValues(alpha: 0.35),
                     width: size * 0.06,
+                  ),
+                ),
+              ),
+            if (isLeftColumn)
+              Positioned(
+                top: 2,
+                left: 3,
+                child: Text(
+                  (rankOf(square) + 1).toString(),
+                  style: TextStyle(
+                    fontSize: size * 0.16,
+                    fontWeight: FontWeight.w700,
+                    color: coordinateColor,
+                  ),
+                ),
+              ),
+            if (isBottomRow)
+              Positioned(
+                bottom: 2,
+                right: 3,
+                child: Text(
+                  String.fromCharCode('a'.codeUnitAt(0) + fileOf(square)),
+                  style: TextStyle(
+                    fontSize: size * 0.16,
+                    fontWeight: FontWeight.w700,
+                    color: coordinateColor,
                   ),
                 ),
               ),

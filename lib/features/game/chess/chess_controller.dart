@@ -1,8 +1,8 @@
+import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
-import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
 const String kStartFen =
@@ -16,7 +16,7 @@ int skillLevelForElo(int elo) {
   return (t * 20).round();
 }
 
-enum GameStatus { playing, checkmate, draw, resigned }
+enum GameStatus { loading, playing, checkmate, draw, resigned }
 
 class GameState {
   const GameState({
@@ -26,8 +26,11 @@ class GameState {
     this.selectedSquare,
     this.legalDestinations = const {},
     this.moveSquares = const [],
-    this.status = GameStatus.playing,
+    this.hintSquares = const {},
+    this.history = const [],
+    this.status = GameStatus.loading,
     this.isBotThinking = false,
+    this.isHintThinking = false,
   });
 
   final Position position;
@@ -36,11 +39,16 @@ class GameState {
   final Square? selectedSquare;
   final Set<Square> legalDestinations;
   final List<Square> moveSquares;
+  final Set<Square> hintSquares;
+  final List<Position> history;
   final GameStatus status;
   final bool isBotThinking;
+  final bool isHintThinking;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing && position.turn == playerSide;
+
+  bool get canUndo => history.isNotEmpty && !isBotThinking;
 
   GameState copyWith({
     Position? position,
@@ -48,8 +56,11 @@ class GameState {
     bool clearSelection = false,
     Set<Square>? legalDestinations,
     List<Square>? moveSquares,
+    Set<Square>? hintSquares,
+    List<Position>? history,
     GameStatus? status,
     bool? isBotThinking,
+    bool? isHintThinking,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -62,13 +73,19 @@ class GameState {
           ? const {}
           : (legalDestinations ?? this.legalDestinations),
       moveSquares: moveSquares ?? this.moveSquares,
+      hintSquares: hintSquares ?? this.hintSquares,
+      history: history ?? this.history,
       status: status ?? this.status,
       isBotThinking: isBotThinking ?? this.isBotThinking,
+      isHintThinking: isHintThinking ?? this.isHintThinking,
     );
   }
 }
 
 class ChessController extends Notifier<GameState> {
+  int _moveRequestId = 0;
+  int _currentSkill = 0;
+
   @override
   GameState build() {
     ref.onDispose(_engine.stopThinking);
@@ -83,14 +100,19 @@ class ChessController extends Notifier<GameState> {
   ChessEngine get _engine => ref.read(chessEngineProvider);
 
   Future<void> startGame(Bot bot, {Side playerSide = Side.white}) async {
-    await _engine.start();
-    _engine.setSkillLevel(skillLevelForElo(bot.elo));
+    _moveRequestId++;
+    _currentSkill = skillLevelForElo(bot.elo);
 
     state = GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
       bot: bot,
       playerSide: playerSide,
     );
+
+    await _engine.start();
+    _engine.setSkillLevel(_currentSkill);
+
+    state = state.copyWith(status: GameStatus.playing);
 
     if (state.position.turn != playerSide) {
       _requestBotMove();
@@ -107,6 +129,7 @@ class ChessController extends Notifier<GameState> {
       state = state.copyWith(
         selectedSquare: square,
         legalDestinations: _displayDestinationsFrom(square),
+        hintSquares: const {},
       );
       return;
     }
@@ -125,6 +148,7 @@ class ChessController extends Notifier<GameState> {
       state = state.copyWith(
         selectedSquare: square,
         legalDestinations: _displayDestinationsFrom(square),
+        hintSquares: const {},
       );
     } else {
       state = state.copyWith(clearSelection: true);
@@ -133,8 +157,59 @@ class ChessController extends Notifier<GameState> {
 
   void resign() {
     if (state.status != GameStatus.playing) return;
+    _moveRequestId++;
     _engine.stopThinking();
-    state = state.copyWith(status: GameStatus.resigned);
+    state = state.copyWith(status: GameStatus.resigned, isBotThinking: false);
+  }
+
+  void undoLastMove() {
+    if (state.history.isEmpty) return;
+
+    _moveRequestId++;
+    if (state.isBotThinking) _engine.stopThinking();
+
+    final newHistory = List<Position>.from(state.history);
+    var restored = newHistory.removeLast();
+
+    if (newHistory.isNotEmpty && restored.turn != state.playerSide) {
+      restored = newHistory.removeLast();
+    }
+
+    state = state.copyWith(
+      position: restored,
+      history: newHistory,
+      clearSelection: true,
+      moveSquares: const [],
+      hintSquares: const {},
+      status: GameStatus.playing,
+      isBotThinking: false,
+    );
+  }
+
+  Future<void> requestHint() async {
+    if (!state.isPlayerTurn || state.isBotThinking) return;
+
+    final requestId = ++_moveRequestId;
+    state = state.copyWith(isHintThinking: true);
+
+    _engine.setSkillLevel(20);
+    final uci = await _engine.bestMoveForFen(
+      state.position.fen,
+      thinkTime: const Duration(milliseconds: 500),
+    );
+    _engine.setSkillLevel(_currentSkill);
+
+    if (requestId != _moveRequestId) return;
+
+    if (uci == '(none)') {
+      state = state.copyWith(isHintThinking: false);
+      return;
+    }
+
+    final from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
+    final to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
+
+    state = state.copyWith(hintSquares: {from, to}, isHintThinking: false);
   }
 
   Set<Square> _displayDestinationsFrom(Square square) {
@@ -159,8 +234,10 @@ class ChessController extends Notifier<GameState> {
 
     state = state.copyWith(
       position: newPosition,
+      history: [...state.history, state.position],
       clearSelection: true,
       moveSquares: [from, to],
+      hintSquares: const {},
       status: _statusFor(newPosition),
     );
 
@@ -170,17 +247,20 @@ class ChessController extends Notifier<GameState> {
   }
 
   Future<void> _requestBotMove() async {
-    if (state.status != GameStatus.playing) return;
-
+    final requestId = ++_moveRequestId;
     state = state.copyWith(isBotThinking: true);
 
-    final skill = skillLevelForElo(state.bot.elo);
-    final thinkTime = Duration(milliseconds: 300 + skill * 40);
-
+    final thinkTime = Duration(milliseconds: 300 + _currentSkill * 40);
     final uci = await _engine.bestMoveForFen(
       state.position.fen,
       thinkTime: thinkTime,
     );
+
+    if (requestId != _moveRequestId) return;
+    if (state.status != GameStatus.playing) {
+      state = state.copyWith(isBotThinking: false);
+      return;
+    }
 
     if (uci == '(none)') {
       state = state.copyWith(isBotThinking: false);
@@ -188,10 +268,12 @@ class ChessController extends Notifier<GameState> {
     }
 
     final move = _parseUciMove(uci);
-    final newPosition = state.position.play(move);
+    final beforeBotMove = state.position;
+    final newPosition = beforeBotMove.play(move);
 
     state = state.copyWith(
       position: newPosition,
+      history: [...state.history, beforeBotMove],
       moveSquares: move.squares.toList(),
       status: _statusFor(newPosition),
       isBotThinking: false,

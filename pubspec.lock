@@ -691,7 +691,7 @@ packages:
     source: hosted
     version: "1.0.0"
   stockfish:
-    dependency: "direct overridden"
+    dependency: "direct main"
     description:
       path: "packages/stockfish"
       relative: true

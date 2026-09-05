@@ -19,6 +19,7 @@ dependencies:
   url_launcher: ^6.3.2
   dio: ^5.11.1
   xml: ^7.0.1
+  stockfish: any
 
 dependency_overrides:
   stockfish:
