@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 const Color primaryGold = Color(0xFFFFBB00);
-const Color secondaryGreen = Color(0xFF2E7D32);
 
 const Color lightText = Color(0xFF181A1B);
 const Color darkText = Color(0xFFFAFAFA);
@@ -13,7 +12,7 @@ final ThemeData appTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: primaryGold,
     brightness: Brightness.light,
-  ).copyWith(secondary: secondaryGreen),
+  ),
 
   scaffoldBackgroundColor: const Color(0xFFF8F8F6),
 
@@ -61,7 +60,7 @@ final ThemeData appDarkTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: primaryGold,
     brightness: Brightness.dark,
-  ).copyWith(secondary: secondaryGreen),
+  ),
 
   scaffoldBackgroundColor: const Color(0xFF101112),
 

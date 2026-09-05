@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Kust/features/play/app_bar.dart';
+import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
@@ -127,14 +128,25 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  void _openOpponentPicker() {
+    PickOpponentModal.show(
+      context,
+      onPlay: (bot) {
+        debugPrint('Selected ${bot.name} (${bot.elo} Elo)');
+
+        // TODO : Navigate to the game screen with the selected bot
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppBar(),
+
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
-          mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
@@ -155,7 +167,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 SizedBox(
                   width: 120,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _openOpponentPicker,
                     style: ButtonStyle(
                       minimumSize: WidgetStateProperty.all(
                         const Size(double.infinity, 50),

@@ -13,12 +13,11 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   int currentStep = 0;
-
   bool isLogin = true;
   int registerStep = 0;
+  bool showSkip = true;
 
   final loginController = TextEditingController();
-
   final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -69,6 +68,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void nextStep() {
     if (currentStep == 0) {
       if (!validateAuthStep()) return;
+
+      setState(() {
+        showSkip = false;
+      });
     }
 
     if (currentStep == 1) {
@@ -99,6 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void skipAuth() {
     setState(() {
       currentStep = 1;
+      showSkip = false;
     });
   }
 
@@ -167,6 +171,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
   }
 
+  void switchAuthMode(bool login) {
+    if (isLogin == login) return;
+
+    setState(() {
+      isLogin = login;
+      registerStep = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -177,14 +190,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           children: [
             _buildProgress(context),
-
             Expanded(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
                 child: _buildCurrentStep(context, key: ValueKey(currentStep)),
               ),
             ),
-
             _buildBottomNavigation(context),
           ],
         ),
@@ -219,13 +235,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     switch (currentStep) {
       case 0:
         return _buildAuthStep(context, key: key);
-
       case 1:
         return _buildChessStep(context, key: key);
-
       case 2:
         return _buildWelcomeStep(context, key: key);
-
       default:
         return const SizedBox.shrink();
     }
@@ -238,78 +251,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            isLogin ? 'Welcome back' : 'Create your account',
-            style: const TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.7,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            isLogin
-                ? 'Sign in to continue your chess journey.'
-                : 'Create an account to keep your progress safe.',
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).textTheme.bodyMedium?.color
-                  ?.withValues(alpha: 0.65),
-              height: 1.4,
-            ),
-          ),
-
-          const SizedBox(height: 30),
-
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: 0.06)
-                  : Colors.black.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: Column(
+              key: ValueKey('${isLogin}_$registerStep'),
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: _AuthSwitchButton(
-                    title: 'Log in',
-                    selected: isLogin,
-                    onTap: () {
-                      setState(() {
-                        isLogin = true;
-                        registerStep = 0;
-                      });
-                    },
+                Text(
+                  isLogin ? 'Welcome back' : 'Create your account',
+                  style: const TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.7,
                   ),
                 ),
-                Expanded(
-                  child: _AuthSwitchButton(
-                    title: 'Register',
-                    selected: !isLogin,
-                    onTap: () {
-                      setState(() {
-                        isLogin = false;
-                        registerStep = 0;
-                      });
-                    },
+                const SizedBox(height: 8),
+                Text(
+                  isLogin
+                      ? 'Sign in to continue your chess journey.'
+                      : 'Create an account to keep your progress safe.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Theme.of(context).textTheme.bodyMedium?.color
+                        ?.withValues(alpha: 0.65),
+                    height: 1.4,
                   ),
                 ),
+                const SizedBox(height: 30),
+                if (isLogin)
+                  _buildLoginForm(context)
+                else
+                  _buildRegisterForm(context),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          if (isLogin)
-            _buildLoginForm(context)
-          else
-            _buildRegisterForm(context),
-
           const SizedBox(height: 20),
-
           Row(
             children: [
               Expanded(child: Divider(color: Theme.of(context).dividerColor)),
@@ -328,16 +309,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(child: Divider(color: Theme.of(context).dividerColor)),
             ],
           ),
-
           const SizedBox(height: 20),
-
           SizedBox(
             width: double.infinity,
             height: 54,
             child: OutlinedButton(
-              onPressed: () {
-                // TODO: Google authentication
-              },
+              onPressed: () {},
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: Theme.of(context).dividerColor),
                 shape: RoundedRectangleBorder(
@@ -363,19 +340,39 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 18),
-
-          Center(
-            child: TextButton(
-              onPressed: skipAuth,
-              child: const Text(
-                'Skip for now',
-                style: TextStyle(
-                  color: kAccentColor,
-                  fontWeight: FontWeight.w600,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: Row(
+              key: ValueKey(isLogin),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  isLogin
+                      ? 'Don’t have an account?'
+                      : 'Already have an account?',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color
+                        ?.withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => switchAuthMode(!isLogin),
+                  child: Text(
+                    isLogin ? 'Register' : 'Log in',
+                    style: const TextStyle(
+                      color: kAccentColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -404,18 +401,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             keyboardType: TextInputType.emailAddress,
             prefixIcon: Icons.mail_outline_rounded,
           ),
-
           const SizedBox(height: 14),
-
           _InputField(
             controller: usernameController,
             label: 'Username',
             hint: 'your_username',
             prefixIcon: Icons.alternate_email_rounded,
           ),
-
           const SizedBox(height: 12),
-
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -452,9 +445,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: 14),
-
         _InputField(
           controller: confirmPasswordController,
           label: 'Confirm password',
@@ -474,9 +465,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-
         const SizedBox(height: 12),
-
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -507,9 +496,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               letterSpacing: -0.7,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             'Choose the level that feels closest to your current chess experience.',
             style: TextStyle(
@@ -519,9 +506,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ?.withValues(alpha: 0.65),
             ),
           ),
-
           const SizedBox(height: 26),
-
           ...chessLevels.map(
             (level) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -562,9 +547,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 color: Colors.black,
               ),
             ),
-
             const SizedBox(height: 28),
-
             const Text(
               'TADAM!',
               textAlign: TextAlign.center,
@@ -574,17 +557,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 letterSpacing: -1,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               'You’re all set.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
-
             const SizedBox(height: 12),
-
             Text(
               'Your chess journey starts here.\nLet’s play.',
               textAlign: TextAlign.center,
@@ -607,48 +586,99 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 22),
-      child: Row(
-        children: [
-          if (!isFirstStep)
-            Expanded(
-              child: SizedBox(
-                height: 54,
-                child: OutlinedButton(
-                  onPressed: previousStep,
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      child: isFirstStep
+          ? Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: FilledButton(
+                    onPressed: nextStep,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: kAccentColor,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Continue',
+                      style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
-                  child: const Text('Back'),
                 ),
-              ),
-            ),
-
-          if (!isFirstStep) const SizedBox(width: 12),
-
-          Expanded(
-            flex: 2,
-            child: SizedBox(
-              height: 54,
-              child: FilledButton(
-                onPressed: nextStep,
-                style: FilledButton.styleFrom(
-                  backgroundColor: kAccentColor,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: showSkip
+                      ? Padding(
+                          key: const ValueKey('skip'),
+                          padding: const EdgeInsets.only(top: 4),
+                          child: TextButton(
+                            onPressed: skipAuth,
+                            child: const Text(
+                              'Skip for now',
+                              style: TextStyle(
+                                color: kAccentColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox(key: ValueKey('empty')),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 54,
+                    child: OutlinedButton(
+                      onPressed: previousStep,
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Back'),
+                    ),
                   ),
                 ),
-                child: Text(
-                  isFinalStep ? 'Start playing' : 'Continue',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: SizedBox(
+                    height: 54,
+                    child: FilledButton(
+                      onPressed: nextStep,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: kAccentColor,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        isFinalStep ? 'Start playing' : 'Continue',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -682,52 +712,6 @@ class _StepIndicator extends StatelessWidget {
                 ? Colors.black
                 : Theme.of(context).textTheme.bodyMedium?.color
                       ?.withValues(alpha: 0.45),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthSwitchButton extends StatelessWidget {
-  const _AuthSwitchButton({
-    required this.title,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? Theme.of(context).cardColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    blurRadius: 8,
-                    color: Colors.black.withValues(alpha: 0.06),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: selected
-                ? Theme.of(context).textTheme.bodyLarge?.color
-                : Theme.of(context).textTheme.bodyMedium?.color
-                      ?.withValues(alpha: 0.55),
           ),
         ),
       ),
@@ -835,9 +819,7 @@ class _ChessLevelCard extends StatelessWidget {
                 color: selected ? Colors.black : theme.iconTheme.color,
               ),
             ),
-
             const SizedBox(width: 14),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -863,9 +845,7 @@ class _ChessLevelCard extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(width: 8),
-
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               width: 24,
