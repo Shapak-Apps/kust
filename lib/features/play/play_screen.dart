@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
+import 'package:Kust/features/play/pick_side_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:Kust/features/game/game_args.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
+
+const List<Bot> _challengeBots = [
+  Bot(name: 'Jax', elo: 800, imagePath: 'assets/bots/Jax.png'),
+  Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
+  Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
+  Bot(name: 'Teses', elo: 1400, imagePath: 'assets/bots/Teses.png'),
+];
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
@@ -125,6 +135,23 @@ class _PlayScreenState extends State<PlayScreen> {
     PickOpponentModal.show(
       context,
       onPlay: (bot, side) {
+        if (!mounted) return;
+
+        context.go(
+          '/game',
+          extra: GameArgs(bot: bot, playerSide: side),
+        );
+      },
+    );
+  }
+
+  void _startGameWithBot(Bot bot) {
+    PickSideModal.show(
+      context,
+      bot: bot,
+      onPlay: (side) {
+        if (!mounted) return;
+
         context.go(
           '/game',
           extra: GameArgs(bot: bot, playerSide: side),
@@ -135,6 +162,8 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: MyAppBar(),
       body: Padding(
@@ -181,11 +210,13 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
 
               const SizedBox(height: 16),
+
               const Text(
                 'Announcements',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 10),
+
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: AspectRatio(
@@ -197,8 +228,91 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Our bots wanna challenge you',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final bot in _challengeBots)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _BotChallengeCard(
+                          bot: bot,
+                          onTap: () => _startGameWithBot(bot),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BotChallengeCard extends StatelessWidget {
+  const _BotChallengeCard({required this.bot, required this.onTap});
+
+  final Bot bot;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: theme.colorScheme.surface,
+          border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                bot.imagePath,
+                height: 52,
+                width: 52,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            Text(
+              bot.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 2),
+
+            Text(
+              '${bot.elo} Elo',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ),
       ),
     );

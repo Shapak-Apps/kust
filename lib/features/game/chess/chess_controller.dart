@@ -37,6 +37,7 @@ class GameState {
     this.isHintThinking = false,
     this.lastMove,
     this.capturedPiece,
+    this.capturedSquare,
     this.wasUndo = false,
   });
 
@@ -52,15 +53,24 @@ class GameState {
   final bool isBotThinking;
   final bool isHintThinking;
 
-  // Animation helpers
   final NormalMove? lastMove;
   final Piece? capturedPiece;
+  final Square? capturedSquare;
   final bool wasUndo;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing && position.turn == playerSide;
 
-  bool get canUndo => history.isNotEmpty && !isBotThinking;
+  bool get canUndo {
+    if (status != GameStatus.playing) return false;
+    if (history.isEmpty || isBotThinking) return false;
+
+    if (position.turn == playerSide) {
+      return history.length >= 2;
+    }
+
+    return true;
+  }
 
   GameState copyWith({
     Position? position,
@@ -75,8 +85,10 @@ class GameState {
     bool? isHintThinking,
     NormalMove? lastMove,
     Piece? capturedPiece,
+    Square? capturedSquare,
     bool? wasUndo,
     bool clearLastMove = false,
+    bool clearCapture = false,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -95,9 +107,12 @@ class GameState {
       isBotThinking: isBotThinking ?? this.isBotThinking,
       isHintThinking: isHintThinking ?? this.isHintThinking,
       lastMove: clearLastMove ? null : (lastMove ?? this.lastMove),
-      capturedPiece: clearLastMove
+      capturedPiece: clearCapture
           ? null
           : (capturedPiece ?? this.capturedPiece),
+      capturedSquare: clearCapture
+          ? null
+          : (capturedSquare ?? this.capturedSquare),
       wasUndo: wasUndo ?? this.wasUndo,
     );
   }
@@ -128,7 +143,45 @@ class ChessController extends Notifier<GameState> {
     _audioPlayer.play(AssetSource('sounds/$asset'));
   }
 
-  void _playMoveSound(NormalMove move, Position newPos, bool isBot) {
+  bool _isEnPassant(Position oldPos, NormalMove move) {
+    final piece = oldPos.board.pieceAt(move.from);
+
+    if (piece?.role != Role.pawn) return false;
+    if (fileOf(move.from) == fileOf(move.to)) return false;
+
+    return oldPos.board.pieceAt(move.to) == null;
+  }
+
+  Square? _capturedSquareFor(Position oldPos, NormalMove move) {
+    final piece = oldPos.board.pieceAt(move.from);
+
+    final isCastling =
+        piece?.role == Role.king &&
+        (move.from == Square.e1 || move.from == Square.e8) &&
+        (move.to == Square.h1 ||
+            move.to == Square.a1 ||
+            move.to == Square.h8 ||
+            move.to == Square.a8);
+
+    if (isCastling) return null;
+
+    if (oldPos.board.pieceAt(move.to) != null) {
+      return move.to;
+    }
+
+    if (_isEnPassant(oldPos, move)) {
+      return squareAt(fileOf(move.to), rankOf(move.from));
+    }
+
+    return null;
+  }
+
+  void _playMoveSound(
+    NormalMove move,
+    Position oldPos,
+    Position newPos,
+    bool isBot,
+  ) {
     String sound;
 
     final isCastling =
@@ -138,11 +191,14 @@ class ChessController extends Notifier<GameState> {
             move.to == Square.h8 ||
             move.to == Square.a8);
 
+    final capturedSquare = _capturedSquareFor(oldPos, move);
+    final isCapture = capturedSquare != null;
+
     if (isCastling) {
       sound = 'castle.mp3';
     } else if (move.promotion != null) {
       sound = 'promote.mp3';
-    } else if (state.position.board.pieceAt(move.to) != null) {
+    } else if (isCapture) {
       sound = 'capture.mp3';
     } else {
       sound = isBot ? 'move-opponent.mp3' : 'move.mp3';
@@ -195,6 +251,7 @@ class ChessController extends Notifier<GameState> {
 
     if (state.selectedSquare == null) {
       if (piece == null || piece.color != state.playerSide) return;
+
       state = state.copyWith(
         selectedSquare: square,
         legalDestinations: _displayDestinationsFrom(square),
@@ -226,14 +283,17 @@ class ChessController extends Notifier<GameState> {
 
   void resign() {
     if (state.status != GameStatus.playing) return;
+
     _moveRequestId++;
     _engine.stopThinking();
+
     state = state.copyWith(status: GameStatus.resigned, isBotThinking: false);
+
     _playSound('game-end.mp3');
   }
 
   void undoLastMove() {
-    if (state.history.isEmpty) return;
+    if (!state.canUndo) return;
 
     _moveRequestId++;
     if (state.isBotThinking) _engine.stopThinking();
@@ -241,21 +301,38 @@ class ChessController extends Notifier<GameState> {
     final newHistory = List<Position>.from(state.history);
     var restored = newHistory.removeLast();
 
-    bool wasBotMove = false;
     if (newHistory.isNotEmpty && restored.turn != state.playerSide) {
       restored = newHistory.removeLast();
-      wasBotMove = true;
     }
 
+    final beforeLastMove = state.history.isNotEmpty ? state.history.last : null;
+
     NormalMove? undoMove;
+    Square? capturedSquare;
     Piece? capturedPiece;
 
     if (state.moveSquares.length == 2) {
-      final fromSq = state.moveSquares[1];
-      final toSq = state.moveSquares[0];
+      final forwardFrom = state.moveSquares[0];
+      final forwardTo = state.moveSquares[1];
 
-      undoMove = NormalMove(from: fromSq, to: toSq);
-      capturedPiece = restored.board.pieceAt(toSq);
+      undoMove = NormalMove(from: forwardTo, to: forwardFrom);
+
+      if (beforeLastMove != null) {
+        final forwardMove = NormalMove(from: forwardFrom, to: forwardTo);
+        final possibleCapturedSquare = _capturedSquareFor(
+          beforeLastMove,
+          forwardMove,
+        );
+
+        if (possibleCapturedSquare != null) {
+          final restoredPiece = restored.board.pieceAt(possibleCapturedSquare);
+
+          if (restoredPiece != null) {
+            capturedSquare = possibleCapturedSquare;
+            capturedPiece = restoredPiece;
+          }
+        }
+      }
     }
 
     state = state.copyWith(
@@ -267,7 +344,10 @@ class ChessController extends Notifier<GameState> {
       status: GameStatus.playing,
       isBotThinking: false,
       lastMove: undoMove,
+      clearLastMove: undoMove == null,
       capturedPiece: capturedPiece,
+      capturedSquare: capturedSquare,
+      clearCapture: capturedPiece == null,
       wasUndo: true,
     );
   }
@@ -320,6 +400,7 @@ class ChessController extends Notifier<GameState> {
         displaySquares.add(dest);
       }
     }
+
     return displaySquares;
   }
 
@@ -328,17 +409,17 @@ class ChessController extends Notifier<GameState> {
     final piece = state.position.board.pieceAt(from);
 
     if (piece?.role == Role.king) {
-      if (to == Square.g1)
+      if (to == Square.g1) {
         target = Square.h1;
-      else if (to == Square.c1)
+      } else if (to == Square.c1) {
         target = Square.a1;
-      else if (to == Square.g8)
+      } else if (to == Square.g8) {
         target = Square.h8;
-      else if (to == Square.c8)
+      } else if (to == Square.c8) {
         target = Square.a8;
+      }
     }
 
-    final capturedPiece = state.position.board.pieceAt(target);
     final promotion = _isPromotion(from, target) ? Role.queen : null;
     final move = NormalMove(from: from, to: target, promotion: promotion);
 
@@ -348,18 +429,27 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    final newPosition = state.position.play(move);
-    _playMoveSound(move, newPosition, false);
+    final oldPosition = state.position;
+    final newPosition = oldPosition.play(move);
+
+    final capturedSquare = _capturedSquareFor(oldPosition, move);
+    final capturedPiece = capturedSquare == null
+        ? null
+        : oldPosition.board.pieceAt(capturedSquare);
+
+    _playMoveSound(move, oldPosition, newPosition, false);
 
     state = state.copyWith(
       position: newPosition,
-      history: [...state.history, state.position],
+      history: [...state.history, oldPosition],
       clearSelection: true,
       moveSquares: [move.from, move.to],
       hintSquares: const {},
       status: _statusFor(newPosition),
       lastMove: move,
       capturedPiece: capturedPiece,
+      capturedSquare: capturedSquare,
+      clearCapture: capturedPiece == null,
       wasUndo: false,
     );
 
@@ -381,6 +471,7 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (requestId != _moveRequestId) return;
+
     if (state.status != GameStatus.playing) {
       state = state.copyWith(isBotThinking: false);
       return;
@@ -393,10 +484,14 @@ class ChessController extends Notifier<GameState> {
 
     final move = _parseUciMove(uci);
     final beforeBotMove = state.position;
-    final capturedPiece = beforeBotMove.board.pieceAt(move.to);
     final newPosition = beforeBotMove.play(move);
 
-    _playMoveSound(move, newPosition, true);
+    final capturedSquare = _capturedSquareFor(beforeBotMove, move);
+    final capturedPiece = capturedSquare == null
+        ? null
+        : beforeBotMove.board.pieceAt(capturedSquare);
+
+    _playMoveSound(move, beforeBotMove, newPosition, true);
 
     state = state.copyWith(
       position: newPosition,
@@ -406,6 +501,8 @@ class ChessController extends Notifier<GameState> {
       isBotThinking: false,
       lastMove: move,
       capturedPiece: capturedPiece,
+      capturedSquare: capturedSquare,
+      clearCapture: capturedPiece == null,
       wasUndo: false,
     );
 

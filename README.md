@@ -1,96 +1,48 @@
 # Küşt
 
-Küşt is an open-source chess application built with Dart and Flutter. It combines `dartchess` for chess rules and position handling with Stockfish for playing against bots and analyzing finished games.
+(https://raw.githubusercontent.com/Shapak-Apps/kust/main/assets/images/banner.png)
 
-The main idea behind Küşt is simple: chess analysis should help you improve, not just tell you that a move was bad. After a game, Küşt examines your decisions, identifies inaccuracies, mistakes, and blunders, and explains what could have been played instead and what you should learn from the position.
+Küşt is an open-source chess application built with Flutter and Dart. It uses `dartchess` for chess rules and position handling, and Stockfish as the engine for bot gameplay and position evaluation.
+
+The core idea: chess analysis should help you improve, not just tell you a move was bad. After a game, Küşt examines your decisions, identifies inaccuracies, mistakes, and blunders, and explains what could have been played instead and what you should take away from the position.
 
 ## Features
 
 ### Play Against Bots
 
-Play complete chess games against Stockfish-powered opponents. The application is designed to support different playing strengths so you can choose an opponent that fits your level.
+Play complete games against Stockfish-powered bots at adjustable difficulty levels. Bot strength is mapped from an Elo rating to a Stockfish skill level, so you can pick an opponent that suits where you are as a player.
 
-`dartchess` is responsible for maintaining the chess position and validating moves, while Stockfish provides the engine calculation used by the bot.
+`dartchess` maintains the chess position and validates moves. Stockfish handles engine calculation for the bot's responses.
 
-### Analyze Your Games
+### Move Undo and Hints
 
-After a game, Küşt can go through the played moves position by position and compare your moves with Stockfish's analysis.
+During a game you can undo your last move or request a hint. Hints run Stockfish at full strength on a short time budget and highlight the suggested origin and destination squares. Undo steps back both the player move and the preceding bot move so the position stays consistent.
 
-The analysis can classify moves into categories such as:
+### Move Classification
 
-- **Best move**: a move that matches or is very close to the engine's preferred choice.
-- **Good move**: a strong and reasonable move that keeps the position in good shape.
-- **Inaccuracy**: a small error that worsens the position but usually does not change the result immediately.
-- **Mistake**: a more serious error that gives the opponent a meaningful advantage.
-- **Blunder**: a major error that can lose material, position, or the game.
-- **Missed opportunity**: a position where a stronger tactical or positional continuation was available but was not played.
+After a game, Küşt evaluates the played positions with Stockfish and classifies each move:
 
-The exact thresholds are determined by the analysis implementation and engine settings.
+- **Best move** — matches or comes very close to the engine's preferred choice
+- **Good move** — strong and reasonable, keeps the position in good shape
+- **Inaccuracy** — a small error that worsens the position without immediately changing the result
+- **Mistake** — a more serious error that gives the opponent a meaningful advantage
+- **Blunder** — a major error that loses material, position, or the game
+- **Missed opportunity** — a position where a stronger continuation existed but was not played
 
-### Learn From Mistakes
+### Post-Game Analysis
 
-Küşt is intended to go further than showing engine evaluations. For every important mistake, the goal is to explain the position in a way a player can actually use.
+Küşt is designed to go further than raw engine evaluations. For every significant error, the goal is to explain what happened in terms a player can actually use.
 
-For example, instead of only displaying that a move changed the evaluation from `+1.2` to `-2.4`, the analysis can explain that the move allowed a tactical attack, left a piece undefended, ignored an opponent's threat, or missed a simple way to win material.
-
-A useful analysis should answer four questions:
+A useful analysis answers four questions:
 
 1. What did I play?
 2. What was the better move?
 3. Why was the better move stronger?
 4. What should I remember for the next game?
 
-The long-term goal is to turn engine output into practical lessons rather than a collection of numbers.
+An example of the intended output:
 
-### Personal Chess Insights
-
-By analyzing multiple games, Küşt can eventually identify recurring weaknesses in a player's chess. For example, a player may repeatedly miss tactical threats, lose material in the opening, make inaccurate decisions in endgames, or struggle when under pressure.
-
-These patterns can be used to provide more useful feedback and suggest what the player should study or practice next.
-
-## How It Works
-
-The application is built around three main components.
-
-### `dartchess`
-
-`dartchess` provides the chess logic used by the application. It handles the board position, legal moves, chess rules, notation, and position representation.
-
-This keeps chess rules separate from the user interface and engine code.
-
-### Stockfish
-
-Stockfish is used for two main purposes:
-
-- playing against the user as a chess engine opponent;
-- evaluating positions and finding stronger moves during game analysis.
-
-The engine is not responsible for enforcing the rules of the game. `dartchess` handles the chess state and legal move validation, while Stockfish calculates positions.
-
-### Analysis Layer
-
-The analysis layer connects the game history with Stockfish. It replays the game, evaluates the relevant positions, compares the player's move with stronger alternatives, and assigns an appropriate classification.
-
-The result can then be presented to the player as a structured explanation of what happened during the game.
-
-A typical analysis flow is:
-
-```text
-Finished game
-    -> Replay the moves
-    -> Evaluate positions with Stockfish
-    -> Compare played moves with stronger alternatives
-    -> Measure the change in evaluation
-    -> Classify important moves
-    -> Explain the reason for the error
-    -> Produce learning feedback
 ```
-
-## Example Analysis
-
-A simplified example of the intended experience could look like this:
-
-```text
 Move: 18...Qxd4?
 
 Classification: Mistake
@@ -104,105 +56,122 @@ Before making a capture, check whether the opponent can respond
 with a forcing move such as a check, capture, or attack on your queen.
 ```
 
-The exact explanation depends on the position and the analysis implementation. The goal is to make the feedback understandable to a human player rather than simply exposing raw Stockfish output.
+### Personal Pattern Detection
+
+By analyzing multiple games, Küşt can identify recurring weaknesses — repeatedly missing tactical threats, losing material in the opening, struggling in endgames, or making poor decisions under pressure. These patterns feed into more targeted feedback and study suggestions.
+
+## Architecture
+
+The application is built around three components.
+
+### dartchess
+
+Handles chess logic: board position, legal move generation, rule enforcement, FEN and PGN parsing, and position representation. Chess rules are kept entirely separate from the UI and engine layers.
+
+### Stockfish
+
+Used for two purposes:
+
+- calculating moves for the bot opponent during gameplay
+- evaluating positions and finding stronger alternatives during post-game analysis
+
+Stockfish does not enforce chess rules. `dartchess` owns the game state and legal move validation. Stockfish only sees FEN strings.
+
+### Analysis Layer
+
+Connects the game history to Stockfish. It replays the game, evaluates positions, compares the player's moves against stronger alternatives, measures the evaluation change, and classifies the result.
+
+```
+Finished game
+  -> Replay moves
+  -> Evaluate positions with Stockfish
+  -> Compare played moves with stronger alternatives
+  -> Measure evaluation delta
+  -> Classify moves
+  -> Explain critical errors
+  -> Produce learning feedback
+```
 
 ## Tech Stack
 
-| Technology | Purpose                                                 |
-| ---------- | ------------------------------------------------------- |
-| Dart       | Application and core logic                              |
-| Flutter    | User interface and cross-platform application           |
-| dartchess  | Chess rules, legal moves, FEN/PGN and position handling |
-| Stockfish  | Bot gameplay and chess analysis                         |
+| Technology         | Purpose                                           |
+| ------------------ | ------------------------------------------------- |
+| Dart               | Application language and core logic               |
+| Flutter            | UI and cross-platform application shell           |
+| dartchess          | Chess rules, legal moves, FEN/PGN, position state |
+| Stockfish          | Bot gameplay and position analysis                |
+| Riverpod           | State management                                  |
+| go_router          | Declarative navigation                            |
+| audioplayers       | Move and game event sounds                        |
+| shared_preferences | Onboarding state persistence                      |
+| flutter_svg        | SVG asset rendering                               |
 
 ## Getting Started
 
 ### Requirements
 
-Before running Küşt, make sure you have:
-
-- Flutter SDK installed
+- Flutter SDK
 - Dart SDK compatible with the Flutter version
 - Git
 - A working Stockfish integration for your target platform
 
-### Clone the Repository
+Stockfish setup differs between Android, iOS, and desktop. Follow the platform-specific configuration in the project when setting up the engine.
+
+### Clone and Run
 
 ```bash
 git clone https://github.com/Shapak-Apps/kust.git
 cd kust
-```
-
-### Install Dependencies
-
-```bash
 flutter pub get
-```
-
-### Run the Application
-
-```bash
 flutter run
 ```
 
-Stockfish setup can differ between Android, iOS, desktop, and other targets. Follow the platform-specific configuration used by the project when enabling the engine.
-
 ## Roadmap
 
-The project is still evolving. Planned functionality includes:
-
-- Playing against Stockfish bots
-- Adjustable bot difficulty
-- Complete game history
-- FEN and PGN support
-- Local game storage
-- Post-game analysis
-- Inaccuracy, mistake, and blunder detection
-- Missed opportunity detection
-- Explanations for critical moves
-- Personal mistake pattern detection
-- Opening performance analysis
-- Tactical training based on previous mistakes
-- Endgame analysis
-- Progress tracking
-- Importing games for analysis
-- Exporting games as PGN
+- [x] Play against Stockfish bots
+- [x] Adjustable bot difficulty
+- [x] Move undo
+- [x] Hints during play
+- [ ] Complete game history
+- [ ] FEN and PGN support
+- [ ] Local game storage
+- [ ] Post-game analysis
+- [ ] Inaccuracy, mistake, and blunder detection
+- [ ] Missed opportunity detection
+- [ ] Explanations for critical moves
+- [ ] Personal mistake pattern detection
+- [ ] Opening performance analysis
+- [ ] Tactical training based on previous mistakes
+- [ ] Endgame analysis
+- [ ] Progress tracking
+- [ ] Import games for analysis
+- [ ] Export games as PGN
 
 ## Contributing
 
 Küşt is open source and contributions are welcome.
 
-You can contribute to the project by improving the chess analysis, Stockfish integration, performance, UI, testing, documentation, or learning features.
+Fork the repository, create a branch, make your changes, and open a pull request.
 
-### Development Workflow
-
-Fork the repository, create a branch for your changes, make the changes, and open a pull request.
-
-Before submitting a pull request, format the Dart code and run the tests:
+Before submitting, format and test:
 
 ```bash
 dart format .
 flutter test
 ```
 
-Chess software has many edge cases, so changes involving chess logic should include appropriate tests whenever possible. Important cases include check, checkmate, castling, en passant, promotion, FEN/PGN parsing, engine evaluation, and move classification.
-
-## Open Source
-
-Küşt is intended to remain an open-source project. The repository should provide a place where developers can contribute improvements and where chess players can help shape the learning experience.
-
-Please make sure that the final project license and all third-party dependencies comply with their respective licenses and attribution requirements.
+Chess software has many edge cases. Changes involving chess logic should include tests where possible. Critical cases include check, checkmate, castling, en passant, promotion, FEN and PGN parsing, engine evaluation, and move classification.
 
 ## License
 
-The project license will be added to the repository. If MIT is chosen, the repository should include the standard MIT `LICENSE` file.
+The project license will be added to the repository.
 
 ## Acknowledgements
 
-Küşt uses and builds upon:
+Küşt builds on:
 
 - [dartchess](https://pub.dev/packages/dartchess)
 - [Stockfish](https://stockfishchess.org/)
 - [Flutter](https://flutter.dev/)
 
-Please follow the licensing and attribution requirements of each dependency used by the project.
+Follow the licensing and attribution requirements for each dependency.

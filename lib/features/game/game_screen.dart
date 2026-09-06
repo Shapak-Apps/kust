@@ -1,13 +1,13 @@
-import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:dartchess/dartchess.dart';
 
 import 'package:Kust/features/game/chess/board/chess_board.dart';
 import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 
 const double kBoardMaxWidth = 480;
 
@@ -25,6 +25,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(chessControllerProvider.notifier)
@@ -76,24 +77,50 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
+  void _confirmResign() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Resign'),
+          content: const Text('Are you sure you want to resign?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                ref.read(chessControllerProvider.notifier).resign();
+              },
+              child: const Text('Resign'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showResultDialog(String title, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
+      barrierDismissible: true,
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text(title),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
+                Navigator.of(dialogContext).pop();
                 context.go('/play');
               },
               child: const Text('Back to lobby'),
             ),
             FilledButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 ref
                     .read(chessControllerProvider.notifier)
                     .startGame(widget.bot, playerSide: widget.playerSide);
@@ -104,6 +131,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         );
       },
     );
+  }
+
+  void _showEndDialogForState(GameState state) {
+    switch (state.status) {
+      case GameStatus.checkmate:
+        final winner = state.position.turn == state.playerSide
+            ? widget.bot.name
+            : 'You';
+        _showResultDialog('Checkmate', '$winner won the game.');
+      case GameStatus.draw:
+        _showResultDialog('Draw', 'The game ended in a draw.');
+      case GameStatus.resigned:
+        _showResultDialog('Game over', 'You resigned.');
+      case GameStatus.playing:
+      case GameStatus.loading:
+        break;
+    }
   }
 
   @override
@@ -130,19 +174,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final gameState = ref.watch(chessControllerProvider);
     final theme = Theme.of(context);
-    final notifier = ref.read(chessControllerProvider.notifier);
+
+    final isFinished =
+        gameState.status == GameStatus.checkmate ||
+        gameState.status == GameStatus.draw ||
+        gameState.status == GameStatus.resigned;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('vs ${widget.bot.name}'),
         actions: [
-          IconButton(
-            tooltip: 'Resign',
-            onPressed: gameState.status == GameStatus.playing
-                ? notifier.resign
-                : null,
-            icon: const Icon(Icons.flag_rounded),
-          ),
+          if (gameState.status == GameStatus.playing)
+            IconButton(
+              tooltip: 'Resign',
+              onPressed: _confirmResign,
+              icon: const Icon(Icons.flag_rounded),
+            ),
+
+          if (isFinished)
+            IconButton(
+              tooltip: 'Show result',
+              onPressed: () => _showEndDialogForState(gameState),
+              icon: const Icon(Icons.info_outline_rounded),
+            ),
         ],
       ),
       body: SafeArea(
@@ -196,14 +250,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 children: [
                   IconButton(
                     tooltip: 'Take back',
-                    onPressed: gameState.canUndo ? notifier.undoLastMove : null,
+                    onPressed: gameState.canUndo
+                        ? ref
+                              .read(chessControllerProvider.notifier)
+                              .undoLastMove
+                        : null,
                     icon: const Icon(Icons.undo_rounded),
                   ),
                   IconButton(
                     tooltip: 'Hint',
                     onPressed:
                         gameState.isPlayerTurn && !gameState.isHintThinking
-                        ? notifier.requestHint
+                        ? ref.read(chessControllerProvider.notifier).requestHint
                         : null,
                     icon: gameState.isHintThinking
                         ? const SizedBox(
