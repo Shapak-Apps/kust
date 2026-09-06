@@ -1,6 +1,6 @@
 # Küşt
 
-(https://raw.githubusercontent.com/Shapak-Apps/kust/main/assets/images/banner.png)
+![Küşt](https://raw.githubusercontent.com/Shapak-Apps/kust/main/assets/images/banner.png)
 
 Küşt is an open-source chess application built with Flutter and Dart. It uses `dartchess` for chess rules and position handling, and Stockfish as the engine for bot gameplay and position evaluation.
 
