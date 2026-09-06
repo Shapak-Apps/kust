@@ -12,42 +12,166 @@ const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
 const Color kHintHighlight = Color(0x552ECC71);
 
-class ChessBoard extends ConsumerWidget {
+class ChessBoard extends ConsumerStatefulWidget {
   const ChessBoard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChessBoard> createState() => _ChessBoardState();
+}
+
+class _ChessBoardState extends ConsumerState<ChessBoard>
+    with TickerProviderStateMixin {
+  late AnimationController _moveController;
+  late AnimationController _captureController;
+
+  Square? _animFrom;
+  Square? _animTo;
+  Piece? _animPiece;
+
+  Square? _capSquare;
+  Piece? _capPiece;
+
+  double _squareSize = 0;
+  bool _flipped = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _moveController = AnimationController(vsync: this);
+    _captureController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+  }
+
+  @override
+  void dispose() {
+    _moveController.dispose();
+    _captureController.dispose();
+    super.dispose();
+  }
+
+  Offset _getSquareOffset(Square sq, double size) {
+    final file = fileOf(sq);
+    final rank = rankOf(sq);
+    final dx = (_flipped ? 7 - file : file) * size;
+    final dy = (_flipped ? rank : 7 - rank) * size;
+    return Offset(dx, dy);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final gameState = ref.watch(chessControllerProvider);
-    final flipped = gameState.playerSide == Side.black;
+    _flipped = gameState.playerSide == Side.black;
+
+    ref.listen<GameState>(chessControllerProvider, (previous, next) {
+      if (previous == null) return;
+
+      final move = next.lastMove;
+      if (move != null && move != previous.lastMove) {
+        _animFrom = move.from;
+        _animTo = move.to;
+        _animPiece = next.position.board.pieceAt(move.to);
+
+        final duration = next.wasUndo
+            ? const Duration(milliseconds: 350)
+            : const Duration(milliseconds: 400);
+        _moveController.duration = duration;
+        _moveController.reset();
+        _moveController.forward();
+
+        if (next.capturedPiece != null) {
+          _capSquare = move.to;
+          _capPiece = next.capturedPiece;
+          _captureController.reset();
+          _captureController.forward();
+        }
+      }
+    });
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final side = constraints.maxWidth < constraints.maxHeight
             ? constraints.maxWidth
             : constraints.maxHeight;
-        final squareSize = side / 8;
+        _squareSize = side / 8;
 
-        final ranks = List.generate(8, (i) => flipped ? i : 7 - i);
-        final files = List.generate(8, (i) => flipped ? 7 - i : i);
+        final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
+        final files = List.generate(8, (i) => _flipped ? 7 - i : i);
 
         return SizedBox(
           width: side,
           height: side,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              for (final rank in ranks)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final file in files)
-                      _BoardSquare(
-                        square: squareAt(file, rank),
-                        size: squareSize,
-                        isBottomRow: rank == (flipped ? 7 : 0),
-                        isLeftColumn: file == (flipped ? 7 : 0),
+              // 1. Static Board (Backgrounds, Highlights, Coordinates, Static Pieces)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final rank in ranks)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final file in files)
+                          _buildBoardSquare(squareAt(file, rank), gameState),
+                      ],
+                    ),
+                ],
+              ),
+
+              // 2. Animated Captured Piece (Fade out/in)
+              if (_capPiece != null && _capSquare != null)
+                AnimatedBuilder(
+                  animation: _captureController,
+                  builder: (context, child) {
+                    final opacity = gameState.wasUndo
+                        ? _captureController.value
+                        : 1.0 - _captureController.value;
+                    return Positioned(
+                      left: _getSquareOffset(_capSquare!, _squareSize).dx,
+                      top: _getSquareOffset(_capSquare!, _squareSize).dy,
+                      width: _squareSize,
+                      height: _squareSize,
+                      child: Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: Padding(
+                          padding: EdgeInsets.all(
+                            _squareSize * 0.02,
+                          ), // +5% Size
+                          child: SvgPicture.asset(_assetForPiece(_capPiece!)),
+                        ),
                       ),
-                  ],
+                    );
+                  },
+                ),
+
+              // 3. Animated Moving Piece (Slide)
+              if (_animPiece != null && _animFrom != null && _animTo != null)
+                AnimatedBuilder(
+                  animation: _moveController,
+                  builder: (context, child) {
+                    final fromOffset = _getSquareOffset(
+                      _animFrom!,
+                      _squareSize,
+                    );
+                    final toOffset = _getSquareOffset(_animTo!, _squareSize);
+                    final currentOffset = Offset.lerp(
+                      fromOffset,
+                      toOffset,
+                      Curves.easeInOut.transform(_moveController.value),
+                    )!;
+
+                    return Positioned(
+                      left: currentOffset.dx,
+                      top: currentOffset.dy,
+                      width: _squareSize,
+                      height: _squareSize,
+                      child: Padding(
+                        padding: EdgeInsets.all(_squareSize * 0.02), // +5% Size
+                        child: SvgPicture.asset(_assetForPiece(_animPiece!)),
+                      ),
+                    );
+                  },
                 ),
             ],
           ),
@@ -55,24 +179,8 @@ class ChessBoard extends ConsumerWidget {
       },
     );
   }
-}
 
-class _BoardSquare extends ConsumerWidget {
-  const _BoardSquare({
-    required this.square,
-    required this.size,
-    required this.isBottomRow,
-    required this.isLeftColumn,
-  });
-
-  final Square square;
-  final double size;
-  final bool isBottomRow;
-  final bool isLeftColumn;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(chessControllerProvider);
+  Widget _buildBoardSquare(Square square, GameState gameState) {
     final piece = gameState.position.board.pieceAt(square);
 
     final isLight = (fileOf(square) + rankOf(square)).isEven;
@@ -82,37 +190,49 @@ class _BoardSquare extends ConsumerWidget {
     final isHint = gameState.hintSquares.contains(square);
 
     var background = isLight ? kLightSquare : kDarkSquare;
-    if (isLastMove) {
+    if (isLastMove)
       background = Color.alphaBlend(kLastMoveHighlight, background);
-    }
-    if (isHint) {
-      background = Color.alphaBlend(kHintHighlight, background);
-    }
-    if (isSelected) {
-      background = Color.alphaBlend(kHighlight, background);
-    }
+    if (isHint) background = Color.alphaBlend(kHintHighlight, background);
+    if (isSelected) background = Color.alphaBlend(kHighlight, background);
 
     final coordinateColor = isLight ? kDarkSquare : kLightSquare;
+
+    // Hide piece if it's currently being animated
+    bool hidePiece = false;
+    if (piece != null && _animPiece == piece) {
+      if ((_animFrom == square || _animTo == square) &&
+          _moveController.isAnimating) {
+        hidePiece = true;
+      }
+    }
+    if (piece != null &&
+        _capPiece == piece &&
+        _capSquare == square &&
+        _captureController.isAnimating) {
+      hidePiece = true;
+    }
 
     return GestureDetector(
       onTap: () =>
           ref.read(chessControllerProvider.notifier).selectSquare(square),
       child: Container(
-        width: size,
-        height: size,
+        width: _squareSize,
+        height: _squareSize,
         color: background,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (piece != null)
+            if (piece != null && !hidePiece)
               Padding(
-                padding: EdgeInsets.all(size * 0.04),
+                padding: EdgeInsets.all(
+                  _squareSize * 0.02,
+                ), // Increased size (+5%)
                 child: SvgPicture.asset(_assetForPiece(piece)),
               ),
             if (isLegalTarget && piece == null)
               Container(
-                width: size * 0.28,
-                height: size * 0.28,
+                width: _squareSize * 0.28,
+                height: _squareSize * 0.28,
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
@@ -120,36 +240,36 @@ class _BoardSquare extends ConsumerWidget {
               ),
             if (isLegalTarget && piece != null)
               Container(
-                margin: EdgeInsets.all(size * 0.05),
+                margin: EdgeInsets.all(_squareSize * 0.05),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.black.withValues(alpha: 0.35),
-                    width: size * 0.06,
+                    width: _squareSize * 0.06,
                   ),
                 ),
               ),
-            if (isLeftColumn)
+            if (fileOf(square) == (_flipped ? 7 : 0))
               Positioned(
                 top: 2,
                 left: 3,
                 child: Text(
                   (rankOf(square) + 1).toString(),
                   style: TextStyle(
-                    fontSize: size * 0.16,
+                    fontSize: _squareSize * 0.16,
                     fontWeight: FontWeight.w700,
                     color: coordinateColor,
                   ),
                 ),
               ),
-            if (isBottomRow)
+            if (rankOf(square) == (_flipped ? 7 : 0))
               Positioned(
                 bottom: 2,
                 right: 3,
                 child: Text(
                   String.fromCharCode('a'.codeUnitAt(0) + fileOf(square)),
                   style: TextStyle(
-                    fontSize: size * 0.16,
+                    fontSize: _squareSize * 0.16,
                     fontWeight: FontWeight.w700,
                     color: coordinateColor,
                   ),

@@ -35,6 +35,9 @@ class GameState {
     this.status = GameStatus.loading,
     this.isBotThinking = false,
     this.isHintThinking = false,
+    this.lastMove,
+    this.capturedPiece,
+    this.wasUndo = false,
   });
 
   final Position position;
@@ -48,6 +51,11 @@ class GameState {
   final GameStatus status;
   final bool isBotThinking;
   final bool isHintThinking;
+
+  // Animation helpers
+  final NormalMove? lastMove;
+  final Piece? capturedPiece;
+  final bool wasUndo;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing && position.turn == playerSide;
@@ -65,6 +73,10 @@ class GameState {
     GameStatus? status,
     bool? isBotThinking,
     bool? isHintThinking,
+    NormalMove? lastMove,
+    Piece? capturedPiece,
+    bool? wasUndo,
+    bool clearLastMove = false,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -82,6 +94,11 @@ class GameState {
       status: status ?? this.status,
       isBotThinking: isBotThinking ?? this.isBotThinking,
       isHintThinking: isHintThinking ?? this.isHintThinking,
+      lastMove: clearLastMove ? null : (lastMove ?? this.lastMove),
+      capturedPiece: clearLastMove
+          ? null
+          : (capturedPiece ?? this.capturedPiece),
+      wasUndo: wasUndo ?? this.wasUndo,
     );
   }
 }
@@ -224,8 +241,21 @@ class ChessController extends Notifier<GameState> {
     final newHistory = List<Position>.from(state.history);
     var restored = newHistory.removeLast();
 
+    bool wasBotMove = false;
     if (newHistory.isNotEmpty && restored.turn != state.playerSide) {
       restored = newHistory.removeLast();
+      wasBotMove = true;
+    }
+
+    NormalMove? undoMove;
+    Piece? capturedPiece;
+
+    if (state.moveSquares.length == 2) {
+      final fromSq = state.moveSquares[1];
+      final toSq = state.moveSquares[0];
+
+      undoMove = NormalMove(from: fromSq, to: toSq);
+      capturedPiece = restored.board.pieceAt(toSq);
     }
 
     state = state.copyWith(
@@ -236,6 +266,9 @@ class ChessController extends Notifier<GameState> {
       hintSquares: const {},
       status: GameStatus.playing,
       isBotThinking: false,
+      lastMove: undoMove,
+      capturedPiece: capturedPiece,
+      wasUndo: true,
     );
   }
 
@@ -305,6 +338,7 @@ class ChessController extends Notifier<GameState> {
         target = Square.a8;
     }
 
+    final capturedPiece = state.position.board.pieceAt(target);
     final promotion = _isPromotion(from, target) ? Role.queen : null;
     final move = NormalMove(from: from, to: target, promotion: promotion);
 
@@ -324,6 +358,9 @@ class ChessController extends Notifier<GameState> {
       moveSquares: [move.from, move.to],
       hintSquares: const {},
       status: _statusFor(newPosition),
+      lastMove: move,
+      capturedPiece: capturedPiece,
+      wasUndo: false,
     );
 
     if (state.status == GameStatus.playing) {
@@ -356,6 +393,7 @@ class ChessController extends Notifier<GameState> {
 
     final move = _parseUciMove(uci);
     final beforeBotMove = state.position;
+    final capturedPiece = beforeBotMove.board.pieceAt(move.to);
     final newPosition = beforeBotMove.play(move);
 
     _playMoveSound(move, newPosition, true);
@@ -366,6 +404,9 @@ class ChessController extends Notifier<GameState> {
       moveSquares: [move.from, move.to],
       status: _statusFor(newPosition),
       isBotThinking: false,
+      lastMove: move,
+      capturedPiece: capturedPiece,
+      wasUndo: false,
     );
 
     if (state.status != GameStatus.playing) {

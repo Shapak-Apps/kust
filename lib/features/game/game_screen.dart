@@ -7,6 +7,7 @@ import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 const double kBoardMaxWidth = 480;
 
@@ -86,8 +87,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
+                context.go('/play');
               },
               child: const Text('Back to lobby'),
             ),
