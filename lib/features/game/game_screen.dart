@@ -5,6 +5,8 @@ import 'package:Kust/features/game/chess/board/chess_board.dart';
 import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 const double kBoardMaxWidth = 480;
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -23,6 +25,50 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(chessControllerProvider.notifier).startGame(widget.bot);
     });
+  }
+
+  void _showGameStartModal(dynamic playerSide) {
+    final isWhite = playerSide.toString().toLowerCase().contains('white');
+    final pieceAsset = isWhite
+        ? 'assets/pieces/wK.svg'
+        : 'assets/pieces/bK.svg';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (dialogContext.mounted && Navigator.canPop(dialogContext)) {
+            Navigator.of(dialogContext).pop();
+          }
+        });
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(pieceAsset, width: 64, height: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Game Start',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You play as ${isWhite ? "White" : "Black"}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showResultDialog(String title, String message) {
@@ -62,6 +108,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (previous?.status == next.status) return;
 
       switch (next.status) {
+        case GameStatus.playing:
+          _showGameStartModal(next.playerSide);
         case GameStatus.checkmate:
           final winner = next.position.turn == next.playerSide
               ? widget.bot.name
@@ -71,7 +119,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _showResultDialog('Draw', 'The game ended in a draw.');
         case GameStatus.resigned:
           _showResultDialog('Game over', 'You resigned.');
-        case GameStatus.playing:
         case GameStatus.loading:
           break;
       }
