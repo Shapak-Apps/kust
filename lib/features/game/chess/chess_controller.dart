@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:audioplayers/audioplayers.dart';
+
 import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
@@ -85,10 +89,14 @@ class GameState {
 class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _currentSkill = 0;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   GameState build() {
-    ref.onDispose(_engine.stopThinking);
+    ref.onDispose(() {
+      _engine.stopThinking();
+      _audioPlayer.dispose();
+    });
 
     return GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
@@ -98,6 +106,49 @@ class ChessController extends Notifier<GameState> {
   }
 
   ChessEngine get _engine => ref.read(chessEngineProvider);
+
+  void _playSound(String asset) {
+    _audioPlayer.play(AssetSource('sounds/$asset'));
+  }
+
+  void _playMoveSound(NormalMove move, Position newPos, bool isBot) {
+    String sound;
+
+    final isCastling =
+        (move.from == Square.e1 || move.from == Square.e8) &&
+        (move.to == Square.h1 ||
+            move.to == Square.a1 ||
+            move.to == Square.h8 ||
+            move.to == Square.a8);
+
+    if (isCastling) {
+      sound = 'castle.mp3';
+    } else if (move.promotion != null) {
+      sound = 'promote.mp3';
+    } else if (state.position.board.pieceAt(move.to) != null) {
+      sound = 'capture.mp3';
+    } else {
+      sound = isBot ? 'move-opponent.mp3' : 'move.mp3';
+    }
+
+    _playSound(sound);
+
+    if (newPos.isCheck) {
+      _playSound('check.mp3');
+    }
+  }
+
+  void _playGameEndSound(Position position) {
+    if (position.isCheckmate) {
+      if (position.turn == state.playerSide) {
+        _playSound('game-end.mp3');
+      } else {
+        _playSound('game-win.mp3');
+      }
+    } else {
+      _playSound('game-draw.mp3');
+    }
+  }
 
   Future<void> startGame(Bot bot, {Side playerSide = Side.white}) async {
     _moveRequestId++;
@@ -113,6 +164,7 @@ class ChessController extends Notifier<GameState> {
     _engine.setSkillLevel(_currentSkill);
 
     state = state.copyWith(status: GameStatus.playing);
+    _playSound('game-start.mp3');
 
     if (state.position.turn != playerSide) {
       _requestBotMove();
@@ -160,6 +212,7 @@ class ChessController extends Notifier<GameState> {
     _moveRequestId++;
     _engine.stopThinking();
     state = state.copyWith(status: GameStatus.resigned, isBotThinking: false);
+    _playSound('game-end.mp3');
   }
 
   void undoLastMove() {
@@ -214,35 +267,69 @@ class ChessController extends Notifier<GameState> {
 
   Set<Square> _displayDestinationsFrom(Square square) {
     final piece = state.position.board.pieceAt(square);
-    final raw = state.position.legalMovesOf(square).squares.toSet();
+    if (piece == null) return {};
 
-    if (piece?.role != Role.king) return raw;
-    return raw.map(_castlingDisplaySquare).toSet();
+    final rawDestinations = state.position.legalMovesOf(square).squares.toSet();
+    final displaySquares = <Square>{};
+
+    for (final dest in rawDestinations) {
+      final isCastling =
+          piece.role == Role.king &&
+          (square == Square.e1 || square == Square.e8) &&
+          (dest == Square.h1 ||
+              dest == Square.a1 ||
+              dest == Square.h8 ||
+              dest == Square.a8);
+
+      if (isCastling) {
+        displaySquares.add(_castlingDisplaySquare(dest));
+      } else {
+        displaySquares.add(dest);
+      }
+    }
+    return displaySquares;
   }
 
   void _playPlayerMove(Square from, Square to) {
-    final target = _castlingMoveTarget(from, to);
-    final promotion = _isPromotion(from, to) ? Role.queen : null;
+    Square target = to;
+    final piece = state.position.board.pieceAt(from);
+
+    if (piece?.role == Role.king) {
+      if (to == Square.g1)
+        target = Square.h1;
+      else if (to == Square.c1)
+        target = Square.a1;
+      else if (to == Square.g8)
+        target = Square.h8;
+      else if (to == Square.c8)
+        target = Square.a8;
+    }
+
+    final promotion = _isPromotion(from, target) ? Role.queen : null;
     final move = NormalMove(from: from, to: target, promotion: promotion);
 
     if (!state.position.isLegal(move)) {
+      _playSound('illegal.mp3');
       state = state.copyWith(clearSelection: true);
       return;
     }
 
     final newPosition = state.position.play(move);
+    _playMoveSound(move, newPosition, false);
 
     state = state.copyWith(
       position: newPosition,
       history: [...state.history, state.position],
       clearSelection: true,
-      moveSquares: [from, to],
+      moveSquares: [move.from, move.to],
       hintSquares: const {},
       status: _statusFor(newPosition),
     );
 
     if (state.status == GameStatus.playing) {
       _requestBotMove();
+    } else {
+      _playGameEndSound(newPosition);
     }
   }
 
@@ -271,16 +358,22 @@ class ChessController extends Notifier<GameState> {
     final beforeBotMove = state.position;
     final newPosition = beforeBotMove.play(move);
 
+    _playMoveSound(move, newPosition, true);
+
     state = state.copyWith(
       position: newPosition,
       history: [...state.history, beforeBotMove],
-      moveSquares: move.squares.toList(),
+      moveSquares: [move.from, move.to],
       status: _statusFor(newPosition),
       isBotThinking: false,
     );
+
+    if (state.status != GameStatus.playing) {
+      _playGameEndSound(newPosition);
+    }
   }
 
-  Move _parseUciMove(String uci) {
+  NormalMove _parseUciMove(String uci) {
     final from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
     final to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
     final promotion = uci.length > 4 ? _roleFromChar(uci[4]) : null;
@@ -308,17 +401,6 @@ class ChessController extends Notifier<GameState> {
 
     final rank = rankOf(to);
     return rank == 0 || rank == 7;
-  }
-
-  Square _castlingMoveTarget(Square from, Square to) {
-    final piece = state.position.board.pieceAt(from);
-    if (piece?.role != Role.king) return to;
-
-    if (to == Square.g1) return Square.h1;
-    if (to == Square.c1) return Square.a1;
-    if (to == Square.g8) return Square.h8;
-    if (to == Square.c8) return Square.a8;
-    return to;
   }
 
   Square _castlingDisplaySquare(Square target) {

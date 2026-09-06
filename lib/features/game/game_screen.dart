@@ -1,3 +1,4 @@
+import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,9 +11,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 const double kBoardMaxWidth = 480;
 
 class GameScreen extends ConsumerStatefulWidget {
-  const GameScreen({super.key, required this.bot});
+  const GameScreen({super.key, required this.bot, required this.playerSide});
 
   final Bot bot;
+  final Side playerSide;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -23,7 +25,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(chessControllerProvider.notifier).startGame(widget.bot);
+      ref
+          .read(chessControllerProvider.notifier)
+          .startGame(widget.bot, playerSide: widget.playerSide);
     });
   }
 
@@ -92,7 +96,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 Navigator.of(context).pop();
                 ref
                     .read(chessControllerProvider.notifier)
-                    .startGame(widget.bot);
+                    .startGame(widget.bot, playerSide: widget.playerSide);
               },
               child: const Text('Rematch'),
             ),

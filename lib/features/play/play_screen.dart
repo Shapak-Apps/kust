@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:Kust/features/game/game_args.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
 
@@ -120,11 +121,14 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
-  void _openOpponentPicker() {
+  void _startGame() {
     PickOpponentModal.show(
       context,
-      onPlay: (bot) {
-        context.push('/game', extra: bot);
+      onPlay: (bot, side) {
+        context.go(
+          '/game',
+          extra: GameArgs(bot: bot, playerSide: side),
+        );
       },
     );
   }
@@ -154,7 +158,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   SizedBox(
                     width: 120,
                     child: TextButton(
-                      onPressed: _openOpponentPicker,
+                      onPressed: _startGame,
                       style: ButtonStyle(
                         minimumSize: WidgetStateProperty.all(
                           const Size(double.infinity, 50),

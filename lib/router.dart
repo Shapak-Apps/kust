@@ -2,7 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Kust/features/onboarding/onboarding_screen.dart';
 import 'package:Kust/features/game/game_screen.dart';
-import 'package:Kust/features/play/pick_opponent_modal.dart';
+import 'package:Kust/features/game/game_args.dart';
 import 'package:Kust/features/play/play_screen.dart';
 import 'package:Kust/features/puzzles/puzzles_screen.dart';
 import 'package:Kust/widgets/app_shell.dart';
@@ -19,7 +19,13 @@ GoRouter createRouter({required bool onboardingCompleted}) {
 
       GoRoute(
         path: '/game',
-        builder: (context, state) => GameScreen(bot: state.extra as Bot),
+        builder: (context, state) {
+          final args = state.extra as GameArgs;
+          return GameScreen(
+            bot: args.bot, 
+            playerSide: args.playerSide,
+          );
+        },
       ),
 
       ShellRoute(

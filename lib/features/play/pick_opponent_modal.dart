@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
 class Bot {
@@ -11,11 +14,11 @@ class Bot {
 class PickOpponentModal extends StatefulWidget {
   const PickOpponentModal({super.key, required this.onPlay});
 
-  final void Function(Bot bot) onPlay;
+  final void Function(Bot bot, Side side) onPlay;
 
   static Future<void> show(
     BuildContext context, {
-    required void Function(Bot bot) onPlay,
+    required void Function(Bot bot, Side side) onPlay,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -40,6 +43,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   ];
 
   int? selectedIndex;
+  Side? selectedSide;
 
   @override
   Widget build(BuildContext context) {
@@ -119,13 +123,9 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 4),
-
                         Text(bot.name, style: theme.textTheme.titleLarge),
-
                         const SizedBox(height: 2),
-
                         Text(
                           '${bot.elo} Elo',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -134,13 +134,41 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 12),
                       ],
                     ),
                   ),
                 );
               },
+            ),
+
+            const SizedBox(height: 24),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Play as', style: theme.textTheme.titleMedium),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _SideChoiceChip(
+                  label: 'White',
+                  isSelected: selectedSide == Side.white,
+                  onTap: () => setState(() => selectedSide = Side.white),
+                ),
+                const SizedBox(width: 8),
+                _SideChoiceChip(
+                  label: 'Black',
+                  isSelected: selectedSide == Side.black,
+                  onTap: () => setState(() => selectedSide = Side.black),
+                ),
+                const SizedBox(width: 8),
+                _SideChoiceChip(
+                  label: 'Random',
+                  isSelected: selectedSide == null,
+                  onTap: () => setState(() => selectedSide = null),
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),
@@ -153,9 +181,12 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                     ? null
                     : () {
                         final bot = bots[selectedIndex!];
+                        final side =
+                            selectedSide ??
+                            (Random().nextBool() ? Side.white : Side.black);
 
                         Navigator.of(context).pop();
-                        widget.onPlay(bot);
+                        widget.onPlay(bot, side);
                       },
                 child: const Text(
                   'Play',
@@ -164,6 +195,54 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SideChoiceChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SideChoiceChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: isSelected
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surface,
+            border: Border.all(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outlineVariant,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isSelected
+                  ? theme.colorScheme.onPrimaryContainer
+                  : theme.colorScheme.onSurface,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );
