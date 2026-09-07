@@ -8,12 +8,14 @@ import 'package:dartchess/dartchess.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
+import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/chess/chess_helpers.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 int skillLevelForElo(int elo) {
-  const minElo = 600;
+  const minElo = 800;
   const maxElo = 1400;
 
   final t = ((elo - minElo) / (maxElo - minElo)).clamp(0.0, 1.0);
@@ -32,6 +34,7 @@ class GameState {
     this.moveSquares = const [],
     this.hintSquares = const {},
     this.history = const [],
+    this.moves = const [],
     this.status = GameStatus.loading,
     this.isBotThinking = false,
     this.isHintThinking = false,
@@ -50,6 +53,7 @@ class GameState {
   final List<Square> moveSquares;
   final Set<Square> hintSquares;
   final List<Position> history;
+  final List<MoveRecord> moves;
   final GameStatus status;
   final bool isBotThinking;
   final bool isHintThinking;
@@ -82,6 +86,7 @@ class GameState {
     List<Square>? moveSquares,
     Set<Square>? hintSquares,
     List<Position>? history,
+    List<MoveRecord>? moves,
     GameStatus? status,
     bool? isBotThinking,
     bool? isHintThinking,
@@ -106,6 +111,7 @@ class GameState {
       moveSquares: moveSquares ?? this.moveSquares,
       hintSquares: hintSquares ?? this.hintSquares,
       history: history ?? this.history,
+      moves: moves ?? this.moves,
       status: status ?? this.status,
       isBotThinking: isBotThinking ?? this.isBotThinking,
       isHintThinking: isHintThinking ?? this.isHintThinking,
@@ -167,7 +173,11 @@ class ChessController extends Notifier<GameState> {
         (move.to == Square.h1 ||
             move.to == Square.a1 ||
             move.to == Square.h8 ||
-            move.to == Square.a8);
+            move.to == Square.a8 ||
+            move.to == Square.g1 ||
+            move.to == Square.c1 ||
+            move.to == Square.g8 ||
+            move.to == Square.c8);
 
     if (isCastling) return null;
 
@@ -195,7 +205,11 @@ class ChessController extends Notifier<GameState> {
         (move.to == Square.h1 ||
             move.to == Square.a1 ||
             move.to == Square.h8 ||
-            move.to == Square.a8);
+            move.to == Square.a8 ||
+            move.to == Square.g1 ||
+            move.to == Square.c1 ||
+            move.to == Square.g8 ||
+            move.to == Square.c8);
 
     final capturedSquare = _capturedSquareFor(oldPos, move);
     final isCapture = capturedSquare != null;
@@ -237,6 +251,7 @@ class ChessController extends Notifier<GameState> {
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
       bot: bot,
       playerSide: playerSide,
+      moves: const [],
     );
 
     await _engine.start();
@@ -309,10 +324,18 @@ class ChessController extends Notifier<GameState> {
     if (state.isBotThinking) _engine.stopThinking();
 
     final newHistory = List<Position>.from(state.history);
+    final newMoves = List<MoveRecord>.from(state.moves);
+
     var restored = newHistory.removeLast();
 
     if (newHistory.isNotEmpty && restored.turn != state.playerSide) {
       restored = newHistory.removeLast();
+    }
+
+    final removedMoves = state.history.length - newHistory.length;
+
+    if (removedMoves > 0 && newMoves.length >= removedMoves) {
+      newMoves.removeRange(newMoves.length - removedMoves, newMoves.length);
     }
 
     final beforeLastMove = state.history.isNotEmpty ? state.history.last : null;
@@ -348,6 +371,7 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(
       position: restored,
       history: newHistory,
+      moves: newMoves,
       clearSelection: true,
       moveSquares: const [],
       hintSquares: const {},
@@ -446,6 +470,23 @@ class ChessController extends Notifier<GameState> {
         ? null
         : oldPosition.board.pieceAt(capturedSquare);
 
+    final san = moveToSan(
+      before: oldPosition,
+      move: move,
+      after: newPosition,
+      capturedSquare: capturedSquare,
+    );
+
+    final updatedMoves = [
+      ...state.moves,
+      MoveRecord(
+        side: oldPosition.turn,
+        san: san,
+        move: move,
+        capturedPiece: capturedPiece,
+      ),
+    ];
+
     _playMoveSound(move, oldPosition, newPosition, false);
 
     final gameStatus = _statusFor(newPosition, updatedHistory);
@@ -454,6 +495,7 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(
       position: newPosition,
       history: updatedHistory,
+      moves: updatedMoves,
       clearSelection: true,
       moveSquares: [move.from, move.to],
       hintSquares: const {},
@@ -506,6 +548,23 @@ class ChessController extends Notifier<GameState> {
         ? null
         : beforeBotMove.board.pieceAt(capturedSquare);
 
+    final san = moveToSan(
+      before: beforeBotMove,
+      move: move,
+      after: newPosition,
+      capturedSquare: capturedSquare,
+    );
+
+    final updatedMoves = [
+      ...state.moves,
+      MoveRecord(
+        side: beforeBotMove.turn,
+        san: san,
+        move: move,
+        capturedPiece: capturedPiece,
+      ),
+    ];
+
     _playMoveSound(move, beforeBotMove, newPosition, true);
 
     final gameStatus = _statusFor(newPosition, updatedHistory);
@@ -514,6 +573,7 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(
       position: newPosition,
       history: updatedHistory,
+      moves: updatedMoves,
       moveSquares: [move.from, move.to],
       status: gameStatus,
       isBotThinking: false,
@@ -531,9 +591,21 @@ class ChessController extends Notifier<GameState> {
   }
 
   NormalMove _parseUciMove(String uci) {
-    final from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
-    final to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
+    var from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
+    var to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
+
     final promotion = uci.length > 4 ? _roleFromChar(uci[4]) : null;
+
+    if (from == Square.e1 && to == Square.g1) {
+      to = Square.h1;
+    } else if (from == Square.e1 && to == Square.c1) {
+      to = Square.a1;
+    } else if (from == Square.e8 && to == Square.g8) {
+      to = Square.h8;
+    } else if (from == Square.e8 && to == Square.c8) {
+      to = Square.a8;
+    }
+
     return NormalMove(from: from, to: to, promotion: promotion);
   }
 
