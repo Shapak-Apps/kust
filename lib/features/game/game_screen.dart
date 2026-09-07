@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Kust/features/game/chess/board/chess_board.dart';
 import 'package:Kust/features/game/chess/chess_controller.dart';
@@ -9,9 +12,8 @@ import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
-
 const double kBoardMaxWidth = 480;
+const double kPlayerBarHeight = 56;
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key, required this.bot, required this.playerSide});
@@ -29,7 +31,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(chessControllerProvider.notifier)
@@ -150,13 +151,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             ? widget.bot.name
             : 'You';
         _showResultDialog('Checkmate', '$winner won the game.');
+        break;
       case GameStatus.draw:
         _showResultDialog(
           'Draw',
           state.endReason ?? 'The game ended in a draw.',
         );
+        break;
       case GameStatus.resigned:
         _showResultDialog('Game over', 'You resigned.');
+        break;
       case GameStatus.playing:
       case GameStatus.loading:
         break;
@@ -165,25 +169,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(chessControllerProvider, (previous, next) {
+    ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous?.status == next.status) return;
 
       switch (next.status) {
         case GameStatus.playing:
           _hasDismissedResultDialog = false;
           _showGameStartModal(next.playerSide);
+          break;
         case GameStatus.checkmate:
           final winner = next.position.turn == next.playerSide
               ? widget.bot.name
               : 'You';
           _showResultDialog('Checkmate', '$winner won the game.');
+          break;
         case GameStatus.draw:
           _showResultDialog(
             'Draw',
             next.endReason ?? 'The game ended in a draw.',
           );
+          break;
         case GameStatus.resigned:
           _showResultDialog('Game over', 'You resigned.');
+          break;
         case GameStatus.loading:
           break;
       }
@@ -206,14 +214,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               onPressed: _confirmResign,
               icon: const Icon(Icons.flag_rounded),
             ),
-
           if (isFinished && !_hasDismissedResultDialog)
             IconButton(
               tooltip: 'Show result',
               onPressed: () => _showEndDialogForState(gameState),
               icon: const Icon(Icons.info_outline_rounded),
             ),
-
           if (isFinished && _hasDismissedResultDialog)
             IconButton(
               tooltip: 'Back to lobby',
@@ -225,44 +231,59 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _PlayerBar(
-                side: oppositeSide(widget.playerSide),
-                name: widget.bot.name,
-                subtitle: '${widget.bot.elo} Elo',
-                position: gameState.position,
-                moves: gameState.moves,
-                isThinking: gameState.isBotThinking,
-                thinkingText: '${widget.bot.name} is thinking',
-              ),
-            ),
+            _MoveHistoryBar(moves: gameState.moves),
             Expanded(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: kBoardMaxWidth),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: gameState.status == GameStatus.loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : const ChessBoard(),
-                  ),
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableHeight =
+                      constraints.maxHeight - (2 * kPlayerBarHeight) - 16;
+                  final maxSide = math.min(
+                    constraints.maxWidth,
+                    availableHeight,
+                  );
+                  final side = math.max(0.0, math.min(maxSide, kBoardMaxWidth));
+
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: SizedBox(
+                        width: side,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _PlayerBar(
+                              side: oppositeSide(widget.playerSide),
+                              name: widget.bot.name,
+                              subtitle: '${widget.bot.elo} Elo',
+                              avatarPath: widget.bot.imagePath,
+                              position: gameState.position,
+                              moves: gameState.moves,
+                              isThinking: gameState.isBotThinking,
+                              thinkingText: 'thinking',
+                            ),
+                            SizedBox(
+                              width: side,
+                              height: side,
+                              child: gameState.status == GameStatus.loading
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : const ChessBoard(),
+                            ),
+                            _PlayerBar(
+                              side: widget.playerSide,
+                              name: 'You',
+                              position: gameState.position,
+                              moves: gameState.moves,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: _PlayerBar(
-                side: widget.playerSide,
-                name: 'You',
-                subtitle: 'Player',
-                position: gameState.position,
-                moves: gameState.moves,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: _MoveHistoryBar(moves: gameState.moves),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -314,6 +335,7 @@ class _PlayerBar extends StatelessWidget {
     required this.position,
     required this.moves,
     this.subtitle,
+    this.avatarPath,
     this.isThinking = false,
     this.thinkingText,
   });
@@ -323,209 +345,260 @@ class _PlayerBar extends StatelessWidget {
   final Position position;
   final List<MoveRecord> moves;
   final String? subtitle;
+  final String? avatarPath;
   final bool isThinking;
   final String? thinkingText;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
 
     final captured = piecesCapturedBy(side, moves);
     final advantage = boardMaterialAdvantageFor(position, side);
 
-    return Row(
-      children: [
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (subtitle != null && subtitle!.isNotEmpty)
-                Text(
-                  subtitle!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall,
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-
-        if (isThinking) ...[
-          const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          const SizedBox(width: 8),
-          if (thinkingText != null)
-            Flexible(
-              child: Text(
-                thinkingText!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
-          const SizedBox(width: 8),
-        ],
-
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            reverse: true,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+    return SizedBox(
+      height: kPlayerBarHeight,
+      child: Row(
+        children: [
+          Padding(padding: const EdgeInsets.all(4), child: _buildAvatar(theme)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                for (final piece in captured)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 2),
-                    child: SvgPicture.asset(
-                      assetForPiece(piece),
-                      width: 18,
-                      height: 18,
-                    ),
-                  ),
-
-                if (advantage > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '+$advantage',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onPrimaryContainer,
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                        ),
+                      ),
+                    ],
+                    if (isThinking) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      if (thinkingText != null) ...[
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            thinkingText!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: muted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    for (final piece in captured)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 1),
+                        child: SvgPicture.asset(
+                          assetForPiece(piece),
+                          width: 16,
+                          height: 16,
+                        ),
+                      ),
+                    if (captured.isNotEmpty && advantage > 0)
+                      const SizedBox(width: 5),
+                    if (advantage > 0)
+                      Text(
+                        '+$advantage',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: muted,
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
-}
 
-class _MoveHistoryBar extends StatelessWidget {
-  const _MoveHistoryBar({required this.moves});
-
-  final List<MoveRecord> moves;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (moves.isEmpty) {
-      return SizedBox(
-        height: 40,
-        child: Center(
-          child: Text('No moves yet', style: theme.textTheme.bodySmall),
+  Widget _buildAvatar(ThemeData theme) {
+    if (avatarPath != null && avatarPath!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          avatarPath!,
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
         ),
       );
     }
 
-    final labels = _pairLabels(moves);
-
-    return GestureDetector(
-      onTap: () => _showMoveHistoryDialog(context, moves),
-      child: SizedBox(
-        height: 44,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          itemCount: labels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: Text(
-                labels[index],
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            );
-          },
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.person_rounded,
+          size: 24,
+          color: theme.colorScheme.onSecondaryContainer,
         ),
       ),
     );
   }
 }
 
-List<String> _pairLabels(List<MoveRecord> moves) {
-  final labels = <String>[];
+class _MoveHistoryBar extends StatefulWidget {
+  const _MoveHistoryBar({required this.moves});
 
-  var index = 0;
-  var moveNumber = 1;
+  final List<MoveRecord> moves;
 
-  if (moves.isNotEmpty && moves.first.side == Side.black) {
-    labels.add('$moveNumber... ${moves.first.san}');
-    index = 1;
-    moveNumber = 2;
-  }
-
-  for (; index < moves.length; index += 2) {
-    final white = moves[index].san;
-    final black = index + 1 < moves.length ? moves[index + 1].san : '';
-
-    labels.add('$moveNumber. $white${black.isEmpty ? '' : ' $black'}');
-
-    moveNumber++;
-  }
-
-  return labels;
+  @override
+  State<_MoveHistoryBar> createState() => _MoveHistoryBarState();
 }
 
-void _showMoveHistoryDialog(BuildContext context, List<MoveRecord> moves) {
-  final theme = Theme.of(context);
-  final labels = _pairLabels(moves);
+class _MoveHistoryBarState extends State<_MoveHistoryBar> {
+  final ScrollController _controller = ScrollController();
 
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      return AlertDialog(
-        title: const Text('Move history'),
-        content: SingleChildScrollView(
-          child: Text(
-            labels.join('\n'),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontFamily: 'monospace',
-              height: 1.4,
-            ),
-          ),
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
+  }
+
+  @override
+  void didUpdateWidget(covariant _MoveHistoryBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.moves.length != widget.moves.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _jumpToEnd() {
+    if (!mounted || !_controller.hasClients) return;
+    if (_controller.position.maxScrollExtent > 0) {
+      _controller.jumpTo(_controller.position.maxScrollExtent);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final normalStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+    final highlightStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: theme.colorScheme.primary,
+    );
+
+    // if (widget.moves.isEmpty) {
+    //   return SizedBox(
+    //     height: 40,
+    //     child: Center(
+    //       child: Text(
+    //         'No moves yet',
+    //         style: theme.textTheme.bodySmall?.copyWith(
+    //           color: theme.colorScheme.onSurfaceVariant,
+    //         ),
+    //       ),
+    //     ),
+    //   );
+    // }
+
+    final children = <Widget>[const SizedBox(width: 16)];
+    int index = 0;
+    int number = 1;
+
+    if (widget.moves.first.side == Side.black) {
+      children.add(Text('$number...', style: mutedStyle));
+      children.add(const SizedBox(width: 5));
+      children.add(
+        Text(
+          widget.moves.first.san,
+          style: widget.moves.length == 1 ? highlightStyle : normalStyle,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       );
-    },
-  );
+      children.add(const SizedBox(width: 14));
+      index = 1;
+      number = 2;
+    }
+
+    for (; index < widget.moves.length; index += 2) {
+      children.add(Text('$number.', style: mutedStyle));
+      children.add(const SizedBox(width: 5));
+
+      final isWhiteLast = index == widget.moves.length - 1;
+      children.add(
+        Text(
+          widget.moves[index].san,
+          style: isWhiteLast ? highlightStyle : normalStyle,
+        ),
+      );
+
+      if (index + 1 < widget.moves.length) {
+        children.add(const SizedBox(width: 6));
+        final isBlackLast = (index + 1) == widget.moves.length - 1;
+        children.add(
+          Text(
+            widget.moves[index + 1].san,
+            style: isBlackLast ? highlightStyle : normalStyle,
+          ),
+        );
+      }
+
+      children.add(const SizedBox(width: 14));
+      number++;
+    }
+
+    children.add(const SizedBox(width: 16));
+
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        controller: _controller,
+        scrollDirection: Axis.horizontal,
+        children: children,
+      ),
+    );
+  }
 }
