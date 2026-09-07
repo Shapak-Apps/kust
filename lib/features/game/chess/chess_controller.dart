@@ -13,7 +13,7 @@ const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 int skillLevelForElo(int elo) {
-  const minElo = 800;
+  const minElo = 600;
   const maxElo = 1400;
 
   final t = ((elo - minElo) / (maxElo - minElo)).clamp(0.0, 1.0);
