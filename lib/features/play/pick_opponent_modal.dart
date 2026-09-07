@@ -36,6 +36,8 @@ class PickOpponentModal extends StatefulWidget {
 
 class _PickOpponentModalState extends State<PickOpponentModal> {
   final List<Bot> bots = const [
+    Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
+    Bot(name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
     Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
     Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
     Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
@@ -84,10 +86,10 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: bots.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.9,
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.75,
               ),
               itemBuilder: (context, index) {
                 final bot = bots[index];
@@ -116,7 +118,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                       children: [
                         Expanded(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                             child: Image.asset(
                               bot.imagePath,
                               fit: BoxFit.contain,
@@ -124,17 +126,22 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(bot.name, style: theme.textTheme.titleLarge),
+                        Text(
+                          bot.name,
+                          style: theme.textTheme.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           '${bot.elo} Elo',
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.6,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),

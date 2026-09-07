@@ -22,6 +22,8 @@ class GameScreen extends ConsumerStatefulWidget {
 }
 
 class _GameScreenState extends ConsumerState<GameScreen> {
+  bool _hasDismissedResultDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -130,7 +132,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           ],
         );
       },
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _hasDismissedResultDialog = true;
+        });
+      }
+    });
   }
 
   void _showEndDialogForState(GameState state) {
@@ -160,6 +168,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
       switch (next.status) {
         case GameStatus.playing:
+          _hasDismissedResultDialog = false;
           _showGameStartModal(next.playerSide);
         case GameStatus.checkmate:
           final winner = next.position.turn == next.playerSide
@@ -197,11 +206,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               icon: const Icon(Icons.flag_rounded),
             ),
 
-          if (isFinished)
+          if (isFinished && !_hasDismissedResultDialog)
             IconButton(
               tooltip: 'Show result',
               onPressed: () => _showEndDialogForState(gameState),
               icon: const Icon(Icons.info_outline_rounded),
+            ),
+
+          if (isFinished && _hasDismissedResultDialog)
+            IconButton(
+              tooltip: 'Back to lobby',
+              onPressed: () => context.go('/play'),
+              icon: const Icon(Icons.arrow_back_rounded),
             ),
         ],
       ),

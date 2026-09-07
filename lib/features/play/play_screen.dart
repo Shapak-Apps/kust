@@ -11,10 +11,12 @@ import 'package:Kust/features/game/game_args.dart';
 const Color kAccentColor = Color(0xFFFFBB00);
 
 const List<Bot> _challengeBots = [
-  Bot(name: 'Jax', elo: 800, imagePath: 'assets/bots/Jax.png'),
+  Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
+  Bot(name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
+  Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
   Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
   Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-  Bot(name: 'Teses', elo: 1400, imagePath: 'assets/bots/Teses.png'),
+  Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
 ];
 
 class PlayScreen extends StatefulWidget {
@@ -162,8 +164,6 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       appBar: MyAppBar(),
       body: Padding(
@@ -237,20 +237,23 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
               const SizedBox(height: 12),
 
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final bot in _challengeBots)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: _BotChallengeCard(
-                          bot: bot,
-                          onTap: () => _startGameWithBot(bot),
-                        ),
-                      ),
-                    ),
-                ],
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _challengeBots.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.975,
+                ),
+                itemBuilder: (context, index) {
+                  final bot = _challengeBots[index];
+                  return _BotChallengeCard(
+                    bot: bot,
+                    onTap: () => _startGameWithBot(bot),
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -276,7 +279,7 @@ class _BotChallengeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           color: theme.colorScheme.surface,
@@ -284,23 +287,26 @@ class _BotChallengeCard extends StatelessWidget {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
                 bot.imagePath,
-                height: 52,
-                width: 52,
+                height: 53,
+                width: 53,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             Text(
               bot.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontSize: (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
+              ),
             ),
             const SizedBox(height: 2),
 
@@ -309,6 +315,7 @@ class _BotChallengeCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) * 1.10,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
