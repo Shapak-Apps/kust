@@ -1,7 +1,7 @@
 name: Kust
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: ^3.13.1
@@ -63,3 +63,5 @@ flutter:
     - assets/images/
     - assets/pieces/
     - assets/sounds/
+    - assets/nnue/nn-c288c895ea92.nnue
+    - assets/nnue/nn-37f18f62d772.nnue

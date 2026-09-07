@@ -141,7 +141,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             : 'You';
         _showResultDialog('Checkmate', '$winner won the game.');
       case GameStatus.draw:
-        _showResultDialog('Draw', 'The game ended in a draw.');
+        _showResultDialog(
+          'Draw',
+          state.endReason ?? 'The game ended in a draw.',
+        );
       case GameStatus.resigned:
         _showResultDialog('Game over', 'You resigned.');
       case GameStatus.playing:
@@ -164,7 +167,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               : 'You';
           _showResultDialog('Checkmate', '$winner won the game.');
         case GameStatus.draw:
-          _showResultDialog('Draw', 'The game ended in a draw.');
+          _showResultDialog(
+            'Draw',
+            next.endReason ?? 'The game ended in a draw.',
+          );
         case GameStatus.resigned:
           _showResultDialog('Game over', 'You resigned.');
         case GameStatus.loading:

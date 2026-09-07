@@ -1,7 +1,22 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
+
+const _nnueBig = 'nn-c288c895ea92.nnue';
+const _nnueSmall = 'nn-37f18f62d772.nnue';
+
+Future<String> _extractNnue(String assetName, String dirPath) async {
+  final file = File('$dirPath/$assetName');
+  if (!await file.exists()) {
+    final bytes = await rootBundle.load('assets/nnue/$assetName');
+    await file.writeAsBytes(bytes.buffer.asUint8List());
+  }
+  return file.path;
+}
 
 class ChessEngine {
   ChessEngine._();
@@ -23,6 +38,11 @@ class ChessEngine {
   }
 
   Future<void> _start() async {
+    final dir = await getApplicationSupportDirectory();
+    final bigPath = await _extractNnue(_nnueBig, dir.path);
+    final smallPath = await _extractNnue(_nnueSmall, dir.path);
+
+    Stockfish.setNnueDirectory(dir.path);
     _engine = await stockfishAsync();
 
     _stdoutSubscription = _engine!.stdout.listen((line) {
@@ -34,15 +54,24 @@ class ChessEngine {
     _send('uci');
     await _waitForLine((line) => line == 'uciok');
 
+    _send('setoption name EvalFile value $bigPath');
+    _send('setoption name EvalFileSmall value $smallPath');
     _send('isready');
     await _waitForLine((line) => line == 'readyok');
 
     _ready = true;
   }
 
-  void setSkillLevel(int level) {
-    final clamped = level.clamp(0, 20);
-    _send('setoption name Skill Level value $clamped');
+  void setSkillLevel(int level, {int? elo}) {
+    final clampedLevel = level.clamp(0, 20);
+    _send('setoption name Skill Level value $clampedLevel');
+
+    if (elo != null) {
+      _send('setoption name UCI_LimitStrength value true');
+      _send('setoption name UCI_Elo value ${elo.clamp(1300, 3100)}');
+    } else {
+      _send('setoption name UCI_LimitStrength value false');
+    }
   }
 
   Future<String> bestMoveForFen(
@@ -56,6 +85,23 @@ class ChessEngine {
 
     final line = await _waitForLine((line) => line.startsWith('bestmove '));
     return line.split(' ')[1];
+  }
+
+  Future<String> evaluateBestHint(
+    String fen, {
+    required int currentSkill,
+    required int currentElo,
+  }) async {
+    if (!_ready) await start();
+
+    setSkillLevel(20);
+    final move = await bestMoveForFen(
+      fen,
+      thinkTime: const Duration(milliseconds: 1500),
+    );
+    setSkillLevel(currentSkill, elo: currentElo);
+
+    return move;
   }
 
   void stopThinking() {

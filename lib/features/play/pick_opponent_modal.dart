@@ -36,10 +36,10 @@ class PickOpponentModal extends StatefulWidget {
 
 class _PickOpponentModalState extends State<PickOpponentModal> {
   final List<Bot> bots = const [
-    Bot(name: 'Jax', elo: 800, imagePath: 'assets/bots/Jax.png'),
+    Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
     Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
     Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-    Bot(name: 'Teses', elo: 1400, imagePath: 'assets/bots/Teses.png'),
+    Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
   ];
 
   int? selectedIndex;

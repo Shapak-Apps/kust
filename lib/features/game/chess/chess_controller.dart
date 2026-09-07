@@ -39,6 +39,7 @@ class GameState {
     this.capturedPiece,
     this.capturedSquare,
     this.wasUndo = false,
+    this.endReason,
   });
 
   final Position position;
@@ -57,6 +58,7 @@ class GameState {
   final Piece? capturedPiece;
   final Square? capturedSquare;
   final bool wasUndo;
+  final String? endReason;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing && position.turn == playerSide;
@@ -87,6 +89,7 @@ class GameState {
     Piece? capturedPiece,
     Square? capturedSquare,
     bool? wasUndo,
+    String? endReason,
     bool clearLastMove = false,
     bool clearCapture = false,
   }) {
@@ -114,6 +117,7 @@ class GameState {
           ? null
           : (capturedSquare ?? this.capturedSquare),
       wasUndo: wasUndo ?? this.wasUndo,
+      endReason: endReason ?? this.endReason,
     );
   }
 }
@@ -125,6 +129,8 @@ class ChessController extends Notifier<GameState> {
 
   @override
   GameState build() {
+    _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+
     ref.onDispose(() {
       _engine.stopThinking();
       _audioPlayer.dispose();
@@ -234,7 +240,7 @@ class ChessController extends Notifier<GameState> {
     );
 
     await _engine.start();
-    _engine.setSkillLevel(_currentSkill);
+    _engine.setSkillLevel(_currentSkill, elo: bot.elo);
 
     state = state.copyWith(status: GameStatus.playing);
     _playSound('game-start.mp3');
@@ -287,7 +293,11 @@ class ChessController extends Notifier<GameState> {
     _moveRequestId++;
     _engine.stopThinking();
 
-    state = state.copyWith(status: GameStatus.resigned, isBotThinking: false);
+    state = state.copyWith(
+      status: GameStatus.resigned,
+      isBotThinking: false,
+      endReason: 'You resigned.',
+    );
 
     _playSound('game-end.mp3');
   }
@@ -358,12 +368,11 @@ class ChessController extends Notifier<GameState> {
     final requestId = ++_moveRequestId;
     state = state.copyWith(isHintThinking: true);
 
-    _engine.setSkillLevel(20);
-    final uci = await _engine.bestMoveForFen(
+    final uci = await _engine.evaluateBestHint(
       state.position.fen,
-      thinkTime: const Duration(milliseconds: 500),
+      currentSkill: _currentSkill,
+      currentElo: state.bot.elo,
     );
-    _engine.setSkillLevel(_currentSkill);
 
     if (requestId != _moveRequestId) return;
 
@@ -409,14 +418,12 @@ class ChessController extends Notifier<GameState> {
     final piece = state.position.board.pieceAt(from);
 
     if (piece?.role == Role.king) {
-      if (to == Square.g1) {
-        target = Square.h1;
-      } else if (to == Square.c1) {
-        target = Square.a1;
-      } else if (to == Square.g8) {
-        target = Square.h8;
-      } else if (to == Square.c8) {
-        target = Square.a8;
+      if (from == Square.e1) {
+        if (to == Square.g1) target = Square.h1;
+        if (to == Square.c1) target = Square.a1;
+      } else if (from == Square.e8) {
+        if (to == Square.g8) target = Square.h8;
+        if (to == Square.c8) target = Square.a8;
       }
     }
 
@@ -432,6 +439,8 @@ class ChessController extends Notifier<GameState> {
     final oldPosition = state.position;
     final newPosition = oldPosition.play(move);
 
+    final updatedHistory = [...state.history, oldPosition];
+
     final capturedSquare = _capturedSquareFor(oldPosition, move);
     final capturedPiece = capturedSquare == null
         ? null
@@ -439,18 +448,22 @@ class ChessController extends Notifier<GameState> {
 
     _playMoveSound(move, oldPosition, newPosition, false);
 
+    final gameStatus = _statusFor(newPosition, updatedHistory);
+    final reason = _getEndReason(newPosition, updatedHistory, gameStatus);
+
     state = state.copyWith(
       position: newPosition,
-      history: [...state.history, oldPosition],
+      history: updatedHistory,
       clearSelection: true,
       moveSquares: [move.from, move.to],
       hintSquares: const {},
-      status: _statusFor(newPosition),
+      status: gameStatus,
       lastMove: move,
       capturedPiece: capturedPiece,
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
       wasUndo: false,
+      endReason: reason,
     );
 
     if (state.status == GameStatus.playing) {
@@ -486,6 +499,8 @@ class ChessController extends Notifier<GameState> {
     final beforeBotMove = state.position;
     final newPosition = beforeBotMove.play(move);
 
+    final updatedHistory = [...state.history, beforeBotMove];
+
     final capturedSquare = _capturedSquareFor(beforeBotMove, move);
     final capturedPiece = capturedSquare == null
         ? null
@@ -493,17 +508,21 @@ class ChessController extends Notifier<GameState> {
 
     _playMoveSound(move, beforeBotMove, newPosition, true);
 
+    final gameStatus = _statusFor(newPosition, updatedHistory);
+    final reason = _getEndReason(newPosition, updatedHistory, gameStatus);
+
     state = state.copyWith(
       position: newPosition,
-      history: [...state.history, beforeBotMove],
+      history: updatedHistory,
       moveSquares: [move.from, move.to],
-      status: _statusFor(newPosition),
+      status: gameStatus,
       isBotThinking: false,
       lastMove: move,
       capturedPiece: capturedPiece,
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
       wasUndo: false,
+      endReason: reason,
     );
 
     if (state.status != GameStatus.playing) {
@@ -549,11 +568,56 @@ class ChessController extends Notifier<GameState> {
     return target;
   }
 
-  GameStatus _statusFor(Position position) {
+  bool _isThreefoldRepetition(Position current, List<Position> history) {
+    int count = 1;
+    for (final pastPosition in history) {
+      if (pastPosition.fen == current.fen) {
+        count++;
+        if (count >= 3) return true;
+      }
+    }
+    return false;
+  }
+
+  GameStatus _statusFor(Position position, List<Position> history) {
     if (position.isCheckmate) return GameStatus.checkmate;
-    if (position.outcome != null) return GameStatus.draw;
-    if (position.isGameOver) return GameStatus.draw;
+    if (position.isStalemate ||
+        position.halfmoves >= 100 ||
+        position.isInsufficientMaterial ||
+        _isThreefoldRepetition(position, history) ||
+        position.isGameOver) {
+      return GameStatus.draw;
+    }
     return GameStatus.playing;
+  }
+
+  String? _getEndReason(
+    Position position,
+    List<Position> history,
+    GameStatus status,
+  ) {
+    if (status == GameStatus.checkmate) {
+      final winner = position.turn == state.playerSide ? state.bot.name : 'You';
+      return '$winner won by checkmate.';
+    }
+
+    if (status == GameStatus.draw) {
+      if (position.isStalemate) {
+        return 'Game drawn by stalemate.';
+      }
+      if (position.halfmoves >= 100) {
+        return 'Game drawn by 50-move rule.';
+      }
+      if (position.isInsufficientMaterial) {
+        return 'Game drawn due to insufficient material.';
+      }
+      if (_isThreefoldRepetition(position, history)) {
+        return 'Game drawn by threefold repetition.';
+      }
+      return 'The game ended in a draw.';
+    }
+
+    return null;
   }
 }
 

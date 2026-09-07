@@ -147,98 +147,102 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
 
-        return SizedBox(
-          width: side,
-          height: side,
-          child: Stack(
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final rank in ranks)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final file in files)
-                          _buildBoardSquare(squareAt(file, rank), gameState),
-                      ],
-                    ),
-                ],
-              ),
+        return AbsorbPointer(
+          absorbing:
+              gameState.isBotThinking || gameState.status != GameStatus.playing,
+          child: SizedBox(
+            width: side,
+            height: side,
+            child: Stack(
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final rank in ranks)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final file in files)
+                            _buildBoardSquare(squareAt(file, rank), gameState),
+                        ],
+                      ),
+                  ],
+                ),
 
-              if (_capPiece != null && _capSquare != null)
-                Positioned(
-                  left: _getSquareOffset(_capSquare!, _squareSize).dx,
-                  top: _getSquareOffset(_capSquare!, _squareSize).dy,
-                  width: _squareSize,
-                  height: _squareSize,
-                  child: IgnorePointer(
-                    child: AnimatedBuilder(
-                      animation: _captureController,
-                      builder: (context, child) {
-                        final opacity = gameState.wasUndo
-                            ? _captureController.value
-                            : 1.0 - _captureController.value;
+                if (_capPiece != null && _capSquare != null)
+                  Positioned(
+                    left: _getSquareOffset(_capSquare!, _squareSize).dx,
+                    top: _getSquareOffset(_capSquare!, _squareSize).dy,
+                    width: _squareSize,
+                    height: _squareSize,
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _captureController,
+                        builder: (context, child) {
+                          final opacity = gameState.wasUndo
+                              ? _captureController.value
+                              : 1.0 - _captureController.value;
 
-                        return Opacity(
-                          opacity: opacity.clamp(0.0, 1.0),
-                          child: child,
-                        );
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.all(_squareSize * 0.02),
-                        child: SvgPicture.asset(_assetForPiece(_capPiece!)),
+                          return Opacity(
+                            opacity: opacity.clamp(0.0, 1.0),
+                            child: child,
+                          );
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.all(_squareSize * 0.02),
+                          child: SvgPicture.asset(_assetForPiece(_capPiece!)),
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-              if (_animPiece != null && _animFrom != null && _animTo != null)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: AnimatedBuilder(
-                      animation: _moveController,
-                      builder: (context, child) {
-                        final fromOffset = _getSquareOffset(
-                          _animFrom!,
-                          _squareSize,
-                        );
-                        final toOffset = _getSquareOffset(
-                          _animTo!,
-                          _squareSize,
-                        );
+                if (_animPiece != null && _animFrom != null && _animTo != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _moveController,
+                        builder: (context, child) {
+                          final fromOffset = _getSquareOffset(
+                            _animFrom!,
+                            _squareSize,
+                          );
+                          final toOffset = _getSquareOffset(
+                            _animTo!,
+                            _squareSize,
+                          );
 
-                        final t = Curves.easeInOut.transform(
-                          _moveController.value,
-                        );
+                          final t = Curves.easeInOut.transform(
+                            _moveController.value,
+                          );
 
-                        final currentOffset = Offset.lerp(
-                          fromOffset,
-                          toOffset,
-                          t,
-                        )!;
+                          final currentOffset = Offset.lerp(
+                            fromOffset,
+                            toOffset,
+                            t,
+                          )!;
 
-                        return Transform.translate(
-                          offset: currentOffset,
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: SizedBox(
-                              width: _squareSize,
-                              height: _squareSize,
-                              child: Padding(
-                                padding: EdgeInsets.all(_squareSize * 0.02),
-                                child: SvgPicture.asset(
-                                  _assetForPiece(_animPiece!),
+                          return Transform.translate(
+                            offset: currentOffset,
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: SizedBox(
+                                width: _squareSize,
+                                height: _squareSize,
+                                child: Padding(
+                                  padding: EdgeInsets.all(_squareSize * 0.02),
+                                  child: SvgPicture.asset(
+                                    _assetForPiece(_animPiece!),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
