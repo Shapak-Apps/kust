@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/play/pick_side_modal.dart';
+import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:Kust/features/game/game_args.dart';
@@ -162,6 +163,13 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  void _startLocalGame() {
+    context.go(
+      '/game',
+      extra: const GameArgs(playerSide: Side.white, isLocal: true),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,6 +215,26 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 12),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: _startLocalGame,
+                  icon: const Icon(Icons.people_alt_rounded),
+                  label: const Text(
+                    'Pass & Play',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 16),

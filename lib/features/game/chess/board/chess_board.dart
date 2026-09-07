@@ -70,10 +70,25 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return target;
   }
 
+  Widget _buildRotatedPiece(Piece piece, GameState gameState) {
+    Widget svg = SvgPicture.asset(_assetForPiece(piece));
+
+    if (gameState.mode == GameMode.local) {
+      if (gameState.position.turn == Side.black) {
+        return RotatedBox(quarterTurns: 2, child: svg);
+      }
+    }
+
+    return svg;
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(chessControllerProvider);
-    _flipped = gameState.playerSide == Side.black;
+
+    _flipped = gameState.mode == GameMode.local
+        ? false 
+        : gameState.playerSide == Side.black;
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
@@ -190,7 +205,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                         },
                         child: Padding(
                           padding: EdgeInsets.all(_squareSize * 0.02),
-                          child: SvgPicture.asset(_assetForPiece(_capPiece!)),
+                          child: _buildRotatedPiece(_capPiece!, gameState),
                         ),
                       ),
                     ),
@@ -230,8 +245,9 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                                 height: _squareSize,
                                 child: Padding(
                                   padding: EdgeInsets.all(_squareSize * 0.02),
-                                  child: SvgPicture.asset(
-                                    _assetForPiece(_animPiece!),
+                                  child: _buildRotatedPiece(
+                                    _animPiece!,
+                                    gameState,
                                   ),
                                 ),
                               ),
@@ -302,7 +318,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             if (piece != null && !hidePiece)
               Padding(
                 padding: EdgeInsets.all(_squareSize * 0.02),
-                child: SvgPicture.asset(_assetForPiece(piece)),
+                child: _buildRotatedPiece(piece, gameState),
               ),
 
             if (isLegalTarget && piece == null)

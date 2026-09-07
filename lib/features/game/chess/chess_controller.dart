@@ -24,10 +24,13 @@ int skillLevelForElo(int elo) {
 
 enum GameStatus { loading, playing, checkmate, draw, resigned }
 
+enum GameMode { bot, local }
+
 class GameState {
   const GameState({
     required this.position,
-    required this.bot,
+    required this.mode,
+    this.bot,
     required this.playerSide,
     this.selectedSquare,
     this.legalDestinations = const {},
@@ -46,7 +49,8 @@ class GameState {
   });
 
   final Position position;
-  final Bot bot;
+  final GameMode mode;
+  final Bot? bot;
   final Side playerSide;
   final Square? selectedSquare;
   final Set<Square> legalDestinations;
@@ -65,11 +69,14 @@ class GameState {
   final String? endReason;
 
   bool get isPlayerTurn =>
-      status == GameStatus.playing && position.turn == playerSide;
+      status == GameStatus.playing &&
+      (mode == GameMode.local || position.turn == playerSide);
 
   bool get canUndo {
     if (status != GameStatus.playing) return false;
     if (history.isEmpty || isBotThinking) return false;
+
+    if (mode == GameMode.local) return true;
 
     if (position.turn == playerSide) {
       return history.length >= 2;
@@ -80,6 +87,8 @@ class GameState {
 
   GameState copyWith({
     Position? position,
+    GameMode? mode,
+    Bot? bot,
     Square? selectedSquare,
     bool clearSelection = false,
     Set<Square>? legalDestinations,
@@ -100,7 +109,8 @@ class GameState {
   }) {
     return GameState(
       position: position ?? this.position,
-      bot: bot,
+      mode: mode ?? this.mode,
+      bot: bot ?? this.bot,
       playerSide: playerSide,
       selectedSquare: clearSelection
           ? null
@@ -131,19 +141,16 @@ class GameState {
 class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _currentSkill = 0;
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   GameState build() {
-    _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
-
     ref.onDispose(() {
       _engine.stopThinking();
-      _audioPlayer.dispose();
     });
 
     return GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
+      mode: GameMode.bot,
       bot: const Bot(name: '-', elo: 0, imagePath: ''),
       playerSide: Side.white,
     );
@@ -151,8 +158,15 @@ class ChessController extends Notifier<GameState> {
 
   ChessEngine get _engine => ref.read(chessEngineProvider);
 
-  void _playSound(String asset) {
-    _audioPlayer.play(AssetSource('sounds/$asset'));
+  Future<void> _playSound(String asset) async {
+    final player = AudioPlayer();
+    await player.setPlayerMode(PlayerMode.lowLatency);
+
+    player.onPlayerComplete.listen((_) {
+      player.dispose();
+    });
+
+    await player.play(AssetSource('sounds/$asset'));
   }
 
   bool _isEnPassant(Position oldPos, NormalMove move) {
@@ -233,7 +247,9 @@ class ChessController extends Notifier<GameState> {
 
   void _playGameEndSound(Position position) {
     if (position.isCheckmate) {
-      if (position.turn == state.playerSide) {
+      if (state.mode == GameMode.local) {
+        _playSound('game-end.mp3');
+      } else if (position.turn == state.playerSide) {
         _playSound('game-end.mp3');
       } else {
         _playSound('game-win.mp3');
@@ -249,6 +265,7 @@ class ChessController extends Notifier<GameState> {
 
     state = GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
+      mode: GameMode.bot,
       bot: bot,
       playerSide: playerSide,
       moves: const [],
@@ -265,13 +282,35 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  Future<void> startLocalGame() async {
+    _moveRequestId++;
+    _currentSkill = 0;
+
+    state = GameState(
+      position: Chess.fromSetup(Setup.parseFen(kStartFen)),
+      mode: GameMode.local,
+      bot: null,
+      playerSide: Side.white,
+      moves: const [],
+      status: GameStatus.playing,
+    );
+
+    _playSound('game-start.mp3');
+  }
+
   void selectSquare(Square square) {
     if (!state.isPlayerTurn) return;
 
     final piece = state.position.board.pieceAt(square);
 
     if (state.selectedSquare == null) {
-      if (piece == null || piece.color != state.playerSide) return;
+      if (piece == null) return;
+      if (state.mode != GameMode.local && piece.color != state.playerSide) {
+        return;
+      }
+      if (state.mode == GameMode.local && piece.color != state.position.turn) {
+        return;
+      }
 
       state = state.copyWith(
         selectedSquare: square,
@@ -291,7 +330,13 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    if (piece != null && piece.color == state.playerSide) {
+    final canSelectPiece =
+        piece != null &&
+        (state.mode == GameMode.local
+            ? piece.color == state.position.turn
+            : piece.color == state.playerSide);
+
+    if (canSelectPiece) {
       state = state.copyWith(
         selectedSquare: square,
         legalDestinations: _displayDestinationsFrom(square),
@@ -328,7 +373,9 @@ class ChessController extends Notifier<GameState> {
 
     var restored = newHistory.removeLast();
 
-    if (newHistory.isNotEmpty && restored.turn != state.playerSide) {
+    if (state.mode != GameMode.local &&
+        newHistory.isNotEmpty &&
+        restored.turn != state.playerSide) {
       restored = newHistory.removeLast();
     }
 
@@ -388,6 +435,7 @@ class ChessController extends Notifier<GameState> {
 
   Future<void> requestHint() async {
     if (!state.isPlayerTurn || state.isBotThinking) return;
+    if (state.mode == GameMode.local) return;
 
     final requestId = ++_moveRequestId;
     state = state.copyWith(isHintThinking: true);
@@ -395,7 +443,7 @@ class ChessController extends Notifier<GameState> {
     final uci = await _engine.evaluateBestHint(
       state.position.fen,
       currentSkill: _currentSkill,
-      currentElo: state.bot.elo,
+      currentElo: state.bot?.elo ?? 0,
     );
 
     if (requestId != _moveRequestId) return;
@@ -509,7 +557,7 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.status == GameStatus.playing) {
-      _requestBotMove();
+      if (state.mode == GameMode.bot) _requestBotMove();
     } else {
       _playGameEndSound(newPosition);
     }
@@ -669,7 +717,14 @@ class ChessController extends Notifier<GameState> {
     GameStatus status,
   ) {
     if (status == GameStatus.checkmate) {
-      final winner = position.turn == state.playerSide ? state.bot.name : 'You';
+      if (state.mode == GameMode.local) {
+        final winner = position.turn == Side.white ? 'Black' : 'White';
+        return '$winner won by checkmate.';
+      }
+
+      final winner = position.turn == state.playerSide
+          ? state.bot!.name
+          : 'You';
       return '$winner won by checkmate.';
     }
 

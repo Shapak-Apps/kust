@@ -16,10 +16,16 @@ const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
 
 class GameScreen extends ConsumerStatefulWidget {
-  const GameScreen({super.key, required this.bot, required this.playerSide});
+  const GameScreen({
+    super.key,
+    this.bot,
+    required this.playerSide,
+    this.isLocal = false,
+  });
 
-  final Bot bot;
+  final Bot? bot;
   final Side playerSide;
+  final bool isLocal;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -32,9 +38,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(chessControllerProvider.notifier)
-          .startGame(widget.bot, playerSide: widget.playerSide);
+      final controller = ref.read(chessControllerProvider.notifier);
+      if (widget.isLocal) {
+        controller.startLocalGame();
+      } else {
+        controller.startGame(widget.bot!, playerSide: widget.playerSide);
+      }
     });
   }
 
@@ -71,7 +80,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'You play as ${isWhite ? "White" : "Black"}',
+                  widget.isLocal
+                      ? 'White moves first'
+                      : 'You play as ${isWhite ? "White" : "Black"}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -126,9 +137,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             FilledButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
-                ref
-                    .read(chessControllerProvider.notifier)
-                    .startGame(widget.bot, playerSide: widget.playerSide);
+                final controller = ref.read(chessControllerProvider.notifier);
+                if (widget.isLocal) {
+                  controller.startLocalGame();
+                } else {
+                  controller.startGame(
+                    widget.bot!,
+                    playerSide: widget.playerSide,
+                  );
+                }
               },
               child: const Text('Rematch'),
             ),
@@ -144,13 +161,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
   }
 
+  String _winnerLabel(GameState state) {
+    if (widget.isLocal) {
+      return state.position.turn == Side.white ? 'Black' : 'White';
+    }
+    return state.position.turn == state.playerSide ? widget.bot!.name : 'You';
+  }
+
   void _showEndDialogForState(GameState state) {
     switch (state.status) {
       case GameStatus.checkmate:
-        final winner = state.position.turn == state.playerSide
-            ? widget.bot.name
-            : 'You';
-        _showResultDialog('Checkmate', '$winner won the game.');
+        _showResultDialog('Checkmate', '${_winnerLabel(state)} won the game.');
         break;
       case GameStatus.draw:
         _showResultDialog(
@@ -178,10 +199,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
-          final winner = next.position.turn == next.playerSide
-              ? widget.bot.name
-              : 'You';
-          _showResultDialog('Checkmate', '$winner won the game.');
+          _showResultDialog('Checkmate', '${_winnerLabel(next)} won the game.');
           break;
         case GameStatus.draw:
           _showResultDialog(
@@ -206,7 +224,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('vs ${widget.bot.name}'),
+        title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
         actions: [
           if (gameState.status == GameStatus.playing)
             IconButton(
@@ -253,10 +271,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _PlayerBar(
-                              side: oppositeSide(widget.playerSide),
-                              name: widget.bot.name,
-                              subtitle: '${widget.bot.elo} Elo',
-                              avatarPath: widget.bot.imagePath,
+                              side: widget.isLocal
+                                  ? Side.black
+                                  : oppositeSide(widget.playerSide),
+                              name: widget.isLocal ? 'Black' : widget.bot!.name,
+                              subtitle: widget.isLocal
+                                  ? null
+                                  : '${widget.bot!.elo} Elo',
+                              avatarPath: widget.isLocal
+                                  ? null
+                                  : widget.bot!.imagePath,
                               position: gameState.position,
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
@@ -272,8 +296,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   : const ChessBoard(),
                             ),
                             _PlayerBar(
-                              side: widget.playerSide,
-                              name: 'You',
+                              side: widget.isLocal
+                                  ? Side.white
+                                  : widget.playerSide,
+                              name: widget.isLocal ? 'White' : 'You',
                               position: gameState.position,
                               moves: gameState.moves,
                             ),
@@ -299,20 +325,23 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         : null,
                     icon: const Icon(Icons.undo_rounded),
                   ),
-                  IconButton(
-                    tooltip: 'Hint',
-                    onPressed:
-                        gameState.isPlayerTurn && !gameState.isHintThinking
-                        ? ref.read(chessControllerProvider.notifier).requestHint
-                        : null,
-                    icon: gameState.isHintThinking
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.lightbulb_rounded),
-                  ),
+                  if (!widget.isLocal)
+                    IconButton(
+                      tooltip: 'Hint',
+                      onPressed:
+                          gameState.isPlayerTurn && !gameState.isHintThinking
+                          ? ref
+                                .read(chessControllerProvider.notifier)
+                                .requestHint
+                          : null,
+                      icon: gameState.isHintThinking
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.lightbulb_rounded),
+                    ),
                   IconButton(
                     tooltip: 'More',
                     onPressed: () {},
@@ -449,7 +478,6 @@ class _PlayerBar extends StatelessWidget {
   Widget _buildAvatar(ThemeData theme) {
     if (avatarPath != null && avatarPath!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
         child: Image.asset(
           avatarPath!,
           width: 40,
@@ -466,7 +494,6 @@ class _PlayerBar extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: theme.colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           Icons.person_rounded,
@@ -531,19 +558,19 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       color: theme.colorScheme.primary,
     );
 
-    // if (widget.moves.isEmpty) {
-    //   return SizedBox(
-    //     height: 40,
-    //     child: Center(
-    //       child: Text(
-    //         'No moves yet',
-    //         style: theme.textTheme.bodySmall?.copyWith(
-    //           color: theme.colorScheme.onSurfaceVariant,
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
+    if (widget.moves.isEmpty) {
+      return SizedBox(
+        height: 40,
+        child: Center(
+          child: Text(
+            'No moves yet',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
 
     final children = <Widget>[const SizedBox(width: 16)];
     int index = 0;
