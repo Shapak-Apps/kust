@@ -513,7 +513,14 @@ class _PlayerBar extends StatelessWidget {
           ),
           if (timeLeft != null) ...[
             const SizedBox(width: 8),
-            _ClockChip(time: timeLeft!, active: clockActive, side: side),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
+              child: _ClockChip(
+                time: timeLeft!,
+                active: clockActive,
+                side: side,
+              ),
+            ),
           ],
         ],
       ),
@@ -573,7 +580,7 @@ class _ClockChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
