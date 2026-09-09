@@ -22,8 +22,10 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         builder: (context, state) {
           final args = state.extra as GameArgs;
           return GameScreen(
-            bot: args.bot, 
+            bot: args.bot,
+            isLocal: args.isLocal,
             playerSide: args.playerSide,
+            timeControl: args.timeControl,
           );
         },
       ),
