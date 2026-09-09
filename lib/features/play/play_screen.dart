@@ -6,7 +6,8 @@ import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/play/pick_side_modal.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:Kust/features/play/play_mode_modal.dart';
+import 'package:Kust/features/play/pick_time_modal.dart';
 import 'package:Kust/features/game/game_args.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
@@ -134,6 +135,33 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  void _showPlayChooser() {
+    PlayModeModal.show(
+      context,
+      onBots: () {
+        if (!mounted) return;
+        _startGame();
+      },
+      onLocal: () {
+        if (!mounted) return;
+        PickTimeControlModal.show(
+          context,
+          onPick: (timeControl) {
+            if (!mounted) return;
+            context.go(
+              '/game',
+              extra: GameArgs(
+                playerSide: Side.white,
+                isLocal: true,
+                timeControl: timeControl,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _startGame() {
     PickOpponentModal.show(
       context,
@@ -163,18 +191,11 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
-  void _startLocalGame() {
-    context.go(
-      '/game',
-      extra: const GameArgs(playerSide: Side.white, isLocal: true),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppBar(),
-      
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: SingleChildScrollView(
@@ -196,7 +217,7 @@ class _PlayScreenState extends State<PlayScreen> {
                   SizedBox(
                     width: 120,
                     child: TextButton(
-                      onPressed: _startGame,
+                      onPressed: _showPlayChooser,
                       style: ButtonStyle(
                         minimumSize: WidgetStateProperty.all(
                           const Size(double.infinity, 50),
@@ -216,26 +237,6 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                   ),
                 ],
-              ),
-
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton.icon(
-                  onPressed: _startLocalGame,
-                  icon: const Icon(Icons.people_alt_rounded),
-                  label: const Text(
-                    'Pass & Play',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
               ),
 
               const SizedBox(height: 16),

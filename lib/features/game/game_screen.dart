@@ -11,6 +11,7 @@ import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/time_control.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
@@ -21,11 +22,13 @@ class GameScreen extends ConsumerStatefulWidget {
     this.bot,
     required this.playerSide,
     this.isLocal = false,
+    this.timeControl,
   });
 
   final Bot? bot;
   final Side playerSide;
   final bool isLocal;
+  final TimeControl? timeControl;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -40,7 +43,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
       if (widget.isLocal) {
-        controller.startLocalGame();
+        controller.startLocalGame(timeControl: widget.timeControl);
       } else {
         controller.startGame(widget.bot!, playerSide: widget.playerSide);
       }
@@ -139,7 +142,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 Navigator.of(dialogContext).pop();
                 final controller = ref.read(chessControllerProvider.notifier);
                 if (widget.isLocal) {
-                  controller.startLocalGame();
+                  controller.startLocalGame(timeControl: widget.timeControl);
                 } else {
                   controller.startGame(
                     widget.bot!,
@@ -179,6 +182,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           state.endReason ?? 'The game ended in a draw.',
         );
         break;
+      case GameStatus.timeout:
+        _showResultDialog(
+          'Time out',
+          state.endReason ?? 'The game ended on time.',
+        );
+        break;
       case GameStatus.resigned:
         _showResultDialog('Game over', 'You resigned.');
         break;
@@ -207,6 +216,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             next.endReason ?? 'The game ended in a draw.',
           );
           break;
+        case GameStatus.timeout:
+          _showResultDialog(
+            'Time out',
+            next.endReason ?? 'The game ended on time.',
+          );
+          break;
         case GameStatus.resigned:
           _showResultDialog('Game over', 'You resigned.');
           break;
@@ -220,7 +235,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final isFinished =
         gameState.status == GameStatus.checkmate ||
         gameState.status == GameStatus.draw ||
-        gameState.status == GameStatus.resigned;
+        gameState.status == GameStatus.resigned ||
+        gameState.status == GameStatus.timeout;
+
+    final topSide = widget.isLocal
+        ? Side.black
+        : oppositeSide(widget.playerSide);
+    final bottomSide = widget.isLocal ? Side.white : widget.playerSide;
+
+    final timed = gameState.timeControl != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -262,7 +285,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   final side = math.max(0.0, math.min(maxSide, kBoardMaxWidth));
 
                   return Align(
-                    alignment: Alignment.topCenter,
+                    alignment: Alignment.center,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: SizedBox(
@@ -271,9 +294,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _PlayerBar(
-                              side: widget.isLocal
-                                  ? Side.black
-                                  : oppositeSide(widget.playerSide),
+                              side: topSide,
                               name: widget.isLocal ? 'Black' : widget.bot!.name,
                               subtitle: widget.isLocal
                                   ? null
@@ -285,6 +306,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
+                              timeLeft: timed
+                                  ? (topSide == Side.white
+                                        ? gameState.whiteTimeLeft
+                                        : gameState.blackTimeLeft)
+                                  : null,
+                              clockActive:
+                                  timed &&
+                                  gameState.status == GameStatus.playing &&
+                                  gameState.position.turn == topSide,
                             ),
                             SizedBox(
                               width: side,
@@ -296,12 +326,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                   : const ChessBoard(),
                             ),
                             _PlayerBar(
-                              side: widget.isLocal
-                                  ? Side.white
-                                  : widget.playerSide,
+                              side: bottomSide,
                               name: widget.isLocal ? 'White' : 'You',
                               position: gameState.position,
                               moves: gameState.moves,
+                              timeLeft: timed
+                                  ? (bottomSide == Side.white
+                                        ? gameState.whiteTimeLeft
+                                        : gameState.blackTimeLeft)
+                                  : null,
+                              clockActive:
+                                  timed &&
+                                  gameState.status == GameStatus.playing &&
+                                  gameState.position.turn == bottomSide,
                             ),
                           ],
                         ),
@@ -367,6 +404,8 @@ class _PlayerBar extends StatelessWidget {
     this.avatarPath,
     this.isThinking = false,
     this.thinkingText,
+    this.timeLeft,
+    this.clockActive = false,
   });
 
   final Side side;
@@ -377,6 +416,8 @@ class _PlayerBar extends StatelessWidget {
   final String? avatarPath;
   final bool isThinking;
   final String? thinkingText;
+  final Duration? timeLeft;
+  final bool clockActive;
 
   @override
   Widget build(BuildContext context) {
@@ -470,6 +511,10 @@ class _PlayerBar extends StatelessWidget {
               ],
             ),
           ),
+          if (timeLeft != null) ...[
+            const SizedBox(width: 8),
+            _ClockChip(time: timeLeft!, active: clockActive, side: side),
+          ],
         ],
       ),
     );
@@ -492,14 +537,60 @@ class _PlayerBar extends StatelessWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer,
-        ),
+        decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer),
         child: Icon(
           Icons.person_rounded,
           size: 24,
           color: theme.colorScheme.onSecondaryContainer,
         ),
+      ),
+    );
+  }
+}
+
+class _ClockChip extends StatelessWidget {
+  const _ClockChip({
+    required this.time,
+    required this.active,
+    required this.side,
+  });
+
+  final Duration time;
+  final bool active;
+  final Side side;
+
+  @override
+  Widget build(BuildContext context) {
+    final isWhite = side == Side.white;
+
+    final base = isWhite ? Colors.white : const Color(0xFF1B1B1B);
+    final foreground = isWhite ? const Color(0xFF1B1B1B) : Colors.white;
+
+    final background = active ? base : base.withValues(alpha: 0.35);
+    final text = active ? foreground : foreground.withValues(alpha: 0.65);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (active) ...[
+            Icon(Icons.schedule_rounded, size: 15, color: text),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            TimeControl.format(time),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: text,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -25,6 +25,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             bot: args.bot,
             isLocal: args.isLocal,
             playerSide: args.playerSide,
+            timeControl: args.timeControl,
           );
         },
       ),

@@ -7,6 +7,7 @@ import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:dartchess/dartchess.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
+import 'package:Kust/features/game/time_control.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
@@ -22,7 +23,7 @@ int skillLevelForElo(int elo) {
   return (t * 20).round();
 }
 
-enum GameStatus { loading, playing, checkmate, draw, resigned }
+enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
 enum GameMode { bot, local }
 
@@ -46,6 +47,9 @@ class GameState {
     this.capturedSquare,
     this.wasUndo = false,
     this.endReason,
+    this.timeControl,
+    this.whiteTimeLeft = Duration.zero,
+    this.blackTimeLeft = Duration.zero,
   });
 
   final Position position;
@@ -67,6 +71,10 @@ class GameState {
   final Square? capturedSquare;
   final bool wasUndo;
   final String? endReason;
+
+  final TimeControl? timeControl;
+  final Duration whiteTimeLeft;
+  final Duration blackTimeLeft;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -106,6 +114,9 @@ class GameState {
     String? endReason,
     bool clearLastMove = false,
     bool clearCapture = false,
+    TimeControl? timeControl,
+    Duration? whiteTimeLeft,
+    Duration? blackTimeLeft,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -134,6 +145,9 @@ class GameState {
           : (capturedSquare ?? this.capturedSquare),
       wasUndo: wasUndo ?? this.wasUndo,
       endReason: endReason ?? this.endReason,
+      timeControl: timeControl ?? this.timeControl,
+      whiteTimeLeft: whiteTimeLeft ?? this.whiteTimeLeft,
+      blackTimeLeft: blackTimeLeft ?? this.blackTimeLeft,
     );
   }
 }
@@ -142,9 +156,15 @@ class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _currentSkill = 0;
 
+  Timer? _clockTimer;
+  DateTime? _lastTick;
+  Duration _whiteClock = Duration.zero;
+  Duration _blackClock = Duration.zero;
+
   @override
   GameState build() {
     ref.onDispose(() {
+      _stopClock();
       _engine.stopThinking();
     });
 
@@ -157,6 +177,118 @@ class ChessController extends Notifier<GameState> {
   }
 
   ChessEngine get _engine => ref.read(chessEngineProvider);
+
+  bool get _timed => state.timeControl != null;
+
+  void _initClocks(TimeControl? timeControl) {
+    _stopClock();
+
+    if (timeControl == null) {
+      _whiteClock = Duration.zero;
+      _blackClock = Duration.zero;
+      return;
+    }
+
+    _whiteClock = timeControl.base;
+    _blackClock = timeControl.base;
+    _lastTick = DateTime.now();
+    _clockTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => _onClockTick(),
+    );
+  }
+
+  void _stopClock() {
+    _clockTimer?.cancel();
+    _clockTimer = null;
+    _lastTick = null;
+  }
+
+  void _onClockTick() {
+    if (state.status != GameStatus.playing || !_timed) {
+      _stopClock();
+      return;
+    }
+    _chargeElapsed();
+  }
+
+  bool _chargeElapsed({bool publish = true}) {
+    if (!_timed || _lastTick == null) return true;
+
+    final now = DateTime.now();
+    final elapsed = now.difference(_lastTick!);
+    _lastTick = now;
+
+    if (elapsed > Duration.zero) {
+      if (state.position.turn == Side.white) {
+        _whiteClock -= elapsed;
+        if (_whiteClock <= Duration.zero) {
+          _whiteClock = Duration.zero;
+          _publishClock();
+          _flagFell(Side.white);
+          return false;
+        }
+      } else {
+        _blackClock -= elapsed;
+        if (_blackClock <= Duration.zero) {
+          _blackClock = Duration.zero;
+          _publishClock();
+          _flagFell(Side.black);
+          return false;
+        }
+      }
+    }
+
+    if (publish) _publishClock();
+    return true;
+  }
+
+  void _addIncrement(Side mover) {
+    final increment = state.timeControl?.increment ?? Duration.zero;
+    if (increment == Duration.zero) return;
+
+    if (mover == Side.white) {
+      _whiteClock += increment;
+    } else {
+      _blackClock += increment;
+    }
+    _publishClock();
+  }
+
+  void _publishClock() {
+    if (!_timed) return;
+
+    final white = TimeControl.display(_whiteClock);
+    final black = TimeControl.display(_blackClock);
+
+    if (white == state.whiteTimeLeft && black == state.blackTimeLeft) return;
+
+    state = state.copyWith(whiteTimeLeft: white, blackTimeLeft: black);
+  }
+
+  void _flagFell(Side fellSide) {
+    _stopClock();
+
+    final String winner;
+    if (state.mode == GameMode.local) {
+      winner = fellSide == Side.white ? 'Black' : 'White';
+    } else {
+      winner = fellSide == state.playerSide ? state.bot!.name : 'You';
+    }
+
+    state = state.copyWith(
+      status: GameStatus.timeout,
+      isBotThinking: false,
+      clearSelection: true,
+      endReason: '$winner won on time.',
+    );
+
+    if (state.mode == GameMode.local || fellSide == state.playerSide) {
+      _playSound('game-end.mp3');
+    } else {
+      _playSound('game-win.mp3');
+    }
+  }
 
   Future<void> _playSound(String asset) async {
     final player = AudioPlayer();
@@ -259,9 +391,16 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  Future<void> startGame(Bot bot, {Side playerSide = Side.white}) async {
+  Future<void> startGame(
+    Bot bot, {
+    Side playerSide = Side.white,
+    TimeControl? timeControl,
+  }) async {
     _moveRequestId++;
     _currentSkill = skillLevelForElo(bot.elo);
+    _initClocks(timeControl);
+
+    final base = timeControl?.base ?? Duration.zero;
 
     state = GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
@@ -269,6 +408,9 @@ class ChessController extends Notifier<GameState> {
       bot: bot,
       playerSide: playerSide,
       moves: const [],
+      timeControl: timeControl,
+      whiteTimeLeft: base,
+      blackTimeLeft: base,
     );
 
     await _engine.start();
@@ -282,9 +424,12 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  Future<void> startLocalGame() async {
+  Future<void> startLocalGame({TimeControl? timeControl}) async {
     _moveRequestId++;
     _currentSkill = 0;
+    _initClocks(timeControl);
+
+    final base = timeControl?.base ?? Duration.zero;
 
     state = GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
@@ -293,6 +438,9 @@ class ChessController extends Notifier<GameState> {
       playerSide: Side.white,
       moves: const [],
       status: GameStatus.playing,
+      timeControl: timeControl,
+      whiteTimeLeft: base,
+      blackTimeLeft: base,
     );
 
     _playSound('game-start.mp3');
@@ -352,6 +500,7 @@ class ChessController extends Notifier<GameState> {
 
     _moveRequestId++;
     _engine.stopThinking();
+    _stopClock();
 
     state = state.copyWith(
       status: GameStatus.resigned,
@@ -364,6 +513,8 @@ class ChessController extends Notifier<GameState> {
 
   void undoLastMove() {
     if (!state.canUndo) return;
+
+    if (!_chargeElapsed(publish: false)) return;
 
     _moveRequestId++;
     if (state.isBotThinking) _engine.stopThinking();
@@ -486,6 +637,8 @@ class ChessController extends Notifier<GameState> {
   }
 
   void _playPlayerMove(Square from, Square to) {
+    if (!_chargeElapsed(publish: false)) return;
+
     Square target = to;
     final piece = state.position.board.pieceAt(from);
 
@@ -557,8 +710,10 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.status == GameStatus.playing) {
+      _addIncrement(oldPosition.turn);
       if (state.mode == GameMode.bot) _requestBotMove();
     } else {
+      _stopClock();
       _playGameEndSound(newPosition);
     }
   }
@@ -579,6 +734,8 @@ class ChessController extends Notifier<GameState> {
       state = state.copyWith(isBotThinking: false);
       return;
     }
+
+    if (!_chargeElapsed(publish: false)) return;
 
     if (uci == '(none)') {
       state = state.copyWith(isBotThinking: false);
@@ -634,7 +791,10 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.status != GameStatus.playing) {
+      _stopClock();
       _playGameEndSound(newPosition);
+    } else {
+      _addIncrement(beforeBotMove.turn);
     }
   }
 
@@ -684,7 +844,7 @@ class ChessController extends Notifier<GameState> {
     if (target == Square.h1) return Square.g1;
     if (target == Square.a1) return Square.c1;
     if (target == Square.h8) return Square.g8;
-    if (target == Square.a8) return Square.c8;
+    if (target == Square.c8) return Square.c8;
     return target;
   }
 
