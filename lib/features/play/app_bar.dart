@@ -6,7 +6,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   final String? userAvatar;
 
-  static const double appBarHeight = 48;
+  static const double appBarHeight = 50;
 
   @override
   Size get preferredSize => const Size.fromHeight(appBarHeight);
@@ -24,16 +24,16 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 12),
         child: Center(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(4),
             child: userAvatar == null
                 ? Container(
-                    width: 32,
-                    height: 32,
-                    color: const Color(0xFFCCCCCC).withOpacity(0.05),
+                    width: 38,
+                    height: 38,
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     child: const Icon(
                       Icons.person,
                       size: 30,
-                      color: Color(0xFF181A1B),
+                      color: Color.fromARGB(255, 42, 42, 42),
                     ),
                   )
                 : Image.network(
@@ -51,7 +51,10 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
 
       actions: [
-        IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.more_vert, size: 30),
+        ),
         const SizedBox(width: 4),
       ],
     );
