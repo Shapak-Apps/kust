@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:Kust/features/game/time_control.dart';
 
-class PickTimeControlModal extends StatelessWidget {
+class PickTimeControlModal extends StatefulWidget {
   const PickTimeControlModal({super.key, required this.onPick});
 
   final void Function(TimeControl? timeControl) onPick;
@@ -19,14 +19,51 @@ class PickTimeControlModal extends StatelessWidget {
     );
   }
 
-  void _pick(BuildContext context, TimeControl? timeControl) {
+  @override
+  State<PickTimeControlModal> createState() => _PickTimeControlModalState();
+}
+
+class _PickTimeControlModalState extends State<PickTimeControlModal> {
+  int? _selectedIndex;
+
+  static const List<_Option> _options = [
+    _Option(
+      label: '10 min',
+      subtitle: '10+0',
+      timeControl: TimeControl(baseMinutes: 10),
+    ),
+    _Option(
+      label: '15 min',
+      subtitle: '15+0',
+      timeControl: TimeControl(baseMinutes: 15),
+    ),
+    _Option(
+      label: '3+2',
+      subtitle: '3 min, +2s per move',
+      timeControl: TimeControl(baseMinutes: 3, incrementSeconds: 2),
+    ),
+    _Option(
+      label: '5 min',
+      subtitle: '5+0',
+      timeControl: TimeControl(baseMinutes: 5),
+    ),
+    _Option(
+      label: 'No clock',
+      subtitle: 'Untimed casual game',
+      timeControl: null,
+    ),
+  ];
+
+  void _start() {
+    if (_selectedIndex == null) return;
     Navigator.of(context).pop();
-    onPick(timeControl);
+    widget.onPick(_options[_selectedIndex!].timeControl);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasSelection = _selectedIndex != null;
 
     return SafeArea(
       child: Container(
@@ -61,19 +98,19 @@ class PickTimeControlModal extends StatelessWidget {
               children: [
                 Expanded(
                   child: _TimeTile(
-                    label: '10 min',
-                    subtitle: '10+0',
-                    onTap: () =>
-                        _pick(context, const TimeControl(baseMinutes: 10)),
+                    label: _options[0].label,
+                    subtitle: _options[0].subtitle,
+                    isSelected: _selectedIndex == 0,
+                    onTap: () => setState(() => _selectedIndex = 0),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _TimeTile(
-                    label: '15 min',
-                    subtitle: '15+0',
-                    onTap: () =>
-                        _pick(context, const TimeControl(baseMinutes: 15)),
+                    label: _options[1].label,
+                    subtitle: _options[1].subtitle,
+                    isSelected: _selectedIndex == 1,
+                    onTap: () => setState(() => _selectedIndex = 1),
                   ),
                 ),
               ],
@@ -83,32 +120,44 @@ class PickTimeControlModal extends StatelessWidget {
               children: [
                 Expanded(
                   child: _TimeTile(
-                    label: '3+2',
-                    subtitle: '3 min, +2s per move',
-                    onTap: () => _pick(
-                      context,
-                      const TimeControl(baseMinutes: 3, incrementSeconds: 2),
-                    ),
+                    label: _options[2].label,
+                    subtitle: _options[2].subtitle,
+                    isSelected: _selectedIndex == 2,
+                    onTap: () => setState(() => _selectedIndex = 2),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _TimeTile(
-                    label: '5 min',
-                    subtitle: '5+0',
-                    onTap: () =>
-                        _pick(context, const TimeControl(baseMinutes: 5)),
+                    label: _options[3].label,
+                    subtitle: _options[3].subtitle,
+                    isSelected: _selectedIndex == 3,
+                    onTap: () => setState(() => _selectedIndex = 3),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             _TimeTile(
-              label: 'No clock',
-              subtitle: 'Untimed casual game',
-              onTap: () => _pick(context, null),
+              label: _options[4].label,
+              subtitle: _options[4].subtitle,
+              isSelected: _selectedIndex == 4,
+              onTap: () => setState(() => _selectedIndex = 4),
             ),
-            const SizedBox(height: 8),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: hasSelection ? _start : null,
+                child: const Text(
+                  'Start game',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -116,15 +165,29 @@ class PickTimeControlModal extends StatelessWidget {
   }
 }
 
+class _Option {
+  const _Option({
+    required this.label,
+    required this.subtitle,
+    required this.timeControl,
+  });
+
+  final String label;
+  final String subtitle;
+  final TimeControl? timeControl;
+}
+
 class _TimeTile extends StatelessWidget {
   const _TimeTile({
     required this.label,
     required this.subtitle,
+    required this.isSelected,
     required this.onTap,
   });
 
   final String label;
   final String subtitle;
+  final bool isSelected;
   final VoidCallback onTap;
 
   @override
@@ -134,13 +197,21 @@ class _TimeTile extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: theme.colorScheme.surface,
-          border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
+          color: isSelected
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surface,
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isSelected ? 2 : 1,
+          ),
         ),
         child: Column(
           children: [
