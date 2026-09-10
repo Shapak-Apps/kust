@@ -126,7 +126,7 @@ flutter pub get
 flutter run
 ```
 
-## Roadmap
+## Roadmap (will be updated soon)
 
 - [x] Play against Stockfish bots
 - [x] Adjustable bot difficulty
