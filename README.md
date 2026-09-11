@@ -164,7 +164,7 @@ Chess software has many edge cases. Changes involving chess logic should include
 
 ## License
 
-The project license will be added to the repository.
+Küşt is licensed under the [GNU General Public License v3.0](LICENSE). It uses [Stockfish](https://stockfishchess.org/) and [dartchess](https://pub.dev/packages/dartchess), both GPL-3.0.
 
 ## Acknowledgements
 
