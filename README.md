@@ -4,61 +4,39 @@
 
 Küşt is an open-source chess application built with Flutter and Dart. It uses `dartchess` for chess rules and position handling, and Stockfish as the engine for bot gameplay and position evaluation.
 
-The core idea: chess analysis should help you improve, not just tell you a move was bad. After a game, Küşt examines your decisions, identifies inaccuracies, mistakes, and blunders, and explains what could have been played instead and what you should take away from the position.
+The core idea: chess analysis should help you improve, not just tell you a move was bad. Post-game analysis with move classification and explanations is on the roadmap — right now Küşt is focused on being a genuinely good place to play.
 
 ## Features
 
 ### Play Against Bots
 
-Play complete games against Stockfish-powered bots at adjustable difficulty levels. Bot strength is mapped from an Elo rating to a Stockfish skill level, so you can pick an opponent that suits where you are as a player.
+Play complete games against Stockfish-powered bots at adjustable difficulty levels. Bot strength is mapped from an Elo rating to a Stockfish skill level (and UCI Elo where supported), so you can pick an opponent that suits where you are as a player.
 
 `dartchess` maintains the chess position and validates moves. Stockfish handles engine calculation for the bot's responses.
+
+### Local Pass-and-Play
+
+No engine, no wifi excuse. Play a full game locally on one device with a friend, no Stockfish dependency required.
+
+### Time Controls
+
+Pick from preset time controls (blitz, rapid, with or without increment) before starting a game, with a live clock for both sides during play.
 
 ### Move Undo and Hints
 
 During a game you can undo your last move or request a hint. Hints run Stockfish at full strength on a short time budget and highlight the suggested origin and destination squares. Undo steps back both the player move and the preceding bot move so the position stays consistent.
 
-### Move Classification
+### Practice Mode
 
-After a game, Küşt evaluates the played positions with Stockfish and classifies each move:
+Toggle practice mode to play more freely while still getting the full board and engine experience — good for exploring lines without it counting against your rating.
 
-- **Best move** — matches or comes very close to the engine's preferred choice
-- **Good move** — strong and reasonable, keeps the position in good shape
-- **Inaccuracy** — a small error that worsens the position without immediately changing the result
-- **Mistake** — a more serious error that gives the opponent a meaningful advantage
-- **Blunder** — a major error that loses material, position, or the game
-- **Missed opportunity** — a position where a stronger continuation existed but was not played
+### Rating System
 
-### Post-Game Analysis
+Küşt tracks your own Elo-style rating locally (starting at 1200), updates it after games against bots, and shows a rating-change badge in the post-game recap.
 
-Küşt is designed to go further than raw engine evaluations. For every significant error, the goal is to explain what happened in terms a player can actually use.
+### Evaluation Bar
 
-A useful analysis answers four questions:
-
-1. What did I play?
-2. What was the better move?
-3. Why was the better move stronger?
-4. What should I remember for the next game?
-
-An example of the intended output:
-
-```
-Move: 18...Qxd4?
-
-Classification: Mistake
-
-You captured the pawn on d4, but the move allowed White to develop
-with tempo and attack the queen. The stronger continuation was
-18...Nc6, keeping the queen safe and maintaining development.
-
-Lesson:
-Before making a capture, check whether the opponent can respond
-with a forcing move such as a check, capture, or attack on your queen.
-```
-
-### Personal Pattern Detection
-
-By analyzing multiple games, Küşt can identify recurring weaknesses — repeatedly missing tactical threats, losing material in the opening, struggling in endgames, or making poor decisions under pressure. These patterns feed into more targeted feedback and study suggestions.
+An optional live evaluation bar shows how the position is trending as the game progresses.
 
 ## Architecture
 
@@ -73,24 +51,11 @@ Handles chess logic: board position, legal move generation, rule enforcement, FE
 Used for two purposes:
 
 - calculating moves for the bot opponent during gameplay
-- evaluating positions and finding stronger alternatives during post-game analysis
+- powering hints and the live evaluation bar
 
 Stockfish does not enforce chess rules. `dartchess` owns the game state and legal move validation. Stockfish only sees FEN strings.
 
-### Analysis Layer
-
-Connects the game history to Stockfish. It replays the game, evaluates positions, compares the player's moves against stronger alternatives, measures the evaluation change, and classifies the result.
-
-```
-Finished game
-  -> Replay moves
-  -> Evaluate positions with Stockfish
-  -> Compare played moves with stronger alternatives
-  -> Measure evaluation delta
-  -> Classify moves
-  -> Explain critical errors
-  -> Produce learning feedback
-```
+Stockfish currently runs on Android and iOS. On unsupported platforms, Küşt falls back to local pass-and-play instead of failing silently.
 
 ## Tech Stack
 
@@ -99,11 +64,12 @@ Finished game
 | Dart               | Application language and core logic               |
 | Flutter            | UI and cross-platform application shell           |
 | dartchess          | Chess rules, legal moves, FEN/PGN, position state |
-| Stockfish          | Bot gameplay and position analysis                |
+| Stockfish          | Bot gameplay, hints, and live evaluation          |
 | Riverpod           | State management                                  |
 | go_router          | Declarative navigation                            |
 | audioplayers       | Move and game event sounds                        |
-| shared_preferences | Onboarding state persistence                      |
+| shared_preferences | Onboarding state and settings persistence         |
+| Hive               | Local rating storage                              |
 | flutter_svg        | SVG asset rendering                               |
 
 ## Getting Started
@@ -113,7 +79,7 @@ Finished game
 - Flutter SDK
 - Dart SDK compatible with the Flutter version
 - Git
-- A working Stockfish integration for your target platform
+- A working Stockfish integration for your target platform (Android/iOS)
 
 Stockfish setup differs between Android, iOS, and desktop. Follow the platform-specific configuration in the project when setting up the engine.
 
@@ -132,6 +98,11 @@ flutter run
 - [x] Adjustable bot difficulty
 - [x] Move undo
 - [x] Hints during play
+- [x] Local pass-and-play mode
+- [x] Time controls
+- [x] Local Elo-style rating tracking
+- [x] Live evaluation bar
+- [ ] Puzzles
 - [ ] Complete game history
 - [ ] FEN and PGN support
 - [ ] Local game storage
