@@ -4,18 +4,19 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:Kust/features/play/practice_mode_checkbox.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
 class PickSideModal extends StatefulWidget {
   const PickSideModal({super.key, required this.bot, required this.onPlay});
 
   final Bot bot;
-  final void Function(Side side) onPlay;
+  final void Function(Side side, bool practiceMode) onPlay;
 
   static Future<void> show(
     BuildContext context, {
     required Bot bot,
-    required void Function(Side side) onPlay,
+    required void Function(Side side, bool practiceMode) onPlay,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -33,6 +34,7 @@ class PickSideModal extends StatefulWidget {
 
 class _PickSideModalState extends State<PickSideModal> {
   Side? selectedSide;
+  bool practiceMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +142,12 @@ class _PickSideModalState extends State<PickSideModal> {
                 });
               },
             ),
+            const SizedBox(height: 8),
 
+            PracticeModeCheckbox(
+              value: practiceMode,
+              onChanged: (v) => setState(() => practiceMode = v),
+            ),
             const SizedBox(height: 18),
 
             SizedBox(
@@ -153,7 +160,7 @@ class _PickSideModalState extends State<PickSideModal> {
                       (Random().nextBool() ? Side.white : Side.black);
 
                   Navigator.of(context).pop();
-                  widget.onPlay(side);
+                  widget.onPlay(side, practiceMode);
                 },
                 child: const Text(
                   'Play',

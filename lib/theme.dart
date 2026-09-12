@@ -5,22 +5,31 @@ const Color primaryGold = Color(0xFFFFBB00);
 const Color lightText = Color(0xFF181A1B);
 const Color darkText = Color(0xFFFAFAFA);
 
+const Color lightBackground = Color(0xFFF8F8F6);
+const Color darkBackground = Color.fromARGB(255, 32, 32, 32);
+
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
 
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: primaryGold,
-    brightness: Brightness.light,
+  colorScheme: const ColorScheme.light(
+    primary: primaryGold,
+    onPrimary: lightText,
+    secondary: primaryGold,
+    onSecondary: lightText,
+    surface: lightBackground,
+    onSurface: lightText,
+    error: Color(0xFFBA1A1A),
+    onError: Color(0xFFFFFFFF),
   ),
 
-  scaffoldBackgroundColor: const Color(0xFFF8F8F6),
+  scaffoldBackgroundColor: lightBackground,
 
   appBarTheme: const AppBarTheme(
     centerTitle: false,
     elevation: 0,
     scrolledUnderElevation: 0,
-    backgroundColor: Color(0xFFF8F8F6),
+    backgroundColor: lightBackground,
     foregroundColor: lightText,
   ),
 
@@ -57,18 +66,24 @@ final ThemeData appDarkTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
 
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: primaryGold,
-    brightness: Brightness.dark,
+  colorScheme: const ColorScheme.dark(
+    primary: primaryGold,
+    onPrimary: Color(0xFF000000),
+    secondary: primaryGold,
+    onSecondary: Color(0xFF000000),
+    surface: darkBackground,
+    onSurface: darkText,
+    error: Color(0xFFFFB4AB),
+    onError: Color(0xFF690005),
   ),
 
-  scaffoldBackgroundColor: const Color(0xFF101112),
+  scaffoldBackgroundColor: darkBackground,
 
   appBarTheme: const AppBarTheme(
     centerTitle: false,
     elevation: 0,
     scrolledUnderElevation: 0,
-    backgroundColor: Color(0xFF101112),
+    backgroundColor: darkBackground,
     foregroundColor: darkText,
   ),
 

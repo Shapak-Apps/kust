@@ -12,6 +12,8 @@ const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
 const Color kHintHighlight = Color(0x552ECC71);
 
+final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
+
 class ChessBoard extends ConsumerStatefulWidget {
   const ChessBoard({super.key});
 
@@ -38,11 +40,28 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   void initState() {
     super.initState();
 
-    _moveController = AnimationController(vsync: this);
+    _moveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _captureController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
+
+    _moveController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _animPiece != null) {
+        setState(() => _animPiece = null);
+      }
+    });
+    _captureController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _capPiece != null) {
+        setState(() {
+          _capPiece = null;
+          _capSquare = null;
+        });
+      }
+    });
   }
 
   @override
@@ -70,6 +89,19 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return target;
   }
 
+  Square? _checkedKingSquare(Position position) {
+    if (!position.isCheck) return null;
+    for (final square in Square.values) {
+      final piece = position.board.pieceAt(square);
+      if (piece != null &&
+          piece.role == Role.king &&
+          piece.color == position.turn) {
+        return square;
+      }
+    }
+    return null;
+  }
+
   Widget _buildRotatedPiece(Piece piece, GameState gameState) {
     Widget svg = SvgPicture.asset(_assetForPiece(piece));
 
@@ -87,7 +119,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final gameState = ref.watch(chessControllerProvider);
 
     _flipped = gameState.mode == GameMode.local
-        ? false 
+        ? false
         : gameState.playerSide == Side.black;
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
@@ -129,10 +161,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
           if (_animPiece != null) {
             final duration = next.wasUndo
-                ? const Duration(milliseconds: 150)
+                ? const Duration(milliseconds: 120)
                 : const Duration(milliseconds: 200);
 
             _moveController.duration = duration;
+            _captureController.duration = duration;
             _moveController.reset();
             _moveController.forward();
           }
@@ -146,6 +179,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           } else {
             _capSquare = null;
             _capPiece = null;
+          }
+        } else {
+          if (_animPiece != null || _capPiece != null) {
+            setState(() {
+              _animPiece = null;
+              _capPiece = null;
+              _capSquare = null;
+            });
           }
         }
       }
@@ -161,6 +202,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
+        final checkedKing = _checkedKingSquare(gameState.position);
 
         return AbsorbPointer(
           absorbing:
@@ -178,7 +220,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           for (final file in files)
-                            _buildBoardSquare(squareAt(file, rank), gameState),
+                            _buildBoardSquare(
+                              squareAt(file, rank),
+                              gameState,
+                              checkedKing,
+                            ),
                         ],
                       ),
                   ],
@@ -226,9 +272,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                             _squareSize,
                           );
 
-                          final t = Curves.easeInOut.transform(
-                            _moveController.value,
-                          );
+                          final curve = gameState.wasUndo
+                              ? Curves.easeOut
+                              : Curves.easeInOut;
+
+                          final t = curve.transform(_moveController.value);
 
                           final currentOffset = Offset.lerp(
                             fromOffset,
@@ -265,7 +313,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     );
   }
 
-  Widget _buildBoardSquare(Square square, GameState gameState) {
+  Widget _buildBoardSquare(
+    Square square,
+    GameState gameState,
+    Square? checkedKing,
+  ) {
     final piece = gameState.position.board.pieceAt(square);
 
     final isLight = (fileOf(square) + rankOf(square)).isEven;
@@ -273,6 +325,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final isLegalTarget = gameState.legalDestinations.contains(square);
     final isLastMove = gameState.moveSquares.contains(square);
     final isHint = gameState.hintSquares.contains(square);
+    final isCheckSquare = checkedKing == square;
 
     var background = isLight ? kLightSquare : kDarkSquare;
 
@@ -282,6 +335,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
     if (isHint) {
       background = Color.alphaBlend(kHintHighlight, background);
+    }
+
+    if (isCheckSquare) {
+      background = Color.alphaBlend(kCheckSquareHighlight, background);
     }
 
     if (isSelected) {

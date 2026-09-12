@@ -1,7 +1,7 @@
 name: Kust
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.1.0+1
+version: 1.2.0+1
 
 environment:
   sdk: ^3.13.1
@@ -21,6 +21,7 @@ dependencies:
   xml: ^7.0.1
   stockfish: any
   audioplayers: ^6.8.1
+  path_provider: ^2.1.6
 
 dependency_overrides:
   stockfish:

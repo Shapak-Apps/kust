@@ -165,12 +165,16 @@ class _PlayScreenState extends State<PlayScreen> {
   void _startGame() {
     PickOpponentModal.show(
       context,
-      onPlay: (bot, side) {
+      onPlay: (bot, side, practiceMode) {
         if (!mounted) return;
 
         context.go(
           '/game',
-          extra: GameArgs(bot: bot, playerSide: side),
+          extra: GameArgs(
+            bot: bot,
+            playerSide: side,
+            practiceMode: practiceMode,
+          ),
         );
       },
     );
@@ -180,12 +184,15 @@ class _PlayScreenState extends State<PlayScreen> {
     PickSideModal.show(
       context,
       bot: bot,
-      onPlay: (side) {
+      onPlay: (side, practiceMode) {
         if (!mounted) return;
-
         context.go(
           '/game',
-          extra: GameArgs(bot: bot, playerSide: side),
+          extra: GameArgs(
+            bot: bot,
+            playerSide: side,
+            practiceMode: practiceMode,
+          ),
         );
       },
     );
@@ -197,14 +204,14 @@ class _PlayScreenState extends State<PlayScreen> {
       appBar: MyAppBar(),
 
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Hello Guest!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
 
