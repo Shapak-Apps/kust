@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:Kust/features/play/practice_mode_checkbox.dart';
 
 class Bot {
   final String name;
@@ -14,11 +15,11 @@ class Bot {
 class PickOpponentModal extends StatefulWidget {
   const PickOpponentModal({super.key, required this.onPlay});
 
-  final void Function(Bot bot, Side side) onPlay;
+  final void Function(Bot bot, Side side, bool practiceMode) onPlay;
 
   static Future<void> show(
     BuildContext context, {
-    required void Function(Bot bot, Side side) onPlay,
+    required void Function(Bot bot, Side side, bool practiceMode) onPlay,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -46,6 +47,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
 
   int? selectedIndex;
   Side? selectedSide;
+  bool practiceMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +150,11 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                 );
               },
             ),
-
+            const SizedBox(height: 12),
+            PracticeModeCheckbox(
+              value: practiceMode,
+              onChanged: (v) => setState(() => practiceMode = v),
+            ),
             const SizedBox(height: 24),
 
             Align(
@@ -193,7 +199,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                             (Random().nextBool() ? Side.white : Side.black);
 
                         Navigator.of(context).pop();
-                        widget.onPlay(bot, side);
+                        widget.onPlay(bot, side, practiceMode);
                       },
                 child: const Text(
                   'Play',

@@ -7,11 +7,13 @@ class GameArgs {
   final Side playerSide;
   final bool isLocal;
   final TimeControl? timeControl;
+  final bool practiceMode;
 
   const GameArgs({
     this.bot,
     required this.playerSide,
     this.isLocal = false,
     this.timeControl,
+    this.practiceMode = false,
   });
 }

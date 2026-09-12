@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,30 @@ Future<String> _extractNnue(String assetName, String dirPath) async {
   return file.path;
 }
 
+class EvalScore {
+  const EvalScore({this.cp, this.mate});
+
+  final int? cp;
+
+  final int? mate;
+
+  double get whiteShare {
+    if (mate != null) return mate! > 0 ? 1.0 : 0.0;
+    final pawns = (cp ?? 0) / 100.0;
+    return 1.0 / (1.0 + math.exp(-pawns / 3.0));
+  }
+
+  String get label {
+    if (mate != null) {
+      final n = mate!.abs();
+      return mate! > 0 ? '+M$n' : '-M$n';
+    }
+    final pawns = (cp ?? 0) / 100.0;
+    final s = pawns.toStringAsFixed(2);
+    return pawns > 0 ? '+$s' : s;
+  }
+}
+
 class ChessEngine {
   ChessEngine._();
 
@@ -30,7 +55,18 @@ class ChessEngine {
   bool _ready = false;
   Future<void>? _startFuture;
 
+  Future<void> _chain = Future.value();
+
+  int _lastSkill = 20;
+  int? _lastUciElo;
+
   bool get isReady => _ready;
+
+  Future<T> _run<T>(Future<T> Function() op) {
+    final result = _chain.then((_) => op());
+    _chain = result.then((_) {}, onError: (_) {});
+    return result;
+  }
 
   Future<void> start() {
     if (_ready) return Future.value();
@@ -62,13 +98,16 @@ class ChessEngine {
     _ready = true;
   }
 
-  void setSkillLevel(int level, {int? elo}) {
+  void setSkillLevel(int level, {int? uciElo}) {
+    _lastSkill = level;
+    _lastUciElo = uciElo;
+
     final clampedLevel = level.clamp(0, 20);
     _send('setoption name Skill Level value $clampedLevel');
 
-    if (elo != null) {
+    if (uciElo != null) {
       _send('setoption name UCI_LimitStrength value true');
-      _send('setoption name UCI_Elo value ${elo.clamp(1300, 3100)}');
+      _send('setoption name UCI_Elo value ${uciElo.clamp(1320, 3190)}');
     } else {
       _send('setoption name UCI_LimitStrength value false');
     }
@@ -77,7 +116,11 @@ class ChessEngine {
   Future<String> bestMoveForFen(
     String fen, {
     Duration thinkTime = const Duration(milliseconds: 700),
-  }) async {
+  }) {
+    return _run(() => _search(fen, thinkTime));
+  }
+
+  Future<String> _search(String fen, Duration thinkTime) async {
     if (!_ready) await start();
 
     _send('position fen $fen');
@@ -87,21 +130,56 @@ class ChessEngine {
     return line.split(' ')[1];
   }
 
-  Future<String> evaluateBestHint(
+  Future<EvalScore?> evaluateFen(
     String fen, {
-    required int currentSkill,
-    required int currentElo,
-  }) async {
+    Duration thinkTime = const Duration(milliseconds: 350),
+  }) {
+    return _run(() => _evaluate(fen, thinkTime));
+  }
+
+  Future<EvalScore?> _evaluate(String fen, Duration thinkTime) async {
     if (!_ready) await start();
 
-    setSkillLevel(20);
-    final move = await bestMoveForFen(
-      fen,
-      thinkTime: const Duration(milliseconds: 1500),
-    );
-    setSkillLevel(currentSkill, elo: currentElo);
+    String? lastScoreLine;
+    void listener(String line) {
+      if (line.startsWith('info ') && line.contains(' score ')) {
+        lastScoreLine = line;
+      }
+    }
 
-    return move;
+    _listeners.add(listener);
+    _send('position fen $fen');
+    _send('go movetime ${thinkTime.inMilliseconds}');
+    try {
+      await _waitForLine((line) => line.startsWith('bestmove '));
+    } finally {
+      _listeners.remove(listener);
+    }
+
+    if (lastScoreLine == null) return null;
+    final match = RegExp(r'score (cp|mate) (-?\d+)').firstMatch(lastScoreLine!);
+    if (match == null) return null;
+
+    final value = int.parse(match.group(2)!);
+    final whiteToMove = fen.split(' ')[1] == 'w';
+    final whiteValue = whiteToMove ? value : -value;
+
+    return match.group(1) == 'mate'
+        ? EvalScore(mate: whiteValue)
+        : EvalScore(cp: whiteValue);
+  }
+
+  Future<String> evaluateBestHint(String fen) {
+    return _run(() async {
+      final skill = _lastSkill;
+      final elo = _lastUciElo;
+
+      setSkillLevel(20);
+      final move = await _search(fen, const Duration(milliseconds: 1500));
+      setSkillLevel(skill, uciElo: elo);
+
+      return move;
+    });
   }
 
   void stopThinking() {

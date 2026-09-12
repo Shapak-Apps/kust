@@ -11,10 +11,15 @@ import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/evaluation_bar.dart';
+import 'package:Kust/features/game/more_floating_menu.dart';
 import 'package:Kust/features/game/time_control.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
+
+const Color kDarkGameBackground = Color(0xFF303030);
+const Color kDarkGameAppBar = Color(0xFFFFBB00);
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({
@@ -23,12 +28,14 @@ class GameScreen extends ConsumerStatefulWidget {
     required this.playerSide,
     this.isLocal = false,
     this.timeControl,
+    this.practiceMode = false,
   });
 
   final Bot? bot;
   final Side playerSide;
   final bool isLocal;
   final TimeControl? timeControl;
+  final bool practiceMode;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -45,7 +52,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (widget.isLocal) {
         controller.startLocalGame(timeControl: widget.timeControl);
       } else {
-        controller.startGame(widget.bot!, playerSide: widget.playerSide);
+        controller.startGame(
+          widget.bot!,
+          playerSide: widget.playerSide,
+          practiceMode: widget.practiceMode,
+        );
       }
     });
   }
@@ -147,6 +158,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   controller.startGame(
                     widget.bot!,
                     playerSide: widget.playerSide,
+                    practiceMode: widget.practiceMode,
                   );
                 }
               },
@@ -231,6 +243,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     final gameState = ref.watch(chessControllerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFinished =
         gameState.status == GameStatus.checkmate ||
@@ -245,8 +258,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final timed = gameState.timeControl != null;
 
+    final undoEnabled = gameState.canUndo;
+    final hintBlockedByPractice = !gameState.practiceMode;
+    final hintEnabled =
+        gameState.practiceMode &&
+        gameState.isPlayerTurn &&
+        !gameState.isHintThinking;
+
     return Scaffold(
+      backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
+        backgroundColor: isDark
+            ? kDarkGameAppBar.withValues(alpha: 0.80)
+            : null,
+        foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
         actions: [
           if (gameState.status == GameStatus.playing)
@@ -272,6 +297,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            if (gameState.evaluationEnabled)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: EvaluationBar(
+                  score: gameState.evaluation,
+                  whiteOnLeft: bottomSide == Side.white,
+                ),
+              ),
             _MoveHistoryBar(moves: gameState.moves),
             Expanded(
               child: LayoutBuilder(
@@ -354,34 +387,45 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    tooltip: 'Take back',
-                    onPressed: gameState.canUndo
+                    tooltip: hintBlockedByPractice && !widget.isLocal
+                        ? 'Take back (Practice mode only)'
+                        : 'Take back',
+                    onPressed: undoEnabled
                         ? ref
                               .read(chessControllerProvider.notifier)
                               .undoLastMove
                         : null,
-                    icon: const Icon(Icons.undo_rounded),
+                    icon: Opacity(
+                      opacity: undoEnabled ? 1.0 : 0.35,
+                      child: const Icon(Icons.undo_rounded),
+                    ),
                   ),
                   if (!widget.isLocal)
                     IconButton(
-                      tooltip: 'Hint',
-                      onPressed:
-                          gameState.isPlayerTurn && !gameState.isHintThinking
+                      tooltip: hintBlockedByPractice
+                          ? 'Hint (Practice mode only)'
+                          : 'Hint',
+                      onPressed: hintEnabled
                           ? ref
                                 .read(chessControllerProvider.notifier)
                                 .requestHint
                           : null,
-                      icon: gameState.isHintThinking
+                      icon: gameState.isHintThinking && !hintBlockedByPractice
                           ? const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.lightbulb_rounded),
+                          : Opacity(
+                              opacity: (hintEnabled || gameState.isHintThinking)
+                                  ? 1.0
+                                  : 0.35,
+                              child: const Icon(Icons.lightbulb_rounded),
+                            ),
                     ),
                   IconButton(
                     tooltip: 'More',
-                    onPressed: () {},
+                    onPressed: () => MoreFloatingMenu.show(context),
                     icon: const Icon(Icons.more_vert_rounded),
                   ),
                 ],
