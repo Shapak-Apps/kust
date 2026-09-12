@@ -18,7 +18,7 @@ import 'package:Kust/features/game/time_control.dart';
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
 
-const Color kDarkGameBackground = Color(0xFF303030);
+const Color kDarkGameBackground = Color(0xFF252525);
 const Color kDarkGameAppBar = Color(0xFFFFBB00);
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -269,16 +269,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
         backgroundColor: isDark
-            ? kDarkGameAppBar.withValues(alpha: 0.80)
+            ? kDarkGameAppBar.withValues(alpha: 0.75)
             : null,
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
-        title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
+        title: Text(
+          widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
+          style: TextStyle(color: Colors.white),
+        ),
         actions: [
           if (gameState.status == GameStatus.playing)
             IconButton(
               tooltip: 'Resign',
               onPressed: _confirmResign,
               icon: const Icon(Icons.flag_rounded),
+              color: Colors.white,
             ),
           if (isFinished && !_hasDismissedResultDialog)
             IconButton(

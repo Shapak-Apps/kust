@@ -6,7 +6,7 @@ class EvaluationBar extends StatelessWidget {
   const EvaluationBar({
     super.key,
     required this.score,
-    this.height = 14,
+    this.height = 24,
     this.whiteOnLeft = true,
     this.showLabel = true,
   });
@@ -21,8 +21,6 @@ class EvaluationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     double share = score?.whiteShare ?? 0.5;
     if (!whiteOnLeft) share = 1.0 - share;
 
@@ -32,7 +30,26 @@ class EvaluationBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
         child: Stack(
           children: [
-            const ColoredBox(color: _blackSide),
+            const SizedBox.expand(child: ColoredBox(color: _blackSide)),
+
+            if (showLabel)
+              Positioned(
+                left: 8,
+                top: 0,
+                bottom: 0,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    score?.label ?? '0.00',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: _whiteSide,
+                    ),
+                  ),
+                ),
+              ),
+
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.5, end: share),
               duration: const Duration(milliseconds: 260),
@@ -42,35 +59,35 @@ class EvaluationBar extends StatelessWidget {
                 alignment: whiteOnLeft
                     ? Alignment.centerLeft
                     : Alignment.centerRight,
-                child: const ColoredBox(color: _whiteSide),
-              ),
-            ),
-            if (showLabel)
-              Positioned(
-                left: 5,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      score?.label ?? '0.00',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: theme.colorScheme.onSurface,
+                child: ClipRect(
+                  child: Stack(
+                    children: [
+                      const SizedBox.expand(
+                        child: ColoredBox(color: _whiteSide),
                       ),
-                    ),
+
+                      if (showLabel)
+                        Positioned(
+                          left: 8,
+                          top: 0,
+                          bottom: 0,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              score?.label ?? '0.00',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
