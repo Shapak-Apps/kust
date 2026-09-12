@@ -21,6 +21,7 @@ dependencies:
   xml: ^7.0.1
   stockfish: any
   audioplayers: ^6.8.1
+  path_provider: ^2.1.6
 
 dependency_overrides:
   stockfish:
