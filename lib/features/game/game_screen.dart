@@ -527,15 +527,19 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (isThinking) ...[
-                      const SizedBox(width: 8),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                if (isThinking) ...[
+                  Row(
+                    children: [
                       const SizedBox(
-                        width: 12,
-                        height: 12,
+                        width: 11,
+                        height: 11,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       if (thinkingText != null) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             thinkingText!,
@@ -548,32 +552,31 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    for (final piece in captured)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 1),
-                        child: SvgPicture.asset(
-                          assetForPiece(piece),
-                          width: 16,
-                          height: 16,
+                  ),
+                ] else
+                  Row(
+                    children: [
+                      for (final piece in captured)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 1),
+                          child: SvgPicture.asset(
+                            assetForPiece(piece),
+                            width: 16,
+                            height: 16,
+                          ),
                         ),
-                      ),
-                    if (captured.isNotEmpty && advantage > 0)
-                      const SizedBox(width: 5),
-                    if (advantage > 0)
-                      Text(
-                        '+$advantage',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: muted,
+                      if (captured.isNotEmpty && advantage > 0)
+                        const SizedBox(width: 5),
+                      if (advantage > 0)
+                        Text(
+                          '+$advantage',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: muted,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

@@ -231,10 +231,11 @@ class ChessController extends Notifier<GameState> {
   @override
   GameState build() {
     _isDisposed = false;
+    final engine = ref.read(chessEngineProvider);
     ref.onDispose(() {
       _isDisposed = true;
       _stopClock();
-      _engine.dispose();
+      engine.dispose();
     });
 
     return GameState(
@@ -250,7 +251,7 @@ class ChessController extends Notifier<GameState> {
   bool get _timed => state.timeControl != null;
 
   bool get canAnalysisMoveBack {
-    if (!state.practiceMode) return false;
+    if (state.practiceMode) return false;
     if (state.status != GameStatus.playing) return false;
     if (state.isBotThinking) return false;
     if (state.moves.isEmpty) return false;
@@ -259,7 +260,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   bool get canAnalysisMoveNext {
-    if (!state.practiceMode) return false;
+    if (state.practiceMode) return false;
     if (state.status != GameStatus.playing) return false;
     if (state.isBotThinking) return false;
     if (state.moves.isEmpty) return false;
@@ -725,6 +726,7 @@ class ChessController extends Notifier<GameState> {
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
       wasUndo: true,
+      clearAnalysis: true,
     );
 
     _refreshEvaluation();
@@ -884,6 +886,7 @@ class ChessController extends Notifier<GameState> {
       clearCapture: capturedPiece == null,
       wasUndo: false,
       endReason: reason,
+      clearAnalysis: true,
     );
 
     if (state.status == GameStatus.playing) {
@@ -981,6 +984,7 @@ class ChessController extends Notifier<GameState> {
       clearCapture: capturedPiece == null,
       wasUndo: false,
       endReason: reason,
+      clearAnalysis: true,
     );
 
     if (state.status != GameStatus.playing) {
@@ -1039,7 +1043,7 @@ class ChessController extends Notifier<GameState> {
     if (target == Square.h1) return Square.g1;
     if (target == Square.a1) return Square.c1;
     if (target == Square.h8) return Square.g8;
-    if (target == Square.c8) return Square.c8;
+    if (target == Square.a8) return Square.c8;
     return target;
   }
 
