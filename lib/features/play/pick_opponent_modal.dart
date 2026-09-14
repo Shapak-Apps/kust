@@ -143,6 +143,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                   'New students from Turkmenistan want to challenge you',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
+                    fontSize: 16,
                   ),
                 ),
               ),
