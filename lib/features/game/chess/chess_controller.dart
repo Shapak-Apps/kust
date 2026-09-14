@@ -1,19 +1,18 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:Kust/features/game/chess/bot_policy.dart';
-import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
+import 'package:Kust/features/game/chess/bot_policy.dart';
+import 'package:Kust/features/game/chess/chess_engine.dart';
+import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/time_control.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
-import 'package:Kust/features/game/chess/move_record.dart';
-import 'package:Kust/features/game/chess/chess_helpers.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -218,10 +217,11 @@ class GameState {
   }
 }
 
-class ChessController extends AutoDisposeNotifier<GameState> {
+class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
+  bool _isDisposed = false;
 
   Timer? _clockTimer;
   DateTime? _lastTick;
@@ -230,7 +230,9 @@ class ChessController extends AutoDisposeNotifier<GameState> {
 
   @override
   GameState build() {
+    _isDisposed = false;
     ref.onDispose(() {
+      _isDisposed = true;
       _stopClock();
       _engine.dispose();
     });
@@ -291,6 +293,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
   }
 
   void _onClockTick() {
+    if (_isDisposed) return;
     if (state.status != GameStatus.playing || !_timed) {
       _stopClock();
       return;
@@ -342,7 +345,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
   }
 
   void _publishClock() {
-    if (!_timed) return;
+    if (!_timed || _isDisposed) return;
 
     final white = TimeControl.display(_whiteClock);
     final black = TimeControl.display(_blackClock);
@@ -353,6 +356,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
   }
 
   void _flagFell(Side fellSide) {
+    if (_isDisposed) return;
     _stopClock();
 
     final String winner;
@@ -485,6 +489,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
   Future<void> _loadEvalEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
+    if (_isDisposed) return;
     if (enabled != state.evaluationEnabled) {
       state = state.copyWith(evaluationEnabled: enabled);
     }
@@ -522,14 +527,17 @@ class ChessController extends AutoDisposeNotifier<GameState> {
     );
 
     _playSound('game-start.mp3');
-    _loadEvalEnabled();
+    unawaited(_loadEvalEnabled());
 
-    _engine.start().then((_) {
-      _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
-      if (state.position.turn != playerSide) {
-        _requestBotMove();
-      }
-    });
+    unawaited(
+      _engine.start().then((_) {
+        if (_isDisposed) return;
+        _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+        if (state.position.turn != playerSide) {
+          _requestBotMove();
+        }
+      }),
+    );
   }
 
   Future<void> startLocalGame({TimeControl? timeControl}) async {
@@ -554,12 +562,14 @@ class ChessController extends AutoDisposeNotifier<GameState> {
     );
 
     _playSound('game-start.mp3');
-    _loadEvalEnabled();
+    unawaited(_loadEvalEnabled());
   }
 
   Future<void> setEvaluationEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(kEvalBarPrefKey, enabled);
+
+    if (_isDisposed) return;
 
     state = state.copyWith(
       evaluationEnabled: enabled,
@@ -570,18 +580,19 @@ class ChessController extends AutoDisposeNotifier<GameState> {
   }
 
   Future<void> _refreshEvaluation() async {
-    if (!state.evaluationEnabled) return;
+    if (_isDisposed || !state.evaluationEnabled) return;
     if (state.status != GameStatus.playing &&
         state.status != GameStatus.checkmate &&
-        state.status != GameStatus.draw)
+        state.status != GameStatus.draw) {
       return;
+    }
 
     final id = ++_evalRequestId;
     final fen = state.position.fen;
 
     final score = await _engine.evaluateFen(fen);
 
-    if (id != _evalRequestId) return;
+    if (_isDisposed || id != _evalRequestId) return;
     if (state.position.fen != fen) return;
 
     state = state.copyWith(evaluation: score);
@@ -763,7 +774,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
 
     final uci = await _engine.evaluateBestHint(state.position.fen);
 
-    if (requestId != _moveRequestId) return;
+    if (_isDisposed || requestId != _moveRequestId) return;
 
     if (uci == '(none)') {
       state = state.copyWith(isHintThinking: false);
@@ -915,7 +926,7 @@ class ChessController extends AutoDisposeNotifier<GameState> {
       move = _parseUciMove(uci);
     }
 
-    if (requestId != _moveRequestId) return;
+    if (_isDisposed || requestId != _moveRequestId) return;
 
     if (state.status != GameStatus.playing) {
       state = state.copyWith(isBotThinking: false);
@@ -1093,6 +1104,6 @@ class ChessController extends AutoDisposeNotifier<GameState> {
 }
 
 final chessControllerProvider =
-    AutoDisposeNotifierProvider<ChessController, GameState>(
+    NotifierProvider.autoDispose<ChessController, GameState>(
       ChessController.new,
     );
