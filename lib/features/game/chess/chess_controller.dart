@@ -119,7 +119,7 @@ class GameState {
   Position get displayPosition {
     if (!isSelfAnalysisActive) return position;
 
-    var current = Chess.fromSetup(Setup.parseFen(kStartFen));
+    Position current = Chess.fromSetup(Setup.parseFen(kStartFen));
 
     for (var i = 0; i < analysisIndex!; i++) {
       current = current.play(moves[i].move);
