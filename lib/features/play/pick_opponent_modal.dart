@@ -287,7 +287,7 @@ class _BotTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 if (bot.isTkm) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(flagSize / 2),

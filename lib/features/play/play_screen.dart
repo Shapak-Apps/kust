@@ -395,8 +395,8 @@ class _BotChallengeCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                
                 if (bot.isTkm) ...[
+                  const SizedBox(width: 4),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(kFlagSize / 2),
                     child: Image.asset(
