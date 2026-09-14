@@ -1,19 +1,18 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:Kust/features/game/chess/bot_policy.dart';
-import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
+import 'package:Kust/features/game/chess/bot_policy.dart';
+import 'package:Kust/features/game/chess/chess_engine.dart';
+import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/time_control.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
-import 'package:Kust/features/game/chess/move_record.dart';
-import 'package:Kust/features/game/chess/chess_helpers.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -50,6 +49,7 @@ class GameState {
     this.practiceMode = true,
     this.evaluationEnabled = false,
     this.evaluation,
+    this.analysisIndex,
   });
 
   final Position position;
@@ -80,6 +80,8 @@ class GameState {
   final bool evaluationEnabled;
   final EvalScore? evaluation;
 
+  final int? analysisIndex;
+
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
       (mode == GameMode.local || position.turn == playerSide);
@@ -97,6 +99,52 @@ class GameState {
 
     return true;
   }
+
+  bool get isSelfAnalysisActive {
+    final index = analysisIndex;
+    if (index == null) return false;
+    if (moves.isEmpty) return false;
+    return index >= 0 && index < moves.length;
+  }
+
+  int get analysisCursor {
+    final index = analysisIndex;
+    if (index == null) return moves.length;
+    if (index < 0) return 0;
+    if (index > moves.length) return moves.length;
+    return index;
+  }
+
+  Position get displayPosition {
+    if (!isSelfAnalysisActive) return position;
+
+    Position current = Chess.fromSetup(Setup.parseFen(kStartFen));
+
+    for (var i = 0; i < analysisIndex!; i++) {
+      current = current.play(moves[i].move);
+    }
+
+    return current;
+  }
+
+  List<Square> get displayMoveSquares {
+    if (!isSelfAnalysisActive) return moveSquares;
+
+    final index = analysisIndex!;
+    if (index == 0) return const <Square>[];
+
+    final move = moves[index - 1].move;
+    return [move.from, move.to];
+  }
+
+  Set<Square> get displayHintSquares =>
+      isSelfAnalysisActive ? const <Square>{} : hintSquares;
+
+  Set<Square> get displayLegalDestinations =>
+      isSelfAnalysisActive ? const <Square>{} : legalDestinations;
+
+  Square? get displaySelectedSquare =>
+      isSelfAnalysisActive ? null : selectedSquare;
 
   GameState copyWith({
     Position? position,
@@ -126,6 +174,8 @@ class GameState {
     bool? evaluationEnabled,
     EvalScore? evaluation,
     bool clearEvaluation = false,
+    int? analysisIndex,
+    bool clearAnalysis = false,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -160,6 +210,9 @@ class GameState {
       practiceMode: practiceMode ?? this.practiceMode,
       evaluationEnabled: evaluationEnabled ?? this.evaluationEnabled,
       evaluation: clearEvaluation ? null : (evaluation ?? this.evaluation),
+      analysisIndex: clearAnalysis
+          ? null
+          : (analysisIndex ?? this.analysisIndex),
     );
   }
 }
@@ -168,6 +221,7 @@ class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
+  bool _isDisposed = false;
 
   Timer? _clockTimer;
   DateTime? _lastTick;
@@ -176,9 +230,12 @@ class ChessController extends Notifier<GameState> {
 
   @override
   GameState build() {
+    _isDisposed = false;
+    final engine = ref.read(chessEngineProvider);
     ref.onDispose(() {
+      _isDisposed = true;
       _stopClock();
-      _engine.stopThinking();
+      engine.dispose();
     });
 
     return GameState(
@@ -192,6 +249,25 @@ class ChessController extends Notifier<GameState> {
   ChessEngine get _engine => ref.read(chessEngineProvider);
 
   bool get _timed => state.timeControl != null;
+
+  bool get canAnalysisMoveBack {
+    if (state.practiceMode) return false;
+    if (state.status != GameStatus.playing) return false;
+    if (state.isBotThinking) return false;
+    if (state.moves.isEmpty) return false;
+
+    return state.analysisCursor > 0;
+  }
+
+  bool get canAnalysisMoveNext {
+    if (state.practiceMode) return false;
+    if (state.status != GameStatus.playing) return false;
+    if (state.isBotThinking) return false;
+    if (state.moves.isEmpty) return false;
+    if (state.analysisIndex == null) return false;
+
+    return state.analysisCursor < state.moves.length;
+  }
 
   void _initClocks(TimeControl? timeControl) {
     _stopClock();
@@ -218,6 +294,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   void _onClockTick() {
+    if (_isDisposed) return;
     if (state.status != GameStatus.playing || !_timed) {
       _stopClock();
       return;
@@ -269,7 +346,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   void _publishClock() {
-    if (!_timed) return;
+    if (!_timed || _isDisposed) return;
 
     final white = TimeControl.display(_whiteClock);
     final black = TimeControl.display(_blackClock);
@@ -280,6 +357,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   void _flagFell(Side fellSide) {
+    if (_isDisposed) return;
     _stopClock();
 
     final String winner;
@@ -412,6 +490,7 @@ class ChessController extends Notifier<GameState> {
   Future<void> _loadEvalEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
+    if (_isDisposed) return;
     if (enabled != state.evaluationEnabled) {
       state = state.copyWith(evaluationEnabled: enabled);
     }
@@ -445,18 +524,21 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: practiceMode,
       evaluationEnabled: state.evaluationEnabled,
+      status: GameStatus.playing,
     );
 
-    await _engine.start();
-    _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
-
-    state = state.copyWith(status: GameStatus.playing);
     _playSound('game-start.mp3');
-    _loadEvalEnabled();
+    unawaited(_loadEvalEnabled());
 
-    if (state.position.turn != playerSide) {
-      _requestBotMove();
-    }
+    unawaited(
+      _engine.start().then((_) {
+        if (_isDisposed) return;
+        _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+        if (state.position.turn != playerSide) {
+          _requestBotMove();
+        }
+      }),
+    );
   }
 
   Future<void> startLocalGame({TimeControl? timeControl}) async {
@@ -481,12 +563,14 @@ class ChessController extends Notifier<GameState> {
     );
 
     _playSound('game-start.mp3');
-    _loadEvalEnabled();
+    unawaited(_loadEvalEnabled());
   }
 
   Future<void> setEvaluationEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(kEvalBarPrefKey, enabled);
+
+    if (_isDisposed) return;
 
     state = state.copyWith(
       evaluationEnabled: enabled,
@@ -497,24 +581,26 @@ class ChessController extends Notifier<GameState> {
   }
 
   Future<void> _refreshEvaluation() async {
-    if (!state.evaluationEnabled) return;
+    if (_isDisposed || !state.evaluationEnabled) return;
     if (state.status != GameStatus.playing &&
         state.status != GameStatus.checkmate &&
-        state.status != GameStatus.draw)
+        state.status != GameStatus.draw) {
       return;
+    }
 
     final id = ++_evalRequestId;
     final fen = state.position.fen;
 
     final score = await _engine.evaluateFen(fen);
 
-    if (id != _evalRequestId) return;
+    if (_isDisposed || id != _evalRequestId) return;
     if (state.position.fen != fen) return;
 
     state = state.copyWith(evaluation: score);
   }
 
   void selectSquare(Square square) {
+    if (state.isSelfAnalysisActive) return;
     if (!state.isPlayerTurn) return;
 
     final piece = state.position.board.pieceAt(square);
@@ -640,9 +726,44 @@ class ChessController extends Notifier<GameState> {
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
       wasUndo: true,
+      clearAnalysis: true,
     );
 
     _refreshEvaluation();
+  }
+
+  void analysisMoveBack() {
+    if (!canAnalysisMoveBack) return;
+
+    final newIndex = state.analysisCursor - 1;
+    if (newIndex < 0) return;
+
+    state = state.copyWith(
+      clearSelection: true,
+      hintSquares: const <Square>{},
+      analysisIndex: newIndex,
+    );
+  }
+
+  void analysisMoveNext() {
+    if (!canAnalysisMoveNext) return;
+
+    final newIndex = state.analysisCursor + 1;
+
+    if (newIndex >= state.moves.length) {
+      state = state.copyWith(
+        clearSelection: true,
+        hintSquares: const <Square>{},
+        clearAnalysis: true,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      clearSelection: true,
+      hintSquares: const <Square>{},
+      analysisIndex: newIndex,
+    );
   }
 
   Future<void> requestHint() async {
@@ -655,7 +776,7 @@ class ChessController extends Notifier<GameState> {
 
     final uci = await _engine.evaluateBestHint(state.position.fen);
 
-    if (requestId != _moveRequestId) return;
+    if (_isDisposed || requestId != _moveRequestId) return;
 
     if (uci == '(none)') {
       state = state.copyWith(isHintThinking: false);
@@ -765,6 +886,7 @@ class ChessController extends Notifier<GameState> {
       clearCapture: capturedPiece == null,
       wasUndo: false,
       endReason: reason,
+      clearAnalysis: true,
     );
 
     if (state.status == GameStatus.playing) {
@@ -807,7 +929,7 @@ class ChessController extends Notifier<GameState> {
       move = _parseUciMove(uci);
     }
 
-    if (requestId != _moveRequestId) return;
+    if (_isDisposed || requestId != _moveRequestId) return;
 
     if (state.status != GameStatus.playing) {
       state = state.copyWith(isBotThinking: false);
@@ -862,6 +984,7 @@ class ChessController extends Notifier<GameState> {
       clearCapture: capturedPiece == null,
       wasUndo: false,
       endReason: reason,
+      clearAnalysis: true,
     );
 
     if (state.status != GameStatus.playing) {
@@ -920,7 +1043,7 @@ class ChessController extends Notifier<GameState> {
     if (target == Square.h1) return Square.g1;
     if (target == Square.a1) return Square.c1;
     if (target == Square.h8) return Square.g8;
-    if (target == Square.c8) return Square.c8;
+    if (target == Square.a8) return Square.c8;
     return target;
   }
 
@@ -984,6 +1107,7 @@ class ChessController extends Notifier<GameState> {
   }
 }
 
-final chessControllerProvider = NotifierProvider<ChessController, GameState>(
-  ChessController.new,
-);
+final chessControllerProvider =
+    NotifierProvider.autoDispose<ChessController, GameState>(
+      ChessController.new,
+    );

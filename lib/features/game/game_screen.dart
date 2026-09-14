@@ -243,6 +243,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     final gameState = ref.watch(chessControllerProvider);
+    final controller = ref.read(chessControllerProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFinished =
@@ -259,18 +260,21 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final timed = gameState.timeControl != null;
 
     final undoEnabled = gameState.canUndo;
-    final hintBlockedByPractice = !gameState.practiceMode;
     final hintEnabled =
         gameState.practiceMode &&
         gameState.isPlayerTurn &&
         !gameState.isHintThinking;
+
+    final analysisBackEnabled = controller.canAnalysisMoveBack;
+    final analysisNextEnabled = controller.canAnalysisMoveNext;
+    final isPractice = gameState.practiceMode;
 
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
         backgroundColor: isDark
             ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : null,
+            : kDarkGameAppBar.withValues(alpha: 0.8),
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(
           widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
@@ -339,7 +343,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               avatarPath: widget.isLocal
                                   ? null
                                   : widget.bot!.imagePath,
-                              position: gameState.position,
+                              position: gameState.displayPosition,
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
@@ -365,7 +369,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _PlayerBar(
                               side: bottomSide,
                               name: widget.isLocal ? 'White' : 'You',
-                              position: gameState.position,
+                              position: gameState.displayPosition,
                               moves: gameState.moves,
                               timeLeft: timed
                                   ? (bottomSide == Side.white
@@ -390,48 +394,62 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    tooltip: hintBlockedByPractice && !widget.isLocal
-                        ? 'Take back (Practice mode only)'
-                        : 'Take back',
-                    onPressed: undoEnabled
-                        ? ref
-                              .read(chessControllerProvider.notifier)
-                              .undoLastMove
-                        : null,
-                    icon: Opacity(
-                      opacity: undoEnabled ? 1.0 : 0.35,
-                      child: const Icon(Icons.undo_rounded),
-                    ),
-                  ),
-                  if (!widget.isLocal)
+                  if (isPractice) ...[
                     IconButton(
-                      tooltip: hintBlockedByPractice
-                          ? 'Hint (Practice mode only)'
-                          : 'Hint',
-                      onPressed: hintEnabled
-                          ? ref
-                                .read(chessControllerProvider.notifier)
-                                .requestHint
-                          : null,
-                      icon: gameState.isHintThinking && !hintBlockedByPractice
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Opacity(
-                              opacity: (hintEnabled || gameState.isHintThinking)
-                                  ? 1.0
-                                  : 0.35,
-                              child: const Icon(Icons.lightbulb_rounded),
-                            ),
+                      tooltip: 'Take back',
+                      onPressed: undoEnabled ? controller.undoLastMove : null,
+                      icon: Opacity(
+                        opacity: undoEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.undo_rounded),
+                      ),
                     ),
-                  IconButton(
-                    tooltip: 'More',
-                    onPressed: () => MoreFloatingMenu.show(context),
-                    icon: const Icon(Icons.more_vert_rounded),
-                  ),
+                    if (!widget.isLocal)
+                      IconButton(
+                        tooltip: 'Hint',
+                        onPressed: hintEnabled ? controller.requestHint : null,
+                        icon: gameState.isHintThinking
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Opacity(
+                                opacity:
+                                    (hintEnabled || gameState.isHintThinking)
+                                    ? 1.0
+                                    : 0.35,
+                                child: const Icon(Icons.lightbulb_rounded),
+                              ),
+                      ),
+                    IconButton(
+                      tooltip: 'More',
+                      onPressed: () => MoreFloatingMenu.show(context),
+                      icon: const Icon(Icons.more_vert_rounded),
+                    ),
+                  ] else ...[
+                    IconButton(
+                      tooltip: 'Move back',
+                      onPressed: analysisBackEnabled
+                          ? controller.analysisMoveBack
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisBackEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_previous_rounded),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Move next',
+                      onPressed: analysisNextEnabled
+                          ? controller.analysisMoveNext
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisNextEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_next_rounded),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -509,15 +527,19 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (isThinking) ...[
-                      const SizedBox(width: 8),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                if (isThinking) ...[
+                  Row(
+                    children: [
                       const SizedBox(
-                        width: 12,
-                        height: 12,
+                        width: 11,
+                        height: 11,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       if (thinkingText != null) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 5),
                         Flexible(
                           child: Text(
                             thinkingText!,
@@ -530,32 +552,31 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ],
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    for (final piece in captured)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 1),
-                        child: SvgPicture.asset(
-                          assetForPiece(piece),
-                          width: 16,
-                          height: 16,
+                  ),
+                ] else
+                  Row(
+                    children: [
+                      for (final piece in captured)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 1),
+                          child: SvgPicture.asset(
+                            assetForPiece(piece),
+                            width: 16,
+                            height: 16,
+                          ),
                         ),
-                      ),
-                    if (captured.isNotEmpty && advantage > 0)
-                      const SizedBox(width: 5),
-                    if (advantage > 0)
-                      Text(
-                        '+$advantage',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: muted,
+                      if (captured.isNotEmpty && advantage > 0)
+                        const SizedBox(width: 5),
+                      if (advantage > 0)
+                        Text(
+                          '+$advantage',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: muted,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

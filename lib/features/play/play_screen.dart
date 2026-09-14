@@ -11,6 +11,7 @@ import 'package:Kust/features/play/pick_time_modal.dart';
 import 'package:Kust/features/game/game_args.dart';
 
 const Color kAccentColor = Color(0xFFFFBB00);
+const double kFlagSize = 14;
 
 const List<Bot> _challengeBots = [
   Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
@@ -19,6 +20,22 @@ const List<Bot> _challengeBots = [
   Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
   Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
   Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
+];
+
+const List<Bot> _tkmChallengeBots = [
+  Bot(name: 'Bahar', elo: 400, imagePath: 'assets/bots/Bahar.png', isTkm: true),
+  Bot(
+    name: 'Enejan',
+    elo: 1000,
+    imagePath: 'assets/bots/Enejan.png',
+    isTkm: true,
+  ),
+  Bot(
+    name: 'Berdi',
+    elo: 2000,
+    imagePath: 'assets/bots/Berdi.png',
+    isTkm: true,
+  ),
 ];
 
 class PlayScreen extends StatefulWidget {
@@ -294,6 +311,33 @@ class _PlayScreenState extends State<PlayScreen> {
               ),
 
               const SizedBox(height: 24),
+
+              const Text(
+                'New students from Turkmenistan want to challenge you',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _tkmChallengeBots.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.975,
+                ),
+                itemBuilder: (context, index) {
+                  final bot = _tkmChallengeBots[index];
+                  return _BotChallengeCard(
+                    bot: bot,
+                    onTap: () => _startGameWithBot(bot),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -337,13 +381,34 @@ class _BotChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            Text(
-              bot.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontSize: (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    bot.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontSize:
+                          (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
+                    ),
+                  ),
+                ),
+                if (bot.isTkm) ...[
+                  const SizedBox(width: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(kFlagSize / 2),
+                    child: Image.asset(
+                      'assets/icons/TKM.webp',
+                      width: kFlagSize,
+                      height: kFlagSize,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ],
             ),
             const SizedBox(height: 2),
 
