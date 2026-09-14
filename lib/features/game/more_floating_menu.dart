@@ -19,6 +19,7 @@ class MoreFloatingMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final gameState = ref.watch(chessControllerProvider);
     final double bottomNavHeight = MediaQuery.of(context).padding.bottom + 88;
+    final canToggleEval = gameState.practiceMode;
 
     return Stack(
       children: [
@@ -49,19 +50,25 @@ class MoreFloatingMenu extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.analytics_outlined, size: 20),
-                      title: const Text(
-                        'Evaluation bar',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      trailing: Checkbox(
-                        value: gameState.evaluationEnabled,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (v) => ref
-                            .read(chessControllerProvider.notifier)
-                            .setEvaluationEnabled(v ?? false),
+                    Opacity(
+                      opacity: canToggleEval ? 1.0 : 0.35,
+                      child: ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.analytics_outlined, size: 20),
+                        title: const Text(
+                          'Evaluation bar',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        trailing: Checkbox(
+                          value: gameState.evaluationEnabled,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          onChanged: canToggleEval
+                              ? (v) => ref
+                                    .read(chessControllerProvider.notifier)
+                                    .setEvaluationEnabled(v ?? false)
+                              : null,
+                        ),
                       ),
                     ),
                   ],
