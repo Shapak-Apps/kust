@@ -50,6 +50,7 @@ class GameState {
     this.practiceMode = true,
     this.evaluationEnabled = false,
     this.evaluation,
+    this.analysisIndex,
   });
 
   final Position position;
@@ -80,6 +81,8 @@ class GameState {
   final bool evaluationEnabled;
   final EvalScore? evaluation;
 
+  final int? analysisIndex;
+
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
       (mode == GameMode.local || position.turn == playerSide);
@@ -97,6 +100,52 @@ class GameState {
 
     return true;
   }
+
+  bool get isSelfAnalysisActive {
+    final index = analysisIndex;
+    if (index == null) return false;
+    if (moves.isEmpty) return false;
+    return index >= 0 && index < moves.length;
+  }
+
+  int get analysisCursor {
+    final index = analysisIndex;
+    if (index == null) return moves.length;
+    if (index < 0) return 0;
+    if (index > moves.length) return moves.length;
+    return index;
+  }
+
+  Position get displayPosition {
+    if (!isSelfAnalysisActive) return position;
+
+    var current = Chess.fromSetup(Setup.parseFen(kStartFen));
+
+    for (var i = 0; i < analysisIndex!; i++) {
+      current = current.play(moves[i].move);
+    }
+
+    return current;
+  }
+
+  List<Square> get displayMoveSquares {
+    if (!isSelfAnalysisActive) return moveSquares;
+
+    final index = analysisIndex!;
+    if (index == 0) return const <Square>[];
+
+    final move = moves[index - 1].move;
+    return [move.from, move.to];
+  }
+
+  Set<Square> get displayHintSquares =>
+      isSelfAnalysisActive ? const <Square>{} : hintSquares;
+
+  Set<Square> get displayLegalDestinations =>
+      isSelfAnalysisActive ? const <Square>{} : legalDestinations;
+
+  Square? get displaySelectedSquare =>
+      isSelfAnalysisActive ? null : selectedSquare;
 
   GameState copyWith({
     Position? position,
@@ -126,6 +175,8 @@ class GameState {
     bool? evaluationEnabled,
     EvalScore? evaluation,
     bool clearEvaluation = false,
+    int? analysisIndex,
+    bool clearAnalysis = false,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -160,6 +211,9 @@ class GameState {
       practiceMode: practiceMode ?? this.practiceMode,
       evaluationEnabled: evaluationEnabled ?? this.evaluationEnabled,
       evaluation: clearEvaluation ? null : (evaluation ?? this.evaluation),
+      analysisIndex: clearAnalysis
+          ? null
+          : (analysisIndex ?? this.analysisIndex),
     );
   }
 }
@@ -192,6 +246,25 @@ class ChessController extends Notifier<GameState> {
   ChessEngine get _engine => ref.read(chessEngineProvider);
 
   bool get _timed => state.timeControl != null;
+
+  bool get canAnalysisMoveBack {
+    if (!state.practiceMode) return false;
+    if (state.status != GameStatus.playing) return false;
+    if (state.isBotThinking) return false;
+    if (state.moves.isEmpty) return false;
+
+    return state.analysisCursor > 0;
+  }
+
+  bool get canAnalysisMoveNext {
+    if (!state.practiceMode) return false;
+    if (state.status != GameStatus.playing) return false;
+    if (state.isBotThinking) return false;
+    if (state.moves.isEmpty) return false;
+    if (state.analysisIndex == null) return false;
+
+    return state.analysisCursor < state.moves.length;
+  }
 
   void _initClocks(TimeControl? timeControl) {
     _stopClock();
@@ -515,6 +588,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   void selectSquare(Square square) {
+    if (state.isSelfAnalysisActive) return;
     if (!state.isPlayerTurn) return;
 
     final piece = state.position.board.pieceAt(square);
@@ -643,6 +717,40 @@ class ChessController extends Notifier<GameState> {
     );
 
     _refreshEvaluation();
+  }
+
+  void analysisMoveBack() {
+    if (!canAnalysisMoveBack) return;
+
+    final newIndex = state.analysisCursor - 1;
+    if (newIndex < 0) return;
+
+    state = state.copyWith(
+      clearSelection: true,
+      hintSquares: const <Square>{},
+      analysisIndex: newIndex,
+    );
+  }
+
+  void analysisMoveNext() {
+    if (!canAnalysisMoveNext) return;
+
+    final newIndex = state.analysisCursor + 1;
+
+    if (newIndex >= state.moves.length) {
+      state = state.copyWith(
+        clearSelection: true,
+        hintSquares: const <Square>{},
+        clearAnalysis: true,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      clearSelection: true,
+      hintSquares: const <Square>{},
+      analysisIndex: newIndex,
+    );
   }
 
   Future<void> requestHint() async {
