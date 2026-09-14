@@ -74,9 +74,34 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
 
   late final List<Bot> bots = [...internationalBots, ...tkmBots];
 
+  final ScrollController _scrollController = ScrollController();
+
   int? selectedIndex;
   Side? selectedSide;
   bool practiceMode = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onBotSelected(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+
+    // Auto scroll down to show options and the Play button after selecting
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +115,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
         ),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -130,7 +156,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                   return _BotTile(
                     bot: bot,
                     isSelected: selectedIndex == index,
-                    onTap: () => setState(() => selectedIndex = index),
+                    onTap: () => _onBotSelected(index),
                   );
                 },
               ),
@@ -166,7 +192,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                   return _BotTile(
                     bot: bot,
                     isSelected: selectedIndex == globalIndex,
-                    onTap: () => setState(() => selectedIndex = globalIndex),
+                    onTap: () => _onBotSelected(globalIndex),
                   );
                 },
               ),
@@ -205,12 +231,13 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
+              // Remade Play Button with enhanced UI state
               SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: ElevatedButton(
+                child: FilledButton.icon(
                   onPressed: selectedIndex == null
                       ? null
                       : () {
@@ -222,9 +249,20 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                           Navigator.of(context).pop();
                           widget.onPlay(bot, side, practiceMode);
                         },
-                  child: const Text(
-                    'Play',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(
+                    selectedIndex != null
+                        ? 'Play against ${bots[selectedIndex!].name}'
+                        : 'Select an opponent',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
