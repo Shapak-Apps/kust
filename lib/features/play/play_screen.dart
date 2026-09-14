@@ -388,7 +388,7 @@ class _BotChallengeCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(kFlagSize / 2),
                     child: Image.asset(
-                      'assets/icon/tkm.webp',
+                      'assets/icons/TKM.webp',
                       width: kFlagSize,
                       height: kFlagSize,
                       fit: BoxFit.cover,

@@ -279,18 +279,6 @@ class _BotTile extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (bot.isTkm) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(flagSize / 2),
-                    child: Image.asset(
-                      'assets/icon/tkm.webp',
-                      width: flagSize,
-                      height: flagSize,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
                 Flexible(
                   child: Text(
                     bot.name,
@@ -299,6 +287,18 @@ class _BotTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (bot.isTkm) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(flagSize / 2),
+                    child: Image.asset(
+                      'assets/icons/TKM.webp',
+                      width: flagSize,
+                      height: flagSize,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
               ],
             ),
             const SizedBox(height: 2),
