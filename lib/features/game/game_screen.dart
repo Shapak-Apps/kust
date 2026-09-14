@@ -260,7 +260,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final timed = gameState.timeControl != null;
 
     final undoEnabled = gameState.canUndo;
-    final hintBlockedByPractice = !gameState.practiceMode;
     final hintEnabled =
         gameState.practiceMode &&
         gameState.isPlayerTurn &&
@@ -268,13 +267,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
     final analysisBackEnabled = controller.canAnalysisMoveBack;
     final analysisNextEnabled = controller.canAnalysisMoveNext;
+    final isPractice = gameState.practiceMode;
 
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
         backgroundColor: isDark
             ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : kDarkGameAppBar.withValues(alpha: 0.75),
+            : null,
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(
           widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
@@ -394,59 +394,58 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  IconButton(
-                    tooltip: gameState.practiceMode
-                        ? 'Move back'
-                        : 'Move back (Practice mode only)',
-                    onPressed: analysisBackEnabled
-                        ? controller.analysisMoveBack
-                        : null,
-                    icon: Opacity(
-                      opacity: analysisBackEnabled ? 1.0 : 0.35,
-                      child: const Icon(Icons.skip_previous_rounded),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: gameState.practiceMode
-                        ? 'Move next'
-                        : 'Move next (Practice mode only)',
-                    onPressed: analysisNextEnabled
-                        ? controller.analysisMoveNext
-                        : null,
-                    icon: Opacity(
-                      opacity: analysisNextEnabled ? 1.0 : 0.35,
-                      child: const Icon(Icons.skip_next_rounded),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: hintBlockedByPractice && !widget.isLocal
-                        ? 'Take back (Practice mode only)'
-                        : 'Take back',
-                    onPressed: undoEnabled ? controller.undoLastMove : null,
-                    icon: Opacity(
-                      opacity: undoEnabled ? 1.0 : 0.35,
-                      child: const Icon(Icons.undo_rounded),
-                    ),
-                  ),
-                  if (!widget.isLocal)
+                  if (!isPractice) ...[
                     IconButton(
-                      tooltip: hintBlockedByPractice
-                          ? 'Hint (Practice mode only)'
-                          : 'Hint',
-                      onPressed: hintEnabled ? controller.requestHint : null,
-                      icon: gameState.isHintThinking && !hintBlockedByPractice
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Opacity(
-                              opacity: (hintEnabled || gameState.isHintThinking)
-                                  ? 1.0
-                                  : 0.35,
-                              child: const Icon(Icons.lightbulb_rounded),
-                            ),
+                      tooltip: 'Move back',
+                      onPressed: analysisBackEnabled
+                          ? controller.analysisMoveBack
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisBackEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_previous_rounded),
+                      ),
                     ),
+                    IconButton(
+                      tooltip: 'Move next',
+                      onPressed: analysisNextEnabled
+                          ? controller.analysisMoveNext
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisNextEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_next_rounded),
+                      ),
+                    ),
+                  ],
+                  if (isPractice) ...[
+                    IconButton(
+                      tooltip: 'Take back',
+                      onPressed: undoEnabled ? controller.undoLastMove : null,
+                      icon: Opacity(
+                        opacity: undoEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.undo_rounded),
+                      ),
+                    ),
+                    if (!widget.isLocal)
+                      IconButton(
+                        tooltip: 'Hint',
+                        onPressed: hintEnabled ? controller.requestHint : null,
+                        icon: gameState.isHintThinking
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Opacity(
+                                opacity:
+                                    (hintEnabled || gameState.isHintThinking)
+                                    ? 1.0
+                                    : 0.35,
+                                child: const Icon(Icons.lightbulb_rounded),
+                              ),
+                      ),
+                  ],
                   IconButton(
                     tooltip: 'More',
                     onPressed: () => MoreFloatingMenu.show(context),
