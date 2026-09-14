@@ -102,11 +102,15 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return null;
   }
 
-  Widget _buildRotatedPiece(Piece piece, GameState gameState) {
+  Widget _buildRotatedPiece(
+    Piece piece,
+    GameState gameState,
+    Position displayPosition,
+  ) {
     Widget svg = SvgPicture.asset(_assetForPiece(piece));
 
     if (gameState.mode == GameMode.local) {
-      if (gameState.position.turn == Side.black) {
+      if (displayPosition.turn == Side.black) {
         return RotatedBox(quarterTurns: 2, child: svg);
       }
     }
@@ -117,6 +121,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   @override
   Widget build(BuildContext context) {
     final gameState = ref.watch(chessControllerProvider);
+    final displayPosition = gameState.displayPosition;
 
     _flipped = gameState.mode == GameMode.local
         ? false
@@ -125,7 +130,9 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
 
-      if (previous.position != next.position) {
+      if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) return;
+
+      if (previous.position.fen != next.position.fen) {
         final move = next.lastMove;
 
         if (move != null) {
@@ -202,11 +209,17 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
-        final checkedKing = _checkedKingSquare(gameState.position);
+        final checkedKing = _checkedKingSquare(displayPosition);
+        final selectedSquare = gameState.displaySelectedSquare;
+        final legalDestinations = gameState.displayLegalDestinations;
+        final moveSquares = gameState.displayMoveSquares;
+        final hintSquares = gameState.displayHintSquares;
 
         return AbsorbPointer(
           absorbing:
-              gameState.isBotThinking || gameState.status != GameStatus.playing,
+              gameState.isBotThinking ||
+              gameState.status != GameStatus.playing ||
+              gameState.isSelfAnalysisActive,
           child: SizedBox(
             width: side,
             height: side,
@@ -223,14 +236,21 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                             _buildBoardSquare(
                               squareAt(file, rank),
                               gameState,
+                              displayPosition,
                               checkedKing,
+                              selectedSquare,
+                              legalDestinations,
+                              moveSquares,
+                              hintSquares,
                             ),
                         ],
                       ),
                   ],
                 ),
 
-                if (_capPiece != null && _capSquare != null)
+                if (!gameState.isSelfAnalysisActive &&
+                    _capPiece != null &&
+                    _capSquare != null)
                   Positioned(
                     left: _getSquareOffset(_capSquare!, _squareSize).dx,
                     top: _getSquareOffset(_capSquare!, _squareSize).dy,
@@ -251,13 +271,20 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                         },
                         child: Padding(
                           padding: EdgeInsets.all(_squareSize * 0.02),
-                          child: _buildRotatedPiece(_capPiece!, gameState),
+                          child: _buildRotatedPiece(
+                            _capPiece!,
+                            gameState,
+                            displayPosition,
+                          ),
                         ),
                       ),
                     ),
                   ),
 
-                if (_animPiece != null && _animFrom != null && _animTo != null)
+                if (!gameState.isSelfAnalysisActive &&
+                    _animPiece != null &&
+                    _animFrom != null &&
+                    _animTo != null)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: AnimatedBuilder(
@@ -296,6 +323,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                                   child: _buildRotatedPiece(
                                     _animPiece!,
                                     gameState,
+                                    displayPosition,
                                   ),
                                 ),
                               ),
@@ -316,15 +344,20 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   Widget _buildBoardSquare(
     Square square,
     GameState gameState,
+    Position displayPosition,
     Square? checkedKing,
+    Square? selectedSquare,
+    Set<Square> legalDestinations,
+    List<Square> moveSquares,
+    Set<Square> hintSquares,
   ) {
-    final piece = gameState.position.board.pieceAt(square);
+    final piece = displayPosition.board.pieceAt(square);
 
     final isLight = (fileOf(square) + rankOf(square)).isEven;
-    final isSelected = gameState.selectedSquare == square;
-    final isLegalTarget = gameState.legalDestinations.contains(square);
-    final isLastMove = gameState.moveSquares.contains(square);
-    final isHint = gameState.hintSquares.contains(square);
+    final isSelected = selectedSquare == square;
+    final isLegalTarget = legalDestinations.contains(square);
+    final isLastMove = moveSquares.contains(square);
+    final isHint = hintSquares.contains(square);
     final isCheckSquare = checkedKing == square;
 
     var background = isLight ? kLightSquare : kDarkSquare;
@@ -350,11 +383,15 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     bool hidePiece = false;
 
     if (piece != null) {
-      if (_animTo == square && _moveController.isAnimating) {
+      if (_animTo == square &&
+          _moveController.isAnimating &&
+          !gameState.isSelfAnalysisActive) {
         hidePiece = true;
       }
 
-      if (_capSquare == square && _captureController.isAnimating) {
+      if (_capSquare == square &&
+          _captureController.isAnimating &&
+          !gameState.isSelfAnalysisActive) {
         hidePiece = true;
       }
     }
@@ -375,7 +412,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             if (piece != null && !hidePiece)
               Padding(
                 padding: EdgeInsets.all(_squareSize * 0.02),
-                child: _buildRotatedPiece(piece, gameState),
+                child: _buildRotatedPiece(piece, gameState, displayPosition),
               ),
 
             if (isLegalTarget && piece == null)
