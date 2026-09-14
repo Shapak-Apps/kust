@@ -218,7 +218,7 @@ class GameState {
   }
 }
 
-class ChessController extends Notifier<GameState> {
+class ChessController extends AutoDisposeNotifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
@@ -232,7 +232,7 @@ class ChessController extends Notifier<GameState> {
   GameState build() {
     ref.onDispose(() {
       _stopClock();
-      _engine.stopThinking();
+      _engine.dispose();
     });
 
     return GameState(
@@ -518,18 +518,18 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: practiceMode,
       evaluationEnabled: state.evaluationEnabled,
+      status: GameStatus.playing,
     );
 
-    await _engine.start();
-    _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
-
-    state = state.copyWith(status: GameStatus.playing);
     _playSound('game-start.mp3');
     _loadEvalEnabled();
 
-    if (state.position.turn != playerSide) {
-      _requestBotMove();
-    }
+    _engine.start().then((_) {
+      _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+      if (state.position.turn != playerSide) {
+        _requestBotMove();
+      }
+    });
   }
 
   Future<void> startLocalGame({TimeControl? timeControl}) async {
@@ -1092,6 +1092,7 @@ class ChessController extends Notifier<GameState> {
   }
 }
 
-final chessControllerProvider = NotifierProvider<ChessController, GameState>(
-  ChessController.new,
-);
+final chessControllerProvider =
+    AutoDisposeNotifierProvider<ChessController, GameState>(
+      ChessController.new,
+    );
