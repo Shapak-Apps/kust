@@ -384,6 +384,17 @@ class _BotChallengeCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Flexible(
+                  child: Text(
+                    bot.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontSize:
+                          (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
+                    ),
+                  ),
+                ),
                 if (bot.isTkm) ...[
                   ClipRRect(
                     borderRadius: BorderRadius.circular(kFlagSize / 2),
@@ -396,17 +407,6 @@ class _BotChallengeCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                 ],
-                Flexible(
-                  child: Text(
-                    bot.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontSize:
-                          (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 2),
