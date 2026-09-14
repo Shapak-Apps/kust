@@ -243,6 +243,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     final gameState = ref.watch(chessControllerProvider);
+    final controller = ref.read(chessControllerProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFinished =
@@ -264,6 +265,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         gameState.practiceMode &&
         gameState.isPlayerTurn &&
         !gameState.isHintThinking;
+
+    final analysisBackEnabled = controller.canAnalysisMoveBack;
+    final analysisNextEnabled = controller.canAnalysisMoveNext;
 
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
@@ -339,7 +343,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               avatarPath: widget.isLocal
                                   ? null
                                   : widget.bot!.imagePath,
-                              position: gameState.position,
+                              position: gameState.displayPosition,
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
@@ -365,7 +369,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _PlayerBar(
                               side: bottomSide,
                               name: widget.isLocal ? 'White' : 'You',
-                              position: gameState.position,
+                              position: gameState.displayPosition,
                               moves: gameState.moves,
                               timeLeft: timed
                                   ? (bottomSide == Side.white
@@ -391,14 +395,34 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
+                    tooltip: gameState.practiceMode
+                        ? 'Move back'
+                        : 'Move back (Practice mode only)',
+                    onPressed: analysisBackEnabled
+                        ? controller.analysisMoveBack
+                        : null,
+                    icon: Opacity(
+                      opacity: analysisBackEnabled ? 1.0 : 0.35,
+                      child: const Icon(Icons.skip_previous_rounded),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: gameState.practiceMode
+                        ? 'Move next'
+                        : 'Move next (Practice mode only)',
+                    onPressed: analysisNextEnabled
+                        ? controller.analysisMoveNext
+                        : null,
+                    icon: Opacity(
+                      opacity: analysisNextEnabled ? 1.0 : 0.35,
+                      child: const Icon(Icons.skip_next_rounded),
+                    ),
+                  ),
+                  IconButton(
                     tooltip: hintBlockedByPractice && !widget.isLocal
                         ? 'Take back (Practice mode only)'
                         : 'Take back',
-                    onPressed: undoEnabled
-                        ? ref
-                              .read(chessControllerProvider.notifier)
-                              .undoLastMove
-                        : null,
+                    onPressed: undoEnabled ? controller.undoLastMove : null,
                     icon: Opacity(
                       opacity: undoEnabled ? 1.0 : 0.35,
                       child: const Icon(Icons.undo_rounded),
@@ -409,11 +433,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       tooltip: hintBlockedByPractice
                           ? 'Hint (Practice mode only)'
                           : 'Hint',
-                      onPressed: hintEnabled
-                          ? ref
-                                .read(chessControllerProvider.notifier)
-                                .requestHint
-                          : null,
+                      onPressed: hintEnabled ? controller.requestHint : null,
                       icon: gameState.isHintThinking && !hintBlockedByPractice
                           ? const SizedBox(
                               width: 20,
