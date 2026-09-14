@@ -33,10 +33,8 @@ class PickOpponentModal extends StatefulWidget {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        final double targetHeight = MediaQuery.of(context).size.height * 0.90;
-
         return SizedBox(
-          height: targetHeight,
+          height: MediaQuery.of(context).size.height * 0.9,
           child: PickOpponentModal(onPlay: onPlay),
         );
       },
@@ -79,7 +77,6 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   ];
 
   late final List<Bot> bots = [...internationalBots, ...tkmBots];
-
   final ScrollController _scrollController = ScrollController();
 
   int? selectedIndex;
@@ -97,7 +94,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
       selectedIndex = index;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.microtask(() {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -117,35 +114,35 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
         color: theme.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-      child: Column(
+      child: Stack(
         children: [
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Pick opponent',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Expanded(
+          Positioned.fill(
+            bottom: 76,
             child: SingleChildScrollView(
               controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Pick opponent',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -231,14 +228,14 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
             child: SizedBox(
               width: double.infinity,
               height: 52,
@@ -259,7 +256,6 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                icon: const Icon(Icons.play_arrow_rounded),
                 label: Text(
                   selectedIndex != null
                       ? 'Play against ${bots[selectedIndex!].name}'
