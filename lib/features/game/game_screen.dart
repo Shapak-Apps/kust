@@ -274,7 +274,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       appBar: AppBar(
         backgroundColor: isDark
             ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : null,
+            : kDarkGameAppBar.withValues(alpha: 0.75),
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(
           widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
