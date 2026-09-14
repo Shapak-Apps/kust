@@ -30,9 +30,15 @@ class PickOpponentModal extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return PickOpponentModal(onPlay: onPlay);
+        final double targetHeight = MediaQuery.of(context).size.height * 0.90;
+
+        return SizedBox(
+          height: targetHeight,
+          child: PickOpponentModal(onPlay: onPlay),
+        );
       },
     );
   }
@@ -91,7 +97,6 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
       selectedIndex = index;
     });
 
-    // Auto scroll down to show options and the Play button after selecting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -107,168 +112,167 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SafeArea(
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Column(
+        children: [
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Pick opponent',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Pick opponent',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: internationalBots.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.75,
-                ),
-                itemBuilder: (context, index) {
-                  final bot = internationalBots[index];
-                  return _BotTile(
-                    bot: bot,
-                    isSelected: selectedIndex == index,
-                    onTap: () => _onBotSelected(index),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'New students from Turkmenistan want to challenge you',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: tkmBots.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  childAspectRatio: 0.75,
-                ),
-                itemBuilder: (context, index) {
-                  final bot = tkmBots[index];
-                  final globalIndex = internationalBots.length + index;
-                  return _BotTile(
-                    bot: bot,
-                    isSelected: selectedIndex == globalIndex,
-                    onTap: () => _onBotSelected(globalIndex),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 12),
-              PracticeModeCheckbox(
-                value: practiceMode,
-                onChanged: (v) => setState(() => practiceMode = v),
-              ),
-              const SizedBox(height: 24),
-
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Play as', style: theme.textTheme.titleMedium),
-              ),
-              const SizedBox(height: 8),
-              Row(
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
                 children: [
-                  _SideChoiceChip(
-                    label: 'White',
-                    isSelected: selectedSide == Side.white,
-                    onTap: () => setState(() => selectedSide = Side.white),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: internationalBots.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 0.75,
+                        ),
+                    itemBuilder: (context, index) {
+                      final bot = internationalBots[index];
+                      return _BotTile(
+                        bot: bot,
+                        isSelected: selectedIndex == index,
+                        onTap: () => _onBotSelected(index),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 8),
-                  _SideChoiceChip(
-                    label: 'Black',
-                    isSelected: selectedSide == Side.black,
-                    onTap: () => setState(() => selectedSide = Side.black),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'New students from Turkmenistan want to challenge you',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  _SideChoiceChip(
-                    label: 'Random',
-                    isSelected: selectedSide == null,
-                    onTap: () => setState(() => selectedSide = null),
+                  const SizedBox(height: 12),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: tkmBots.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 0.75,
+                        ),
+                    itemBuilder: (context, index) {
+                      final bot = tkmBots[index];
+                      final globalIndex = internationalBots.length + index;
+                      return _BotTile(
+                        bot: bot,
+                        isSelected: selectedIndex == globalIndex,
+                        onTap: () => _onBotSelected(globalIndex),
+                      );
+                    },
                   ),
+                  const SizedBox(height: 12),
+                  PracticeModeCheckbox(
+                    value: practiceMode,
+                    onChanged: (v) => setState(() => practiceMode = v),
+                  ),
+                  const SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Play as', style: theme.textTheme.titleMedium),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _SideChoiceChip(
+                        label: 'White',
+                        isSelected: selectedSide == Side.white,
+                        onTap: () => setState(() => selectedSide = Side.white),
+                      ),
+                      const SizedBox(width: 8),
+                      _SideChoiceChip(
+                        label: 'Black',
+                        isSelected: selectedSide == Side.black,
+                        onTap: () => setState(() => selectedSide = Side.black),
+                      ),
+                      const SizedBox(width: 8),
+                      _SideChoiceChip(
+                        label: 'Random',
+                        isSelected: selectedSide == null,
+                        onTap: () => setState(() => selectedSide = null),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
+            ),
+          ),
 
-              const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton.icon(
+                onPressed: selectedIndex == null
+                    ? null
+                    : () {
+                        final bot = bots[selectedIndex!];
+                        final side =
+                            selectedSide ??
+                            (Random().nextBool() ? Side.white : Side.black);
 
-              // Remade Play Button with enhanced UI state
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  onPressed: selectedIndex == null
-                      ? null
-                      : () {
-                          final bot = bots[selectedIndex!];
-                          final side =
-                              selectedSide ??
-                              (Random().nextBool() ? Side.white : Side.black);
-
-                          Navigator.of(context).pop();
-                          widget.onPlay(bot, side, practiceMode);
-                        },
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+                        Navigator.of(context).pop();
+                        widget.onPlay(bot, side, practiceMode);
+                      },
+                style: FilledButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text(
-                    selectedIndex != null
-                        ? 'Play against ${bots[selectedIndex!].name}'
-                        : 'Select an opponent',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(
+                  selectedIndex != null
+                      ? 'Play against ${bots[selectedIndex!].name}'
+                      : 'Select an opponent',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
