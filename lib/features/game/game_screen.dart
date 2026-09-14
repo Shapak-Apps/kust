@@ -274,7 +274,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       appBar: AppBar(
         backgroundColor: isDark
             ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : kDarkGameAppBar.withValues(alpha: 0.75),
+            : kDarkGameAppBar.withValues(alpha: 0.8),
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(
           widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
@@ -394,28 +394,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (!isPractice) ...[
-                    IconButton(
-                      tooltip: 'Move back',
-                      onPressed: analysisBackEnabled
-                          ? controller.analysisMoveBack
-                          : null,
-                      icon: Opacity(
-                        opacity: analysisBackEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.skip_previous_rounded),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Move next',
-                      onPressed: analysisNextEnabled
-                          ? controller.analysisMoveNext
-                          : null,
-                      icon: Opacity(
-                        opacity: analysisNextEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.skip_next_rounded),
-                      ),
-                    ),
-                  ],
                   if (isPractice) ...[
                     IconButton(
                       tooltip: 'Take back',
@@ -445,12 +423,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                                 child: const Icon(Icons.lightbulb_rounded),
                               ),
                       ),
+                    IconButton(
+                      tooltip: 'More',
+                      onPressed: () => MoreFloatingMenu.show(context),
+                      icon: const Icon(Icons.more_vert_rounded),
+                    ),
+                  ] else ...[
+                    IconButton(
+                      tooltip: 'Move back',
+                      onPressed: analysisBackEnabled
+                          ? controller.analysisMoveBack
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisBackEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_previous_rounded),
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Move next',
+                      onPressed: analysisNextEnabled
+                          ? controller.analysisMoveNext
+                          : null,
+                      icon: Opacity(
+                        opacity: analysisNextEnabled ? 1.0 : 0.35,
+                        child: const Icon(Icons.skip_next_rounded),
+                      ),
+                    ),
                   ],
-                  IconButton(
-                    tooltip: 'More',
-                    onPressed: () => MoreFloatingMenu.show(context),
-                    icon: const Icon(Icons.more_vert_rounded),
-                  ),
                 ],
               ),
             ),
