@@ -238,6 +238,24 @@ class ChessController extends Notifier<GameState> {
       engine.dispose();
     });
 
+    // Keep this controller alive for as long as the game screen is
+    // watching it. Without this, autoDispose can tear the provider
+    // down and rebuild it with fresh default state (wrong practiceMode,
+    // empty board) on brief widget-tree flickers, which looks like the
+    // game randomly resetting mid-play.
+    final keepAliveLink = ref.keepAlive();
+    Timer? keepAliveTimer;
+    ref.onCancel(() {
+      keepAliveTimer?.cancel();
+      keepAliveTimer = Timer(const Duration(seconds: 30), keepAliveLink.close);
+    });
+    ref.onResume(() {
+      keepAliveTimer?.cancel();
+    });
+    ref.onDispose(() {
+      keepAliveTimer?.cancel();
+    });
+
     return GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
       mode: GameMode.bot,
