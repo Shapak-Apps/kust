@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Kust/theme.dart';
@@ -16,6 +17,14 @@ class MyApp extends StatelessWidget {
       theme: appTheme,
       darkTheme: appDarkTheme,
       themeMode: ThemeMode.system,
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+          child: child!,
+        );
+      },
     );
   }
 }

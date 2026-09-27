@@ -14,6 +14,7 @@ class PlayModeModal extends StatelessWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      
       backgroundColor: Colors.transparent,
       builder: (context) => PlayModeModal(onBots: onBots, onLocal: onLocal),
     );

@@ -9,13 +9,28 @@ class BotPolicy {
   final int elo;
   final Random _random;
 
-  double get blunderChance => ((1400 - elo) / 1450).clamp(0.04, 0.60);
+  static const int _engineEloFloor = 1320;
+  static const int _engineEloCeiling = 3190;
 
-  int get skillLevel => (((elo - 600) / 800) * 20).round().clamp(0, 20);
+  int get skillLevel => 20;
 
-  int? get uciElo => elo >= 1320 ? elo : null;
+  int get uciElo => elo.clamp(_engineEloFloor, _engineEloCeiling);
 
-  Duration get thinkTime => Duration(milliseconds: 250 + skillLevel * 35);
+  double get blunderChance {
+    if (elo >= _engineEloFloor) return 0.02;
+    final gap = _engineEloFloor - elo;
+    return 0.03 + gap / 920 * 0.32;
+  }
+
+  Duration get thinkTime {
+    if (elo < _engineEloFloor) {
+      final fastRange = (elo - 400).clamp(0, 920);
+      return Duration(milliseconds: 120 + (fastRange / 920 * 200).round());
+    }
+
+    final strongRange = (elo - _engineEloFloor).clamp(0, 680);
+    return Duration(milliseconds: 400 + (strongRange / 680 * 800).round());
+  }
 
   bool shouldBlunder() => _random.nextDouble() < blunderChance;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const Color primaryGold = Color(0xFFFFBB00);
 
@@ -31,6 +32,7 @@ final ThemeData appTheme = ThemeData(
     scrolledUnderElevation: 0,
     backgroundColor: lightBackground,
     foregroundColor: lightText,
+    systemOverlayStyle: SystemUiOverlayStyle.dark,
   ),
 
   textTheme: const TextTheme(
@@ -85,6 +87,7 @@ final ThemeData appDarkTheme = ThemeData(
     scrolledUnderElevation: 0,
     backgroundColor: darkBackground,
     foregroundColor: darkText,
+    systemOverlayStyle: SystemUiOverlayStyle.light,
   ),
 
   textTheme: const TextTheme(

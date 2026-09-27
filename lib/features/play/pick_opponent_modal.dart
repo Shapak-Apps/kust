@@ -34,7 +34,7 @@ class PickOpponentModal extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.9,
+          height: MediaQuery.of(context).size.height * 0.7,
           child: PickOpponentModal(onPlay: onPlay),
         );
       },
