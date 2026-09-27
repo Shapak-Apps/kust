@@ -313,7 +313,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   whiteOnLeft: bottomSide == Side.white,
                 ),
               ),
-            _MoveHistoryBar(moves: gameState.moves),
+            _MoveHistoryBar(
+              moves: gameState.moves,
+              analysisIndex: gameState.analysisIndex,
+              isPractice: isPractice,
+              onMoveTap: isPractice ? null : controller.jumpToMove,
+            ),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -673,9 +678,17 @@ class _ClockChip extends StatelessWidget {
 }
 
 class _MoveHistoryBar extends StatefulWidget {
-  const _MoveHistoryBar({required this.moves});
+  const _MoveHistoryBar({
+    required this.moves,
+    required this.analysisIndex,
+    this.isPractice = false,
+    this.onMoveTap,
+  });
 
   final List<MoveRecord> moves;
+  final int? analysisIndex;
+  final bool isPractice;
+  final void Function(int index)? onMoveTap;
 
   @override
   State<_MoveHistoryBar> createState() => _MoveHistoryBarState();
@@ -711,6 +724,13 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     }
   }
 
+  int get _selectedIndex {
+    if (widget.isPractice) return -1;
+    final index = widget.analysisIndex;
+    if (index == null) return widget.moves.length - 1;
+    return index - 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -720,9 +740,9 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     final normalStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
     );
-    final highlightStyle = theme.textTheme.bodyMedium?.copyWith(
+    final selectedTextStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w800,
-      color: theme.colorScheme.primary,
+      color: theme.colorScheme.onPrimaryContainer,
     );
 
     if (widget.moves.isEmpty) {
@@ -739,52 +759,67 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       );
     }
 
-    final children = <Widget>[const SizedBox(width: 16)];
+    final canTap = widget.onMoveTap != null;
+
+    Widget moveChip(int moveIndex) {
+      final isSelected = moveIndex == _selectedIndex;
+
+      final text = Text(
+        widget.moves[moveIndex].san,
+        style: isSelected ? selectedTextStyle : normalStyle,
+      );
+
+      final child = isSelected
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: text,
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              child: text,
+            );
+
+      if (!canTap) return child;
+
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => widget.onMoveTap!(moveIndex),
+        child: child,
+      );
+    }
+
+    final children = <Widget>[const SizedBox(width: 10)];
     int index = 0;
     int number = 1;
 
     if (widget.moves.first.side == Side.black) {
       children.add(Text('$number...', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-      children.add(
-        Text(
-          widget.moves.first.san,
-          style: widget.moves.length == 1 ? highlightStyle : normalStyle,
-        ),
-      );
-      children.add(const SizedBox(width: 14));
+      children.add(const SizedBox(width: 4));
+      children.add(moveChip(0));
+      children.add(const SizedBox(width: 12));
       index = 1;
       number = 2;
     }
 
     for (; index < widget.moves.length; index += 2) {
       children.add(Text('$number.', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-
-      final isWhiteLast = index == widget.moves.length - 1;
-      children.add(
-        Text(
-          widget.moves[index].san,
-          style: isWhiteLast ? highlightStyle : normalStyle,
-        ),
-      );
+      children.add(const SizedBox(width: 4));
+      children.add(moveChip(index));
 
       if (index + 1 < widget.moves.length) {
         children.add(const SizedBox(width: 6));
-        final isBlackLast = (index + 1) == widget.moves.length - 1;
-        children.add(
-          Text(
-            widget.moves[index + 1].san,
-            style: isBlackLast ? highlightStyle : normalStyle,
-          ),
-        );
+        children.add(moveChip(index + 1));
       }
 
-      children.add(const SizedBox(width: 14));
+      children.add(const SizedBox(width: 12));
       number++;
     }
 
-    children.add(const SizedBox(width: 16));
+    children.add(const SizedBox(width: 10));
 
     return SizedBox(
       height: 40,

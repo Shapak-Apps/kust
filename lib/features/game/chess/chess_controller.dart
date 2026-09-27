@@ -766,6 +766,32 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
+  void jumpToMove(int index) {
+    if (state.practiceMode) return;
+    if (state.status != GameStatus.playing) return;
+    if (state.isBotThinking) return;
+    if (index < 0 || index >= state.moves.length) return;
+
+    // Show the position directly after the tapped move.
+    final newIndex = index + 1;
+
+    if (newIndex >= state.moves.length) {
+      // Tapped the last move -> return to the live position.
+      state = state.copyWith(
+        clearSelection: true,
+        hintSquares: const <Square>{},
+        clearAnalysis: true,
+      );
+      return;
+    }
+
+    state = state.copyWith(
+      clearSelection: true,
+      hintSquares: const <Square>{},
+      analysisIndex: newIndex,
+    );
+  }
+
   Future<void> requestHint() async {
     if (!state.isPlayerTurn || state.isBotThinking) return;
     if (!state.practiceMode) return;
