@@ -25,55 +25,52 @@ class PlayModeModal extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(999),
-                ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(999),
               ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Play', style: theme.textTheme.headlineMedium),
-              ),
-              const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Play', style: theme.textTheme.headlineMedium),
+            ),
+            const SizedBox(height: 16),
 
-              _ModeTile(
-                icon: Icons.smart_toy_rounded,
-                label: 'Play with bots',
-                subtitle: 'Challenge one of our bots',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  onBots();
-                },
-              ),
-              const SizedBox(height: 10),
-              _ModeTile(
-                icon: Icons.people_alt_rounded,
-                label: 'Play locally',
-                subtitle: 'Pass & play on this device',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  onLocal();
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
+            _ModeTile(
+              icon: Icons.smart_toy_rounded,
+              label: 'Play with bots',
+              subtitle: 'Challenge one of our bots',
+              onTap: () {
+                Navigator.of(context).pop();
+                onBots();
+              },
+            ),
+            const SizedBox(height: 10),
+            _ModeTile(
+              icon: Icons.people_alt_rounded,
+              label: 'Play locally',
+              subtitle: 'Pass & play on this device',
+              onTap: () {
+                Navigator.of(context).pop();
+                onLocal();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
