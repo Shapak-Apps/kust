@@ -228,6 +228,11 @@ class ChessController extends Notifier<GameState> {
   Duration _whiteClock = Duration.zero;
   Duration _blackClock = Duration.zero;
 
+  static const int _soundPoolSize = 4;
+
+  final List<AudioPlayer> _soundPool = [];
+  int _soundPoolIndex = 0;
+
   @override
   GameState build() {
     _isDisposed = false;
@@ -236,6 +241,10 @@ class ChessController extends Notifier<GameState> {
       _isDisposed = true;
       _stopClock();
       engine.dispose();
+      for (final player in _soundPool) {
+        player.dispose();
+      }
+      _soundPool.clear();
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -392,20 +401,29 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  AudioPlayer _nextSoundPlayer() {
+    while (_soundPool.length < _soundPoolSize) {
+      final player = AudioPlayer();
+      unawaited(player.setPlayerMode(PlayerMode.lowLatency));
+      _soundPool.add(player);
+    }
+
+    final player = _soundPool[_soundPoolIndex];
+    _soundPoolIndex = (_soundPoolIndex + 1) % _soundPool.length;
+    return player;
+  }
+
   Future<void> _playSound(String asset, {double volume = 1.0}) async {
-    final player = AudioPlayer();
-    await player.setPlayerMode(PlayerMode.lowLatency);
+    if (_isDisposed) return;
 
-    player.onPlayerComplete.listen((_) {
-      player.dispose();
-    });
-
-    await player.play(AssetSource('sounds/$asset'), volume: volume);
+    final player = _nextSoundPlayer();
+    try {
+      await player.play(AssetSource('sounds/$asset'), volume: volume);
+    } catch (_) {}
   }
 
   void _playCheckSound() {
     _playSound('check.mp3');
-    _playSound('check.mp3', volume: 0.5);
   }
 
   bool _isEnPassant(Position oldPos, NormalMove move) {
@@ -699,9 +717,10 @@ class ChessController extends Notifier<GameState> {
       restored = newHistory.removeLast();
     }
 
-    final removedMoves = oldMoves.length - newMoves.length;
-    if (removedMoves > 0 && newMoves.length >= removedMoves) {
-      newMoves.removeRange(newMoves.length - removedMoves, newMoves.length);
+    final removedCount = oldHistory.length - newHistory.length;
+    final trimCount = removedCount.clamp(0, newMoves.length);
+    if (trimCount > 0) {
+      newMoves.removeRange(newMoves.length - trimCount, newMoves.length);
     }
 
     NormalMove? undoMove;
@@ -940,26 +959,28 @@ class ChessController extends Notifier<GameState> {
 
     final policy = _policy;
 
-    Move move;
+    Move? move;
     if (policy.shouldBlunder()) {
-      final blunder = policy.randomLegalMove(state.position);
-      if (blunder != null) {
-        move = blunder;
+      move = policy.randomLegalMove(state.position);
+      if (move != null) {
         await Future.delayed(
           Duration(milliseconds: 250 + Random().nextInt(350)),
         );
-      } else {
-        final uci = await _engine.bestMoveForFen(
-          state.position.fen,
-          thinkTime: policy.thinkTime,
-        );
-        move = _parseUciMove(uci);
       }
-    } else {
+    }
+
+    if (move == null) {
       final uci = await _engine.bestMoveForFen(
         state.position.fen,
         thinkTime: policy.thinkTime,
       );
+
+      if (uci == '(none)' || uci.length < 4) {
+        if (_isDisposed || requestId != _moveRequestId) return;
+        state = state.copyWith(isBotThinking: false);
+        return;
+      }
+
       move = _parseUciMove(uci);
     }
 
@@ -970,9 +991,14 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
+    if (move is! NormalMove || !state.position.isLegal(move)) {
+      state = state.copyWith(isBotThinking: false);
+      return;
+    }
+
     if (!_chargeElapsed(publish: false)) return;
 
-    final normalMove = move as NormalMove;
+    final normalMove = move;
     final beforeBotMove = state.position;
     final newPosition = beforeBotMove.play(move);
 
