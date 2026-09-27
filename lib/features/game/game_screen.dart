@@ -772,9 +772,12 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     final barColor = isDark
         ? Colors.white.withValues(alpha: 0.05)
         : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
-    final numberStyle = theme.textTheme.labelMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-      fontWeight: FontWeight.w500,
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : theme.colorScheme.outlineVariant.withValues(alpha: 0.4);
+    final numberStyle = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      fontWeight: FontWeight.w600,
     );
     final normalStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -785,18 +788,17 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       color: theme.colorScheme.onPrimary,
     );
 
-    final container = BoxDecoration(
-      color: barColor,
-      borderRadius: BorderRadius.circular(14),
-    );
-
     if (widget.moves.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Container(
           height: 40,
           alignment: Alignment.center,
-          decoration: container,
+          decoration: BoxDecoration(
+            color: barColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
           child: Text(
             'No moves yet — make the first one',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -812,19 +814,17 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     Widget moveChip(int moveIndex) {
       final isSelected = moveIndex == _selectedIndex;
 
-      final text = Text(
-        widget.moves[moveIndex].san,
-        style: isSelected ? selectedTextStyle : normalStyle,
-      );
-
       final child = AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(6),
         ),
-        child: text,
+        child: Text(
+          widget.moves[moveIndex].san,
+          style: isSelected ? selectedTextStyle : normalStyle,
+        ),
       );
 
       if (!canTap) return child;
@@ -836,7 +836,9 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       );
     }
 
-    final children = <Widget>[const SizedBox(width: 12)];
+    // Single flat row: "1. e4 e5  2. Nf3 Nc6 ..." — no card grouping,
+    // no wrapping, just an inline scrollable strip like real notation.
+    final children = <Widget>[const SizedBox(width: 10)];
     int index = 0;
     int number = 1;
 
@@ -844,7 +846,7 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       children.add(Text('$number.', style: numberStyle));
       children.add(const SizedBox(width: 4));
       children.add(moveChip(0));
-      children.add(const SizedBox(width: 14));
+      children.add(const SizedBox(width: 10));
       index = 1;
       number = 2;
     }
@@ -855,21 +857,25 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       children.add(moveChip(index));
 
       if (index + 1 < widget.moves.length) {
-        children.add(const SizedBox(width: 6));
+        children.add(const SizedBox(width: 4));
         children.add(moveChip(index + 1));
       }
 
-      children.add(const SizedBox(width: 14));
+      children.add(const SizedBox(width: 10));
       number++;
     }
 
-    children.add(const SizedBox(width: 8));
+    children.add(const SizedBox(width: 6));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Container(
-        height: 44,
-        decoration: container,
+        height: 40,
+        decoration: BoxDecoration(
+          color: barColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
         child: ListView(
           controller: _controller,
           scrollDirection: Axis.horizontal,
