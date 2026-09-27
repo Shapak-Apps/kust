@@ -216,8 +216,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
       switch (next.status) {
         case GameStatus.playing:
-          _hasDismissedResultDialog = false;
-          _showGameStartModal(next.playerSide);
+          // Only announce a fresh game — not every return to "playing"
+          // (e.g. after an undo, which also sets status back to playing).
+          final isFreshGame =
+              previous == null ||
+              previous.status == GameStatus.loading ||
+              (previous.moves.isEmpty && next.moves.isEmpty && !next.wasUndo);
+          if (isFreshGame) {
+            _hasDismissedResultDialog = false;
+            _showGameStartModal(next.playerSide);
+          }
           break;
         case GameStatus.checkmate:
           _showResultDialog('Checkmate', '${_winnerLabel(next)} won the game.');
