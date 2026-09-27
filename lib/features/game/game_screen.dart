@@ -395,67 +395,56 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  if (isPractice) ...[
-                    IconButton(
-                      tooltip: 'Take back',
-                      onPressed: undoEnabled ? controller.undoLastMove : null,
-                      icon: Opacity(
-                        opacity: undoEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.undo_rounded),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (isPractice) ...[
+                      _ControlButton(
+                        tooltip: 'Take back',
+                        enabled: undoEnabled,
+                        onPressed: controller.undoLastMove,
+                        icon: Icons.undo_rounded,
                       ),
-                    ),
-                    if (!widget.isLocal)
-                      IconButton(
-                        tooltip: 'Hint',
-                        onPressed: hintEnabled ? controller.requestHint : null,
-                        icon: gameState.isHintThinking
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Opacity(
-                                opacity:
-                                    (hintEnabled || gameState.isHintThinking)
-                                    ? 1.0
-                                    : 0.35,
-                                child: const Icon(Icons.lightbulb_rounded),
-                              ),
+                      if (!widget.isLocal)
+                        _ControlButton(
+                          tooltip: 'Hint',
+                          enabled: hintEnabled,
+                          onPressed: controller.requestHint,
+                          icon: Icons.lightbulb_rounded,
+                          loading: gameState.isHintThinking,
+                        ),
+                      _ControlButton(
+                        tooltip: 'More',
+                        enabled: true,
+                        onPressed: () => MoreFloatingMenu.show(context),
+                        icon: Icons.more_vert_rounded,
                       ),
-                    IconButton(
-                      tooltip: 'More',
-                      onPressed: () => MoreFloatingMenu.show(context),
-                      icon: const Icon(Icons.more_vert_rounded),
-                    ),
-                  ] else ...[
-                    IconButton(
-                      tooltip: 'Move back',
-                      onPressed: analysisBackEnabled
-                          ? controller.analysisMoveBack
-                          : null,
-                      icon: Opacity(
-                        opacity: analysisBackEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.skip_previous_rounded),
+                    ] else ...[
+                      _ControlButton(
+                        tooltip: 'Move back',
+                        enabled: analysisBackEnabled,
+                        onPressed: controller.analysisMoveBack,
+                        icon: Icons.skip_previous_rounded,
                       ),
-                    ),
-                    IconButton(
-                      tooltip: 'Move next',
-                      onPressed: analysisNextEnabled
-                          ? controller.analysisMoveNext
-                          : null,
-                      icon: Opacity(
-                        opacity: analysisNextEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.skip_next_rounded),
+                      _ControlButton(
+                        tooltip: 'Move next',
+                        enabled: analysisNextEnabled,
+                        onPressed: controller.analysisMoveNext,
+                        icon: Icons.skip_next_rounded,
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],
@@ -677,6 +666,50 @@ class _ClockChip extends StatelessWidget {
   }
 }
 
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({
+    required this.tooltip,
+    required this.enabled,
+    required this.onPressed,
+    required this.icon,
+    this.loading = false,
+  });
+
+  final String tooltip;
+  final bool enabled;
+  final VoidCallback onPressed;
+  final IconData icon;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: enabled ? onPressed : null,
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        shape: const CircleBorder(),
+      ),
+      icon: loading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            )
+          : AnimatedOpacity(
+              duration: const Duration(milliseconds: 150),
+              opacity: enabled ? 1.0 : 0.35,
+              child: Icon(icon),
+            ),
+    );
+  }
+}
+
 class _MoveHistoryBar extends StatefulWidget {
   const _MoveHistoryBar({
     required this.moves,
@@ -734,23 +767,38 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
+    final isDark = theme.brightness == Brightness.dark;
+
+    final barColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final numberStyle = theme.textTheme.labelMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+      fontWeight: FontWeight.w500,
     );
     final normalStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
+      color: theme.colorScheme.onSurface,
     );
     final selectedTextStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w800,
-      color: theme.colorScheme.onPrimaryContainer,
+      color: theme.colorScheme.onPrimary,
+    );
+
+    final container = BoxDecoration(
+      color: barColor,
+      borderRadius: BorderRadius.circular(14),
     );
 
     if (widget.moves.isEmpty) {
-      return SizedBox(
-        height: 40,
-        child: Center(
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Container(
+          height: 40,
+          alignment: Alignment.center,
+          decoration: container,
           child: Text(
-            'No moves yet',
+            'No moves yet — make the first one',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -769,19 +817,15 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
         style: isSelected ? selectedTextStyle : normalStyle,
       );
 
-      final child = isSelected
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: text,
-            )
-          : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              child: text,
-            );
+      final child = AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: text,
+      );
 
       if (!canTap) return child;
 
@@ -792,21 +836,21 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       );
     }
 
-    final children = <Widget>[const SizedBox(width: 10)];
+    final children = <Widget>[const SizedBox(width: 12)];
     int index = 0;
     int number = 1;
 
     if (widget.moves.first.side == Side.black) {
-      children.add(Text('$number...', style: mutedStyle));
+      children.add(Text('$number.', style: numberStyle));
       children.add(const SizedBox(width: 4));
       children.add(moveChip(0));
-      children.add(const SizedBox(width: 12));
+      children.add(const SizedBox(width: 14));
       index = 1;
       number = 2;
     }
 
     for (; index < widget.moves.length; index += 2) {
-      children.add(Text('$number.', style: mutedStyle));
+      children.add(Text('$number.', style: numberStyle));
       children.add(const SizedBox(width: 4));
       children.add(moveChip(index));
 
@@ -815,18 +859,22 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
         children.add(moveChip(index + 1));
       }
 
-      children.add(const SizedBox(width: 12));
+      children.add(const SizedBox(width: 14));
       number++;
     }
 
-    children.add(const SizedBox(width: 10));
+    children.add(const SizedBox(width: 8));
 
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        controller: _controller,
-        scrollDirection: Axis.horizontal,
-        children: children,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        height: 44,
+        decoration: container,
+        child: ListView(
+          controller: _controller,
+          scrollDirection: Axis.horizontal,
+          children: children,
+        ),
       ),
     );
   }
