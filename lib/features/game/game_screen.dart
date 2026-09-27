@@ -301,7 +301,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            if (gameState.evaluationEnabled)
+            if (gameState.evaluationEnabled && gameState.practiceMode)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: EvaluationBar(
@@ -389,50 +389,81 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    tooltip: hintBlockedByPractice && !widget.isLocal
-                        ? 'Take back (Practice mode only)'
-                        : 'Take back',
-                    onPressed: undoEnabled
-                        ? ref
-                              .read(chessControllerProvider.notifier)
-                              .undoLastMove
-                        : null,
-                    icon: Opacity(
-                      opacity: undoEnabled ? 1.0 : 0.35,
-                      child: const Icon(Icons.undo_rounded),
-                    ),
-                  ),
-                  if (!widget.isLocal)
-                    IconButton(
-                      tooltip: hintBlockedByPractice
-                          ? 'Hint (Practice mode only)'
-                          : 'Hint',
-                      onPressed: hintEnabled
-                          ? ref
-                                .read(chessControllerProvider.notifier)
-                                .requestHint
-                          : null,
-                      icon: gameState.isHintThinking && !hintBlockedByPractice
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Opacity(
-                              opacity: (hintEnabled || gameState.isHintThinking)
-                                  ? 1.0
-                                  : 0.35,
-                              child: const Icon(Icons.lightbulb_rounded),
-                            ),
-                    ),
-                  IconButton(
-                    tooltip: 'More',
-                    onPressed: () => MoreFloatingMenu.show(context),
-                    icon: const Icon(Icons.more_vert_rounded),
-                  ),
-                ],
+                children: !widget.isLocal && !gameState.practiceMode
+                    ? [
+                        IconButton(
+                          tooltip: 'Previous move',
+                          onPressed: gameState.analysisCursor > 0
+                              ? ref
+                                    .read(chessControllerProvider.notifier)
+                                    .analysisMoveBack
+                              : null,
+                          icon: Opacity(
+                            opacity: gameState.analysisCursor > 0 ? 1.0 : 0.35,
+                            child: const Icon(Icons.arrow_left_rounded),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Next move',
+                          onPressed: gameState.isSelfAnalysisActive
+                              ? ref
+                                    .read(chessControllerProvider.notifier)
+                                    .analysisMoveNext
+                              : null,
+                          icon: Opacity(
+                            opacity: gameState.isSelfAnalysisActive ? 1.0 : 0.35,
+                            child: const Icon(Icons.arrow_right_rounded),
+                          ),
+                        ),
+                      ]
+                    : [
+                        IconButton(
+                          tooltip: hintBlockedByPractice && !widget.isLocal
+                              ? 'Take back (Practice mode only)'
+                              : 'Take back',
+                          onPressed: undoEnabled
+                              ? ref
+                                    .read(chessControllerProvider.notifier)
+                                    .undoLastMove
+                              : null,
+                          icon: Opacity(
+                            opacity: undoEnabled ? 1.0 : 0.35,
+                            child: const Icon(Icons.undo_rounded),
+                          ),
+                        ),
+                        if (!widget.isLocal)
+                          IconButton(
+                            tooltip: hintBlockedByPractice
+                                ? 'Hint (Practice mode only)'
+                                : 'Hint',
+                            onPressed: hintEnabled
+                                ? ref
+                                      .read(chessControllerProvider.notifier)
+                                      .requestHint
+                                : null,
+                            icon:
+                                gameState.isHintThinking && !hintBlockedByPractice
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
+                                      )
+                                    : Opacity(
+                                        opacity: (hintEnabled ||
+                                                gameState.isHintThinking)
+                                            ? 1.0
+                                            : 0.35,
+                                        child: const Icon(
+                                            Icons.lightbulb_rounded),
+                                      ),
+                          ),
+                        IconButton(
+                          tooltip: 'More',
+                          onPressed: () => MoreFloatingMenu.show(context),
+                          icon: const Icon(Icons.more_vert_rounded),
+                        ),
+                      ],
               ),
             ),
           ],
