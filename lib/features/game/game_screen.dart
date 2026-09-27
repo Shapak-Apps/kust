@@ -775,17 +775,9 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    final barColor = isDark
-        ? Colors.white.withValues(alpha: 0.05)
-        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : theme.colorScheme.outlineVariant.withValues(alpha: 0.4);
-    final numberStyle = theme.textTheme.labelSmall?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-      fontWeight: FontWeight.w600,
+    final numberStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
     );
     final normalStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -793,22 +785,15 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     );
     final selectedTextStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w800,
-      color: theme.colorScheme.onPrimary,
+      color: theme.colorScheme.primary,
     );
 
     if (widget.moves.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Container(
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: barColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor),
-          ),
+      return SizedBox(
+        height: 32,
+        child: Center(
           child: Text(
-            'No moves yet — make the first one',
+            'No moves yet',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -822,17 +807,9 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     Widget moveChip(int moveIndex) {
       final isSelected = moveIndex == _selectedIndex;
 
-      final child = AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          widget.moves[moveIndex].san,
-          style: isSelected ? selectedTextStyle : normalStyle,
-        ),
+      final child = Text(
+        widget.moves[moveIndex].san,
+        style: isSelected ? selectedTextStyle : normalStyle,
       );
 
       if (!canTap) return child;
@@ -875,20 +852,12 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
 
     children.add(const SizedBox(width: 6));
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        height: 40,
-        decoration: BoxDecoration(
-          color: barColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-        ),
-        child: ListView(
-          controller: _controller,
-          scrollDirection: Axis.horizontal,
-          children: children,
-        ),
+    return SizedBox(
+      height: 32,
+      child: ListView(
+        controller: _controller,
+        scrollDirection: Axis.horizontal,
+        children: children,
       ),
     );
   }
