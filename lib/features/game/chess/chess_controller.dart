@@ -264,7 +264,6 @@ class ChessController extends Notifier<GameState> {
   bool get _timed => state.timeControl != null;
 
   bool get canAnalysisMoveBack {
-    if (state.practiceMode) return false;
     if (state.status != GameStatus.playing) return false;
     if (state.isBotThinking) return false;
     if (state.moves.isEmpty) return false;
@@ -273,7 +272,6 @@ class ChessController extends Notifier<GameState> {
   }
 
   bool get canAnalysisMoveNext {
-    if (state.practiceMode) return false;
     if (state.status != GameStatus.playing) return false;
     if (state.isBotThinking) return false;
     if (state.moves.isEmpty) return false;
@@ -780,7 +778,6 @@ class ChessController extends Notifier<GameState> {
   }
 
   void jumpToMove(int index) {
-    if (state.practiceMode) return;
     if (state.status != GameStatus.playing) return;
     if (state.isBotThinking) return;
     if (index < 0 || index >= state.moves.length) return;
