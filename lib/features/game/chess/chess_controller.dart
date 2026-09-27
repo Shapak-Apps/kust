@@ -238,11 +238,6 @@ class ChessController extends Notifier<GameState> {
       engine.dispose();
     });
 
-    // Keep this controller alive for as long as the game screen is
-    // watching it. Without this, autoDispose can tear the provider
-    // down and rebuild it with fresh default state (wrong practiceMode,
-    // empty board) on brief widget-tree flickers, which looks like the
-    // game randomly resetting mid-play.
     final keepAliveLink = ref.keepAlive();
     Timer? keepAliveTimer;
     ref.onCancel(() {
@@ -790,11 +785,9 @@ class ChessController extends Notifier<GameState> {
     if (state.isBotThinking) return;
     if (index < 0 || index >= state.moves.length) return;
 
-    // Show the position directly after the tapped move.
     final newIndex = index + 1;
 
     if (newIndex >= state.moves.length) {
-      // Tapped the last move -> return to the live position.
       state = state.copyWith(
         clearSelection: true,
         hintSquares: const <Square>{},
