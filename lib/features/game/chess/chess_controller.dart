@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -499,6 +500,12 @@ class ChessController extends Notifier<GameState> {
 
     if (newPos.isCheck) {
       _playCheckSound();
+    }
+
+    if (isCapture || newPos.isCheck) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.lightImpact();
     }
   }
 
