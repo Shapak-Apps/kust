@@ -301,7 +301,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            if (gameState.evaluationEnabled && gameState.practiceMode)
+            if (gameState.evaluationEnabled &&
+                (widget.isLocal || widget.practiceMode))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: EvaluationBar(
@@ -402,7 +403,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       child: const Icon(Icons.arrow_left_rounded),
                     ),
                   ),
-                  if (widget.isLocal || gameState.practiceMode)
+                  if (widget.isLocal || widget.practiceMode)
                     IconButton(
                       tooltip: hintBlockedByPractice && !widget.isLocal
                           ? 'Take back (Practice mode only)'
@@ -417,7 +418,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: const Icon(Icons.undo_rounded),
                       ),
                     ),
-                  if (!widget.isLocal && gameState.practiceMode)
+                  if (!widget.isLocal && widget.practiceMode)
                     IconButton(
                       tooltip: hintBlockedByPractice
                           ? 'Hint (Practice mode only)'
@@ -441,7 +442,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               child: const Icon(Icons.lightbulb_rounded),
                             ),
                     ),
-                  if (widget.isLocal || gameState.practiceMode)
+                  if (widget.isLocal || widget.practiceMode)
                     IconButton(
                       tooltip: 'More',
                       onPressed: () => MoreFloatingMenu.show(context),
