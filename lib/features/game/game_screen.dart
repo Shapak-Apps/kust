@@ -216,16 +216,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
       switch (next.status) {
         case GameStatus.playing:
-          // Only announce a fresh game — not every return to "playing"
-          // (e.g. after an undo, which also sets status back to playing).
-          final isFreshGame =
-              previous == null ||
-              previous.status == GameStatus.loading ||
-              (previous.moves.isEmpty && next.moves.isEmpty && !next.wasUndo);
-          if (isFreshGame) {
-            _hasDismissedResultDialog = false;
-            _showGameStartModal(next.playerSide);
-          }
+          _hasDismissedResultDialog = false;
+          _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
           _showResultDialog('Checkmate', '${_winnerLabel(next)} won the game.');
@@ -251,7 +243,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     });
 
     final gameState = ref.watch(chessControllerProvider);
-    final controller = ref.read(chessControllerProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFinished =
@@ -268,21 +259,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final timed = gameState.timeControl != null;
 
     final undoEnabled = gameState.canUndo;
+    final hintBlockedByPractice = !gameState.practiceMode;
     final hintEnabled =
         gameState.practiceMode &&
         gameState.isPlayerTurn &&
         !gameState.isHintThinking;
-
-    final analysisBackEnabled = controller.canAnalysisMoveBack;
-    final analysisNextEnabled = controller.canAnalysisMoveNext;
-    final isPractice = gameState.practiceMode;
 
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
         backgroundColor: isDark
             ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : kDarkGameAppBar.withValues(alpha: 0.8),
+            : null,
         foregroundColor: isDark ? const Color(0xFF181A1B) : null,
         title: Text(
           widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
@@ -321,12 +309,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   whiteOnLeft: bottomSide == Side.white,
                 ),
               ),
-            _MoveHistoryBar(
-              moves: gameState.moves,
-              analysisIndex: gameState.analysisIndex,
-              isPractice: isPractice,
-              onMoveTap: isPractice ? null : controller.jumpToMove,
-            ),
+            _MoveHistoryBar(moves: gameState.moves),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -356,7 +339,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               avatarPath: widget.isLocal
                                   ? null
                                   : widget.bot!.imagePath,
-                              position: gameState.displayPosition,
+                              position: gameState.position,
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
@@ -382,7 +365,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _PlayerBar(
                               side: bottomSide,
                               name: widget.isLocal ? 'White' : 'You',
-                              position: gameState.displayPosition,
+                              position: gameState.position,
                               moves: gameState.moves,
                               timeLeft: timed
                                   ? (bottomSide == Side.white
@@ -403,56 +386,53 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Theme.of(context).colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (isPractice) ...[
-                      _ControlButton(
-                        tooltip: 'Take back',
-                        enabled: undoEnabled,
-                        onPressed: controller.undoLastMove,
-                        icon: Icons.undo_rounded,
-                      ),
-                      if (!widget.isLocal)
-                        _ControlButton(
-                          tooltip: 'Hint',
-                          enabled: hintEnabled,
-                          onPressed: controller.requestHint,
-                          icon: Icons.lightbulb_rounded,
-                          loading: gameState.isHintThinking,
-                        ),
-                      _ControlButton(
-                        tooltip: 'More',
-                        enabled: true,
-                        onPressed: () => MoreFloatingMenu.show(context),
-                        icon: Icons.more_vert_rounded,
-                      ),
-                    ] else ...[
-                      _ControlButton(
-                        tooltip: 'Move back',
-                        enabled: analysisBackEnabled,
-                        onPressed: controller.analysisMoveBack,
-                        icon: Icons.skip_previous_rounded,
-                      ),
-                      _ControlButton(
-                        tooltip: 'Move next',
-                        enabled: analysisNextEnabled,
-                        onPressed: controller.analysisMoveNext,
-                        icon: Icons.skip_next_rounded,
-                      ),
-                    ],
-                  ],
-                ),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    tooltip: hintBlockedByPractice && !widget.isLocal
+                        ? 'Take back (Practice mode only)'
+                        : 'Take back',
+                    onPressed: undoEnabled
+                        ? ref
+                              .read(chessControllerProvider.notifier)
+                              .undoLastMove
+                        : null,
+                    icon: Opacity(
+                      opacity: undoEnabled ? 1.0 : 0.35,
+                      child: const Icon(Icons.undo_rounded),
+                    ),
+                  ),
+                  if (!widget.isLocal)
+                    IconButton(
+                      tooltip: hintBlockedByPractice
+                          ? 'Hint (Practice mode only)'
+                          : 'Hint',
+                      onPressed: hintEnabled
+                          ? ref
+                                .read(chessControllerProvider.notifier)
+                                .requestHint
+                          : null,
+                      icon: gameState.isHintThinking && !hintBlockedByPractice
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Opacity(
+                              opacity: (hintEnabled || gameState.isHintThinking)
+                                  ? 1.0
+                                  : 0.35,
+                              child: const Icon(Icons.lightbulb_rounded),
+                            ),
+                    ),
+                  IconButton(
+                    tooltip: 'More',
+                    onPressed: () => MoreFloatingMenu.show(context),
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
+                ],
               ),
             ),
           ],
@@ -529,19 +509,15 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                if (isThinking) ...[
-                  Row(
-                    children: [
+                    if (isThinking) ...[
+                      const SizedBox(width: 8),
                       const SizedBox(
-                        width: 11,
-                        height: 11,
+                        width: 12,
+                        height: 12,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
                       if (thinkingText != null) ...[
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             thinkingText!,
@@ -554,31 +530,32 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ],
                     ],
-                  ),
-                ] else
-                  Row(
-                    children: [
-                      for (final piece in captured)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 1),
-                          child: SvgPicture.asset(
-                            assetForPiece(piece),
-                            width: 16,
-                            height: 16,
-                          ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    for (final piece in captured)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 1),
+                        child: SvgPicture.asset(
+                          assetForPiece(piece),
+                          width: 16,
+                          height: 16,
                         ),
-                      if (captured.isNotEmpty && advantage > 0)
-                        const SizedBox(width: 5),
-                      if (advantage > 0)
-                        Text(
-                          '+$advantage',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: muted,
-                          ),
+                      ),
+                    if (captured.isNotEmpty && advantage > 0)
+                      const SizedBox(width: 5),
+                    if (advantage > 0)
+                      Text(
+                        '+$advantage',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: muted,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -674,62 +651,10 @@ class _ClockChip extends StatelessWidget {
   }
 }
 
-class _ControlButton extends StatelessWidget {
-  const _ControlButton({
-    required this.tooltip,
-    required this.enabled,
-    required this.onPressed,
-    required this.icon,
-    this.loading = false,
-  });
-
-  final String tooltip;
-  final bool enabled;
-  final VoidCallback onPressed;
-  final IconData icon;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: enabled ? onPressed : null,
-      style: IconButton.styleFrom(
-        minimumSize: const Size(48, 48),
-        shape: const CircleBorder(),
-      ),
-      icon: loading
-          ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: theme.colorScheme.primary,
-              ),
-            )
-          : AnimatedOpacity(
-              duration: const Duration(milliseconds: 150),
-              opacity: enabled ? 1.0 : 0.35,
-              child: Icon(icon),
-            ),
-    );
-  }
-}
-
 class _MoveHistoryBar extends StatefulWidget {
-  const _MoveHistoryBar({
-    required this.moves,
-    required this.analysisIndex,
-    this.isPractice = false,
-    this.onMoveTap,
-  });
+  const _MoveHistoryBar({required this.moves});
 
   final List<MoveRecord> moves;
-  final int? analysisIndex;
-  final bool isPractice;
-  final void Function(int index)? onMoveTap;
 
   @override
   State<_MoveHistoryBar> createState() => _MoveHistoryBarState();
@@ -765,32 +690,23 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
     }
   }
 
-  int get _selectedIndex {
-    if (widget.isPractice) return -1;
-    final index = widget.analysisIndex;
-    if (index == null) return widget.moves.length - 1;
-    return index - 1;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final numberStyle = theme.textTheme.bodyMedium?.copyWith(
+    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
     final normalStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w600,
-      color: theme.colorScheme.onSurface,
     );
-    final selectedTextStyle = theme.textTheme.bodyMedium?.copyWith(
+    final highlightStyle = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: FontWeight.w800,
       color: theme.colorScheme.primary,
     );
 
     if (widget.moves.isEmpty) {
       return SizedBox(
-        height: 32,
+        height: 40,
         child: Center(
           child: Text(
             'No moves yet',
@@ -802,58 +718,55 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
       );
     }
 
-    final canTap = widget.onMoveTap != null;
-
-    Widget moveChip(int moveIndex) {
-      final isSelected = moveIndex == _selectedIndex;
-
-      final child = Text(
-        widget.moves[moveIndex].san,
-        style: isSelected ? selectedTextStyle : normalStyle,
-      );
-
-      if (!canTap) return child;
-
-      return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => widget.onMoveTap!(moveIndex),
-        child: child,
-      );
-    }
-
-    // Single flat row: "1. e4 e5  2. Nf3 Nc6 ..." — no card grouping,
-    // no wrapping, just an inline scrollable strip like real notation.
-    final children = <Widget>[const SizedBox(width: 10)];
+    final children = <Widget>[const SizedBox(width: 16)];
     int index = 0;
     int number = 1;
 
     if (widget.moves.first.side == Side.black) {
-      children.add(Text('$number.', style: numberStyle));
-      children.add(const SizedBox(width: 4));
-      children.add(moveChip(0));
-      children.add(const SizedBox(width: 10));
+      children.add(Text('$number...', style: mutedStyle));
+      children.add(const SizedBox(width: 5));
+      children.add(
+        Text(
+          widget.moves.first.san,
+          style: widget.moves.length == 1 ? highlightStyle : normalStyle,
+        ),
+      );
+      children.add(const SizedBox(width: 14));
       index = 1;
       number = 2;
     }
 
     for (; index < widget.moves.length; index += 2) {
-      children.add(Text('$number.', style: numberStyle));
-      children.add(const SizedBox(width: 4));
-      children.add(moveChip(index));
+      children.add(Text('$number.', style: mutedStyle));
+      children.add(const SizedBox(width: 5));
+
+      final isWhiteLast = index == widget.moves.length - 1;
+      children.add(
+        Text(
+          widget.moves[index].san,
+          style: isWhiteLast ? highlightStyle : normalStyle,
+        ),
+      );
 
       if (index + 1 < widget.moves.length) {
-        children.add(const SizedBox(width: 4));
-        children.add(moveChip(index + 1));
+        children.add(const SizedBox(width: 6));
+        final isBlackLast = (index + 1) == widget.moves.length - 1;
+        children.add(
+          Text(
+            widget.moves[index + 1].san,
+            style: isBlackLast ? highlightStyle : normalStyle,
+          ),
+        );
       }
 
-      children.add(const SizedBox(width: 10));
+      children.add(const SizedBox(width: 14));
       number++;
     }
 
-    children.add(const SizedBox(width: 6));
+    children.add(const SizedBox(width: 16));
 
     return SizedBox(
-      height: 32,
+      height: 40,
       child: ListView(
         controller: _controller,
         scrollDirection: Axis.horizontal,
