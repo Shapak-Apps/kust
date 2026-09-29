@@ -387,32 +387,16 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.mode == GameMode.local || fellSide == state.playerSide) {
-      _playSound('game-end.mp3');
+      SoundService.instance.playJingle('game-end.mp3');
     } else {
-      _playSound('game-win.mp3');
+      SoundService.instance.playJingle('game-win.mp3');
       _recordBotWin();
     }
   }
 
-  AudioPlayer _nextSoundPlayer() {
-    while (_soundPool.length < _soundPoolSize) {
-      final player = AudioPlayer();
-      unawaited(player.setPlayerMode(PlayerMode.lowLatency));
-      _soundPool.add(player);
-    }
-
-    final player = _soundPool[_soundPoolIndex];
-    _soundPoolIndex = (_soundPoolIndex + 1) % _soundPool.length;
-    return player;
-  }
-
-  Future<void> _playSound(String asset, {double volume = 1.0}) async {
+  void _playSound(String asset) {
     if (_isDisposed) return;
-
-    final player = _nextSoundPlayer();
-    try {
-      await player.play(AssetSource('sounds/$asset'), volume: volume);
-    } catch (_) {}
+    SoundService.instance.playSfx(asset);
   }
 
   void _playCheckSound() {
@@ -495,29 +479,27 @@ class ChessController extends Notifier<GameState> {
     }
 
     if (isCapture || newPos.isCheck) {
-      HapticFeedback.mediumImpact();
+      SoundService.instance.buzz(heavy: true);
     } else {
-      HapticFeedback.lightImpact();
+      SoundService.instance.buzz();
     }
   }
 
   void _playGameEndSound(Position position) {
     if (position.isCheckmate) {
       if (state.mode == GameMode.local) {
-        _playSound('game-end.mp3');
+        SoundService.instance.playJingle('game-end.mp3');
       } else if (position.turn == state.playerSide) {
-        _playSound('game-end.mp3');
+        SoundService.instance.playJingle('game-end.mp3');
       } else {
-        _playSound('game-win.mp3');
+        SoundService.instance.playJingle('game-win.mp3');
         _recordBotWin();
       }
     } else {
-      _playSound('game-draw.mp3');
+      SoundService.instance.playJingle('game-draw.mp3');
     }
   }
 
-  /// Player just beat the current bot — persist it so the bot card
-  /// shows the green tick. Fire-and-forget, never blocks game flow.
   void _recordBotWin() {
     if (state.mode != GameMode.bot) return;
     final bot = state.bot;
@@ -701,7 +683,7 @@ class ChessController extends Notifier<GameState> {
       endReason: 'You resigned.',
     );
 
-    _playSound('game-end.mp3');
+    SoundService.instance.playJingle('game-end.mp3');
   }
 
   void undoLastMove() {

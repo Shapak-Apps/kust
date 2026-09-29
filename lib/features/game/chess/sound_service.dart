@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
@@ -23,13 +25,12 @@ class SoundService {
 
   final List<AudioPlayer> _pool = [];
   int _cursor = 0;
-  static const int _poolSize = 4;
+  static const int _poolSize = 5;
 
   AudioPlayer? _jinglePlayer;
 
   bool _warmedUp = false;
   Future<void>? _warmupFuture;
-  int _playToken = 0;
 
   Future<void> warmUp() {
     if (_warmedUp) return Future.value();
@@ -40,6 +41,7 @@ class SoundService {
     try {
       for (var i = 0; i < _poolSize; i++) {
         final p = AudioPlayer(playerId: 'kust_sfx_$i');
+        await p.setPlayerMode(PlayerMode.lowLatency);
         await p.setReleaseMode(ReleaseMode.stop);
         await p.setVolume(1.0);
         _pool.add(p);
@@ -47,14 +49,12 @@ class SoundService {
       _jinglePlayer = AudioPlayer(playerId: 'kust_jingle');
       await _jinglePlayer!.setReleaseMode(ReleaseMode.stop);
       await _jinglePlayer!.setVolume(1.0);
+      final cache = AudioCache(prefix: 'assets/$_prefix');
       for (final name in _precache) {
         try {
-          await AudioCache(prefix: 'assets/$_prefix').load(name);
+          await cache.load(name);
         } catch (_) {}
       }
-      try {
-        await _pool.first.setSource(AssetSource('$_prefix${_precache.first}'));
-      } catch (_) {}
       _warmedUp = true;
     } catch (_) {
       // Audio must never crash the game.
@@ -62,13 +62,11 @@ class SoundService {
   }
 
   Future<void> playSfx(String fileName) async {
-    final token = ++_playToken;
     try {
       await warmUp();
-      if (token != _playToken && _isMoveLike(fileName)) return;
       final player = _pool.isEmpty ? null : _pool[_cursor++ % _pool.length];
       if (player == null) return;
-      await player.play(AssetSource('$_prefix$fileName'));
+      unawaited(player.play(AssetSource('$_prefix$fileName')));
     } catch (_) {}
   }
 
@@ -77,6 +75,7 @@ class SoundService {
       await warmUp();
       final player = _jinglePlayer ??= AudioPlayer(playerId: 'kust_jingle');
       await player.stop();
+      await Future.delayed(const Duration(milliseconds: 250));
       await player.play(AssetSource('$_prefix$fileName'));
     } catch (_) {}
   }
@@ -90,11 +89,6 @@ class SoundService {
       }
     } catch (_) {}
   }
-
-  bool _isMoveLike(String fileName) =>
-      fileName == 'move.mp3' ||
-      fileName == 'move-opponent.mp3' ||
-      fileName == 'capture.mp3';
 
   Future<void> dispose() async {
     for (final p in _pool) {

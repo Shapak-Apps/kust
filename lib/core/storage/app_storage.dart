@@ -3,9 +3,6 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-/// Local storage for guest identity + bot progress.
-/// No auth yet — we act as guest. Everything is Hive-backed and reactive
-/// via [botProgressListenable] so the UI ticks update live.
 class AppStorage {
   AppStorage._();
   static final AppStorage instance = AppStorage._();
@@ -29,7 +26,6 @@ class AppStorage {
   Box get _user => Hive.box(userBoxName);
   Box get _bots => Hive.box(botProgressBoxName);
 
-  /// Must be called once from main() after Hive.initFlutter().
   static Future<void> init() async {
     await Hive.openBox(userBoxName);
     await Hive.openBox(botProgressBoxName);
@@ -52,10 +48,8 @@ class AppStorage {
   String get guestName =>
       _user.get(_guestNameKey, defaultValue: 'Guest') as String;
 
-  /// Reactive signal for bot-progress UI (bot ticks update live).
   ValueListenable botProgressListenable() => _bots.listenable();
 
-  /// Stable key for a bot. Use explicit id everywhere.
   bool isBotBeaten(String botId) => _bots.get(_beatenKey(botId)) == true;
 
   Set<String> get beatenBotIds => _bots.keys
