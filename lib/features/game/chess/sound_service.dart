@@ -23,6 +23,15 @@ class SoundService {
     'game-draw.mp3',
   ];
 
+  static final AudioContext _noFocusCtx = AudioContext(
+    android: const AudioContextAndroid(
+      audioFocus: AndroidAudioFocus.none,
+      usageType: AndroidUsageType.game,
+      contentType: AndroidContentType.sonification,
+    ),
+    iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
+  );
+
   final List<AudioPlayer> _pool = [];
   int _cursor = 0;
   static const int _poolSize = 5;
@@ -39,16 +48,23 @@ class SoundService {
 
   Future<void> _doWarmUp() async {
     try {
+      await AudioPlayer.global.setAudioContext(_noFocusCtx);
       for (var i = 0; i < _poolSize; i++) {
         final p = AudioPlayer(playerId: 'kust_sfx_$i');
         await p.setPlayerMode(PlayerMode.lowLatency);
         await p.setReleaseMode(ReleaseMode.stop);
         await p.setVolume(1.0);
+        try {
+          await p.setAudioContext(_noFocusCtx);
+        } catch (_) {}
         _pool.add(p);
       }
       _jinglePlayer = AudioPlayer(playerId: 'kust_jingle');
       await _jinglePlayer!.setReleaseMode(ReleaseMode.stop);
       await _jinglePlayer!.setVolume(1.0);
+      try {
+        await _jinglePlayer!.setAudioContext(_noFocusCtx);
+      } catch (_) {}
       final cache = AudioCache(prefix: 'assets/$_prefix');
       for (final name in _precache) {
         try {
@@ -64,7 +80,9 @@ class SoundService {
       await warmUp();
       final player = _pool.isEmpty ? null : _pool[_cursor++ % _pool.length];
       if (player == null) return;
-      unawaited(player.play(AssetSource('$_prefix$fileName')));
+      unawaited(
+        player.play(AssetSource('$_prefix$fileName'), ctx: _noFocusCtx),
+      );
     } catch (_) {}
   }
 
@@ -74,7 +92,7 @@ class SoundService {
       final player = _jinglePlayer ??= AudioPlayer(playerId: 'kust_jingle');
       await player.stop();
       await Future.delayed(const Duration(milliseconds: 250));
-      await player.play(AssetSource('$_prefix$fileName'));
+      await player.play(AssetSource('$_prefix$fileName'), ctx: _noFocusCtx);
     } catch (_) {}
   }
 

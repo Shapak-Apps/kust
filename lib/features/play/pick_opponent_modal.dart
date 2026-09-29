@@ -323,41 +323,7 @@ class _BotTile extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(bot.imagePath, fit: BoxFit.contain),
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: ValueListenableBuilder(
-                        valueListenable: AppStorage.instance
-                            .botProgressListenable(),
-                        builder: (context, _, _) {
-                          final beaten = AppStorage.instance.isBotBeaten(
-                            bot.id,
-                          );
-                          if (!beaten) return const SizedBox.shrink();
-                          return Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF22C55E),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                            ),
-                            child: const Icon(
-                              Icons.check,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                child: Image.asset(bot.imagePath, fit: BoxFit.contain),
               ),
             ),
             const SizedBox(height: 4),
@@ -387,11 +353,32 @@ class _BotTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 2),
-            Text(
-              '${bot.elo} Elo',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+            ValueListenableBuilder(
+              valueListenable: AppStorage.instance.botProgressListenable(),
+              builder: (context, _, _) {
+                final beaten = AppStorage.instance.isBotBeaten(bot.id);
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${bot.elo} Elo',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                    if (beaten) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.emoji_events_rounded,
+                        size: 15,
+                        color: Color(0xFFFFBB00),
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 8),
           ],
