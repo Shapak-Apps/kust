@@ -229,11 +229,6 @@ class ChessController extends Notifier<GameState> {
   Duration _whiteClock = Duration.zero;
   Duration _blackClock = Duration.zero;
 
-  static const int _soundPoolSize = 4;
-
-  final List<AudioPlayer> _soundPool = [];
-  int _soundPoolIndex = 0;
-
   @override
   GameState build() {
     _isDisposed = false;
@@ -242,10 +237,6 @@ class ChessController extends Notifier<GameState> {
       _isDisposed = true;
       _stopClock();
       engine.dispose();
-      for (final player in _soundPool) {
-        player.dispose();
-      }
-      _soundPool.clear();
     });
 
     final keepAliveLink = ref.keepAlive();
