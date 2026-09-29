@@ -56,9 +56,7 @@ class SoundService {
         } catch (_) {}
       }
       _warmedUp = true;
-    } catch (_) {
-      // Audio must never crash the game.
-    }
+    } catch (_) {}
   }
 
   Future<void> playSfx(String fileName) async {
