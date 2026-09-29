@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/game/chess/bot_policy.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
@@ -264,7 +265,7 @@ class ChessController extends Notifier<GameState> {
     return GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
       mode: GameMode.bot,
-      bot: const Bot(name: '-', elo: 0, imagePath: ''),
+      bot: const Bot(id: '-', name: '-', elo: 0, imagePath: ''),
       playerSide: Side.white,
     );
   }
@@ -399,6 +400,7 @@ class ChessController extends Notifier<GameState> {
       _playSound('game-end.mp3');
     } else {
       _playSound('game-win.mp3');
+      _recordBotWin();
     }
   }
 
@@ -517,10 +519,21 @@ class ChessController extends Notifier<GameState> {
         _playSound('game-end.mp3');
       } else {
         _playSound('game-win.mp3');
+        _recordBotWin();
       }
     } else {
       _playSound('game-draw.mp3');
     }
+  }
+
+  /// Player just beat the current bot — persist it so the bot card
+  /// shows the green tick. Fire-and-forget, never blocks game flow.
+  void _recordBotWin() {
+    if (state.mode != GameMode.bot) return;
+    final bot = state.bot;
+    if (bot == null) return;
+    if (state.practiceMode) return;
+    unawaited(AppStorage.instance.markBotBeaten(bot.id));
   }
 
   Future<void> _loadEvalEnabled() async {

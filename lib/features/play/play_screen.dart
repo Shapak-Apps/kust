@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/play/pick_side_modal.dart';
@@ -14,23 +15,36 @@ const Color kAccentColor = Color(0xFFFFBB00);
 const double kFlagSize = 14;
 
 const List<Bot> _challengeBots = [
-  Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
-  Bot(name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
-  Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
-  Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
-  Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-  Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
+  Bot(
+    id: 'elizabeth',
+    name: 'Elizabeth',
+    elo: 600,
+    imagePath: 'assets/bots/Elizabeth.png',
+  ),
+  Bot(id: 'mark', name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
+  Bot(id: 'apex', name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
+  Bot(id: 'karl', name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
+  Bot(id: 'maya', name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
+  Bot(id: 'yura', name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
 ];
 
 const List<Bot> _tkmChallengeBots = [
-  Bot(name: 'Bahar', elo: 400, imagePath: 'assets/bots/Bahar.png', isTkm: true),
   Bot(
+    id: 'bahar',
+    name: 'Bahar',
+    elo: 400,
+    imagePath: 'assets/bots/Bahar.png',
+    isTkm: true,
+  ),
+  Bot(
+    id: 'enejan',
     name: 'Enejan',
     elo: 1000,
     imagePath: 'assets/bots/Enejan.png',
     isTkm: true,
   ),
   Bot(
+    id: 'berdi',
     name: 'Berdi',
     elo: 2000,
     imagePath: 'assets/bots/Berdi.png',
@@ -372,11 +386,41 @@ class _BotChallengeCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                bot.imagePath,
-                height: 53,
-                width: 53,
-                fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  Image.asset(
+                    bot.imagePath,
+                    height: 53,
+                    width: 53,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: ValueListenableBuilder(
+                      valueListenable: AppStorage.instance
+                          .botProgressListenable(),
+                      builder: (context, _, _) {
+                        final beaten = AppStorage.instance.isBotBeaten(bot.id);
+                        if (!beaten) return const SizedBox.shrink();
+                        return Container(
+                          width: 18,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 6),

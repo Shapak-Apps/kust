@@ -2,15 +2,19 @@ import 'dart:math';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+
+import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/play/practice_mode_checkbox.dart';
 
 class Bot {
+  final String id;
   final String name;
   final int elo;
   final String imagePath;
   final bool isTkm;
 
   const Bot({
+    required this.id,
     required this.name,
     required this.elo,
     required this.imagePath,
@@ -47,28 +51,36 @@ class PickOpponentModal extends StatefulWidget {
 
 class _PickOpponentModalState extends State<PickOpponentModal> {
   final List<Bot> internationalBots = const [
-    Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
-    Bot(name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
-    Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
-    Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
-    Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-    Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
+    Bot(
+      id: 'elizabeth',
+      name: 'Elizabeth',
+      elo: 600,
+      imagePath: 'assets/bots/Elizabeth.png',
+    ),
+    Bot(id: 'mark', name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
+    Bot(id: 'apex', name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
+    Bot(id: 'karl', name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
+    Bot(id: 'maya', name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
+    Bot(id: 'yura', name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
   ];
 
   final List<Bot> tkmBots = const [
     Bot(
+      id: 'bahar',
       name: 'Bahar',
       elo: 400,
       imagePath: 'assets/bots/Bahar.png',
       isTkm: true,
     ),
     Bot(
+      id: 'enejan',
       name: 'Enejan',
       elo: 1000,
       imagePath: 'assets/bots/Enejan.png',
       isTkm: true,
     ),
     Bot(
+      id: 'berdi',
       name: 'Berdi',
       elo: 2000,
       imagePath: 'assets/bots/Berdi.png',
@@ -311,7 +323,41 @@ class _BotTile extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: Image.asset(bot.imagePath, fit: BoxFit.contain),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(bot.imagePath, fit: BoxFit.contain),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: ValueListenableBuilder(
+                        valueListenable: AppStorage.instance
+                            .botProgressListenable(),
+                        builder: (context, _, _) {
+                          final beaten = AppStorage.instance.isBotBeaten(
+                            bot.id,
+                          );
+                          if (!beaten) return const SizedBox.shrink();
+                          return Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF22C55E),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 4),
