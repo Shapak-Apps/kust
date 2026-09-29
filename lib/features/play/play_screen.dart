@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/play/app_bar.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/play/pick_side_modal.dart';
@@ -14,23 +15,36 @@ const Color kAccentColor = Color(0xFFFFBB00);
 const double kFlagSize = 14;
 
 const List<Bot> _challengeBots = [
-  Bot(name: 'Elizabeth', elo: 600, imagePath: 'assets/bots/Elizabeth.png'),
-  Bot(name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
-  Bot(name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
-  Bot(name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
-  Bot(name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-  Bot(name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
+  Bot(
+    id: 'elizabeth',
+    name: 'Elizabeth',
+    elo: 600,
+    imagePath: 'assets/bots/Elizabeth.png',
+  ),
+  Bot(id: 'mark', name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
+  Bot(id: 'apex', name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
+  Bot(id: 'karl', name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
+  Bot(id: 'maya', name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
+  Bot(id: 'yura', name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
 ];
 
 const List<Bot> _tkmChallengeBots = [
-  Bot(name: 'Bahar', elo: 400, imagePath: 'assets/bots/Bahar.png', isTkm: true),
   Bot(
+    id: 'bahar',
+    name: 'Bahar',
+    elo: 400,
+    imagePath: 'assets/bots/Bahar.png',
+    isTkm: true,
+  ),
+  Bot(
+    id: 'enejan',
     name: 'Enejan',
     elo: 1000,
     imagePath: 'assets/bots/Enejan.png',
     isTkm: true,
   ),
   Bot(
+    id: 'berdi',
     name: 'Berdi',
     elo: 2000,
     imagePath: 'assets/bots/Berdi.png',
@@ -412,14 +426,36 @@ class _BotChallengeCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
 
-            Text(
-              '${bot.elo} Elo',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: (theme.textTheme.bodySmall?.fontSize ?? 12) * 1.10,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+            ValueListenableBuilder(
+              valueListenable: AppStorage.instance.botProgressListenable(),
+              builder: (context, _, _) {
+                final beaten = AppStorage.instance.isBotBeaten(bot.id);
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${bot.elo} Elo',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize:
+                            (theme.textTheme.bodySmall?.fontSize ?? 12) * 1.10,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                    if (beaten) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.emoji_events_rounded,
+                        size: 15,
+                        color: kAccentColor,
+                      ),
+                    ],
+                  ],
+                );
+              },
             ),
           ],
         ),

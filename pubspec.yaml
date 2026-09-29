@@ -22,6 +22,8 @@ dependencies:
   stockfish: any
   audioplayers: ^6.8.1
   path_provider: ^2.1.6
+  hive_ce: ^2.11.3
+  hive_ce_flutter: ^2.3.1
 
 dependency_overrides:
   stockfish:

@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/game/chess/bot_policy.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/game/time_control.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
@@ -229,11 +229,6 @@ class ChessController extends Notifier<GameState> {
   Duration _whiteClock = Duration.zero;
   Duration _blackClock = Duration.zero;
 
-  static const int _soundPoolSize = 4;
-
-  final List<AudioPlayer> _soundPool = [];
-  int _soundPoolIndex = 0;
-
   @override
   GameState build() {
     _isDisposed = false;
@@ -242,10 +237,6 @@ class ChessController extends Notifier<GameState> {
       _isDisposed = true;
       _stopClock();
       engine.dispose();
-      for (final player in _soundPool) {
-        player.dispose();
-      }
-      _soundPool.clear();
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -264,7 +255,7 @@ class ChessController extends Notifier<GameState> {
     return GameState(
       position: Chess.fromSetup(Setup.parseFen(kStartFen)),
       mode: GameMode.bot,
-      bot: const Bot(name: '-', elo: 0, imagePath: ''),
+      bot: const Bot(id: '-', name: '-', elo: 0, imagePath: ''),
       playerSide: Side.white,
     );
   }
@@ -396,31 +387,16 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.mode == GameMode.local || fellSide == state.playerSide) {
-      _playSound('game-end.mp3');
+      SoundService.instance.playJingle('game-end.mp3');
     } else {
-      _playSound('game-win.mp3');
+      SoundService.instance.playJingle('game-win.mp3');
+      _recordBotWin();
     }
   }
 
-  AudioPlayer _nextSoundPlayer() {
-    while (_soundPool.length < _soundPoolSize) {
-      final player = AudioPlayer();
-      unawaited(player.setPlayerMode(PlayerMode.lowLatency));
-      _soundPool.add(player);
-    }
-
-    final player = _soundPool[_soundPoolIndex];
-    _soundPoolIndex = (_soundPoolIndex + 1) % _soundPool.length;
-    return player;
-  }
-
-  Future<void> _playSound(String asset, {double volume = 1.0}) async {
+  void _playSound(String asset) {
     if (_isDisposed) return;
-
-    final player = _nextSoundPlayer();
-    try {
-      await player.play(AssetSource('sounds/$asset'), volume: volume);
-    } catch (_) {}
+    SoundService.instance.playSfx(asset);
   }
 
   void _playCheckSound() {
@@ -503,24 +479,33 @@ class ChessController extends Notifier<GameState> {
     }
 
     if (isCapture || newPos.isCheck) {
-      HapticFeedback.mediumImpact();
+      SoundService.instance.buzz(heavy: true);
     } else {
-      HapticFeedback.lightImpact();
+      SoundService.instance.buzz();
     }
   }
 
   void _playGameEndSound(Position position) {
     if (position.isCheckmate) {
       if (state.mode == GameMode.local) {
-        _playSound('game-end.mp3');
+        SoundService.instance.playJingle('game-end.mp3');
       } else if (position.turn == state.playerSide) {
-        _playSound('game-end.mp3');
+        SoundService.instance.playJingle('game-end.mp3');
       } else {
-        _playSound('game-win.mp3');
+        SoundService.instance.playJingle('game-win.mp3');
+        _recordBotWin();
       }
     } else {
-      _playSound('game-draw.mp3');
+      SoundService.instance.playJingle('game-draw.mp3');
     }
+  }
+
+  void _recordBotWin() {
+    if (state.mode != GameMode.bot) return;
+    final bot = state.bot;
+    if (bot == null) return;
+    if (state.practiceMode) return;
+    unawaited(AppStorage.instance.markBotBeaten(bot.id));
   }
 
   Future<void> _loadEvalEnabled() async {
@@ -698,7 +683,7 @@ class ChessController extends Notifier<GameState> {
       endReason: 'You resigned.',
     );
 
-    _playSound('game-end.mp3');
+    SoundService.instance.playJingle('game-end.mp3');
   }
 
   void undoLastMove() {

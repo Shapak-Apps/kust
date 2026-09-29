@@ -8,18 +8,22 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Kust/features/game/chess/board/chess_board.dart';
 import 'package:Kust/features/game/chess/chess_controller.dart';
+import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/evaluation_bar.dart';
 import 'package:Kust/features/game/more_floating_menu.dart';
 import 'package:Kust/features/game/time_control.dart';
+import 'package:Kust/theme.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
 
 const Color kDarkGameBackground = Color(0xFF252525);
-const Color kDarkGameAppBar = Color(0xFFFFBB00);
+
+const Color kAccentYellow = primaryGold;
+const Color kDarkGameAppBar = primaryGold;
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({
@@ -47,6 +51,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
+    SoundService.instance.warmUp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
       if (widget.isLocal) {
@@ -268,21 +273,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
       appBar: AppBar(
-        backgroundColor: isDark
-            ? kDarkGameAppBar.withValues(alpha: 0.75)
-            : null,
-        foregroundColor: isDark ? const Color(0xFF181A1B) : null,
-        title: Text(
-          widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
-          style: TextStyle(color: Colors.white),
-        ),
+        backgroundColor: isDark ? kDarkGameAppBar : kAccentYellow,
+        foregroundColor: const Color(0xFF181A1B),
+        title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
         actions: [
           if (gameState.status == GameStatus.playing)
             IconButton(
               tooltip: 'Resign',
               onPressed: _confirmResign,
               icon: const Icon(Icons.flag_rounded),
-              color: Colors.white,
             ),
           if (isFinished && !_hasDismissedResultDialog)
             IconButton(
@@ -432,8 +431,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Opacity(
                               opacity: (hintEnabled || gameState.isHintThinking)
