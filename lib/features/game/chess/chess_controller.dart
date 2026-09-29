@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,6 +11,7 @@ import 'package:Kust/features/game/chess/bot_policy.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/game/time_control.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 
