@@ -1,0 +1,39 @@
+# Flutter / Dart generated files
+.dart_tool/
+build/
+.pub/
+coverage/
+
+# Android generated files
+android/.cxx/
+android/build/
+android/.gradle/
+android/local.properties
+
+# Android generated intermediates
+android/app/build/
+android/app/.cxx/
+
+# iOS generated files
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Pods/
+ios/.symlinks/
+
+# Example app generated files
+example/.dart_tool/
+example/build/
+example/.pub/
+example/android/.cxx/
+example/android/build/
+example/android/.gradle/
+example/android/local.properties
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Flutter/ephemeral/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
