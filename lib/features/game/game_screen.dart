@@ -11,9 +11,7 @@ import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
-import 'package:Kust/features/game/chess/move_feedback.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
-import 'package:Kust/features/game/move_feedback_badge.dart';
 import 'package:Kust/features/game/evaluation_bar.dart';
 import 'package:Kust/features/game/more_floating_menu.dart';
 import 'package:Kust/features/game/time_control.dart';
@@ -47,12 +45,14 @@ class GameScreen extends ConsumerStatefulWidget {
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends ConsumerState<GameScreen> {
+class _GameScreenState extends ConsumerState<GameScreen>
+    with WidgetsBindingObserver {
   bool _hasDismissedResultDialog = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SoundService.instance.warmUp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
@@ -66,6 +66,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    if (lifecycle == AppLifecycleState.paused) {
+      ref.read(chessControllerProvider.notifier).stopEngineWork();
+    }
   }
 
   void _showGameStartModal(dynamic playerSide) {
@@ -216,20 +229,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
-  /// Latest feedback badge for a player bar.
-  /// Only the human player's own bar ever gets a badge — never the
-  /// opponent/bot top corner. In local games both bars are human.
-  MoveFeedback? _feedbackFor(GameState state, Side side) {
-    if (!state.moveFeedbackEnabled) return null;
-    if (state.isSelfAnalysisActive) return null;
-    if (state.mode == GameMode.bot && side != state.playerSide) return null;
-    for (var i = state.moves.length - 1; i >= 0; i--) {
-      final m = state.moves[i];
-      if (m.side == side && m.feedback != null) return m.feedback;
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
@@ -263,28 +262,29 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       }
     });
 
-    final gameState = ref.watch(chessControllerProvider);
+    final screen = ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          status: g.status,
+          practice: g.practiceMode,
+          eval: g.evaluationEnabled,
+          feedback: g.moveFeedbackEnabled,
+        ),
+      ),
+    );
+    final status = screen.status;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final isFinished =
-        gameState.status == GameStatus.checkmate ||
-        gameState.status == GameStatus.draw ||
-        gameState.status == GameStatus.resigned ||
-        gameState.status == GameStatus.timeout;
+        status == GameStatus.checkmate ||
+        status == GameStatus.draw ||
+        status == GameStatus.resigned ||
+        status == GameStatus.timeout;
 
     final topSide = widget.isLocal
         ? Side.black
         : oppositeSide(widget.playerSide);
     final bottomSide = widget.isLocal ? Side.white : widget.playerSide;
-
-    final timed = gameState.timeControl != null;
-
-    final undoEnabled = gameState.canUndo;
-    final hintBlockedByPractice = !gameState.practiceMode;
-    final hintEnabled =
-        gameState.practiceMode &&
-        gameState.isPlayerTurn &&
-        !gameState.isHintThinking;
 
     return Scaffold(
       backgroundColor: isDark ? kDarkGameBackground : null,
@@ -293,7 +293,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         foregroundColor: const Color(0xFF181A1B),
         title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
         actions: [
-          if (gameState.status == GameStatus.playing)
+          if (status == GameStatus.playing)
             IconButton(
               tooltip: 'Resign',
               onPressed: _confirmResign,
@@ -302,7 +302,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           if (isFinished && !_hasDismissedResultDialog)
             IconButton(
               tooltip: 'Show result',
-              onPressed: () => _showEndDialogForState(gameState),
+              onPressed: () =>
+                  _showEndDialogForState(ref.read(chessControllerProvider)),
               icon: const Icon(Icons.info_outline_rounded),
             ),
           if (isFinished && _hasDismissedResultDialog)
@@ -316,29 +317,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            if (gameState.evaluationEnabled &&
-                (widget.isLocal || widget.practiceMode))
+            if (screen.eval && (widget.isLocal || widget.practiceMode))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: EvaluationBar(
-                  score: gameState.evaluation,
-                  whiteOnLeft: bottomSide == Side.white,
-                ),
+                child: _EvalBarSlot(whiteOnLeft: bottomSide == Side.white),
               ),
-            _MoveHistoryBar(moves: gameState.moves),
-            if (gameState.practiceMode && gameState.moveFeedbackEnabled)
-              // Fixed height + Stack so the layout never jumps when
-              // feedback appears/disappears.
-              SizedBox(
+            const _HistorySlot(),
+            if (screen.practice && screen.feedback)
+              const SizedBox(
                 height: 24,
-                child: Stack(
-                  children: [
-                    _MoveFeedbackLine(
-                      moves: gameState.moves,
-                      analyzing: gameState.feedbackAnalyzing,
-                    ),
-                  ],
-                ),
+                child: Stack(children: [_FeedbackSlot()]),
               ),
             Expanded(
               child: LayoutBuilder(
@@ -369,28 +357,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               avatarPath: widget.isLocal
                                   ? null
                                   : widget.bot!.imagePath,
-                              position: gameState.position,
-                              moves: gameState.moves,
-                              isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
-                              feedback: _feedbackFor(
-                                gameState,
-                                topSide,
-                              ),
-                              timeLeft: timed
-                                  ? (topSide == Side.white
-                                        ? gameState.whiteTimeLeft
-                                        : gameState.blackTimeLeft)
-                                  : null,
-                              clockActive:
-                                  timed &&
-                                  gameState.status == GameStatus.playing &&
-                                  gameState.position.turn == topSide,
                             ),
                             SizedBox(
                               width: side,
                               height: side,
-                              child: gameState.status == GameStatus.loading
+                              child: status == GameStatus.loading
                                   ? const Center(
                                       child: CircularProgressIndicator(),
                                     )
@@ -399,21 +371,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             _PlayerBar(
                               side: bottomSide,
                               name: widget.isLocal ? 'White' : 'You',
-                              position: gameState.position,
-                              moves: gameState.moves,
-                              feedback: _feedbackFor(
-                                gameState,
-                                bottomSide,
-                              ),
-                              timeLeft: timed
-                                  ? (bottomSide == Side.white
-                                        ? gameState.whiteTimeLeft
-                                        : gameState.blackTimeLeft)
-                                  : null,
-                              clockActive:
-                                  timed &&
-                                  gameState.status == GameStatus.playing &&
-                                  gameState.position.turn == bottomSide,
                             ),
                           ],
                         ),
@@ -423,81 +380,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    tooltip: 'Previous move',
-                    onPressed: gameState.analysisCursor > 0
-                        ? ref
-                              .read(chessControllerProvider.notifier)
-                              .analysisMoveBack
-                        : null,
-                    icon: Opacity(
-                      opacity: gameState.analysisCursor > 0 ? 1.0 : 0.35,
-                      child: const Icon(Icons.arrow_left_rounded),
-                    ),
-                  ),
-                  if (widget.isLocal || widget.practiceMode)
-                    IconButton(
-                      tooltip: hintBlockedByPractice && !widget.isLocal
-                          ? 'Take back (Practice mode only)'
-                          : 'Take back',
-                      onPressed: undoEnabled
-                          ? ref
-                                .read(chessControllerProvider.notifier)
-                                .undoLastMove
-                          : null,
-                      icon: Opacity(
-                        opacity: undoEnabled ? 1.0 : 0.35,
-                        child: const Icon(Icons.undo_rounded),
-                      ),
-                    ),
-                  if (!widget.isLocal && widget.practiceMode)
-                    IconButton(
-                      tooltip: hintBlockedByPractice
-                          ? 'Hint (Practice mode only)'
-                          : 'Hint',
-                      onPressed: hintEnabled
-                          ? ref
-                                .read(chessControllerProvider.notifier)
-                                .requestHint
-                          : null,
-                      icon: gameState.isHintThinking && !hintBlockedByPractice
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Opacity(
-                              opacity: (hintEnabled || gameState.isHintThinking)
-                                  ? 1.0
-                                  : 0.35,
-                              child: const Icon(Icons.lightbulb_rounded),
-                            ),
-                    ),
-                  if (widget.isLocal || widget.practiceMode)
-                    IconButton(
-                      tooltip: 'More',
-                      onPressed: () => MoreFloatingMenu.show(context),
-                      icon: const Icon(Icons.more_vert_rounded),
-                    ),
-                  IconButton(
-                    tooltip: 'Next move',
-                    onPressed: gameState.isSelfAnalysisActive
-                        ? ref
-                              .read(chessControllerProvider.notifier)
-                              .analysisMoveNext
-                        : null,
-                    icon: Opacity(
-                      opacity: gameState.isSelfAnalysisActive ? 1.0 : 0.35,
-                      child: const Icon(Icons.arrow_right_rounded),
-                    ),
-                  ),
-                ],
-              ),
+            _ControlsBar(
+              isLocal: widget.isLocal,
+              practiceMode: widget.practiceMode,
             ),
           ],
         ),
@@ -506,40 +391,164 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 }
 
-class _PlayerBar extends StatelessWidget {
+class _EvalBarSlot extends ConsumerWidget {
+  const _EvalBarSlot({required this.whiteOnLeft});
+
+  final bool whiteOnLeft;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final score = ref.watch(chessControllerProvider.select((g) => g.evaluation));
+    return EvaluationBar(score: score, whiteOnLeft: whiteOnLeft);
+  }
+}
+
+class _HistorySlot extends ConsumerWidget {
+  const _HistorySlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final moves = ref.watch(chessControllerProvider.select((g) => g.moves));
+    return _MoveHistoryBar(moves: moves);
+  }
+}
+
+class _FeedbackSlot extends ConsumerWidget {
+  const _FeedbackSlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (moves: g.moves, analyzing: g.feedbackAnalyzing),
+      ),
+    );
+    return _MoveFeedbackLine(moves: data.moves, analyzing: data.analyzing);
+  }
+}
+
+class _ControlsBar extends ConsumerWidget {
+  const _ControlsBar({required this.isLocal, required this.practiceMode});
+
+  final bool isLocal;
+  final bool practiceMode;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          cursor: g.analysisCursor,
+          canUndo: g.canUndo,
+          hintEnabled: g.practiceMode && g.isPlayerTurn && !g.isHintThinking,
+          hintThinking: g.isHintThinking,
+          practice: g.practiceMode,
+          analysisActive: g.isSelfAnalysisActive,
+        ),
+      ),
+    );
+    final controller = ref.read(chessControllerProvider.notifier);
+    final hintBlockedByPractice = !s.practice;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          IconButton(
+            tooltip: 'Previous move',
+            onPressed: s.cursor > 0 ? controller.analysisMoveBack : null,
+            icon: Opacity(
+              opacity: s.cursor > 0 ? 1.0 : 0.35,
+              child: const Icon(Icons.arrow_left_rounded),
+            ),
+          ),
+          if (isLocal || practiceMode)
+            IconButton(
+              tooltip: hintBlockedByPractice && !isLocal
+                  ? 'Take back (Practice mode only)'
+                  : 'Take back',
+              onPressed: s.canUndo ? controller.undoLastMove : null,
+              icon: Opacity(
+                opacity: s.canUndo ? 1.0 : 0.35,
+                child: const Icon(Icons.undo_rounded),
+              ),
+            ),
+          if (!isLocal && practiceMode)
+            IconButton(
+              tooltip: hintBlockedByPractice
+                  ? 'Hint (Practice mode only)'
+                  : 'Hint',
+              onPressed: s.hintEnabled ? controller.requestHint : null,
+              icon: s.hintThinking && !hintBlockedByPractice
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Opacity(
+                      opacity: (s.hintEnabled || s.hintThinking) ? 1.0 : 0.35,
+                      child: const Icon(Icons.lightbulb_rounded),
+                    ),
+            ),
+          if (isLocal || practiceMode)
+            IconButton(
+              tooltip: 'More',
+              onPressed: () => MoreFloatingMenu.show(context),
+              icon: const Icon(Icons.more_vert_rounded),
+            ),
+          IconButton(
+            tooltip: 'Next move',
+            onPressed: s.analysisActive ? controller.analysisMoveNext : null,
+            icon: Opacity(
+              opacity: s.analysisActive ? 1.0 : 0.35,
+              child: const Icon(Icons.arrow_right_rounded),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlayerBar extends ConsumerWidget {
   const _PlayerBar({
     required this.side,
     required this.name,
-    required this.position,
-    required this.moves,
     this.subtitle,
     this.avatarPath,
-    this.isThinking = false,
     this.thinkingText,
-    this.timeLeft,
-    this.clockActive = false,
-    this.feedback,
   });
 
   final Side side;
   final String name;
-  final Position position;
-  final List<MoveRecord> moves;
   final String? subtitle;
   final String? avatarPath;
-  final bool isThinking;
   final String? thinkingText;
-  final Duration? timeLeft;
-  final bool clockActive;
-  final MoveFeedback? feedback;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          position: g.position,
+          moves: g.moves,
+          thinking: thinkingText != null && g.isBotThinking,
+          time: g.timeControl == null
+              ? null
+              : (side == Side.white ? g.whiteTimeLeft : g.blackTimeLeft),
+          clockActive:
+              g.timeControl != null &&
+              g.status == GameStatus.playing &&
+              g.position.turn == side,
+        ),
+      ),
+    );
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
 
-    final captured = piecesCapturedBy(side, moves);
-    final advantage = boardMaterialAdvantageFor(position, side);
+    final captured = piecesCapturedBy(side, s.moves);
+    final advantage = boardMaterialAdvantageFor(s.position, side);
 
     return SizedBox(
       height: kPlayerBarHeight,
@@ -575,7 +584,7 @@ class _PlayerBar extends StatelessWidget {
                         ),
                       ),
                     ],
-                    if (isThinking) ...[
+                    if (s.thinking) ...[
                       const SizedBox(width: 8),
                       const SizedBox(
                         width: 12,
@@ -625,20 +634,13 @@ class _PlayerBar extends StatelessWidget {
               ],
             ),
           ),
-          if (feedback != null) ...[
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: MoveFeedbackBadge(feedback: feedback!, size: 30),
-            ),
-          ],
-          if (timeLeft != null) ...[
+          if (s.time != null) ...[
             const SizedBox(width: 8),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
               child: _ClockChip(
-                time: timeLeft!,
-                active: clockActive,
+                time: s.time!,
+                active: s.clockActive,
                 side: side,
               ),
             ),
@@ -850,9 +852,7 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
 }
 
 /// Line under the moves history bar: "a4 was inaccuracy · Nc3 was best".
-/// Start-aligned; only the circle takes the move color, text stays default.
-/// Only player feedback is ever stored, so the latest feedback in the list
-/// is always the human player's — opponent moves never overwrite it.
+/// Text only — no icon. Start-aligned, default text style.
 class _MoveFeedbackLine extends StatelessWidget {
   const _MoveFeedbackLine({required this.moves, required this.analyzing});
 
@@ -874,7 +874,7 @@ class _MoveFeedbackLine extends StatelessWidget {
     final feedback = target?.feedback;
 
     String? text;
-    if (feedback != null && target != null) {
+    if (feedback != null) {
       text = feedback.bannerText;
     } else if (analyzing) {
       text = 'Analyzing ${moves.last.san}…';
@@ -882,42 +882,20 @@ class _MoveFeedbackLine extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final textStyle = theme.textTheme.bodySmall?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
-
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
-          child: Row(
+          child: Text(
+            text,
             key: ValueKey('${target?.san}_${feedback?.quality}_$analyzing'),
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (feedback != null)
-                MoveFeedbackBadge(
-                  feedback: feedback,
-                  size: 20,
-                )
-              else
-                const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textStyle,
-                ),
-              ),
-            ],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

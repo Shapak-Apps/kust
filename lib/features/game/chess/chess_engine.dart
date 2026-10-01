@@ -43,10 +43,32 @@ class EvalScore {
   }
 }
 
+class MoveAnalysis {
+  const MoveAnalysis({
+    required this.bestUci,
+    required this.bestCp,
+    required this.playedCp,
+  });
+
+  final String bestUci;
+  final int bestCp;
+  final int playedCp;
+}
+
+class _Scored {
+  const _Scored(this.uci, this.cp);
+
+  final String uci;
+  final int cp;
+}
+
 class ChessEngine {
   ChessEngine._();
 
   static final ChessEngine instance = ChessEngine._();
+
+  static const int _mateCp = 100000;
+  static final RegExp _scoreRe = RegExp(r'score (cp|mate) (-?\d+)');
 
   Stockfish? _engine;
   StreamSubscription<String>? _stdoutSubscription;
@@ -59,6 +81,7 @@ class ChessEngine {
 
   int _lastSkill = 20;
   int? _lastUciElo;
+  String? _lastScoreLine;
 
   bool get isReady => _ready;
 
@@ -73,6 +96,10 @@ class ChessEngine {
     return _startFuture ??= _start();
   }
 
+  void warmUp() {
+    start().ignore();
+  }
+
   Future<void> _start() async {
     final dir = await getApplicationSupportDirectory();
     final bigPath = await _extractNnue(_nnueBig, dir.path);
@@ -81,21 +108,35 @@ class ChessEngine {
     Stockfish.setNnueDirectory(dir.path);
     _engine = await stockfishAsync();
 
-    _stdoutSubscription = _engine!.stdout.listen((line) {
-      for (final listener in List.of(_listeners)) {
-        listener(line);
-      }
-    });
+    _stdoutSubscription = _engine!.stdout.listen(_onLine);
 
     _send('uci');
     await _waitForLine((line) => line == 'uciok');
 
+    _send('setoption name Threads value 2');
+    _send('setoption name Hash value 32');
+    _send('setoption name Move Overhead value 50');
     _send('setoption name EvalFile value $bigPath');
     _send('setoption name EvalFileSmall value $smallPath');
     _send('isready');
     await _waitForLine((line) => line == 'readyok');
 
     _ready = true;
+  }
+
+  void _onLine(String line) {
+    if (line.startsWith('info ')) {
+      if (line.contains(' score ') &&
+          !line.contains(' lowerbound') &&
+          !line.contains(' upperbound')) {
+        _lastScoreLine = line;
+      }
+      return;
+    }
+    if (_listeners.isEmpty) return;
+    for (final listener in List.of(_listeners)) {
+      listener(line);
+    }
   }
 
   void setSkillLevel(int level, {int? uciElo}) {
@@ -132,54 +173,109 @@ class ChessEngine {
 
   Future<EvalScore?> evaluateFen(
     String fen, {
-    Duration thinkTime = const Duration(milliseconds: 350),
+    Duration thinkTime = const Duration(milliseconds: 250),
+    bool Function()? isStale,
   }) {
-    return _run(() => _evaluate(fen, thinkTime));
+    return _run<EvalScore?>(() async {
+      if (isStale != null && isStale()) return null;
+      if (!_ready) await start();
+      return _atFullStrength<EvalScore?>(() => _evaluate(fen, thinkTime));
+    });
   }
 
   Future<EvalScore?> _evaluate(String fen, Duration thinkTime) async {
-    if (!_ready) await start();
-
-    String? lastScoreLine;
-    void listener(String line) {
-      if (line.startsWith('info ') && line.contains(' score ')) {
-        lastScoreLine = line;
-      }
-    }
-
-    _listeners.add(listener);
+    _lastScoreLine = null;
     _send('position fen $fen');
     _send('go movetime ${thinkTime.inMilliseconds}');
-    try {
-      await _waitForLine((line) => line.startsWith('bestmove '));
-    } finally {
-      _listeners.remove(listener);
-    }
+    await _waitForLine((line) => line.startsWith('bestmove '));
 
-    if (lastScoreLine == null) return null;
-    final match = RegExp(r'score (cp|mate) (-?\d+)').firstMatch(lastScoreLine!);
-    if (match == null) return null;
+    final score = _parseScore(_lastScoreLine);
+    if (score == null) return null;
 
-    final value = int.parse(match.group(2)!);
     final whiteToMove = fen.split(' ')[1] == 'w';
-    final whiteValue = whiteToMove ? value : -value;
+    final whiteValue = whiteToMove ? score.value : -score.value;
 
-    return match.group(1) == 'mate'
+    return score.mate
         ? EvalScore(mate: whiteValue)
         : EvalScore(cp: whiteValue);
   }
 
   Future<String> evaluateBestHint(String fen) {
-    return _run(() async {
-      final skill = _lastSkill;
-      final elo = _lastUciElo;
-
-      setSkillLevel(20);
-      final move = await _search(fen, const Duration(milliseconds: 1500));
-      setSkillLevel(skill, uciElo: elo);
-
-      return move;
+    return _run<String>(() async {
+      if (!_ready) await start();
+      return _atFullStrength<String>(
+        () => _search(fen, const Duration(milliseconds: 1000)),
+      );
     });
+  }
+
+  Future<MoveAnalysis?> analyzeMove({
+    required String beforeFen,
+    required String playedUci,
+    required String afterFen,
+    Duration thinkTime = const Duration(milliseconds: 450),
+    bool Function()? isStale,
+  }) {
+    return _run<MoveAnalysis?>(() async {
+      if (isStale != null && isStale()) return null;
+      if (!_ready) await start();
+      return _atFullStrength<MoveAnalysis?>(() async {
+        final best = await _searchScored(beforeFen, thinkTime);
+        if (best == null || best.uci == '(none)') return null;
+        if (best.uci == playedUci) {
+          return MoveAnalysis(
+            bestUci: best.uci,
+            bestCp: best.cp,
+            playedCp: best.cp,
+          );
+        }
+        if (isStale != null && isStale()) return null;
+        final reply = await _searchScored(afterFen, thinkTime);
+        if (reply == null) return null;
+        return MoveAnalysis(
+          bestUci: best.uci,
+          bestCp: best.cp,
+          playedCp: -reply.cp,
+        );
+      });
+    });
+  }
+
+  Future<T> _atFullStrength<T>(Future<T> Function() op) async {
+    final skill = _lastSkill;
+    final elo = _lastUciElo;
+    if (skill == 20 && elo == null) return op();
+    setSkillLevel(20);
+    try {
+      return await op();
+    } finally {
+      setSkillLevel(skill, uciElo: elo);
+    }
+  }
+
+  Future<_Scored?> _searchScored(String fen, Duration thinkTime) async {
+    _lastScoreLine = null;
+    _send('position fen $fen');
+    _send('go movetime ${thinkTime.inMilliseconds}');
+
+    final line = await _waitForLine((l) => l.startsWith('bestmove '));
+    final parts = line.split(' ');
+    final uci = parts.length > 1 ? parts[1] : '(none)';
+
+    final score = _parseScore(_lastScoreLine);
+    if (score == null) return null;
+
+    final cp = score.mate
+        ? (score.value > 0 ? _mateCp : -_mateCp)
+        : score.value;
+    return _Scored(uci, cp);
+  }
+
+  ({bool mate, int value})? _parseScore(String? line) {
+    if (line == null) return null;
+    final match = _scoreRe.firstMatch(line);
+    if (match == null) return null;
+    return (mate: match.group(1) == 'mate', value: int.parse(match.group(2)!));
   }
 
   void stopThinking() {
@@ -190,6 +286,7 @@ class ChessEngine {
   void dispose() {
     _ready = false;
     _startFuture = null;
+    _lastScoreLine = null;
     _stdoutSubscription?.cancel();
     _stdoutSubscription = null;
     _listeners.clear();
@@ -224,5 +321,6 @@ class ChessEngine {
 }
 
 final chessEngineProvider = Provider<ChessEngine>((ref) {
+  ref.keepAlive();
   return ChessEngine.instance;
 });

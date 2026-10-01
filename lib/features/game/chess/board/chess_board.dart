@@ -1,10 +1,13 @@
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/foundation.dart' show listEquals, setEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/game/chess/chess_controller.dart';
+import 'package:Kust/features/game/chess/move_feedback.dart';
+import 'package:Kust/features/game/move_feedback_badge.dart';
 
 const Color kLightSquare = Color(0xFFF0E6D2);
 const Color kDarkSquare = Color(0xFFB58863);
@@ -13,6 +16,114 @@ const Color kLastMoveHighlight = Color(0x40FFBB00);
 const Color kHintHighlight = Color(0x552ECC71);
 
 final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
+
+Square _castlingDisplaySquare(Square target) {
+  if (target == Square.h1) return Square.g1;
+  if (target == Square.a1) return Square.c1;
+  if (target == Square.h8) return Square.g8;
+  if (target == Square.a8) return Square.c8;
+  return target;
+}
+
+class _BoardView {
+  const _BoardView({
+    required this.position,
+    required this.mode,
+    required this.playerSide,
+    required this.selected,
+    required this.legal,
+    required this.moveSquares,
+    required this.hints,
+    required this.blocked,
+    required this.analysis,
+    required this.wasUndo,
+    required this.badgeFeedback,
+    required this.badgeSquare,
+  });
+
+  factory _BoardView.from(GameState g) {
+    MoveFeedback? feedback;
+    Square? square;
+
+    if (g.practiceMode &&
+        g.moveFeedbackEnabled &&
+        !g.isSelfAnalysisActive &&
+        g.moves.isNotEmpty) {
+      for (var i = g.moves.length - 1; i >= 0; i--) {
+        final record = g.moves[i];
+        if (record.feedback == null) continue;
+        if (g.mode == GameMode.bot && record.side != g.playerSide) continue;
+        feedback = record.feedback;
+        square = _castlingDisplaySquare(record.move.to);
+        break;
+      }
+    }
+
+    return _BoardView(
+      position: g.displayPosition,
+      mode: g.mode,
+      playerSide: g.playerSide,
+      selected: g.displaySelectedSquare,
+      legal: g.displayLegalDestinations,
+      moveSquares: g.displayMoveSquares,
+      hints: g.displayHintSquares,
+      blocked:
+          g.isBotThinking ||
+          g.status != GameStatus.playing ||
+          g.isSelfAnalysisActive,
+      analysis: g.isSelfAnalysisActive,
+      wasUndo: g.wasUndo,
+      badgeFeedback: feedback,
+      badgeSquare: square,
+    );
+  }
+
+  final Position position;
+  final GameMode mode;
+  final Side playerSide;
+  final Square? selected;
+  final Set<Square> legal;
+  final List<Square> moveSquares;
+  final Set<Square> hints;
+  final bool blocked;
+  final bool analysis;
+  final bool wasUndo;
+  final MoveFeedback? badgeFeedback;
+  final Square? badgeSquare;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _BoardView &&
+        identical(position, other.position) &&
+        mode == other.mode &&
+        playerSide == other.playerSide &&
+        selected == other.selected &&
+        setEquals(legal, other.legal) &&
+        listEquals(moveSquares, other.moveSquares) &&
+        setEquals(hints, other.hints) &&
+        blocked == other.blocked &&
+        analysis == other.analysis &&
+        wasUndo == other.wasUndo &&
+        identical(badgeFeedback, other.badgeFeedback) &&
+        badgeSquare == other.badgeSquare;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    position,
+    mode,
+    playerSide,
+    selected,
+    legal.length,
+    moveSquares.length,
+    hints.length,
+    blocked,
+    analysis,
+    wasUndo,
+    badgeFeedback,
+    badgeSquare,
+  );
+}
 
 class ChessBoard extends ConsumerStatefulWidget {
   const ChessBoard({super.key});
@@ -81,12 +192,15 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return Offset(dx, dy);
   }
 
-  Square _castlingDisplaySquare(Square target) {
-    if (target == Square.h1) return Square.g1;
-    if (target == Square.a1) return Square.c1;
-    if (target == Square.h8) return Square.g8;
-    if (target == Square.a8) return Square.c8;
-    return target;
+  void _handleTap(Offset local) {
+    if (_squareSize <= 0) return;
+    final col = (local.dx ~/ _squareSize).clamp(0, 7).toInt();
+    final row = (local.dy ~/ _squareSize).clamp(0, 7).toInt();
+    final file = _flipped ? 7 - col : col;
+    final rank = _flipped ? row : 7 - row;
+    ref.read(chessControllerProvider.notifier).selectSquare(
+      squareAt(file, rank),
+    );
   }
 
   Square? _checkedKingSquare(Position position) {
@@ -102,17 +216,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return null;
   }
 
-  Widget _buildRotatedPiece(
-    Piece piece,
-    GameState gameState,
-    Position displayPosition,
-  ) {
-    Widget svg = SvgPicture.asset(_assetForPiece(piece));
+  Widget _buildRotatedPiece(Piece piece, _BoardView view) {
+    final Widget svg = SvgPicture.asset(_assetForPiece(piece));
 
-    if (gameState.mode == GameMode.local) {
-      if (displayPosition.turn == Side.black) {
-        return RotatedBox(quarterTurns: 2, child: svg);
-      }
+    if (view.mode == GameMode.local && view.position.turn == Side.black) {
+      return RotatedBox(quarterTurns: 2, child: svg);
     }
 
     return svg;
@@ -120,19 +228,19 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   @override
   Widget build(BuildContext context) {
-    final gameState = ref.watch(chessControllerProvider);
-    final displayPosition = gameState.displayPosition;
+    final view = ref.watch(chessControllerProvider.select(_BoardView.from));
+    final displayPosition = view.position;
 
-    _flipped = gameState.mode == GameMode.local
+    _flipped = view.mode == GameMode.local
         ? false
-        : gameState.playerSide == Side.black;
+        : view.playerSide == Side.black;
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
 
       if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) return;
 
-      if (previous.position.fen != next.position.fen) {
+      if (!identical(previous.position, next.position)) {
         final move = next.lastMove;
 
         if (move != null) {
@@ -210,47 +318,39 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
         final checkedKing = _checkedKingSquare(displayPosition);
-        final selectedSquare = gameState.displaySelectedSquare;
-        final legalDestinations = gameState.displayLegalDestinations;
-        final moveSquares = gameState.displayMoveSquares;
-        final hintSquares = gameState.displayHintSquares;
 
         return AbsorbPointer(
-          absorbing:
-              gameState.isBotThinking ||
-              gameState.status != GameStatus.playing ||
-              gameState.isSelfAnalysisActive,
+          absorbing: view.blocked,
           child: SizedBox(
             width: side,
             height: side,
             child: Stack(
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final rank in ranks)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final file in files)
-                            _buildBoardSquare(
-                              squareAt(file, rank),
-                              gameState,
-                              displayPosition,
-                              checkedKing,
-                              selectedSquare,
-                              legalDestinations,
-                              moveSquares,
-                              hintSquares,
-                            ),
-                        ],
-                      ),
-                  ],
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapUp: (details) => _handleTap(details.localPosition),
+                  child: RepaintBoundary(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final rank in ranks)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final file in files)
+                                _buildBoardSquare(
+                                  squareAt(file, rank),
+                                  view,
+                                  checkedKing,
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
 
-                if (!gameState.isSelfAnalysisActive &&
-                    _capPiece != null &&
-                    _capSquare != null)
+                if (!view.analysis && _capPiece != null && _capSquare != null)
                   Positioned(
                     left: _getSquareOffset(_capSquare!, _squareSize).dx,
                     top: _getSquareOffset(_capSquare!, _squareSize).dy,
@@ -260,7 +360,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                       child: AnimatedBuilder(
                         animation: _captureController,
                         builder: (context, child) {
-                          final opacity = gameState.wasUndo
+                          final opacity = view.wasUndo
                               ? _captureController.value
                               : 1.0 - _captureController.value;
 
@@ -271,17 +371,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                         },
                         child: Padding(
                           padding: EdgeInsets.all(_squareSize * 0.02),
-                          child: _buildRotatedPiece(
-                            _capPiece!,
-                            gameState,
-                            displayPosition,
-                          ),
+                          child: _buildRotatedPiece(_capPiece!, view),
                         ),
                       ),
                     ),
                   ),
 
-                if (!gameState.isSelfAnalysisActive &&
+                if (!view.analysis &&
                     _animPiece != null &&
                     _animFrom != null &&
                     _animTo != null)
@@ -299,7 +395,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                             _squareSize,
                           );
 
-                          final curve = gameState.wasUndo
+                          final curve = view.wasUndo
                               ? Curves.easeOut
                               : Curves.easeInOut;
 
@@ -320,16 +416,38 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                                 height: _squareSize,
                                 child: Padding(
                                   padding: EdgeInsets.all(_squareSize * 0.02),
-                                  child: _buildRotatedPiece(
-                                    _animPiece!,
-                                    gameState,
-                                    displayPosition,
-                                  ),
+                                  child: _buildRotatedPiece(_animPiece!, view),
                                 ),
                               ),
                             ),
                           );
                         },
+                      ),
+                    ),
+                  ),
+
+                if (view.badgeFeedback != null && view.badgeSquare != null)
+                  Positioned(
+                    left: _getSquareOffset(view.badgeSquare!, _squareSize).dx,
+                    top: _getSquareOffset(view.badgeSquare!, _squareSize).dy,
+                    width: _squareSize,
+                    height: _squareSize,
+                    child: IgnorePointer(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            right: -_squareSize * 0.22,
+                            top: -_squareSize * 0.22,
+                            child: MoveFeedbackBadge(
+                              feedback: view.badgeFeedback!,
+                              size: _squareSize * 0.52,
+                              key: ValueKey(
+                                '${view.badgeFeedback!.playedSan}_${view.badgeFeedback!.quality}',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -343,21 +461,16 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   Widget _buildBoardSquare(
     Square square,
-    GameState gameState,
-    Position displayPosition,
+    _BoardView view,
     Square? checkedKing,
-    Square? selectedSquare,
-    Set<Square> legalDestinations,
-    List<Square> moveSquares,
-    Set<Square> hintSquares,
   ) {
-    final piece = displayPosition.board.pieceAt(square);
+    final piece = view.position.board.pieceAt(square);
 
     final isLight = (fileOf(square) + rankOf(square)).isEven;
-    final isSelected = selectedSquare == square;
-    final isLegalTarget = legalDestinations.contains(square);
-    final isLastMove = moveSquares.contains(square);
-    final isHint = hintSquares.contains(square);
+    final isSelected = view.selected == square;
+    final isLegalTarget = view.legal.contains(square);
+    final isLastMove = view.moveSquares.contains(square);
+    final isHint = view.hints.contains(square);
     final isCheckSquare = checkedKing == square;
 
     var background = isLight ? kLightSquare : kDarkSquare;
@@ -383,15 +496,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     bool hidePiece = false;
 
     if (piece != null) {
-      if (_animTo == square &&
-          _moveController.isAnimating &&
-          !gameState.isSelfAnalysisActive) {
+      if (_animTo == square && _moveController.isAnimating && !view.analysis) {
         hidePiece = true;
       }
 
       if (_capSquare == square &&
           _captureController.isAnimating &&
-          !gameState.isSelfAnalysisActive) {
+          !view.analysis) {
         hidePiece = true;
       }
     }
@@ -399,73 +510,69 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final showRankLabel = fileOf(square) == (_flipped ? 7 : 0);
     final showFileLabel = rankOf(square) == (_flipped ? 7 : 0);
 
-    return GestureDetector(
-      onTap: () =>
-          ref.read(chessControllerProvider.notifier).selectSquare(square),
-      child: Container(
-        width: _squareSize,
-        height: _squareSize,
-        color: background,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (piece != null && !hidePiece)
-              Padding(
-                padding: EdgeInsets.all(_squareSize * 0.02),
-                child: _buildRotatedPiece(piece, gameState, displayPosition),
-              ),
+    return Container(
+      width: _squareSize,
+      height: _squareSize,
+      color: background,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (piece != null && !hidePiece)
+            Padding(
+              padding: EdgeInsets.all(_squareSize * 0.02),
+              child: _buildRotatedPiece(piece, view),
+            ),
 
-            if (isLegalTarget && piece == null)
-              Container(
-                width: _squareSize * 0.28,
-                height: _squareSize * 0.28,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
+          if (isLegalTarget && piece == null)
+            Container(
+              width: _squareSize * 0.28,
+              height: _squareSize * 0.28,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+            ),
+
+          if (isLegalTarget && piece != null)
+            Container(
+              margin: EdgeInsets.all(_squareSize * 0.05),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  width: _squareSize * 0.06,
                 ),
               ),
+            ),
 
-            if (isLegalTarget && piece != null)
-              Container(
-                margin: EdgeInsets.all(_squareSize * 0.05),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    width: _squareSize * 0.06,
-                  ),
+          if (showRankLabel)
+            Positioned(
+              top: 2,
+              left: 3,
+              child: Text(
+                (rankOf(square) + 1).toString(),
+                style: TextStyle(
+                  fontSize: _squareSize * 0.16,
+                  fontWeight: FontWeight.w700,
+                  color: coordinateColor,
                 ),
               ),
+            ),
 
-            if (showRankLabel)
-              Positioned(
-                top: 2,
-                left: 3,
-                child: Text(
-                  (rankOf(square) + 1).toString(),
-                  style: TextStyle(
-                    fontSize: _squareSize * 0.16,
-                    fontWeight: FontWeight.w700,
-                    color: coordinateColor,
-                  ),
+          if (showFileLabel)
+            Positioned(
+              bottom: 2,
+              right: 3,
+              child: Text(
+                String.fromCharCode('a'.codeUnitAt(0) + fileOf(square)),
+                style: TextStyle(
+                  fontSize: _squareSize * 0.16,
+                  fontWeight: FontWeight.w700,
+                  color: coordinateColor,
                 ),
               ),
-
-            if (showFileLabel)
-              Positioned(
-                bottom: 2,
-                right: 3,
-                child: Text(
-                  String.fromCharCode('a'.codeUnitAt(0) + fileOf(square)),
-                  style: TextStyle(
-                    fontSize: _squareSize * 0.16,
-                    fontWeight: FontWeight.w700,
-                    color: coordinateColor,
-                  ),
-                ),
-              ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

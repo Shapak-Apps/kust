@@ -8,19 +8,19 @@ class SoundService {
   static final SoundService instance = SoundService._();
 
   static const _prefix = 'sounds/';
-  static const List<String> _precache = [
-    'move.mp3',
-    'move-opponent.mp3',
-    'capture.mp3',
-    'check.mp3',
-    'castle.mp3',
-    'promote.mp3',
-    'illegal.mp3',
-    'tenseconds.mp3',
-    'game-start.mp3',
-    'game-end.mp3',
-    'game-win.mp3',
-    'game-draw.mp3',
+  static const List<String> _sounds = [
+    'move.wav',
+    'move-opponent.wav',
+    'capture.wav',
+    'check.wav',
+    'castle.wav',
+    'promote.wav',
+    'illegal.wav',
+    'tenseconds.wav',
+    'game-start.wav',
+    'game-end.wav',
+    'game-win.wav',
+    'game-draw.wav',
   ];
 
   static final AudioContext _noFocusCtx = AudioContext(
@@ -32,12 +32,7 @@ class SoundService {
     iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
   );
 
-  final List<AudioPlayer> _pool = [];
-  int _cursor = 0;
-  static const int _poolSize = 5;
-
-  AudioPlayer? _jinglePlayer;
-
+  final Map<String, AudioPlayer> _players = {};
   bool _warmedUp = false;
   Future<void>? _warmupFuture;
 
@@ -49,51 +44,43 @@ class SoundService {
   Future<void> _doWarmUp() async {
     try {
       await AudioPlayer.global.setAudioContext(_noFocusCtx);
-      for (var i = 0; i < _poolSize; i++) {
-        final p = AudioPlayer(playerId: 'kust_sfx_$i');
-        await p.setPlayerMode(PlayerMode.lowLatency);
-        await p.setReleaseMode(ReleaseMode.stop);
-        await p.setVolume(1.0);
-        try {
-          await p.setAudioContext(_noFocusCtx);
-        } catch (_) {}
-        _pool.add(p);
-      }
-      _jinglePlayer = AudioPlayer(playerId: 'kust_jingle');
-      await _jinglePlayer!.setReleaseMode(ReleaseMode.stop);
-      await _jinglePlayer!.setVolume(1.0);
+    } catch (_) {}
+    await Future.wait(_sounds.map(_prepare));
+    _warmedUp = true;
+  }
+
+  Future<void> _prepare(String name) async {
+    try {
+      final player = AudioPlayer(playerId: 'kust_${name.replaceAll('.', '_')}');
+      await player.setPlayerMode(PlayerMode.lowLatency);
+      await player.setReleaseMode(ReleaseMode.stop);
+      await player.setVolume(1.0);
       try {
-        await _jinglePlayer!.setAudioContext(_noFocusCtx);
+        await player.setAudioContext(_noFocusCtx);
       } catch (_) {}
-      final cache = AudioCache(prefix: 'assets/$_prefix');
-      for (final name in _precache) {
-        try {
-          await cache.load(name);
-        } catch (_) {}
-      }
-      _warmedUp = true;
+      await player.setSource(AssetSource('$_prefix$name'));
+      _players[name] = player;
     } catch (_) {}
   }
 
-  Future<void> playSfx(String fileName) async {
+  Future<void> _play(String name) async {
     try {
-      await warmUp();
-      final player = _pool.isEmpty ? null : _pool[_cursor++ % _pool.length];
+      if (!_warmedUp) await warmUp();
+      final player = _players[name];
       if (player == null) return;
-      unawaited(
-        player.play(AssetSource('$_prefix$fileName'), ctx: _noFocusCtx),
-      );
+      await player.stop();
+      await player.resume();
     } catch (_) {}
   }
 
-  Future<void> playJingle(String fileName) async {
-    try {
-      await warmUp();
-      final player = _jinglePlayer ??= AudioPlayer(playerId: 'kust_jingle');
-      await player.stop();
-      await Future.delayed(const Duration(milliseconds: 250));
-      await player.play(AssetSource('$_prefix$fileName'), ctx: _noFocusCtx);
-    } catch (_) {}
+  Future<void> playSfx(String fileName) => _play(fileName);
+
+  Future<void> playJingle(
+    String fileName, {
+    Duration delay = Duration.zero,
+  }) async {
+    if (delay > Duration.zero) await Future.delayed(delay);
+    await _play(fileName);
   }
 
   void buzz({bool heavy = false}) {
@@ -107,16 +94,12 @@ class SoundService {
   }
 
   Future<void> dispose() async {
-    for (final p in _pool) {
+    for (final p in _players.values) {
       try {
         await p.dispose();
       } catch (_) {}
     }
-    _pool.clear();
-    try {
-      await _jinglePlayer?.dispose();
-    } catch (_) {}
-    _jinglePlayer = null;
+    _players.clear();
     _warmedUp = false;
     _warmupFuture = null;
   }
