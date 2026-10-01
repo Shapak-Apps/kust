@@ -39,23 +39,33 @@ class _BoardView {
     required this.wasUndo,
     required this.badgeFeedback,
     required this.badgeSquare,
+    required this.badgeIndex,
   });
 
   factory _BoardView.from(GameState g) {
     MoveFeedback? feedback;
     Square? square;
+    int? index;
 
     if (g.practiceMode &&
         g.moveFeedbackEnabled &&
         !g.isSelfAnalysisActive &&
         g.moves.isNotEmpty) {
+      int? lastPlayerIndex;
       for (var i = g.moves.length - 1; i >= 0; i--) {
-        final record = g.moves[i];
-        if (record.feedback == null) continue;
-        if (g.mode == GameMode.bot && record.side != g.playerSide) continue;
-        feedback = record.feedback;
-        square = _castlingDisplaySquare(record.move.to);
+        if (g.mode == GameMode.bot && g.moves[i].side != g.playerSide) {
+          continue;
+        }
+        lastPlayerIndex = i;
         break;
+      }
+      if (lastPlayerIndex != null) {
+        final record = g.moves[lastPlayerIndex];
+        if (record.feedback != null) {
+          feedback = record.feedback;
+          square = _castlingDisplaySquare(record.move.to);
+          index = lastPlayerIndex;
+        }
       }
     }
 
@@ -75,6 +85,7 @@ class _BoardView {
       wasUndo: g.wasUndo,
       badgeFeedback: feedback,
       badgeSquare: square,
+      badgeIndex: index,
     );
   }
 
@@ -90,6 +101,7 @@ class _BoardView {
   final bool wasUndo;
   final MoveFeedback? badgeFeedback;
   final Square? badgeSquare;
+  final int? badgeIndex;
 
   @override
   bool operator ==(Object other) {
@@ -105,7 +117,8 @@ class _BoardView {
         analysis == other.analysis &&
         wasUndo == other.wasUndo &&
         identical(badgeFeedback, other.badgeFeedback) &&
-        badgeSquare == other.badgeSquare;
+        badgeSquare == other.badgeSquare &&
+        badgeIndex == other.badgeIndex;
   }
 
   @override
@@ -122,6 +135,7 @@ class _BoardView {
     wasUndo,
     badgeFeedback,
     badgeSquare,
+    badgeIndex,
   );
 }
 
@@ -198,9 +212,9 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final row = (local.dy ~/ _squareSize).clamp(0, 7).toInt();
     final file = _flipped ? 7 - col : col;
     final rank = _flipped ? row : 7 - row;
-    ref.read(chessControllerProvider.notifier).selectSquare(
-      squareAt(file, rank),
-    );
+    ref
+        .read(chessControllerProvider.notifier)
+        .selectSquare(squareAt(file, rank));
   }
 
   Square? _checkedKingSquare(Position position) {
@@ -443,7 +457,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                               feedback: view.badgeFeedback!,
                               size: _squareSize * 0.52,
                               key: ValueKey(
-                                '${view.badgeFeedback!.playedSan}_${view.badgeFeedback!.quality}',
+                                '${view.badgeIndex}_${view.badgeFeedback!.playedSan}_${view.badgeFeedback!.quality}',
                               ),
                             ),
                           ),
