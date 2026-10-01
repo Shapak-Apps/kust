@@ -216,14 +216,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
-  /// Latest feedback for the given side (corner badge on player bar).
+  /// Latest feedback badge for a player bar.
+  /// Only the human player's own bar ever gets a badge — never the
+  /// opponent/bot top corner. In local games both bars are human.
   MoveFeedback? _feedbackFor(GameState state, Side side) {
     if (!state.moveFeedbackEnabled) return null;
     if (state.isSelfAnalysisActive) return null;
-    if (state.moves.isEmpty) return null;
-    final last = state.moves.last;
-    if (last.side != side) return null;
-    return last.feedback;
+    if (state.mode == GameMode.bot && side != state.playerSide) return null;
+    for (var i = state.moves.length - 1; i >= 0; i--) {
+      final m = state.moves[i];
+      if (m.side == side && m.feedback != null) return m.feedback;
+    }
+    return null;
   }
 
   @override
@@ -323,9 +327,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
             _MoveHistoryBar(moves: gameState.moves),
             if (gameState.practiceMode && gameState.moveFeedbackEnabled)
-              _MoveFeedbackLine(
-                moves: gameState.moves,
-                analyzing: gameState.feedbackAnalyzing,
+              // Fixed height + Stack so the layout never jumps when
+              // feedback appears/disappears.
+              SizedBox(
+                height: 24,
+                child: Stack(
+                  children: [
+                    _MoveFeedbackLine(
+                      moves: gameState.moves,
+                      analyzing: gameState.feedbackAnalyzing,
+                    ),
+                  ],
+                ),
               ),
             Expanded(
               child: LayoutBuilder(
@@ -837,6 +850,9 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
 }
 
 /// Line under the moves history bar: "a4 was inaccuracy · Nc3 was best".
+/// Start-aligned; only the circle takes the move color, text stays default.
+/// Only player feedback is ever stored, so the latest feedback in the list
+/// is always the human player's — opponent moves never overwrite it.
 class _MoveFeedbackLine extends StatelessWidget {
   const _MoveFeedbackLine({required this.moves, required this.analyzing});
 
@@ -848,53 +864,61 @@ class _MoveFeedbackLine extends StatelessWidget {
     final theme = Theme.of(context);
     if (moves.isEmpty) return const SizedBox.shrink();
 
-    final last = moves.last;
-    final feedback = last.feedback;
+    MoveRecord? target;
+    for (var i = moves.length - 1; i >= 0; i--) {
+      if (moves[i].feedback != null) {
+        target = moves[i];
+        break;
+      }
+    }
+    final feedback = target?.feedback;
 
-    String text;
-    Color? accent;
-    if (feedback != null) {
+    String? text;
+    if (feedback != null && target != null) {
       text = feedback.bannerText;
-      accent = feedback.quality.color;
     } else if (analyzing) {
-      text = 'Analyzing ${last.san}…';
+      text = 'Analyzing ${moves.last.san}…';
     } else {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: Row(
-          key: ValueKey('${last.san}_${feedback?.quality}'),
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (feedback != null)
-              MoveFeedbackBadge(
-                feedback: feedback,
-                size: 20,
-              )
-            else
-              const SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                text,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: accent ?? theme.colorScheme.onSurfaceVariant,
+    final textStyle = theme.textTheme.bodySmall?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Row(
+            key: ValueKey('${target?.san}_${feedback?.quality}_$analyzing'),
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (feedback != null)
+                MoveFeedbackBadge(
+                  feedback: feedback,
+                  size: 20,
+                )
+              else
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textStyle,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -547,8 +547,14 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  /// Classifies the most recent move in practice mode games.
-  /// Compares best-move eval before the move with the eval after it.
+  /// Only the human player's moves get feedback — never the bot/opponent.
+  bool _isPlayerMove(MoveRecord played) {
+    if (state.mode == GameMode.local) return true;
+    return played.side == state.playerSide;
+  }
+
+  /// Classifies the most recent PLAYER move in practice mode games.
+  /// Opponent/bot moves are never analyzed.
   Future<void> _analyzeLastMoveFeedback() async {
     if (_isDisposed) return;
     if (!state.practiceMode || !state.moveFeedbackEnabled) return;
@@ -556,6 +562,8 @@ class ChessController extends Notifier<GameState> {
     if (state.isSelfAnalysisActive) return;
     // Skip if this move already has feedback.
     if (state.moves.last.feedback != null) return;
+    // Do not analyze opponent moves (bot in bot games).
+    if (!_isPlayerMove(state.moves.last)) return;
 
     final moveIndex = state.moves.length - 1;
     final played = state.moves[moveIndex];
