@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/core/storage/app_storage.dart';
-
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({super.key, this.userAvatar});
 
@@ -53,42 +51,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
 
       actions: [
-        ValueListenableBuilder(
-          valueListenable: AppStorage.instance.botProgressListenable(),
-          builder: (context, _, _) {
-            final beaten = AppStorage.instance.beatenBotIds.length;
-            if (beaten == 0) return const SizedBox.shrink();
-            return Center(
-              child: Container(
-                margin: const EdgeInsets.only(right: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      size: 14,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$beaten',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
         IconButton(
           onPressed: () {},
           icon: const Icon(Icons.more_vert, size: 30),
