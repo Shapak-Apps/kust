@@ -10,7 +10,7 @@ class MoveFeedbackBadge extends StatefulWidget {
     super.key,
     required this.feedback,
     this.size = 22,
-    this.iconScale = 0.62,
+    this.iconScale = 0.6,
   });
 
   final MoveFeedback feedback;
@@ -36,7 +36,7 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
     );
     _circleScale = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.55, curve: Curves.elasticOut),
+      curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
     );
     _iconOpacity = CurvedAnimation(
       parent: _controller,
@@ -65,37 +65,51 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
   @override
   Widget build(BuildContext context) {
     final color = widget.feedback.quality.color;
+    final iconSize = widget.size * widget.iconScale;
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) {
+      builder: (context, child) {
         return Transform.scale(
-          scale: _circleScale.value.clamp(0.0, 1.2),
-          child: Container(
-            width: widget.size,
-            height: widget.size,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.45),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Opacity(
-              opacity: _iconOpacity.value.clamp(0.0, 1.0),
-              child: SvgPicture.asset(
-                widget.feedback.quality.asset,
-                width: widget.size * widget.iconScale,
-                height: widget.size * widget.iconScale,
-              ),
-            ),
-          ),
+          scale: _circleScale.value.clamp(0.01, 1.0),
+          child: child,
         );
       },
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.45),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: FadeTransition(
+          opacity: _iconOpacity,
+          child: SvgPicture.asset(
+            widget.feedback.quality.asset,
+            width: iconSize,
+            height: iconSize,
+            fit: BoxFit.contain,
+            // Force glyph to white so it is always visible on the
+            // colored circle regardless of the raw svg fill.
+            colorFilter: const ColorFilter.mode(
+              Colors.white,
+              BlendMode.srcIn,
+            ),
+            placeholderBuilder: (_) => Icon(
+              Icons.star,
+              size: iconSize,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
