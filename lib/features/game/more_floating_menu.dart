@@ -64,6 +64,23 @@ class MoreFloatingMenu extends ConsumerWidget {
                             .setEvaluationEnabled(v ?? false),
                       ),
                     ),
+                    if (gameState.practiceMode)
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.feedback_outlined, size: 20),
+                        title: const Text(
+                          'Move feedback',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        trailing: Checkbox(
+                          value: gameState.moveFeedbackEnabled,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (v) => ref
+                              .read(chessControllerProvider.notifier)
+                              .setMoveFeedbackEnabled(v ?? false),
+                        ),
+                      ),
                   ],
                 ),
               ),
