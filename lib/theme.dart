@@ -118,10 +118,3 @@ final ThemeData appDarkTheme = ThemeData(
     ),
   ),
 );
-
-//FFDD00 iA
-//00FF8C brillilant
-//DB0000 mistake
-//00B138 best
-//4CD23E good
-//6385ED flawless

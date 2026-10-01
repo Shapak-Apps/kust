@@ -19,6 +19,8 @@ import 'package:Kust/features/play/pick_opponent_modal.dart';
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+const Duration kBotMinMoveTime = Duration(milliseconds: 400);
+
 const String kEvalBarPrefKey = 'eval_bar_enabled';
 const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 
@@ -87,10 +89,8 @@ class GameState {
 
   final int? analysisIndex;
 
-  /// Practice-mode move feedback toggle (3-dot "More" menu).
   final bool moveFeedbackEnabled;
 
-  /// True while the last move is being classified by the engine.
   final bool feedbackAnalyzing;
 
   bool get isPlayerTurn =>
@@ -247,9 +247,6 @@ class ChessController extends Notifier<GameState> {
     ref.onDispose(() {
       _isDisposed = true;
       _stopClock();
-      // NOTE: engine is intentionally NOT disposed here — ChessEngine
-      // lives for the whole app lifetime (keepAlive) so the next game
-      // starts instantly without the ~20s Stockfish + NNUE boot.
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -598,8 +595,9 @@ class ChessController extends Notifier<GameState> {
         target.color == piece.color) {
       to = _castlingDisplaySquare(to);
     }
-    final promotion =
-        move.promotion == null ? '' : _promotionChar(move.promotion!);
+    final promotion = move.promotion == null
+        ? ''
+        : _promotionChar(move.promotion!);
     return '${squareName(move.from)}${squareName(to)}$promotion';
   }
 
@@ -1151,6 +1149,7 @@ class ChessController extends Notifier<GameState> {
     final requestId = ++_moveRequestId;
     state = state.copyWith(isBotThinking: true);
 
+    final startedAt = DateTime.now();
     final policy = _policy;
 
     Move? move;
@@ -1177,6 +1176,9 @@ class ChessController extends Notifier<GameState> {
 
       move = _parseUciMove(uci);
     }
+
+    final remaining = kBotMinMoveTime - DateTime.now().difference(startedAt);
+    if (remaining > Duration.zero) await Future.delayed(remaining);
 
     if (_isDisposed || requestId != _moveRequestId) return;
 
@@ -1314,11 +1316,7 @@ class ChessController extends Notifier<GameState> {
     return GameStatus.playing;
   }
 
-  String? _getEndReason(
-    Position position,
-    int repetitions,
-    GameStatus status,
-  ) {
+  String? _getEndReason(Position position, int repetitions, GameStatus status) {
     if (status == GameStatus.checkmate) {
       if (state.mode == GameMode.local) {
         final winner = position.turn == Side.white ? 'Black' : 'White';
