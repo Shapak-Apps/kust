@@ -11,7 +11,9 @@ import 'package:Kust/features/game/chess/chess_controller.dart';
 import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:Kust/features/game/chess/move_feedback.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:Kust/features/game/move_feedback_badge.dart';
 import 'package:Kust/features/game/evaluation_bar.dart';
 import 'package:Kust/features/game/more_floating_menu.dart';
 import 'package:Kust/features/game/time_control.dart';
@@ -214,6 +216,16 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
   }
 
+  /// Latest feedback for the given side (corner badge on player bar).
+  MoveFeedback? _feedbackFor(GameState state, Side side) {
+    if (!state.moveFeedbackEnabled) return null;
+    if (state.isSelfAnalysisActive) return null;
+    if (state.moves.isEmpty) return null;
+    final last = state.moves.last;
+    if (last.side != side) return null;
+    return last.feedback;
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
@@ -310,6 +322,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ),
               ),
             _MoveHistoryBar(moves: gameState.moves),
+            if (gameState.practiceMode && gameState.moveFeedbackEnabled)
+              _MoveFeedbackLine(
+                moves: gameState.moves,
+                analyzing: gameState.feedbackAnalyzing,
+              ),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -343,6 +360,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               moves: gameState.moves,
                               isThinking: gameState.isBotThinking,
                               thinkingText: 'thinking',
+                              feedback: _feedbackFor(
+                                gameState,
+                                topSide,
+                              ),
                               timeLeft: timed
                                   ? (topSide == Side.white
                                         ? gameState.whiteTimeLeft
@@ -367,6 +388,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               name: widget.isLocal ? 'White' : 'You',
                               position: gameState.position,
                               moves: gameState.moves,
+                              feedback: _feedbackFor(
+                                gameState,
+                                bottomSide,
+                              ),
                               timeLeft: timed
                                   ? (bottomSide == Side.white
                                         ? gameState.whiteTimeLeft
@@ -480,6 +505,7 @@ class _PlayerBar extends StatelessWidget {
     this.thinkingText,
     this.timeLeft,
     this.clockActive = false,
+    this.feedback,
   });
 
   final Side side;
@@ -492,6 +518,7 @@ class _PlayerBar extends StatelessWidget {
   final String? thinkingText;
   final Duration? timeLeft;
   final bool clockActive;
+  final MoveFeedback? feedback;
 
   @override
   Widget build(BuildContext context) {
@@ -585,6 +612,13 @@ class _PlayerBar extends StatelessWidget {
               ],
             ),
           ),
+          if (feedback != null) ...[
+            const SizedBox(width: 8),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: MoveFeedbackBadge(feedback: feedback!, size: 30),
+            ),
+          ],
           if (timeLeft != null) ...[
             const SizedBox(width: 8),
             Padding(
@@ -797,6 +831,71 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
         controller: _controller,
         scrollDirection: Axis.horizontal,
         children: children,
+      ),
+    );
+  }
+}
+
+/// Line under the moves history bar: "a4 was inaccuracy · Nc3 was best".
+class _MoveFeedbackLine extends StatelessWidget {
+  const _MoveFeedbackLine({required this.moves, required this.analyzing});
+
+  final List<MoveRecord> moves;
+  final bool analyzing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (moves.isEmpty) return const SizedBox.shrink();
+
+    final last = moves.last;
+    final feedback = last.feedback;
+
+    String text;
+    Color? accent;
+    if (feedback != null) {
+      text = feedback.bannerText;
+      accent = feedback.quality.color;
+    } else if (analyzing) {
+      text = 'Analyzing ${last.san}…';
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: Row(
+          key: ValueKey('${last.san}_${feedback?.quality}'),
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (feedback != null)
+              MoveFeedbackBadge(
+                feedback: feedback,
+                size: 20,
+              )
+            else
+              const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: accent ?? theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

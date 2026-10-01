@@ -10,6 +10,7 @@ import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/game/chess/bot_policy.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:Kust/features/game/chess/move_feedback.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/game/time_control.dart';
@@ -19,6 +20,7 @@ const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 const String kEvalBarPrefKey = 'eval_bar_enabled';
+const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
@@ -51,6 +53,8 @@ class GameState {
     this.evaluationEnabled = false,
     this.evaluation,
     this.analysisIndex,
+    this.moveFeedbackEnabled = true,
+    this.feedbackAnalyzing = false,
   });
 
   final Position position;
@@ -82,6 +86,12 @@ class GameState {
   final EvalScore? evaluation;
 
   final int? analysisIndex;
+
+  /// Practice-mode move feedback toggle (3-dot "More" menu).
+  final bool moveFeedbackEnabled;
+
+  /// True while the last move is being classified by the engine.
+  final bool feedbackAnalyzing;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -177,6 +187,8 @@ class GameState {
     bool clearEvaluation = false,
     int? analysisIndex,
     bool clearAnalysis = false,
+    bool? moveFeedbackEnabled,
+    bool? feedbackAnalyzing,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -214,6 +226,8 @@ class GameState {
       analysisIndex: clearAnalysis
           ? null
           : (analysisIndex ?? this.analysisIndex),
+      moveFeedbackEnabled: moveFeedbackEnabled ?? this.moveFeedbackEnabled,
+      feedbackAnalyzing: feedbackAnalyzing ?? this.feedbackAnalyzing,
     );
   }
 }
@@ -508,12 +522,175 @@ class ChessController extends Notifier<GameState> {
     unawaited(AppStorage.instance.markBotBeaten(bot.id));
   }
 
+  Future<void> setMoveFeedbackEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kMoveFeedbackPrefKey, enabled);
+    if (_isDisposed) return;
+    state = state.copyWith(moveFeedbackEnabled: enabled);
+    if (enabled) {
+      _analyzeLastMoveFeedback();
+    }
+  }
+
+  int _evalToCp(EvalScore score) {
+    if (score.mate != null) {
+      // Treat mate as a very large advantage for the mating side.
+      return score.mate! > 0 ? 100000 : -100000;
+    }
+    return score.cp ?? 0;
+  }
+
+  void _clearFeedbackAnalyzing() {
+    if (_isDisposed) return;
+    if (state.feedbackAnalyzing) {
+      state = state.copyWith(feedbackAnalyzing: false);
+    }
+  }
+
+  /// Classifies the most recent move in practice mode games.
+  /// Compares best-move eval before the move with the eval after it.
+  Future<void> _analyzeLastMoveFeedback() async {
+    if (_isDisposed) return;
+    if (!state.practiceMode || !state.moveFeedbackEnabled) return;
+    if (state.moves.isEmpty || state.history.isEmpty) return;
+    if (state.isSelfAnalysisActive) return;
+    // Skip if this move already has feedback.
+    if (state.moves.last.feedback != null) return;
+
+    final moveIndex = state.moves.length - 1;
+    final played = state.moves[moveIndex];
+    final beforePos = state.history[moveIndex];
+    final beforeFen = beforePos.fen;
+
+    state = state.copyWith(feedbackAnalyzing: true);
+
+    try {
+      // 1) Find engine best move from the position before the played move.
+      final bestUci = await _engine.evaluateBestHint(beforeFen);
+      if (_isDisposed) return;
+      if (state.moves.length != moveIndex + 1 ||
+          state.moves[moveIndex].san != played.san) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      NormalMove? bestMove;
+      try {
+        bestMove = _parseUciMove(bestUci);
+      } catch (_) {
+        bestMove = null;
+      }
+      if (bestMove == null || !beforePos.isLegal(bestMove)) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      String bestSan;
+      try {
+        final bestAfter = beforePos.play(bestMove);
+        bestSan = moveToSan(
+          before: beforePos,
+          move: bestMove,
+          after: bestAfter,
+        );
+      } catch (_) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      final playedUci =
+          '${squareName(played.move.from)}${squareName(played.move.to)}${played.move.promotion == null ? '' : _promotionChar(played.move.promotion!)}';
+      final isBestMove = playedUci == bestUci;
+
+      // 2) Eval before (side-to-move perspective) and eval after the move.
+      final beforeScore = await _engine.evaluateFen(beforeFen);
+      if (_isDisposed) return;
+      if (state.moves.length != moveIndex + 1) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      Position? bestAfterPos;
+      try {
+        bestAfterPos = beforePos.play(bestMove);
+      } catch (_) {
+        bestAfterPos = null;
+      }
+      if (bestAfterPos == null) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      final bestAfterScore =
+          await _engine.evaluateFen(bestAfterPos.fen);
+      final playedAfterScore =
+          await _engine.evaluateFen(state.position.fen);
+      if (_isDisposed) return;
+      if (state.moves.length != moveIndex + 1) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+      if (beforeScore == null ||
+          bestAfterScore == null ||
+          playedAfterScore == null) {
+        _clearFeedbackAnalyzing();
+        return;
+      }
+
+      // All scores are white-relative; flip to the mover's perspective.
+      final moverIsWhite = played.side == Side.white;
+      final sign = moverIsWhite ? 1 : -1;
+      final lossCp = (_evalToCp(bestAfterScore) - _evalToCp(playedAfterScore)) * sign;
+
+      // If the played move keeps (or improves) the best eval, call it best.
+      final quality = (isBestMove || lossCp <= 10)
+          ? MoveQuality.best
+          : classifyMoveLoss(lossCp.clamp(0, 100000),
+              isBestMove: false);
+
+      final feedback = MoveFeedback(
+        quality: quality,
+        bestSan: bestSan,
+        playedSan: played.san,
+        evalLossCp: lossCp.clamp(0, 100000),
+      );
+
+      final updated = List<MoveRecord>.of(state.moves);
+      updated[moveIndex] =
+          updated[moveIndex].copyWith(feedback: feedback, bestSan: bestSan);
+      state = state.copyWith(moves: updated, feedbackAnalyzing: false);
+    } catch (_) {
+      if (!_isDisposed) {
+        state = state.copyWith(feedbackAnalyzing: false);
+      }
+    }
+  }
+
+  String _promotionChar(Role role) {
+    switch (role) {
+      case Role.knight:
+        return 'n';
+      case Role.bishop:
+        return 'b';
+      case Role.rook:
+        return 'r';
+      case Role.queen:
+      default:
+        return 'q';
+    }
+  }
+
   Future<void> _loadEvalEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
+    final feedback = prefs.getBool(kMoveFeedbackPrefKey) ?? true;
     if (_isDisposed) return;
-    if (enabled != state.evaluationEnabled) {
-      state = state.copyWith(evaluationEnabled: enabled);
+    if (enabled != state.evaluationEnabled ||
+        feedback != state.moveFeedbackEnabled) {
+      state = state.copyWith(
+        evaluationEnabled: enabled,
+        moveFeedbackEnabled: feedback,
+      );
     }
     if (enabled) _refreshEvaluation();
   }
@@ -545,6 +722,7 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: practiceMode,
       evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
       status: GameStatus.playing,
     );
 
@@ -581,6 +759,7 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: true,
       evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
     );
 
     _playSound('game-start.mp3');
@@ -938,6 +1117,7 @@ class ChessController extends Notifier<GameState> {
       _addIncrement(oldPosition.turn);
       _refreshEvaluation();
       if (state.mode == GameMode.bot) _requestBotMove();
+      _analyzeLastMoveFeedback();
     } else {
       _stopClock();
       _playGameEndSound(newPosition);
@@ -1047,6 +1227,7 @@ class ChessController extends Notifier<GameState> {
     }
 
     _refreshEvaluation();
+    _analyzeLastMoveFeedback();
   }
 
   NormalMove _parseUciMove(String uci) {
