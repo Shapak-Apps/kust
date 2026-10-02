@@ -522,6 +522,33 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  Future<void> _playQualityFeedback(MoveQuality quality) async {
+    switch (quality) {
+      case MoveQuality.brilliant:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playJingle('game-win.wav');
+        break;
+      case MoveQuality.flawless:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playJingle('game-win.wav');
+        break;
+      case MoveQuality.best:
+        SoundService.instance.buzz();
+        SoundService.instance.playSfx('promote.wav');
+        break;
+      case MoveQuality.blunder:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playSfx('illegal.wav');
+        break;
+      case MoveQuality.mistake:
+        SoundService.instance.buzz(heavy: true);
+        break;
+      default:
+        SoundService.instance.buzz();
+        break;
+    }
+  }
+
   void _playGameEndSound(Position position) {
     if (position.isCheckmate) {
       if (state.mode == GameMode.local) {
@@ -650,6 +677,7 @@ class ChessController extends Notifier<GameState> {
 
       final lossCp = (analysis.bestCp - analysis.playedCp).clamp(0, 100000);
       final isBest = analysis.bestUci == playedUci || lossCp <= 10;
+      final rating = ratingForFeedback(botElo: state.bot?.elo);
       MoveQuality quality;
       if (isBest) {
         final afterPos = beforePos.play(played.move);
@@ -661,9 +689,34 @@ class ChessController extends Notifier<GameState> {
           playedCp: analysis.playedCp,
           isBest: true,
         );
-        quality = brilliant ? MoveQuality.brilliant : MoveQuality.best;
+        if (brilliant) {
+          quality = MoveQuality.brilliant;
+        } else {
+          var streak = 1;
+          for (var i = moveIndex - 1; i >= 0; i--) {
+            final feedback = i < state.moves.length
+                ? state.moves[i].feedback
+                : null;
+            if (feedback == null) break;
+            if (!feedback.isBest) break;
+            streak++;
+            if (streak >= 4) break;
+          }
+          final flawless = isFlawlessSequence(
+            bestCp: analysis.bestCp,
+            playedCp: analysis.playedCp,
+            isBest: true,
+            streak: streak,
+          );
+          quality = flawless ? MoveQuality.flawless : MoveQuality.best;
+        }
       } else {
-        quality = classifyMoveLoss(lossCp, isBestMove: false);
+        quality = classifyByExpectedPoints(
+          bestCp: analysis.bestCp,
+          playedCp: analysis.playedCp,
+          isBestMove: false,
+          rating: rating,
+        );
       }
 
       final feedback = MoveFeedback(
@@ -679,6 +732,7 @@ class ChessController extends Notifier<GameState> {
         bestSan: bestSan,
       );
       state = state.copyWith(moves: updated);
+      unawaited(_playQualityFeedback(quality));
     } catch (_) {
     } finally {
       if (epoch == _feedbackEpoch) _feedbackPending.remove(moveIndex);

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:dartchess/dartchess.dart';
 
@@ -116,7 +118,10 @@ class MoveFeedback {
   final String playedSan;
   final int evalLossCp;
 
-  bool get isBest => quality == MoveQuality.best || quality == MoveQuality.brilliant;
+  bool get isBest =>
+      quality == MoveQuality.best ||
+      quality == MoveQuality.brilliant ||
+      quality == MoveQuality.flawless;
 
   String get bannerText {
     if (isBest) return '$playedSan · ${quality.shortLabel} move';
@@ -124,12 +129,78 @@ class MoveFeedback {
   }
 }
 
-MoveQuality classifyMoveLoss(int lossCp, {required bool isBestMove}) {
+double expectedPointsFromCp(int cp) {
+  if (cp >= 100000) return 1.0;
+  if (cp <= -100000) return 0.0;
+  return 1.0 / (1.0 + math.exp(-cp / 300.0));
+}
+
+int ratingForFeedback({int? botElo, Side? playerSide}) {
+  if (botElo != null && botElo > 0) return botElo;
+  return 800;
+}
+
+({int good, int inaccuracy, int mistake}) lossThresholdsFor(int rating) {
+  if (rating < 600) return (good: 35, inaccuracy: 110, mistake: 250);
+  if (rating < 1000) return (good: 25, inaccuracy: 85, mistake: 200);
+  if (rating < 1500) return (good: 18, inaccuracy: 65, mistake: 160);
+  return (good: 12, inaccuracy: 50, mistake: 120);
+}
+
+MoveQuality classifyMoveLossCp(
+  int lossCp, {
+  required bool isBestMove,
+  int rating = 800,
+}) {
   if (isBestMove) return MoveQuality.best;
-  if (lossCp <= 15) return MoveQuality.good;
-  if (lossCp <= 60) return MoveQuality.inaccuracy;
-  if (lossCp <= 150) return MoveQuality.mistake;
+  final t = lossThresholdsFor(rating);
+  if (lossCp <= t.good) return MoveQuality.good;
+  if (lossCp <= t.inaccuracy) return MoveQuality.inaccuracy;
+  if (lossCp <= t.mistake) return MoveQuality.mistake;
   return MoveQuality.blunder;
+}
+
+MoveQuality classifyMoveLoss(int lossCp, {required bool isBestMove}) {
+  return classifyMoveLossCp(lossCp, isBestMove: isBestMove);
+}
+
+MoveQuality classifyByExpectedPoints({
+  required int bestCp,
+  required int playedCp,
+  required bool isBestMove,
+  int rating = 800,
+}) {
+  if (isBestMove) return MoveQuality.best;
+  final lost =
+      (expectedPointsFromCp(bestCp) - expectedPointsFromCp(playedCp)).clamp(
+        0.0,
+        1.0,
+      );
+  final softness = rating < 600
+      ? 1.6
+      : rating < 1000
+      ? 1.3
+      : rating < 1500
+      ? 1.0
+      : 0.85;
+  if (lost <= 0.02 * softness) return MoveQuality.good;
+  if (lost <= 0.05 * softness) return MoveQuality.good;
+  if (lost <= 0.10 * softness) return MoveQuality.inaccuracy;
+  if (lost <= 0.20 * softness) return MoveQuality.mistake;
+  return MoveQuality.blunder;
+}
+
+bool isFlawlessSequence({
+  required int bestCp,
+  required int playedCp,
+  required bool isBest,
+  required int streak,
+}) {
+  if (!isBest) return false;
+  if (playedCp.abs() >= 100000) return false;
+  if (playedCp < -80) return false;
+  if (bestCp > 500) return false;
+  return streak >= 3;
 }
 
 int _sacPieceValue(Role role) {
@@ -162,23 +233,58 @@ bool isBrilliantSacrifice({
   final opponent = mover.opposite;
   final piece = before.board.pieceAt(move.from);
   if (piece == null) return false;
-  if (piece.role == Role.king) return false;
-  if (playedCp.abs() >= 100000 || bestCp.abs() >= 100000) {
-    final mated = playedCp <= -100000;
-    if (mated) return false;
-  } else {
-    if (playedCp < -150) return false;
-    if (bestCp > 600) return false;
-  }
-  final destAttackers = after.board.attacksTo(move.to, opponent);
-  final destHung = destAttackers.isNotEmpty;
+  if (piece.role == Role.king || piece.role == Role.pawn) return false;
+  final moverMatBefore = _sideMaterial(before, mover);
+  final moverMatAfter = _sideMaterial(after, mover);
+  final staticLoss = moverMatBefore - moverMatAfter;
   final captured = before.board.pieceAt(move.to);
-  final sacValue = _sacPieceValue(piece.role);
-  final isMinorPlus = sacValue >= 3;
-  if (!isMinorPlus) return false;
-  if (!destHung && captured == null) return false;
-  if (destHung) return true;
-  if (captured != null && _sacPieceValue(captured.role) >= 3) return true;
+  final takesEqualOrBigger =
+      captured != null && _sacPieceValue(captured.role) >= 2;
+  if (staticLoss < 3 && !takesEqualOrBigger) return false;
+  final destAttackers = after.board.attacksTo(move.to, opponent);
+  if (destAttackers.isEmpty) {
+    final givesCheck = after.isCheck;
+    final attacksQueen = _attacksEnemyQueen(after, mover, opponent);
+    if (!givesCheck && !attacksQueen) return false;
+  }
+  final defenders = after.board.attacksTo(move.to, mover);
+  final hanging = defenders.isEmpty && destAttackers.isNotEmpty;
+  final enPrise =
+      hanging && _sacPieceValue(piece.role) >= 3 && staticLoss >= 3;
+  final givesCheck = after.isCheck;
+  if (!enPrise && !givesCheck && destAttackers.isEmpty) return false;
+  if (playedCp.abs() >= 100000 || bestCp.abs() >= 100000) {
+    if (playedCp <= -100000) return false;
+    if (playedCp < 0) return false;
+    return true;
+  }
+  if (playedCp < -120) return false;
+  if (bestCp > 400) return false;
+  if (bestCp < -300) return false;
+  final delta = (playedCp - bestCp).clamp(-100000, 100000);
+  if (delta < -30) return false;
+  return true;
+}
+
+int _sideMaterial(Position position, Side side) {
+  var total = 0;
+  for (final square in Square.values) {
+    final piece = position.board.pieceAt(square);
+    if (piece == null) continue;
+    if (piece.color != side) continue;
+    total += _sacPieceValue(piece.role);
+  }
+  return total;
+}
+
+bool _attacksEnemyQueen(Position after, Side mover, Side opponent) {
+  for (final square in Square.values) {
+    final piece = after.board.pieceAt(square);
+    if (piece == null) continue;
+    if (piece.color != opponent) continue;
+    if (piece.role != Role.queen) continue;
+    if (after.board.attacksTo(square, mover).isNotEmpty) return true;
+  }
   return false;
 }
 
