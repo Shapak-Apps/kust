@@ -90,10 +90,8 @@ class GameState {
 
   final int? analysisIndex;
 
-  /// Practice-mode move feedback toggle (3-dot "More" menu).
   final bool moveFeedbackEnabled;
 
-  /// True while the last move is being classified by the engine.
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
 
@@ -255,9 +253,6 @@ class ChessController extends Notifier<GameState> {
     ref.onDispose(() {
       _isDisposed = true;
       _stopClock();
-      // NOTE: engine is intentionally NOT disposed here — ChessEngine
-      // lives for the whole app lifetime (keepAlive) so the next game
-      // starts instantly without the ~20s Stockfish + NNUE boot.
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -562,7 +557,6 @@ class ChessController extends Notifier<GameState> {
 
   int _evalToCp(EvalScore score) {
     if (score.mate != null) {
-      // Treat mate as a very large advantage for the mating side.
       return score.mate! > 0 ? 100000 : -100000;
     }
     return score.cp ?? 0;
@@ -656,9 +650,21 @@ class ChessController extends Notifier<GameState> {
 
       final lossCp = (analysis.bestCp - analysis.playedCp).clamp(0, 100000);
       final isBest = analysis.bestUci == playedUci || lossCp <= 10;
-      final quality = isBest
-          ? MoveQuality.best
-          : classifyMoveLoss(lossCp, isBestMove: false);
+      MoveQuality quality;
+      if (isBest) {
+        final afterPos = beforePos.play(played.move);
+        final brilliant = isBrilliantSacrifice(
+          before: beforePos,
+          after: afterPos,
+          move: played.move,
+          bestCp: analysis.bestCp,
+          playedCp: analysis.playedCp,
+          isBest: true,
+        );
+        quality = brilliant ? MoveQuality.brilliant : MoveQuality.best;
+      } else {
+        quality = classifyMoveLoss(lossCp, isBestMove: false);
+      }
 
       final feedback = MoveFeedback(
         quality: quality,

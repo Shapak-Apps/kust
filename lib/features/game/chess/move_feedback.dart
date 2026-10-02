@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:dartchess/dartchess.dart';
 
-/// Move feedback colors (also used for badge circles).
-/// FFDD00 inaccuracy, 00FF8C brilliant, DB0000 blunder,
-/// 00B138 best, 4CD23E good, 6385ED flawless.
 const Color kMoveInaccuracy = Color(0xFFFFDD00);
 const Color kMoveBrilliant = Color(0xFF00FF8C);
 const Color kMoveBlunder = Color(0xFFDB0000);
@@ -59,7 +57,6 @@ extension MoveQualityStyle on MoveQuality {
     }
   }
 
-  /// SVG glyph from assets/icons/moves (white shape, drawn on colored circle).
   String get asset {
     switch (this) {
       case MoveQuality.brilliant:
@@ -95,9 +92,17 @@ extension MoveQualityStyle on MoveQuality {
         return kMoveBlunder;
     }
   }
+
+  double get iconScale {
+    switch (this) {
+      case MoveQuality.best:
+        return 0.72;
+      default:
+        return 0.66;
+    }
+  }
 }
 
-/// Feedback attached to a single played move.
 class MoveFeedback {
   const MoveFeedback({
     required this.quality,
@@ -113,8 +118,6 @@ class MoveFeedback {
 
   bool get isBest => quality == MoveQuality.best || quality == MoveQuality.brilliant;
 
-  /// Line shown under the moves history bar.
-  /// e.g. "Nf3 · best move" or "a4 was inaccuracy · Nc3 was best".
   String get bannerText {
     if (isBest) return '$playedSan · ${quality.shortLabel} move';
     return '$playedSan was ${quality.shortLabel} · $bestSan was best';
@@ -128,3 +131,54 @@ MoveQuality classifyMoveLoss(int lossCp, {required bool isBestMove}) {
   if (lossCp <= 150) return MoveQuality.mistake;
   return MoveQuality.blunder;
 }
+
+int _sacPieceValue(Role role) {
+  switch (role) {
+    case Role.pawn:
+      return 1;
+    case Role.knight:
+      return 3;
+    case Role.bishop:
+      return 3;
+    case Role.rook:
+      return 5;
+    case Role.queen:
+      return 9;
+    case Role.king:
+      return 0;
+  }
+}
+
+bool isBrilliantSacrifice({
+  required Position before,
+  required Position after,
+  required NormalMove move,
+  required int bestCp,
+  required int playedCp,
+  required bool isBest,
+}) {
+  if (!isBest) return false;
+  final mover = before.turn;
+  final opponent = mover.opposite;
+  final piece = before.board.pieceAt(move.from);
+  if (piece == null) return false;
+  if (piece.role == Role.king) return false;
+  if (playedCp.abs() >= 100000 || bestCp.abs() >= 100000) {
+    final mated = playedCp <= -100000;
+    if (mated) return false;
+  } else {
+    if (playedCp < -150) return false;
+    if (bestCp > 600) return false;
+  }
+  final destAttackers = after.board.attacksTo(move.to, opponent);
+  final destHung = destAttackers.isNotEmpty;
+  final captured = before.board.pieceAt(move.to);
+  final sacValue = _sacPieceValue(piece.role);
+  final isMinorPlus = sacValue >= 3;
+  if (!isMinorPlus) return false;
+  if (!destHung && captured == null) return false;
+  if (destHung) return true;
+  if (captured != null && _sacPieceValue(captured.role) >= 3) return true;
+  return false;
+}
+
