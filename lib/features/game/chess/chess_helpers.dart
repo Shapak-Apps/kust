@@ -92,17 +92,21 @@ String moveToSan({
   final piece = before.board.pieceAt(move.from);
   if (piece == null) return '--';
 
+  final isKing = piece.role == Role.king;
+
   final isKingsideCastle =
-      (move.from == Square.e1 &&
-          (move.to == Square.h1 || move.to == Square.g1)) ||
-      (move.from == Square.e8 &&
-          (move.to == Square.h8 || move.to == Square.g8));
+      isKing &&
+      ((move.from == Square.e1 &&
+              (move.to == Square.h1 || move.to == Square.g1)) ||
+          (move.from == Square.e8 &&
+              (move.to == Square.h8 || move.to == Square.g8)));
 
   final isQueensideCastle =
-      (move.from == Square.e1 &&
-          (move.to == Square.a1 || move.to == Square.c1)) ||
-      (move.from == Square.e8 &&
-          (move.to == Square.a8 || move.to == Square.c8));
+      isKing &&
+      ((move.from == Square.e1 &&
+              (move.to == Square.a1 || move.to == Square.c1)) ||
+          (move.from == Square.e8 &&
+              (move.to == Square.a8 || move.to == Square.c8)));
 
   if (isKingsideCastle) return _withCheck('O-O', after);
   if (isQueensideCastle) return _withCheck('O-O-O', after);

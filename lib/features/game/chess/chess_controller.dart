@@ -10,6 +10,7 @@ import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/game/chess/bot_policy.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
 import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:Kust/features/game/chess/move_feedback.dart';
 import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/game/time_control.dart';
@@ -18,7 +19,10 @@ import 'package:Kust/features/play/pick_opponent_modal.dart';
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
+const Duration kBotMinMoveTime = Duration(milliseconds: 400);
+
 const String kEvalBarPrefKey = 'eval_bar_enabled';
+const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
@@ -51,6 +55,9 @@ class GameState {
     this.evaluationEnabled = false,
     this.evaluation,
     this.analysisIndex,
+    this.moveFeedbackEnabled = false,
+    this.feedbackAnalyzing = false,
+    this.pendingPromotion,
   });
 
   final Position position;
@@ -82,6 +89,11 @@ class GameState {
   final EvalScore? evaluation;
 
   final int? analysisIndex;
+
+  final bool moveFeedbackEnabled;
+
+  final bool feedbackAnalyzing;
+  final ({Square from, Square to})? pendingPromotion;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -118,14 +130,9 @@ class GameState {
 
   Position get displayPosition {
     if (!isSelfAnalysisActive) return position;
-
-    Position current = Chess.fromSetup(Setup.parseFen(kStartFen));
-
-    for (var i = 0; i < analysisIndex!; i++) {
-      current = current.play(moves[i].move);
-    }
-
-    return current;
+    final index = analysisIndex!;
+    if (index < history.length) return history[index];
+    return position;
   }
 
   List<Square> get displayMoveSquares {
@@ -177,6 +184,9 @@ class GameState {
     bool clearEvaluation = false,
     int? analysisIndex,
     bool clearAnalysis = false,
+    bool? moveFeedbackEnabled,
+    bool? feedbackAnalyzing,
+    ({Square from, Square to})? pendingPromotion,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -214,6 +224,11 @@ class GameState {
       analysisIndex: clearAnalysis
           ? null
           : (analysisIndex ?? this.analysisIndex),
+      moveFeedbackEnabled: moveFeedbackEnabled ?? this.moveFeedbackEnabled,
+      feedbackAnalyzing: feedbackAnalyzing ?? this.feedbackAnalyzing,
+      pendingPromotion: clearSelection
+          ? null
+          : (pendingPromotion ?? this.pendingPromotion),
     );
   }
 }
@@ -223,6 +238,9 @@ class ChessController extends Notifier<GameState> {
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
   bool _isDisposed = false;
+  int _feedbackEpoch = 0;
+  final Set<int> _feedbackPending = <int>{};
+  final Map<String, int> _repCounts = <String, int>{};
 
   Timer? _clockTimer;
   DateTime? _lastTick;
@@ -232,11 +250,9 @@ class ChessController extends Notifier<GameState> {
   @override
   GameState build() {
     _isDisposed = false;
-    final engine = ref.read(chessEngineProvider);
     ref.onDispose(() {
       _isDisposed = true;
       _stopClock();
-      engine.dispose();
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -387,11 +403,31 @@ class ChessController extends Notifier<GameState> {
     );
 
     if (state.mode == GameMode.local || fellSide == state.playerSide) {
-      SoundService.instance.playJingle('game-end.mp3');
+      SoundService.instance.playJingle('game-end.wav');
     } else {
-      SoundService.instance.playJingle('game-win.mp3');
+      SoundService.instance.playJingle('game-win.wav');
       _recordBotWin();
     }
+  }
+
+  String _repKey(Position p) {
+    final parts = p.fen.split(' ');
+    return parts.length >= 4 ? parts.sublist(0, 4).join(' ') : p.fen;
+  }
+
+  int _registerPosition(Position p) {
+    final key = _repKey(p);
+    final count = (_repCounts[key] ?? 0) + 1;
+    _repCounts[key] = count;
+    return count;
+  }
+
+  void _rebuildRepetitions(List<Position> history, Position current) {
+    _repCounts.clear();
+    for (final p in history) {
+      _registerPosition(p);
+    }
+    _registerPosition(current);
   }
 
   void _playSound(String asset) {
@@ -400,7 +436,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   void _playCheckSound() {
-    _playSound('check.mp3');
+    _playSound('check.wav');
   }
 
   bool _isEnPassant(Position oldPos, NormalMove move) {
@@ -449,6 +485,7 @@ class ChessController extends Notifier<GameState> {
     String sound;
 
     final isCastling =
+        oldPos.board.pieceAt(move.from)?.role == Role.king &&
         (move.from == Square.e1 || move.from == Square.e8) &&
         (move.to == Square.h1 ||
             move.to == Square.a1 ||
@@ -463,13 +500,13 @@ class ChessController extends Notifier<GameState> {
     final isCapture = capturedSquare != null;
 
     if (isCastling) {
-      sound = 'castle.mp3';
+      sound = 'castle.wav';
     } else if (move.promotion != null) {
-      sound = 'promote.mp3';
+      sound = 'promote.wav';
     } else if (isCapture) {
-      sound = 'capture.mp3';
+      sound = 'capture.wav';
     } else {
-      sound = isBot ? 'move-opponent.mp3' : 'move.mp3';
+      sound = isBot ? 'move-opponent.wav' : 'move.wav';
     }
 
     _playSound(sound);
@@ -485,18 +522,45 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  Future<void> _playQualityFeedback(MoveQuality quality) async {
+    switch (quality) {
+      case MoveQuality.brilliant:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playJingle('game-win.wav');
+        break;
+      case MoveQuality.flawless:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playJingle('game-win.wav');
+        break;
+      case MoveQuality.best:
+        SoundService.instance.buzz();
+        SoundService.instance.playSfx('promote.wav');
+        break;
+      case MoveQuality.blunder:
+        SoundService.instance.buzz(heavy: true);
+        SoundService.instance.playSfx('illegal.wav');
+        break;
+      case MoveQuality.mistake:
+        SoundService.instance.buzz(heavy: true);
+        break;
+      default:
+        SoundService.instance.buzz();
+        break;
+    }
+  }
+
   void _playGameEndSound(Position position) {
     if (position.isCheckmate) {
       if (state.mode == GameMode.local) {
-        SoundService.instance.playJingle('game-end.mp3');
+        SoundService.instance.playJingle('game-end.wav');
       } else if (position.turn == state.playerSide) {
-        SoundService.instance.playJingle('game-end.mp3');
+        SoundService.instance.playJingle('game-end.wav');
       } else {
-        SoundService.instance.playJingle('game-win.mp3');
+        SoundService.instance.playJingle('game-win.wav');
         _recordBotWin();
       }
     } else {
-      SoundService.instance.playJingle('game-draw.mp3');
+      SoundService.instance.playJingle('game-draw.wav');
     }
   }
 
@@ -508,12 +572,201 @@ class ChessController extends Notifier<GameState> {
     unawaited(AppStorage.instance.markBotBeaten(bot.id));
   }
 
+  Future<void> setMoveFeedbackEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kMoveFeedbackPrefKey, enabled);
+    if (_isDisposed) return;
+    state = state.copyWith(moveFeedbackEnabled: enabled);
+    if (enabled) {
+      _analyzeLastPlayerMove();
+    }
+  }
+
+  int _evalToCp(EvalScore score) {
+    if (score.mate != null) {
+      return score.mate! > 0 ? 100000 : -100000;
+    }
+    return score.cp ?? 0;
+  }
+
+  void _clearFeedbackAnalyzing() {
+    if (_isDisposed) return;
+    if (state.feedbackAnalyzing) {
+      state = state.copyWith(feedbackAnalyzing: false);
+    }
+  }
+
+  bool _isPlayerMove(MoveRecord played) {
+    if (state.mode == GameMode.local) return true;
+    return played.side == state.playerSide;
+  }
+
+  int _lastPlayerMoveIndex() {
+    for (var i = state.moves.length - 1; i >= 0; i--) {
+      if (_isPlayerMove(state.moves[i])) return i;
+    }
+    return -1;
+  }
+
+  void _analyzeLastPlayerMove() {
+    final index = _lastPlayerMoveIndex();
+    if (index >= 0) unawaited(_analyzeMoveAt(index));
+  }
+
+  void _resetFeedbackQueue() {
+    _feedbackEpoch++;
+    _feedbackPending.clear();
+  }
+
+  String _uciFor(NormalMove move, Position before) {
+    final piece = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    var to = move.to;
+    if (piece != null &&
+        piece.role == Role.king &&
+        target != null &&
+        target.color == piece.color) {
+      to = _castlingDisplaySquare(to);
+    }
+    final promotion = move.promotion == null
+        ? ''
+        : _promotionChar(move.promotion!);
+    return '${squareName(move.from)}${squareName(to)}$promotion';
+  }
+
+  Future<void> _analyzeMoveAt(int moveIndex) async {
+    if (_isDisposed) return;
+    if (!state.practiceMode || !state.moveFeedbackEnabled) return;
+    if (moveIndex < 0 || moveIndex >= state.moves.length) return;
+    if (moveIndex >= state.history.length) return;
+
+    final played = state.moves[moveIndex];
+    if (played.feedback != null) return;
+    if (!_isPlayerMove(played)) return;
+    if (!_feedbackPending.add(moveIndex)) return;
+
+    final epoch = _feedbackEpoch;
+    final beforePos = state.history[moveIndex];
+
+    try {
+      final afterPos = beforePos.play(played.move);
+      final playedUci = _uciFor(played.move, beforePos);
+
+      state = state.copyWith(feedbackAnalyzing: true);
+
+      final analysis = await _engine.analyzeMove(
+        beforeFen: beforePos.fen,
+        playedUci: playedUci,
+        afterFen: afterPos.fen,
+        isStale: () => _isDisposed || epoch != _feedbackEpoch,
+      );
+
+      if (_isDisposed || epoch != _feedbackEpoch || analysis == null) return;
+      if (moveIndex >= state.moves.length) return;
+      if (state.moves[moveIndex].san != played.san) return;
+
+      final bestMove = _parseUciMove(analysis.bestUci, beforePos);
+      if (!beforePos.isLegal(bestMove)) return;
+
+      final bestSan = moveToSan(
+        before: beforePos,
+        move: bestMove,
+        after: beforePos.play(bestMove),
+        capturedSquare: _capturedSquareFor(beforePos, bestMove),
+      );
+
+      final lossCp = (analysis.bestCp - analysis.playedCp).clamp(0, 100000);
+      final isBest = analysis.bestUci == playedUci || lossCp <= 10;
+      final rating = ratingForFeedback(botElo: state.bot?.elo);
+      MoveQuality quality;
+      if (isBest) {
+        final afterPos = beforePos.play(played.move);
+        final brilliant = isBrilliantSacrifice(
+          before: beforePos,
+          after: afterPos,
+          move: played.move,
+          bestCp: analysis.bestCp,
+          playedCp: analysis.playedCp,
+          isBest: true,
+        );
+        if (brilliant) {
+          quality = MoveQuality.brilliant;
+        } else {
+          var streak = 1;
+          for (var i = moveIndex - 1; i >= 0; i--) {
+            final feedback = i < state.moves.length
+                ? state.moves[i].feedback
+                : null;
+            if (feedback == null) break;
+            if (!feedback.isBest) break;
+            streak++;
+            if (streak >= 4) break;
+          }
+          final flawless = isFlawlessSequence(
+            bestCp: analysis.bestCp,
+            playedCp: analysis.playedCp,
+            isBest: true,
+            streak: streak,
+          );
+          quality = flawless ? MoveQuality.flawless : MoveQuality.best;
+        }
+      } else {
+        quality = classifyByExpectedPoints(
+          bestCp: analysis.bestCp,
+          playedCp: analysis.playedCp,
+          isBestMove: false,
+          rating: rating,
+        );
+      }
+
+      final feedback = MoveFeedback(
+        quality: quality,
+        bestSan: bestSan,
+        playedSan: played.san,
+        evalLossCp: lossCp,
+      );
+
+      final updated = List<MoveRecord>.of(state.moves);
+      updated[moveIndex] = updated[moveIndex].copyWith(
+        feedback: feedback,
+        bestSan: bestSan,
+      );
+      state = state.copyWith(moves: updated);
+      unawaited(_playQualityFeedback(quality));
+    } catch (_) {
+    } finally {
+      if (epoch == _feedbackEpoch) _feedbackPending.remove(moveIndex);
+      if (!_isDisposed && _feedbackPending.isEmpty && state.feedbackAnalyzing) {
+        state = state.copyWith(feedbackAnalyzing: false);
+      }
+    }
+  }
+
+  String _promotionChar(Role role) {
+    switch (role) {
+      case Role.knight:
+        return 'n';
+      case Role.bishop:
+        return 'b';
+      case Role.rook:
+        return 'r';
+      case Role.queen:
+      default:
+        return 'q';
+    }
+  }
+
   Future<void> _loadEvalEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
+    final feedback = prefs.getBool(kMoveFeedbackPrefKey) ?? false;
     if (_isDisposed) return;
-    if (enabled != state.evaluationEnabled) {
-      state = state.copyWith(evaluationEnabled: enabled);
+    if (enabled != state.evaluationEnabled ||
+        feedback != state.moveFeedbackEnabled) {
+      state = state.copyWith(
+        evaluationEnabled: enabled,
+        moveFeedbackEnabled: feedback,
+      );
     }
     if (enabled) _refreshEvaluation();
   }
@@ -526,6 +779,7 @@ class ChessController extends Notifier<GameState> {
   }) async {
     _moveRequestId++;
     _evalRequestId++;
+    _resetFeedbackQueue();
     _policy = BotPolicy(
       elo: bot.elo,
       seed: DateTime.now().microsecondsSinceEpoch,
@@ -545,10 +799,12 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: practiceMode,
       evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
       status: GameStatus.playing,
     );
 
-    _playSound('game-start.mp3');
+    _rebuildRepetitions(const <Position>[], state.position);
+    _playSound('game-start.wav');
     unawaited(_loadEvalEnabled());
 
     unawaited(
@@ -565,6 +821,7 @@ class ChessController extends Notifier<GameState> {
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _moveRequestId++;
     _evalRequestId++;
+    _resetFeedbackQueue();
     _initClocks(timeControl);
 
     final base = timeControl?.base ?? Duration.zero;
@@ -581,9 +838,11 @@ class ChessController extends Notifier<GameState> {
       blackTimeLeft: base,
       practiceMode: true,
       evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
     );
 
-    _playSound('game-start.mp3');
+    _rebuildRepetitions(const <Position>[], state.position);
+    _playSound('game-start.wav');
     unawaited(_loadEvalEnabled());
   }
 
@@ -612,7 +871,10 @@ class ChessController extends Notifier<GameState> {
     final id = ++_evalRequestId;
     final fen = state.position.fen;
 
-    final score = await _engine.evaluateFen(fen);
+    final score = await _engine.evaluateFen(
+      fen,
+      isStale: () => _isDisposed || id != _evalRequestId,
+    );
 
     if (_isDisposed || id != _evalRequestId) return;
     if (state.position.fen != fen) return;
@@ -683,7 +945,7 @@ class ChessController extends Notifier<GameState> {
       endReason: 'You resigned.',
     );
 
-    SoundService.instance.playJingle('game-end.mp3');
+    SoundService.instance.playJingle('game-end.wav');
   }
 
   void undoLastMove() {
@@ -693,6 +955,7 @@ class ChessController extends Notifier<GameState> {
 
     _moveRequestId++;
     _evalRequestId++;
+    _resetFeedbackQueue();
     if (state.isBotThinking) _engine.stopThinking();
 
     final oldHistory = state.history;
@@ -714,6 +977,8 @@ class ChessController extends Notifier<GameState> {
     if (trimCount > 0) {
       newMoves.removeRange(newMoves.length - trimCount, newMoves.length);
     }
+
+    _rebuildRepetitions(newHistory, restored);
 
     NormalMove? undoMove;
     Square? capturedSquare;
@@ -749,6 +1014,7 @@ class ChessController extends Notifier<GameState> {
       clearCapture: capturedPiece == null,
       wasUndo: true,
       clearAnalysis: true,
+      feedbackAnalyzing: false,
     );
 
     _refreshEvaluation();
@@ -811,6 +1077,25 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
+  void completePromotion(Role role) {
+    final pending = state.pendingPromotion;
+    if (pending == null) return;
+    if (state.status != GameStatus.playing) {
+      state = state.copyWith(clearSelection: true);
+      return;
+    }
+    _playPlayerMove(pending.from, pending.to, promotion: role);
+  }
+
+  void cancelPromotion() {
+    if (state.pendingPromotion == null) return;
+    state = state.copyWith(clearSelection: true);
+  }
+
+  void stopEngineWork() {
+    _engine.stopThinking();
+  }
+
   Future<void> requestHint() async {
     if (!state.isPlayerTurn || state.isBotThinking) return;
     if (!state.practiceMode) return;
@@ -860,9 +1145,7 @@ class ChessController extends Notifier<GameState> {
     return displaySquares;
   }
 
-  void _playPlayerMove(Square from, Square to) {
-    if (!_chargeElapsed(publish: false)) return;
-
+  void _playPlayerMove(Square from, Square to, {Role? promotion}) {
     Square target = to;
     final piece = state.position.board.pieceAt(from);
 
@@ -876,11 +1159,29 @@ class ChessController extends Notifier<GameState> {
       }
     }
 
-    final promotion = _isPromotion(from, target) ? Role.queen : null;
-    final move = NormalMove(from: from, to: target, promotion: promotion);
+    final needsPromotion = _isPromotion(from, target);
+
+    if (needsPromotion && promotion == null) {
+      final probe = NormalMove(from: from, to: target, promotion: Role.queen);
+      if (!state.position.isLegal(probe)) {
+        _playSound('illegal.wav');
+        state = state.copyWith(clearSelection: true);
+        return;
+      }
+      state = state.copyWith(pendingPromotion: (from: from, to: target));
+      return;
+    }
+
+    if (!_chargeElapsed(publish: false)) return;
+
+    final move = NormalMove(
+      from: from,
+      to: target,
+      promotion: needsPromotion ? promotion : null,
+    );
 
     if (!state.position.isLegal(move)) {
-      _playSound('illegal.mp3');
+      _playSound('illegal.wav');
       state = state.copyWith(clearSelection: true);
       return;
     }
@@ -914,8 +1215,9 @@ class ChessController extends Notifier<GameState> {
 
     _playMoveSound(move, oldPosition, newPosition, false);
 
-    final gameStatus = _statusFor(newPosition, updatedHistory);
-    final reason = _getEndReason(newPosition, updatedHistory, gameStatus);
+    final repetitions = _registerPosition(newPosition);
+    final gameStatus = _statusFor(newPosition, repetitions);
+    final reason = _getEndReason(newPosition, repetitions, gameStatus);
 
     state = state.copyWith(
       position: newPosition,
@@ -936,8 +1238,9 @@ class ChessController extends Notifier<GameState> {
 
     if (state.status == GameStatus.playing) {
       _addIncrement(oldPosition.turn);
-      _refreshEvaluation();
       if (state.mode == GameMode.bot) _requestBotMove();
+      _refreshEvaluation();
+      unawaited(_analyzeMoveAt(state.moves.length - 1));
     } else {
       _stopClock();
       _playGameEndSound(newPosition);
@@ -949,6 +1252,7 @@ class ChessController extends Notifier<GameState> {
     final requestId = ++_moveRequestId;
     state = state.copyWith(isBotThinking: true);
 
+    final startedAt = DateTime.now();
     final policy = _policy;
 
     Move? move;
@@ -973,8 +1277,11 @@ class ChessController extends Notifier<GameState> {
         return;
       }
 
-      move = _parseUciMove(uci);
+      move = _parseUciMove(uci, state.position);
     }
+
+    final remaining = kBotMinMoveTime - DateTime.now().difference(startedAt);
+    if (remaining > Duration.zero) await Future.delayed(remaining);
 
     if (_isDisposed || requestId != _moveRequestId) return;
 
@@ -1020,8 +1327,9 @@ class ChessController extends Notifier<GameState> {
 
     _playMoveSound(normalMove, beforeBotMove, newPosition, true);
 
-    final gameStatus = _statusFor(newPosition, updatedHistory);
-    final reason = _getEndReason(newPosition, updatedHistory, gameStatus);
+    final repetitions = _registerPosition(newPosition);
+    final gameStatus = _statusFor(newPosition, repetitions);
+    final reason = _getEndReason(newPosition, repetitions, gameStatus);
 
     state = state.copyWith(
       position: newPosition,
@@ -1049,20 +1357,22 @@ class ChessController extends Notifier<GameState> {
     _refreshEvaluation();
   }
 
-  NormalMove _parseUciMove(String uci) {
+  NormalMove _parseUciMove(String uci, Position position) {
     var from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
     var to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
 
     final promotion = uci.length > 4 ? _roleFromChar(uci[4]) : null;
 
-    if (from == Square.e1 && to == Square.g1) {
-      to = Square.h1;
-    } else if (from == Square.e1 && to == Square.c1) {
-      to = Square.a1;
-    } else if (from == Square.e8 && to == Square.g8) {
-      to = Square.h8;
-    } else if (from == Square.e8 && to == Square.c8) {
-      to = Square.a8;
+    if (position.board.pieceAt(from)?.role == Role.king) {
+      if (from == Square.e1 && to == Square.g1) {
+        to = Square.h1;
+      } else if (from == Square.e1 && to == Square.c1) {
+        to = Square.a1;
+      } else if (from == Square.e8 && to == Square.g8) {
+        to = Square.h8;
+      } else if (from == Square.e8 && to == Square.c8) {
+        to = Square.a8;
+      }
     }
 
     return NormalMove(from: from, to: to, promotion: promotion);
@@ -1099,34 +1409,19 @@ class ChessController extends Notifier<GameState> {
     return target;
   }
 
-  bool _isThreefoldRepetition(Position current, List<Position> history) {
-    int count = 1;
-    for (final pastPosition in history) {
-      if (pastPosition.fen == current.fen) {
-        count++;
-        if (count >= 3) return true;
-      }
-    }
-    return false;
-  }
-
-  GameStatus _statusFor(Position position, List<Position> history) {
+  GameStatus _statusFor(Position position, int repetitions) {
     if (position.isCheckmate) return GameStatus.checkmate;
     if (position.isStalemate ||
         position.halfmoves >= 100 ||
         position.isInsufficientMaterial ||
-        _isThreefoldRepetition(position, history) ||
+        repetitions >= 3 ||
         position.isGameOver) {
       return GameStatus.draw;
     }
     return GameStatus.playing;
   }
 
-  String? _getEndReason(
-    Position position,
-    List<Position> history,
-    GameStatus status,
-  ) {
+  String? _getEndReason(Position position, int repetitions, GameStatus status) {
     if (status == GameStatus.checkmate) {
       if (state.mode == GameMode.local) {
         final winner = position.turn == Side.white ? 'Black' : 'White';
@@ -1149,7 +1444,7 @@ class ChessController extends Notifier<GameState> {
       if (position.isInsufficientMaterial) {
         return 'Game drawn due to insufficient material.';
       }
-      if (_isThreefoldRepetition(position, history)) {
+      if (repetitions >= 3) {
         return 'Game drawn by threefold repetition.';
       }
       return 'The game ended in a draw.';
