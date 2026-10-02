@@ -15,8 +15,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await AppStorage.init();
-  // Boot Stockfish + NNUE in the background as soon as the app opens,
-  // so hitting play on a bot is instant instead of ~20s wait.
   ChessEngine.instance.warmUp();
   SoundService.instance.warmUp();
   unawaited(precacheGameSvgs());

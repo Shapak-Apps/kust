@@ -3,19 +3,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:Kust/features/game/chess/move_feedback.dart';
 
-/// Animated move-quality badge: circle scales in first, then the
-/// white SVG glyph fades in — "boom, beautiful".
 class MoveFeedbackBadge extends StatefulWidget {
   const MoveFeedbackBadge({
     super.key,
     required this.feedback,
     this.size = 22,
-    this.iconScale = 0.6,
+    this.iconScale,
   });
 
   final MoveFeedback feedback;
   final double size;
-  final double iconScale;
+  final double? iconScale;
 
   @override
   State<MoveFeedbackBadge> createState() => _MoveFeedbackBadgeState();
@@ -65,7 +63,7 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
   @override
   Widget build(BuildContext context) {
     final color = widget.feedback.quality.color;
-    final iconSize = widget.size * widget.iconScale;
+    final iconSize = widget.size * (widget.iconScale ?? widget.feedback.quality.iconScale);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -96,8 +94,6 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
             width: iconSize,
             height: iconSize,
             fit: BoxFit.contain,
-            // Force glyph to white so it is always visible on the
-            // colored circle regardless of the raw svg fill.
             colorFilter: const ColorFilter.mode(
               Colors.white,
               BlendMode.srcIn,

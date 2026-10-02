@@ -851,8 +851,6 @@ class _MoveHistoryBarState extends State<_MoveHistoryBar> {
   }
 }
 
-/// Line under the moves history bar: "a4 was inaccuracy · Nc3 was best".
-/// Text only — no icon. Start-aligned, default text style.
 class _MoveFeedbackLine extends StatelessWidget {
   const _MoveFeedbackLine({required this.moves, required this.analyzing});
 
