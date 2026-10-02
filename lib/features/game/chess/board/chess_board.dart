@@ -25,6 +25,10 @@ Square _castlingDisplaySquare(Square target) {
   return target;
 }
 
+bool _isCornerSquare(Square s) {
+  return s == Square.a1 || s == Square.h1 || s == Square.a8 || s == Square.h8;
+}
+
 class _BoardView {
   const _BoardView({
     required this.position,
@@ -40,6 +44,7 @@ class _BoardView {
     required this.badgeFeedback,
     required this.badgeSquare,
     required this.badgeIndex,
+    required this.pendingPromotion,
   });
 
   factory _BoardView.from(GameState g) {
@@ -86,6 +91,10 @@ class _BoardView {
       badgeFeedback: feedback,
       badgeSquare: square,
       badgeIndex: index,
+      pendingPromotion:
+          !g.isSelfAnalysisActive && g.status == GameStatus.playing
+          ? g.pendingPromotion
+          : null,
     );
   }
 
@@ -102,6 +111,7 @@ class _BoardView {
   final MoveFeedback? badgeFeedback;
   final Square? badgeSquare;
   final int? badgeIndex;
+  final ({Square from, Square to})? pendingPromotion;
 
   @override
   bool operator ==(Object other) {
@@ -118,7 +128,8 @@ class _BoardView {
         wasUndo == other.wasUndo &&
         identical(badgeFeedback, other.badgeFeedback) &&
         badgeSquare == other.badgeSquare &&
-        badgeIndex == other.badgeIndex;
+        badgeIndex == other.badgeIndex &&
+        pendingPromotion == other.pendingPromotion;
   }
 
   @override
@@ -136,6 +147,7 @@ class _BoardView {
     badgeFeedback,
     badgeSquare,
     badgeIndex,
+    pendingPromotion,
   );
 }
 
@@ -261,19 +273,20 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           Square visualFrom = move.from;
           Square visualTo = move.to;
 
+          final fromHome = move.from == Square.e1 || move.from == Square.e8;
+          final toHome = move.to == Square.e1 || move.to == Square.e8;
+
           final isForwardCastling =
-              (move.from == Square.e1 || move.from == Square.e8) &&
-              (move.to == Square.h1 ||
-                  move.to == Square.a1 ||
-                  move.to == Square.h8 ||
-                  move.to == Square.a8);
+              !next.wasUndo &&
+              fromHome &&
+              _isCornerSquare(move.to) &&
+              previous.position.board.pieceAt(move.from)?.role == Role.king;
 
           final isReverseCastling =
-              (move.to == Square.e1 || move.to == Square.e8) &&
-              (move.from == Square.h1 ||
-                  move.from == Square.a1 ||
-                  move.from == Square.h8 ||
-                  move.from == Square.a8);
+              next.wasUndo &&
+              toHome &&
+              _isCornerSquare(move.from) &&
+              next.position.board.pieceAt(move.to)?.role == Role.king;
 
           if (isForwardCastling) {
             visualTo = _castlingDisplaySquare(move.to);
@@ -437,6 +450,23 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                           );
                         },
                       ),
+                    ),
+                  ),
+
+                if (view.pendingPromotion != null)
+                  Positioned.fill(
+                    child: _PromotionPicker(
+                      color: displayPosition.turn,
+                      rotated:
+                          view.mode == GameMode.local &&
+                          displayPosition.turn == Side.black,
+                      squareSize: _squareSize,
+                      onPick: (role) => ref
+                          .read(chessControllerProvider.notifier)
+                          .completePromotion(role),
+                      onCancel: () => ref
+                          .read(chessControllerProvider.notifier)
+                          .cancelPromotion(),
                     ),
                   ),
 
@@ -605,4 +635,71 @@ String _assetForPiece(Piece piece) {
   };
 
   return 'assets/pieces/$color$role.svg';
+}
+
+class _PromotionPicker extends StatelessWidget {
+  const _PromotionPicker({
+    required this.color,
+    required this.rotated,
+    required this.squareSize,
+    required this.onPick,
+    required this.onCancel,
+  });
+
+  final Side color;
+  final bool rotated;
+  final double squareSize;
+  final ValueChanged<Role> onPick;
+  final VoidCallback onCancel;
+
+  static const List<Role> _roles = [
+    Role.queen,
+    Role.rook,
+    Role.bishop,
+    Role.knight,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      padding: EdgeInsets.all(squareSize * 0.15),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(squareSize * 0.3),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 16),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final role in _roles)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onPick(role),
+              child: SizedBox(
+                width: squareSize * 1.1,
+                height: squareSize * 1.1,
+                child: Padding(
+                  padding: EdgeInsets.all(squareSize * 0.05),
+                  child: SvgPicture.asset(
+                    _assetForPiece(Piece(color: color, role: role)),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onCancel,
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.45),
+        alignment: Alignment.center,
+        child: rotated ? RotatedBox(quarterTurns: 2, child: card) : card,
+      ),
+    );
+  }
 }
