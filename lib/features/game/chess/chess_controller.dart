@@ -55,8 +55,9 @@ class GameState {
     this.evaluationEnabled = false,
     this.evaluation,
     this.analysisIndex,
-    this.moveFeedbackEnabled = true,
+    this.moveFeedbackEnabled = false,
     this.feedbackAnalyzing = false,
+    this.pendingPromotion,
   });
 
   final Position position;
@@ -89,9 +90,12 @@ class GameState {
 
   final int? analysisIndex;
 
+  /// Practice-mode move feedback toggle (3-dot "More" menu).
   final bool moveFeedbackEnabled;
 
+  /// True while the last move is being classified by the engine.
   final bool feedbackAnalyzing;
+  final ({Square from, Square to})? pendingPromotion;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -184,6 +188,7 @@ class GameState {
     bool clearAnalysis = false,
     bool? moveFeedbackEnabled,
     bool? feedbackAnalyzing,
+    ({Square from, Square to})? pendingPromotion,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -223,6 +228,9 @@ class GameState {
           : (analysisIndex ?? this.analysisIndex),
       moveFeedbackEnabled: moveFeedbackEnabled ?? this.moveFeedbackEnabled,
       feedbackAnalyzing: feedbackAnalyzing ?? this.feedbackAnalyzing,
+      pendingPromotion: clearSelection
+          ? null
+          : (pendingPromotion ?? this.pendingPromotion),
     );
   }
 }
@@ -247,6 +255,9 @@ class ChessController extends Notifier<GameState> {
     ref.onDispose(() {
       _isDisposed = true;
       _stopClock();
+      // NOTE: engine is intentionally NOT disposed here — ChessEngine
+      // lives for the whole app lifetime (keepAlive) so the next game
+      // starts instantly without the ~20s Stockfish + NNUE boot.
     });
 
     final keepAliveLink = ref.keepAlive();
@@ -479,6 +490,7 @@ class ChessController extends Notifier<GameState> {
     String sound;
 
     final isCastling =
+        oldPos.board.pieceAt(move.from)?.role == Role.king &&
         (move.from == Square.e1 || move.from == Square.e8) &&
         (move.to == Square.h1 ||
             move.to == Square.a1 ||
@@ -632,7 +644,7 @@ class ChessController extends Notifier<GameState> {
       if (moveIndex >= state.moves.length) return;
       if (state.moves[moveIndex].san != played.san) return;
 
-      final bestMove = _parseUciMove(analysis.bestUci);
+      final bestMove = _parseUciMove(analysis.bestUci, beforePos);
       if (!beforePos.isLegal(bestMove)) return;
 
       final bestSan = moveToSan(
@@ -687,7 +699,7 @@ class ChessController extends Notifier<GameState> {
   Future<void> _loadEvalEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
-    final feedback = prefs.getBool(kMoveFeedbackPrefKey) ?? true;
+    final feedback = prefs.getBool(kMoveFeedbackPrefKey) ?? false;
     if (_isDisposed) return;
     if (enabled != state.evaluationEnabled ||
         feedback != state.moveFeedbackEnabled) {
@@ -1005,6 +1017,21 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
+  void completePromotion(Role role) {
+    final pending = state.pendingPromotion;
+    if (pending == null) return;
+    if (state.status != GameStatus.playing) {
+      state = state.copyWith(clearSelection: true);
+      return;
+    }
+    _playPlayerMove(pending.from, pending.to, promotion: role);
+  }
+
+  void cancelPromotion() {
+    if (state.pendingPromotion == null) return;
+    state = state.copyWith(clearSelection: true);
+  }
+
   void stopEngineWork() {
     _engine.stopThinking();
   }
@@ -1058,9 +1085,7 @@ class ChessController extends Notifier<GameState> {
     return displaySquares;
   }
 
-  void _playPlayerMove(Square from, Square to) {
-    if (!_chargeElapsed(publish: false)) return;
-
+  void _playPlayerMove(Square from, Square to, {Role? promotion}) {
     Square target = to;
     final piece = state.position.board.pieceAt(from);
 
@@ -1074,8 +1099,26 @@ class ChessController extends Notifier<GameState> {
       }
     }
 
-    final promotion = _isPromotion(from, target) ? Role.queen : null;
-    final move = NormalMove(from: from, to: target, promotion: promotion);
+    final needsPromotion = _isPromotion(from, target);
+
+    if (needsPromotion && promotion == null) {
+      final probe = NormalMove(from: from, to: target, promotion: Role.queen);
+      if (!state.position.isLegal(probe)) {
+        _playSound('illegal.wav');
+        state = state.copyWith(clearSelection: true);
+        return;
+      }
+      state = state.copyWith(pendingPromotion: (from: from, to: target));
+      return;
+    }
+
+    if (!_chargeElapsed(publish: false)) return;
+
+    final move = NormalMove(
+      from: from,
+      to: target,
+      promotion: needsPromotion ? promotion : null,
+    );
 
     if (!state.position.isLegal(move)) {
       _playSound('illegal.wav');
@@ -1174,7 +1217,7 @@ class ChessController extends Notifier<GameState> {
         return;
       }
 
-      move = _parseUciMove(uci);
+      move = _parseUciMove(uci, state.position);
     }
 
     final remaining = kBotMinMoveTime - DateTime.now().difference(startedAt);
@@ -1254,20 +1297,22 @@ class ChessController extends Notifier<GameState> {
     _refreshEvaluation();
   }
 
-  NormalMove _parseUciMove(String uci) {
+  NormalMove _parseUciMove(String uci, Position position) {
     var from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
     var to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
 
     final promotion = uci.length > 4 ? _roleFromChar(uci[4]) : null;
 
-    if (from == Square.e1 && to == Square.g1) {
-      to = Square.h1;
-    } else if (from == Square.e1 && to == Square.c1) {
-      to = Square.a1;
-    } else if (from == Square.e8 && to == Square.g8) {
-      to = Square.h8;
-    } else if (from == Square.e8 && to == Square.c8) {
-      to = Square.a8;
+    if (position.board.pieceAt(from)?.role == Role.king) {
+      if (from == Square.e1 && to == Square.g1) {
+        to = Square.h1;
+      } else if (from == Square.e1 && to == Square.c1) {
+        to = Square.a1;
+      } else if (from == Square.e8 && to == Square.g8) {
+        to = Square.h8;
+      } else if (from == Square.e8 && to == Square.c8) {
+        to = Square.a8;
+      }
     }
 
     return NormalMove(from: from, to: to, promotion: promotion);
