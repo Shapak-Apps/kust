@@ -374,7 +374,7 @@ class _BotChallengeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           color: theme.colorScheme.surface,
