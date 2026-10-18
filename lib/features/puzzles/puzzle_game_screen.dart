@@ -4,13 +4,15 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/core/storage/puzzle_progress_store.dart';
+import 'package:Kust/features/game/chess/sound_service.dart';
+import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/puzzles/puzzle_board.dart';
 import 'package:Kust/features/puzzles/puzzle_data.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
+const Color _accentColor = Color(0xFFFFBB00);
 
 class PuzzleGameScreen extends StatefulWidget {
   const PuzzleGameScreen({super.key, required this.level, required this.index});
@@ -132,6 +134,34 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     _ply = _positions.length - 1;
   }
 
+  void _playMoveFeedback(Position before, NormalMove move, Position after, bool isUser) {
+    final piece = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    final isCastle =
+        piece?.role == Role.king && target != null && target.color == piece?.color;
+    final isCapture = target != null && !isCastle;
+    final isCheck = after.isCheck;
+
+    String sound;
+    if (isCastle) {
+      sound = 'castle.wav';
+    } else if (move.promotion != null) {
+      sound = 'promote.wav';
+    } else if (isCapture) {
+      sound = 'capture.wav';
+    } else {
+      sound = isUser ? 'move.wav' : 'move-opponent.wav';
+    }
+
+    SoundService.instance.playSfx(isCheck ? 'check.wav' : sound);
+
+    if (isCapture || isCheck) {
+      SoundService.instance.buzz(heavy: true);
+    } else {
+      SoundService.instance.buzz();
+    }
+  }
+
   void _onUserMove(NormalMove move) {
     final puzzle = _puzzle;
     if (puzzle == null || _busy || _solved) return;
@@ -146,6 +176,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       _onMistake(puzzle);
       return;
     }
+
+    final before = _position;
+    _playMoveFeedback(before, move, before.play(move), true);
 
     setState(() {
       _applyMove(move);
@@ -170,6 +203,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
 
+    final before = _position;
+    _playMoveFeedback(before, reply, before.play(reply), false);
+
     setState(() {
       _applyMove(reply);
       _busy = false;
@@ -183,6 +219,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _onMistake(PuzzleEntry puzzle) {
     _mistakes++;
+    SoundService.instance.playSfx('illegal.wav');
+    SoundService.instance.buzz(heavy: true);
     if (_mistakes == 1) {
       unawaited(PuzzleProgressStore.instance.recordMistake(puzzle));
     }
@@ -203,9 +241,14 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _onSolved(PuzzleEntry puzzle) {
     _busy = false;
+    SoundService.instance.playJingle('game-win.wav');
+    SoundService.instance.buzzMedium();
     if (mounted) setState(() => _solved = true);
     unawaited(
-      PuzzleProgressStore.instance.recordSolved(puzzle, clean: _mistakes == 0),
+      PuzzleProgressStore.instance.recordSolved(
+        puzzle,
+        clean: _mistakes == 0,
+      ),
     );
   }
 
@@ -271,7 +314,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         centerTitle: true,
         title: Text(
           'Puzzles #${widget.level}',
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            color: _accentColor,
+          ),
         ),
         actions: [
           IconButton(
@@ -287,8 +333,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: _StatusCard(
+                    child: _StatusLine(
                       text: _statusText,
+                      whiteToMove: _position.turn == Side.white,
                       highlight: _solved
                           ? const Color(0xFF3CB371)
                           : _mistakeFlash
@@ -298,19 +345,16 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   ),
                   Expanded(
                     child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: PuzzleBoard(
-                            position: _position,
-                            flipped: _startTurn == Side.black,
-                            interactive: _atTip && !_busy && !_solved,
-                            onMove: _onUserMove,
-                            lastMove: _lastMoves[_ply],
-                            hintFrom: hintFrom,
-                            hintTo: hintTo,
-                          ),
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: PuzzleBoard(
+                          position: _position,
+                          flipped: _startTurn == Side.black,
+                          interactive: _atTip && !_busy && !_solved,
+                          onMove: _onUserMove,
+                          lastMove: _lastMoves[_ply],
+                          hintFrom: hintFrom,
+                          hintTo: hintTo,
                         ),
                       ),
                     ),
@@ -336,32 +380,43 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 }
 
-class _StatusCard extends StatelessWidget {
-  const _StatusCard({required this.text, this.highlight});
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({
+    required this.text,
+    required this.whiteToMove,
+    this.highlight,
+  });
 
   final String text;
+  final bool whiteToMove;
   final Color? highlight;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: highlight ?? Colors.transparent, width: 2),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: highlight ?? scheme.onSurface,
+    return Row(
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: whiteToMove ? Colors.white : Colors.black,
+            border: Border.all(color: Colors.black54, width: 1),
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: highlight ?? scheme.onSurface,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
