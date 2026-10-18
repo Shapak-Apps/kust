@@ -9,6 +9,7 @@ class AppStorage {
 
   static const String userBoxName = 'kust_user';
   static const String botProgressBoxName = 'bot_progress';
+  static const String puzzleBoxName = 'puzzle_progress';
 
   static const String _guestIdKey = 'guest_id';
   static const String _guestNameKey = 'guest_name';
@@ -29,6 +30,7 @@ class AppStorage {
   static Future<void> init() async {
     await Hive.openBox(userBoxName);
     await Hive.openBox(botProgressBoxName);
+    await Hive.openBox(puzzleBoxName);
     await instance._ensureGuest();
   }
 

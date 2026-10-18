@@ -1,0 +1,189 @@
+{
+  "level": 1,
+  "puzzles": [
+    {
+      "fen": "2B5/p1p4p/1p1knQ2/2b2p2/1P6/P3N3/5BPq/R3K2R w KQ - 4 26",
+      "moves": [
+        "f6e6"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-001"
+    },
+    {
+      "fen": "r3k2r/p2p1pP1/npp1p3/P5B1/2P4p/1P3P2/7P/RN1Q1BK1 w q - 1 18",
+      "moves": [
+        "g7h8q"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-002"
+    },
+    {
+      "fen": "1nb1Q3/4n2p/1ppPk1p1/p4p2/2P2B2/P3p3/4P2P/4K1NR w - - 0 24",
+      "moves": [
+        "e8e7"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-003"
+    },
+    {
+      "fen": "1rbk4/1pp1R2p/p2p4/6B1/P1P5/P7/3KB1P1/5R2 w - - 3 32",
+      "moves": [
+        "f1f8"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-004"
+    },
+    {
+      "fen": "r1b5/p3k1p1/n3p3/2p1K1p1/1N2Br1p/q7/1NP3PP/8 b - - 0 27",
+      "moves": [
+        "a3c3"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-005"
+    },
+    {
+      "fen": "r1b5/p3k1p1/n3p3/2p1K1p1/4Br1p/1q1N4/1NP3PP/8 b - - 2 28",
+      "moves": [
+        "b3b8"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-006"
+    },
+    {
+      "fen": "r4bB1/ppp3p1/3k4/4pn1r/6Pq/2NPpb1P/PPP5/R1B2K1R b - - 3 19",
+      "moves": [
+        "h4f2"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-007"
+    },
+    {
+      "fen": "r4b2/1pp3p1/p2k4/3Bpn1r/4b1Pq/3Pp2P/PPP5/R1B2K1R b - - 1 21",
+      "moves": [
+        "h4f2"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-008"
+    },
+    {
+      "fen": "r3k2r/pp4pp/4p2n/8/1bPP3Q/1qn1P2N/3K1PPP/2B2BR1 b - - 6 23",
+      "moves": [
+        "b3d1"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-009"
+    },
+    {
+      "fen": "6k1/p1pQ1p2/1r2pBpr/1N4Np/7P/2P5/P1P2PP1/R3KB1R w - - 1 26",
+      "moves": [
+        "d7e8"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-010"
+    },
+    {
+      "fen": "6k1/2pQ1p2/pr2pBpr/1N4Np/7P/2PB4/P1P2PP1/R3K2R w - - 0 27",
+      "moves": [
+        "d7e8"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-011"
+    },
+    {
+      "fen": "r1b3nr/p4ppp/2np3k/1p1Q4/1P2P1PN/8/PBP1PP1P/1R2KB1R w K - 4 15",
+      "moves": [
+        "d5h5"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-012"
+    },
+    {
+      "fen": "r2k4/1p3p1r/2n4p/p4Pp1/4p1nR/1B6/PP1PK3/R1B3q1 b - - 0 25",
+      "moves": [
+        "c6d4"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-013"
+    },
+    {
+      "fen": "r1bk1b1r/2Np1pp1/Bp1Qp3/2P1Nnq1/3nPPp1/8/PPP4P/R1B1K2R w KQ - 5 13",
+      "moves": [
+        "e5f7"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-014"
+    },
+    {
+      "fen": "4Q3/2p1bp2/p1P1k1p1/4p1B1/4p2p/2P4P/PPKN1PP1/R6R w - - 4 28",
+      "moves": [
+        "e8d7"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-015"
+    },
+    {
+      "fen": "r1bq1b1r/p2p2kp/1pp1pn2/2P1Np2/N2P2p1/3P4/PP1QBPPP/R1B1K2R w KQ - 2 12",
+      "moves": [
+        "d2g5"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-016"
+    },
+    {
+      "fen": "5r1k/1p1Q3p/1r5B/p3pN2/1P6/6P1/P1P4P/R3K3 w - - 3 31",
+      "moves": [
+        "d7g7"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-017"
+    },
+    {
+      "fen": "r1b2r2/p1k5/p3ppnp/P5p1/2p1p1P1/2P4N/P1NQKP1P/1R1R4 w - - 6 23",
+      "moves": [
+        "d2d6"
+      ],
+      "rating": 800,
+      "theme": "mateIn1",
+      "id": "l1-018"
+    },
+    {
+      "fen": "r4bB1/ppp3p1/3k1q2/4pn1r/6P1/2NPpb1P/PPP5/R1B1K2R b KQ - 1 18",
+      "moves": [
+        "f6h4",
+        "e1f1",
+        "h4f2"
+      ],
+      "rating": 1000,
+      "theme": "mateIn2",
+      "id": "l1-019"
+    },
+    {
+      "fen": "r1b1kb1r/3p1pp1/Bp1Qp3/2PNNnq1/3nPPp1/8/PPP4P/R1B1K2R w KQkq - 3 12",
+      "moves": [
+        "d5c7",
+        "e8d8",
+        "e5f7"
+      ],
+      "rating": 1000,
+      "theme": "mateIn2",
+      "id": "l1-020"
+    }
+  ]
+}

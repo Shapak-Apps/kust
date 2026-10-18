@@ -4,6 +4,7 @@ import 'package:Kust/features/onboarding/onboarding_screen.dart';
 import 'package:Kust/features/game/game_screen.dart';
 import 'package:Kust/features/game/game_args.dart';
 import 'package:Kust/features/play/play_screen.dart';
+import 'package:Kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:Kust/features/puzzles/puzzles_screen.dart';
 import 'package:Kust/widgets/app_shell.dart';
 
@@ -29,6 +30,14 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             practiceMode: args.practiceMode,
           );
         },
+      ),
+
+      GoRoute(
+        path: '/puzzle/:level/:index',
+        builder: (context, state) => PuzzleGameScreen(
+          level: int.parse(state.pathParameters['level']!),
+          index: int.parse(state.pathParameters['index']!),
+        ),
       ),
 
       ShellRoute(
