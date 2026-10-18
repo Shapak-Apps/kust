@@ -48,11 +48,13 @@ class MoveAnalysis {
     required this.bestUci,
     required this.bestCp,
     required this.playedCp,
+    this.secondBestCp,
   });
 
   final String bestUci;
   final int bestCp;
   final int playedCp;
+  final int? secondBestCp;
 }
 
 class _Scored {
@@ -69,6 +71,8 @@ class ChessEngine {
 
   static const int _mateCp = 100000;
   static final RegExp _scoreRe = RegExp(r'score (cp|mate) (-?\d+)');
+  static final RegExp _multiPvRe = RegExp(r' multipv (\d+)');
+  static final RegExp _pvMoveRe = RegExp(r' pv (\S+)');
 
   Stockfish? _engine;
   StreamSubscription<String>? _stdoutSubscription;
@@ -82,6 +86,7 @@ class ChessEngine {
   int _lastSkill = 20;
   int? _lastUciElo;
   String? _lastScoreLine;
+  final Map<int, String> _scoreLines = {};
 
   bool get isReady => _ready;
 
@@ -129,7 +134,10 @@ class ChessEngine {
       if (line.contains(' score ') &&
           !line.contains(' lowerbound') &&
           !line.contains(' upperbound')) {
-        _lastScoreLine = line;
+        final pvMatch = _multiPvRe.firstMatch(line);
+        final pvIndex = pvMatch == null ? 1 : int.parse(pvMatch.group(1)!);
+        _scoreLines[pvIndex] = line;
+        if (pvIndex == 1) _lastScoreLine = line;
       }
       return;
     }
@@ -213,32 +221,45 @@ class ChessEngine {
     required String beforeFen,
     required String playedUci,
     required String afterFen,
-    Duration thinkTime = const Duration(milliseconds: 450),
+    Duration thinkTime = const Duration(milliseconds: 350),
     bool Function()? isStale,
   }) {
     return _run<MoveAnalysis?>(() async {
       if (isStale != null && isStale()) return null;
       if (!_ready) await start();
       return _atFullStrength<MoveAnalysis?>(() async {
-        final best = await _searchScored(beforeFen, thinkTime);
-        if (best == null || best.uci == '(none)') return null;
-        if (best.uci == playedUci) {
-          return MoveAnalysis(
-            bestUci: best.uci,
-            bestCp: best.cp,
-            playedCp: best.cp,
-          );
+        final top = await _searchTop(beforeFen, thinkTime, 2);
+        if (top.isEmpty) return null;
+
+        final best = top.first;
+        final secondBestCp = top.length > 1 ? top[1].cp : null;
+
+        final knownPlayedCp = _cpForUci(top, playedUci);
+        final int playedCp;
+        if (knownPlayedCp != null) {
+          playedCp = knownPlayedCp;
+        } else {
+          if (isStale != null && isStale()) return null;
+          final reply = await _searchScored(afterFen, thinkTime);
+          if (reply == null) return null;
+          playedCp = -reply.cp;
         }
-        if (isStale != null && isStale()) return null;
-        final reply = await _searchScored(afterFen, thinkTime);
-        if (reply == null) return null;
+
         return MoveAnalysis(
           bestUci: best.uci,
           bestCp: best.cp,
-          playedCp: -reply.cp,
+          playedCp: playedCp,
+          secondBestCp: secondBestCp,
         );
       });
     });
+  }
+
+  int? _cpForUci(List<_Scored> lines, String uci) {
+    for (final line in lines) {
+      if (line.uci == uci) return line.cp;
+    }
+    return null;
   }
 
   Future<T> _atFullStrength<T>(Future<T> Function() op) async {
@@ -254,21 +275,42 @@ class ChessEngine {
   }
 
   Future<_Scored?> _searchScored(String fen, Duration thinkTime) async {
+    final lines = await _searchTop(fen, thinkTime, 1);
+    return lines.isEmpty ? null : lines.first;
+  }
+
+  Future<List<_Scored>> _searchTop(
+    String fen,
+    Duration thinkTime,
+    int lines,
+  ) async {
+    _scoreLines.clear();
     _lastScoreLine = null;
+    _send('setoption name MultiPV value $lines');
     _send('position fen $fen');
     _send('go movetime ${thinkTime.inMilliseconds}');
 
     final line = await _waitForLine((l) => l.startsWith('bestmove '));
+    _send('setoption name MultiPV value 1');
+
     final parts = line.split(' ');
-    final uci = parts.length > 1 ? parts[1] : '(none)';
+    if (parts.length < 2 || parts[1] == '(none)') return const [];
 
-    final score = _parseScore(_lastScoreLine);
-    if (score == null) return null;
+    final results = <_Scored>[];
+    for (var index = 1; index <= lines; index++) {
+      final info = _scoreLines[index];
+      if (info == null) break;
 
-    final cp = score.mate
-        ? (score.value > 0 ? _mateCp : -_mateCp)
-        : score.value;
-    return _Scored(uci, cp);
+      final score = _parseScore(info);
+      final pvMatch = _pvMoveRe.firstMatch(info);
+      if (score == null || pvMatch == null) break;
+
+      final cp = score.mate
+          ? (score.value > 0 ? _mateCp : -_mateCp)
+          : score.value;
+      results.add(_Scored(pvMatch.group(1)!, cp));
+    }
+    return results;
   }
 
   ({bool mate, int value})? _parseScore(String? line) {
@@ -287,6 +329,7 @@ class ChessEngine {
     _ready = false;
     _startFuture = null;
     _lastScoreLine = null;
+    _scoreLines.clear();
     _stdoutSubscription?.cancel();
     _stdoutSubscription = null;
     _listeners.clear();

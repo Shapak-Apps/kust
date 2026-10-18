@@ -309,11 +309,11 @@ class _PlayScreenState extends State<PlayScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _challengeBots.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 130,
+                  mainAxisExtent: 150,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio: 0.975,
                 ),
                 itemBuilder: (context, index) {
                   final bot = _challengeBots[index];
@@ -336,11 +336,11 @@ class _PlayScreenState extends State<PlayScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _tkmChallengeBots.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 130,
+                  mainAxisExtent: 150,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
-                  childAspectRatio: 0.975,
                 ),
                 itemBuilder: (context, index) {
                   final bot = _tkmChallengeBots[index];
@@ -374,7 +374,7 @@ class _BotChallengeCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           color: theme.colorScheme.surface,

@@ -93,6 +93,12 @@ class SoundService {
     } catch (_) {}
   }
 
+  void buzzMedium() {
+    try {
+      HapticFeedback.mediumImpact();
+    } catch (_) {}
+  }
+
   Future<void> dispose() async {
     for (final p in _players.values) {
       try {
