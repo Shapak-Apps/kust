@@ -43,8 +43,9 @@ class PuzzlesScreen extends StatefulWidget {
 
 class _PuzzlesScreenState extends State<PuzzlesScreen> {
   final ScrollController _scroll = ScrollController();
-  final Future<PuzzleLevel> _levelFuture =
-      PuzzleRepository.instance.loadLevel(kPuzzleLevel);
+  final Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
+    kPuzzleLevel,
+  );
   bool _initialJumpDone = false;
 
   @override
@@ -222,10 +223,7 @@ class _PuzzlePath extends StatelessWidget {
         final height = _pathHeight(count);
         final centers = [
           for (var i = 0; i < count; i++)
-            Offset(
-              width * _zigzag[i % _zigzag.length],
-              _nodeCenterY(i, count),
-            ),
+            Offset(width * _zigzag[i % _zigzag.length], _nodeCenterY(i, count)),
         ];
 
         return SizedBox(
@@ -335,10 +333,7 @@ class _PuzzleNode extends StatelessWidget {
                 color: fill,
                 border: Border.all(color: scheme.surface, width: 4),
                 boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0, 4),
-                  ),
+                  BoxShadow(color: Colors.black26, offset: Offset(0, 4)),
                 ],
               ),
               child: Center(child: center),
@@ -448,15 +443,17 @@ class _ActionBar extends StatelessWidget {
           SizedBox(
             width: 56,
             height: 56,
-            child: OutlinedButton(
+            child: FilledButton(
               onPressed: onList,
-              style: OutlinedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 padding: EdgeInsets.zero,
+                backgroundColor: kAccentColor,
+                foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Icon(Icons.format_list_bulleted_rounded),
+              child: const Icon(Icons.format_list_bulleted_rounded, size: 24),
             ),
           ),
           const SizedBox(width: 12),
