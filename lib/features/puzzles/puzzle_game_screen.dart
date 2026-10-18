@@ -134,11 +134,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     _ply = _positions.length - 1;
   }
 
-  void _playMoveFeedback(Position before, NormalMove move, Position after, bool isUser) {
+  void _playMoveFeedback(
+    Position before,
+    NormalMove move,
+    Position after,
+    bool isUser,
+  ) {
     final piece = before.board.pieceAt(move.from);
     final target = before.board.pieceAt(move.to);
     final isCastle =
-        piece?.role == Role.king && target != null && target.color == piece?.color;
+        piece?.role == Role.king &&
+        target != null &&
+        target.color == piece?.color;
     final isCapture = target != null && !isCastle;
     final isCheck = after.isCheck;
 
@@ -245,10 +252,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     SoundService.instance.buzzMedium();
     if (mounted) setState(() => _solved = true);
     unawaited(
-      PuzzleProgressStore.instance.recordSolved(
-        puzzle,
-        clean: _mistakes == 0,
-      ),
+      PuzzleProgressStore.instance.recordSolved(puzzle, clean: _mistakes == 0),
     );
   }
 
@@ -331,34 +335,40 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           : SafeArea(
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: _StatusLine(
-                      text: _statusText,
-                      whiteToMove: _position.turn == Side.white,
-                      highlight: _solved
-                          ? const Color(0xFF3CB371)
-                          : _mistakeFlash
-                          ? Colors.redAccent
-                          : null,
-                    ),
-                  ),
                   Expanded(
                     child: Center(
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: PuzzleBoard(
-                          position: _position,
-                          flipped: _startTurn == Side.black,
-                          interactive: _atTip && !_busy && !_solved,
-                          onMove: _onUserMove,
-                          lastMove: _lastMoves[_ply],
-                          hintFrom: hintFrom,
-                          hintTo: hintTo,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            child: _StatusLine(
+                              text: _statusText,
+                              whiteToMove: _position.turn == Side.white,
+                              highlight: _solved
+                                  ? const Color(0xFF3CB371)
+                                  : _mistakeFlash
+                                  ? Colors.redAccent
+                                  : null,
+                            ),
+                          ),
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: PuzzleBoard(
+                              position: _position,
+                              flipped: _startTurn == Side.black,
+                              interactive: _atTip && !_busy && !_solved,
+                              onMove: _onUserMove,
+                              lastMove: _lastMoves[_ply],
+                              hintFrom: hintFrom,
+                              hintTo: hintTo,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+
                   if (_solved)
                     _SolvedBar(
                       hasNext: _index + 1 < _puzzleCount,
