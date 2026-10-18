@@ -49,3 +49,11 @@ packages/**/android/local.properties
 
 .env
 /assets/nnue
+
+# Python virtualenv and generator output
+.venv/
+venv/
+env/
+__pycache__/
+*.egg-info/
+.pytest_cache/
