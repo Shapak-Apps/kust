@@ -21,8 +21,7 @@ class EvaluationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double share = score?.whiteShare ?? 0.5;
-    if (!whiteOnLeft) share = 1.0 - share;
+    final share = score?.whiteShare ?? 0.5;
 
     return SizedBox(
       height: height,
@@ -68,11 +67,14 @@ class EvaluationBar extends StatelessWidget {
 
                       if (showLabel)
                         Positioned(
-                          left: 8,
+                          left: whiteOnLeft ? 8 : null,
+                          right: whiteOnLeft ? null : 8,
                           top: 0,
                           bottom: 0,
                           child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: whiteOnLeft
+                                ? Alignment.centerLeft
+                                : Alignment.centerRight,
                             child: Text(
                               score?.label ?? '0.00',
                               style: const TextStyle(
