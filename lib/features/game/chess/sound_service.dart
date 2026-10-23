@@ -33,6 +33,8 @@ class SoundService {
   );
 
   final Map<String, AudioPlayer> _players = {};
+  bool soundEnabled = true;
+  bool hapticsEnabled = true;
   bool _warmedUp = false;
   Future<void>? _warmupFuture;
 
@@ -64,6 +66,7 @@ class SoundService {
   }
 
   Future<void> _play(String name) async {
+    if (!soundEnabled) return;
     try {
       if (!_warmedUp) await warmUp();
       final player = _players[name];
@@ -84,6 +87,7 @@ class SoundService {
   }
 
   void buzz({bool heavy = false}) {
+    if (!hapticsEnabled) return;
     try {
       if (heavy) {
         HapticFeedback.heavyImpact();
@@ -94,6 +98,7 @@ class SoundService {
   }
 
   void buzzMedium() {
+    if (!hapticsEnabled) return;
     try {
       HapticFeedback.mediumImpact();
     } catch (_) {}

@@ -15,15 +15,13 @@ import 'package:Kust/features/game/chess/move_record.dart';
 import 'package:Kust/features/game/evaluation_bar.dart';
 import 'package:Kust/features/game/more_floating_menu.dart';
 import 'package:Kust/features/game/time_control.dart';
-import 'package:Kust/theme.dart';
+import 'package:Kust/ui/kust_button.dart';
+import 'package:Kust/ui/kust_sheet.dart';
+import 'package:Kust/ui/kust_top_bar.dart';
+import 'package:Kust/ui/tokens.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
-
-const Color kDarkGameBackground = Color(0xFF252525);
-
-const Color kAccentYellow = primaryGold;
-const Color kDarkGameAppBar = primaryGold;
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({
@@ -128,65 +126,68 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _confirmResign() {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Resign'),
-          content: const Text('Are you sure you want to resign?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                ref.read(chessControllerProvider.notifier).resign();
-              },
-              child: const Text('Resign'),
-            ),
-          ],
-        );
-      },
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const KustSheetHeader(
+            title: 'Resign this game?',
+            subtitle: 'The game will end and count as a loss.',
+          ),
+          KustButton(
+            label: 'Resign',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              ref.read(chessControllerProvider.notifier).resign();
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: 'Keep playing',
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheetContext).pop(),
+          ),
+        ],
+      ),
     );
   }
 
   void _showResultDialog(String title, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                context.go('/play');
-              },
-              child: const Text('Back to lobby'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                final controller = ref.read(chessControllerProvider.notifier);
-                if (widget.isLocal) {
-                  controller.startLocalGame(timeControl: widget.timeControl);
-                } else {
-                  controller.startGame(
-                    widget.bot!,
-                    playerSide: widget.playerSide,
-                    practiceMode: widget.practiceMode,
-                  );
-                }
-              },
-              child: const Text('Rematch'),
-            ),
-          ],
-        );
-      },
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KustSheetHeader(title: title, subtitle: message),
+          KustButton(
+            label: 'Rematch',
+            icon: Icons.refresh_rounded,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              final controller = ref.read(chessControllerProvider.notifier);
+              if (widget.isLocal) {
+                controller.startLocalGame(timeControl: widget.timeControl);
+              } else {
+                controller.startGame(
+                  widget.bot!,
+                  playerSide: widget.playerSide,
+                  practiceMode: widget.practiceMode,
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: 'Back to lobby',
+            style: KustButtonStyle.outline,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              context.go('/play');
+            },
+          ),
+        ],
+      ),
     ).then((_) {
       if (mounted) {
         setState(() {
@@ -273,8 +274,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ),
     );
     final status = screen.status;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final isFinished =
         status == GameStatus.checkmate ||
         status == GameStatus.draw ||
@@ -286,106 +285,127 @@ class _GameScreenState extends ConsumerState<GameScreen>
         : oppositeSide(widget.playerSide);
     final bottomSide = widget.isLocal ? Side.white : widget.playerSide;
 
+    final k = context.k;
     return Scaffold(
-      backgroundColor: isDark ? kDarkGameBackground : null,
-      appBar: AppBar(
-        backgroundColor: isDark ? kDarkGameAppBar : kAccentYellow,
-        foregroundColor: const Color(0xFF181A1B),
-        title: Text(widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}'),
-        actions: [
-          if (status == GameStatus.playing)
-            IconButton(
-              tooltip: 'Resign',
-              onPressed: _confirmResign,
-              icon: const Icon(Icons.flag_rounded),
+      backgroundColor: k.bg,
+      body: Column(
+        children: [
+          KustTopBar(
+            title: widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
+            subtitle: widget.isLocal
+                ? null
+                : '${widget.bot!.elo} Elo${widget.practiceMode ? ' · Practice' : ''}',
+            leading: KustIconButton(
+              icon: Icons.arrow_back_rounded,
+              label: 'Leave game',
+              onTap: () {
+                if (status == GameStatus.playing) {
+                  _confirmResign();
+                } else {
+                  context.go('/play');
+                }
+              },
             ),
-          if (isFinished && !_hasDismissedResultDialog)
-            IconButton(
-              tooltip: 'Show result',
-              onPressed: () =>
-                  _showEndDialogForState(ref.read(chessControllerProvider)),
-              icon: const Icon(Icons.info_outline_rounded),
-            ),
-          if (isFinished && _hasDismissedResultDialog)
-            IconButton(
-              tooltip: 'Back to lobby',
-              onPressed: () => context.go('/play'),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (screen.eval && (widget.isLocal || widget.practiceMode))
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _EvalBarSlot(whiteOnLeft: bottomSide == Side.white),
-              ),
-            const _HistorySlot(),
-            if (screen.practice && screen.feedback)
-              const SizedBox(
-                height: 24,
-                child: Stack(children: [_FeedbackSlot()]),
-              ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final availableHeight =
-                      constraints.maxHeight - (2 * kPlayerBarHeight) - 16;
-                  final maxSide = math.min(
-                    constraints.maxWidth,
-                    availableHeight,
-                  );
-                  final side = math.max(0.0, math.min(maxSide, kBoardMaxWidth));
-
-                  return Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: SizedBox(
-                        width: side,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _PlayerBar(
-                              side: topSide,
-                              name: widget.isLocal ? 'Black' : widget.bot!.name,
-                              subtitle: widget.isLocal
-                                  ? null
-                                  : '${widget.bot!.elo} Elo',
-                              avatarPath: widget.isLocal
-                                  ? null
-                                  : widget.bot!.imagePath,
-                              thinkingText: 'thinking',
-                            ),
-                            SizedBox(
-                              width: side,
-                              height: side,
-                              child: status == GameStatus.loading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : const ChessBoard(),
-                            ),
-                            _PlayerBar(
-                              side: bottomSide,
-                              name: widget.isLocal ? 'White' : 'You',
-                            ),
-                          ],
-                        ),
+            trailing: [
+              if (status == GameStatus.playing)
+                KustIconButton(
+                  icon: Icons.flag_outlined,
+                  label: 'Resign',
+                  onTap: _confirmResign,
+                ),
+              if (isFinished && !_hasDismissedResultDialog)
+                KustIconButton(
+                  icon: Icons.emoji_events_outlined,
+                  label: 'Show result',
+                  onTap: () =>
+                      _showEndDialogForState(ref.read(chessControllerProvider)),
+                ),
+            ],
+          ),
+          Expanded(
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  if (screen.eval && (widget.isLocal || widget.practiceMode))
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: _EvalBarSlot(
+                        whiteOnLeft: bottomSide == Side.white,
                       ),
                     ),
-                  );
-                },
+                  const _HistorySlot(),
+                  if (screen.practice && screen.feedback)
+                    const SizedBox(
+                      height: 24,
+                      child: Stack(children: [_FeedbackSlot()]),
+                    ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final availableHeight =
+                            constraints.maxHeight - (2 * kPlayerBarHeight) - 16;
+                        final maxSide = math.min(
+                          constraints.maxWidth,
+                          availableHeight,
+                        );
+                        final side = math.max(
+                          0.0,
+                          math.min(maxSide, kBoardMaxWidth),
+                        );
+
+                        return Align(
+                          alignment: Alignment.center,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: SizedBox(
+                              width: side,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _PlayerBar(
+                                    side: topSide,
+                                    name: widget.isLocal
+                                        ? 'Black'
+                                        : widget.bot!.name,
+                                    subtitle: widget.isLocal
+                                        ? null
+                                        : '${widget.bot!.elo} Elo',
+                                    avatarPath: widget.isLocal
+                                        ? null
+                                        : widget.bot!.imagePath,
+                                    thinkingText: 'thinking',
+                                  ),
+                                  SizedBox(
+                                    width: side,
+                                    height: side,
+                                    child: status == GameStatus.loading
+                                        ? const Center(
+                                            child: CircularProgressIndicator(),
+                                          )
+                                        : const ChessBoard(),
+                                  ),
+                                  _PlayerBar(
+                                    side: bottomSide,
+                                    name: widget.isLocal ? 'White' : 'You',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  _ControlsBar(
+                    isLocal: widget.isLocal,
+                    practiceMode: widget.practiceMode,
+                  ),
+                ],
               ),
             ),
-            _ControlsBar(
-              isLocal: widget.isLocal,
-              practiceMode: widget.practiceMode,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -398,7 +418,9 @@ class _EvalBarSlot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final score = ref.watch(chessControllerProvider.select((g) => g.evaluation));
+    final score = ref.watch(
+      chessControllerProvider.select((g) => g.evaluation),
+    );
     return EvaluationBar(score: score, whiteOnLeft: whiteOnLeft);
   }
 }
@@ -448,62 +470,55 @@ class _ControlsBar extends ConsumerWidget {
       ),
     );
     final controller = ref.read(chessControllerProvider.notifier);
-    final hintBlockedByPractice = !s.practice;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          IconButton(
-            tooltip: 'Previous move',
-            onPressed: s.cursor > 0 ? controller.analysisMoveBack : null,
-            icon: Opacity(
-              opacity: s.cursor > 0 ? 1.0 : 0.35,
-              child: const Icon(Icons.arrow_left_rounded),
-            ),
+          KustIconButton(
+            label: 'Previous move',
+            onTap: s.cursor > 0 ? controller.analysisMoveBack : null,
+            icon: Icons.chevron_left_rounded,
           ),
           if (isLocal || practiceMode)
-            IconButton(
-              tooltip: hintBlockedByPractice && !isLocal
-                  ? 'Take back (Practice mode only)'
-                  : 'Take back',
-              onPressed: s.canUndo ? controller.undoLastMove : null,
-              icon: Opacity(
-                opacity: s.canUndo ? 1.0 : 0.35,
-                child: const Icon(Icons.undo_rounded),
-              ),
+            KustIconButton(
+              label: 'Take back',
+              icon: Icons.undo_rounded,
+              onTap: s.canUndo ? controller.undoLastMove : null,
             ),
           if (!isLocal && practiceMode)
-            IconButton(
-              tooltip: hintBlockedByPractice
-                  ? 'Hint (Practice mode only)'
-                  : 'Hint',
-              onPressed: s.hintEnabled ? controller.requestHint : null,
-              icon: s.hintThinking && !hintBlockedByPractice
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Opacity(
-                      opacity: (s.hintEnabled || s.hintThinking) ? 1.0 : 0.35,
-                      child: const Icon(Icons.lightbulb_rounded),
+            s.hintThinking
+                ? SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: context.k.accent,
+                        ),
+                      ),
                     ),
-            ),
+                  )
+                : KustIconButton(
+                    label: 'Hint',
+                    icon: Icons.lightbulb_outline_rounded,
+                    filled: s.hintEnabled,
+                    onTap: s.hintEnabled ? controller.requestHint : null,
+                  ),
           if (isLocal || practiceMode)
-            IconButton(
-              tooltip: 'More',
-              onPressed: () => MoreFloatingMenu.show(context),
-              icon: const Icon(Icons.more_vert_rounded),
+            KustIconButton(
+              label: 'Game options',
+              icon: Icons.tune_rounded,
+              onTap: () => MoreFloatingMenu.show(context),
             ),
-          IconButton(
-            tooltip: 'Next move',
-            onPressed: s.analysisActive ? controller.analysisMoveNext : null,
-            icon: Opacity(
-              opacity: s.analysisActive ? 1.0 : 0.35,
-              child: const Icon(Icons.arrow_right_rounded),
-            ),
+          KustIconButton(
+            label: 'Next move',
+            icon: Icons.chevron_right_rounded,
+            onTap: s.analysisActive ? controller.analysisMoveNext : null,
           ),
         ],
       ),
@@ -653,10 +668,12 @@ class _PlayerBar extends ConsumerWidget {
   Widget _buildAvatar(ThemeData theme) {
     if (avatarPath != null && avatarPath!.isNotEmpty) {
       return ClipRRect(
+        borderRadius: BorderRadius.circular(KustSpace.rSmall),
         child: Image.asset(
           avatarPath!,
           width: 40,
           height: 40,
+          cacheWidth: 120,
           fit: BoxFit.cover,
         ),
       );
@@ -667,11 +684,14 @@ class _PlayerBar extends ConsumerWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(KustSpace.rSmall),
+        ),
         child: Icon(
           Icons.person_rounded,
           size: 24,
-          color: theme.colorScheme.onSecondaryContainer,
+          color: theme.colorScheme.onSurface,
         ),
       ),
     );
@@ -703,7 +723,8 @@ class _ClockChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(KustSpace.rSmall),
+        border: Border.all(color: context.k.line),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

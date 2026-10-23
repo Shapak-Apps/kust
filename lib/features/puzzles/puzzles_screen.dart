@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Kust/core/storage/puzzle_progress_store.dart';
-import 'package:Kust/features/play/play_screen.dart';
+import 'package:Kust/ui/kust_button.dart';
+import 'package:Kust/ui/kust_controls.dart';
+import 'package:Kust/ui/kust_sheet.dart';
+import 'package:Kust/ui/kust_nav_bar.dart';
+import 'package:Kust/ui/kust_top_bar.dart';
+import 'package:Kust/ui/tokens.dart';
 import 'package:Kust/features/puzzles/puzzle_data.dart';
 
 const int kPuzzleLevel = 1;
@@ -10,7 +15,6 @@ const double _nodeSpacing = 112;
 const double _nodeSize = 68;
 const double _pathPadding = 24;
 const List<double> _zigzag = [0.5, 0.25, 0.5, 0.75];
-const Color _solvedColor = Color(0xFF3CB371);
 
 double _pathHeight(int count) {
   return count * _nodeSpacing + _nodeSpacing + _pathPadding * 2;
@@ -23,7 +27,7 @@ double _nodeCenterY(int index, int count) {
 }
 
 int _currentIndex(PuzzleLevel level, PuzzleProgress progress) {
-  final index = level.puzzles.indexWhere((p) => !progress.isSolved(p.id));
+  final index = level.puzzles.indexWhere((p) => !progress.isCompleted(p.id));
   return index == -1 ? level.puzzles.length - 1 : index;
 }
 
@@ -43,7 +47,7 @@ class PuzzlesScreen extends StatefulWidget {
 
 class _PuzzlesScreenState extends State<PuzzlesScreen> {
   final ScrollController _scroll = ScrollController();
-  final Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
+  late Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
     kPuzzleLevel,
   );
   bool _initialJumpDone = false;
@@ -77,39 +81,49 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     PuzzleProgress progress,
     int current,
   ) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
+    showKustSheet<void>(
+      context,
       builder: (sheetContext) {
-        return SafeArea(
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: level.puzzles.length,
-            itemBuilder: (itemContext, index) {
-              final puzzle = level.puzzles[index];
-              final locked = index > current;
-              final solved = progress.isSolved(puzzle.id);
-              return ListTile(
-                enabled: !locked,
-                leading: Icon(
-                  solved
-                      ? Icons.check_circle_rounded
-                      : locked
-                      ? Icons.lock_rounded
-                      : Icons.play_circle_rounded,
-                  color: solved ? _solvedColor : null,
+        final k = sheetContext.k;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            KustSheetHeader(
+              title: 'All puzzles',
+              subtitle:
+                  '${level.puzzles.where((p) => progress.isSolved(p.id)).length} of ${level.puzzles.length} solved',
+            ),
+            for (var index = 0; index < level.puzzles.length; index++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Opacity(
+                  opacity: index > current ? 0.5 : 1,
+                  child: KustOption(
+                    title: 'Puzzle ${index + 1}',
+                    subtitle:
+                        '${_themeLabel(level.puzzles[index].theme)} · ${level.puzzles[index].rating}',
+                    leading: KustIconTile(
+                      progress.isSolved(level.puzzles[index].id)
+                          ? Icons.check_rounded
+                          : progress.isRevealed(level.puzzles[index].id)
+                          ? Icons.visibility_rounded
+                          : index > current
+                          ? Icons.lock_rounded
+                          : Icons.play_arrow_rounded,
+                    ),
+                    trailing: progress.isSolved(level.puzzles[index].id)
+                        ? Icon(Icons.check_circle_rounded, color: k.success)
+                        : const SizedBox.shrink(),
+                    onTap: index > current
+                        ? null
+                        : () {
+                            Navigator.pop(sheetContext);
+                            _openPuzzle(context, index);
+                          },
+                  ),
                 ),
-                title: Text('Puzzle ${index + 1}'),
-                subtitle: Text(
-                  '${_themeLabel(puzzle.theme)} · ${puzzle.rating}',
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  _openPuzzle(context, index);
-                },
-              );
-            },
-          ),
+              ),
+          ],
         );
       },
     );
@@ -117,84 +131,107 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.extension_rounded, color: kAccentColor),
-            SizedBox(width: 8),
-            Text('Puzzles', style: TextStyle(fontWeight: FontWeight.w800)),
-          ],
-        ),
+    final k = context.k;
+    return ColoredBox(
+      color: k.bg,
+      child: Column(
+        children: [
+          const KustTopBar(
+            large: true,
+            title: 'Puzzles',
+            subtitle: 'Sharpen your tactics',
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: KustNavBar.clearance(context)),
+              child: _body(context),
+            ),
+          ),
+        ],
       ),
-      body: FutureBuilder<PuzzleLevel>(
-        future: _levelFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('Could not load puzzles'));
-          }
-          final level = snapshot.data;
-          if (level == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (level.puzzles.isEmpty) {
-            return const Center(child: Text('No puzzles yet'));
-          }
-          return ValueListenableBuilder(
-            valueListenable: PuzzleProgressStore.instance.listenable(),
-            builder: (context, _, _) {
-              final progress = PuzzleProgressStore.instance.load();
-              final current = _currentIndex(level, progress);
-              final count = level.puzzles.length;
+    );
+  }
 
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!_initialJumpDone && mounted) {
-                  _initialJumpDone = true;
-                  _scrollTo(current, count);
-                }
-              });
-
-              return Column(
-                children: [
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        SingleChildScrollView(
-                          controller: _scroll,
-                          child: _PuzzlePath(
-                            level: level,
-                            progress: progress,
-                            currentIndex: current,
-                            onOpen: (index) => _openPuzzle(context, index),
-                          ),
-                        ),
-                        Positioned(
-                          right: 16,
-                          bottom: 16,
-                          child: FloatingActionButton.small(
-                            heroTag: 'puzzles-jump-to-current',
-                            backgroundColor: kAccentColor,
-                            foregroundColor: Colors.black,
-                            onPressed: () => _scrollTo(current, count),
-                            child: const Icon(Icons.arrow_upward_rounded),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _StatsBar(progress: progress),
-                  _ActionBar(
-                    onSolve: () => _openPuzzle(context, current),
-                    onList: () => _showList(context, level, progress, current),
-                  ),
-                ],
-              );
-            },
+  Widget _body(BuildContext context) {
+    return FutureBuilder<PuzzleLevel>(
+      future: _levelFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return _StateMessage(
+            icon: Icons.cloud_off_rounded,
+            message: 'Could not load puzzles',
+            actionLabel: 'Try again',
+            onAction: () => setState(() {
+              _levelFuture = PuzzleRepository.instance.loadLevel(kPuzzleLevel);
+            }),
           );
-        },
-      ),
+        }
+        final level = snapshot.data;
+        if (level == null) {
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: context.k.accent,
+            ),
+          );
+        }
+        if (level.puzzles.isEmpty) {
+          return const _StateMessage(
+            icon: Icons.extension_off_rounded,
+            message: 'No puzzles yet. Check back soon.',
+          );
+        }
+        return ValueListenableBuilder(
+          valueListenable: PuzzleProgressStore.instance.listenable(),
+          builder: (context, _, _) {
+            final progress = PuzzleProgressStore.instance.load();
+            final current = _currentIndex(level, progress);
+            final count = level.puzzles.length;
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!_initialJumpDone && mounted) {
+                _initialJumpDone = true;
+                _scrollTo(current, count);
+              }
+            });
+
+            return Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      SingleChildScrollView(
+                        controller: _scroll,
+                        child: _PuzzlePath(
+                          level: level,
+                          progress: progress,
+                          currentIndex: current,
+                          onOpen: (index) => _openPuzzle(context, index),
+                        ),
+                      ),
+                      Positioned(
+                        right: 16,
+                        bottom: 16,
+                        child: KustIconButton(
+                          icon: Icons.my_location_rounded,
+                          label: 'Jump to current puzzle',
+                          filled: true,
+                          onTap: () => _scrollTo(current, count),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _StatsBar(progress: progress),
+                _ActionBar(
+                  onSolve: () => _openPuzzle(context, current),
+                  onList: () => _showList(context, level, progress, current),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -242,6 +279,7 @@ class _PuzzlePath extends StatelessWidget {
                   child: _PuzzleNode(
                     index: i,
                     solved: progress.isSolved(level.puzzles[i].id),
+                    revealed: progress.isRevealed(level.puzzles[i].id),
                     current: i == currentIndex,
                     locked: i > currentIndex,
                     onTap: () => onOpen(i),
@@ -286,6 +324,7 @@ class _PuzzleNode extends StatelessWidget {
   const _PuzzleNode({
     required this.index,
     required this.solved,
+    required this.revealed,
     required this.current,
     required this.locked,
     required this.onTap,
@@ -293,67 +332,79 @@ class _PuzzleNode extends StatelessWidget {
 
   final int index;
   final bool solved;
+  final bool revealed;
   final bool current;
   final bool locked;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fill = solved
-        ? _solvedColor
+    final k = context.k;
+    final Color fill = solved
+        ? k.success
+        : revealed
+        ? k.muted
         : locked
-        ? scheme.surfaceContainerHighest
-        : kAccentColor;
+        ? k.surfaceAlt
+        : k.accent;
 
     final Widget center = solved
-        ? const Icon(Icons.check_rounded, color: Colors.white, size: 34)
+        ? const Icon(Icons.check_rounded, color: Colors.white, size: 32)
+        : revealed
+        ? const Icon(Icons.visibility_rounded, color: Colors.white, size: 28)
         : locked
-        ? Icon(Icons.lock_rounded, color: scheme.onSurfaceVariant)
-        : Text(
-            '${index + 1}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.black,
-            ),
-          );
+        ? Icon(Icons.lock_rounded, color: k.muted, size: 24)
+        : Text('${index + 1}', style: k.title.copyWith(color: k.accentInk));
 
-    return GestureDetector(
-      onTap: locked ? null : onTap,
-      child: SizedBox(
-        width: _nodeSize,
-        height: _nodeSize,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: fill,
-                border: Border.all(color: scheme.surface, width: 4),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, offset: Offset(0, 4)),
-                ],
-              ),
-              child: Center(child: center),
-            ),
-            if (current)
-              Positioned(
-                right: -6,
-                top: -6,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.surface,
-                    border: Border.all(color: kAccentColor, width: 2),
-                  ),
-                  child: const Icon(Icons.person_rounded, size: 18),
+    final status = solved
+        ? 'solved'
+        : revealed
+        ? 'solution shown'
+        : locked
+        ? 'locked'
+        : 'available';
+
+    return Semantics(
+      button: !locked,
+      label: 'Puzzle ${index + 1}, $status',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: locked ? null : onTap,
+        child: SizedBox(
+          width: _nodeSize,
+          height: _nodeSize,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: fill,
+                  border: Border.all(color: k.bg, width: 4),
                 ),
+                child: Center(child: center),
               ),
-          ],
+              if (current)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: k.ink,
+                      border: Border.all(color: k.bg, width: 3),
+                    ),
+                    child: Icon(
+                      Icons.play_arrow_rounded,
+                      size: 14,
+                      color: k.bg,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -367,36 +418,23 @@ class _StatsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'RATING',
-                  style: TextStyle(
-                    fontSize: 11,
-                    letterSpacing: 1,
-                    color: muted,
-                  ),
-                ),
-                Text(
-                  '${progress.rating}',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                Text('RATING', style: k.caption.copyWith(letterSpacing: 1)),
+                Text('${progress.rating}', style: k.display),
               ],
             ),
           ),
           _Stat(label: 'HIGHEST', value: '${progress.highest}'),
-          const SizedBox(width: 20),
-          _Stat(label: 'ATTEMPTS', value: '${progress.attempts}'),
+          const SizedBox(width: 24),
+          _Stat(label: 'SOLVED', value: '${progress.solved.length}'),
         ],
       ),
     );
@@ -411,18 +449,12 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    final k = context.k;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, letterSpacing: 1, color: muted),
-        ),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-        ),
+        Text(label, style: k.caption.copyWith(letterSpacing: 1)),
+        Text(value, style: k.title),
       ],
     );
   }
@@ -437,46 +469,56 @@ class _ActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Row(
         children: [
-          SizedBox(
-            width: 56,
-            height: 56,
-            child: FilledButton(
-              onPressed: onList,
-              style: FilledButton.styleFrom(
-                padding: EdgeInsets.zero,
-                backgroundColor: kAccentColor,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: const Icon(Icons.format_list_bulleted_rounded, size: 24),
-            ),
+          KustIconButton(
+            icon: Icons.format_list_bulleted_rounded,
+            label: 'All puzzles',
+            size: 52,
+            onTap: onList,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: SizedBox(
-              height: 56,
-              child: FilledButton(
-                onPressed: onSolve,
-                style: FilledButton.styleFrom(
-                  backgroundColor: kAccentColor,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: const Text(
-                  'Solve Puzzles',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
+            child: KustButton(label: 'Solve puzzles', onTap: onSolve),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StateMessage extends StatelessWidget {
+  const _StateMessage({
+    required this.icon,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 40, color: k.muted),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center, style: k.body),
+            if (actionLabel != null) ...[
+              const SizedBox(height: 20),
+              KustButton(label: actionLabel!, onTap: onAction, expand: false),
+            ],
+          ],
+        ),
       ),
     );
   }

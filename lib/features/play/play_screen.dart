@@ -1,56 +1,25 @@
+import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:Kust/core/storage/app_storage.dart';
-import 'package:Kust/features/play/app_bar.dart';
+import 'package:Kust/features/game/game_args.dart';
+import 'package:Kust/features/play/bot_card.dart';
 import 'package:Kust/features/play/pick_opponent_modal.dart';
 import 'package:Kust/features/play/pick_side_modal.dart';
-import 'package:dartchess/dartchess.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:Kust/features/play/play_mode_modal.dart';
 import 'package:Kust/features/play/pick_time_modal.dart';
-import 'package:Kust/features/game/game_args.dart';
+import 'package:Kust/features/play/play_mode_modal.dart';
+import 'package:Kust/ui/kust_button.dart';
+import 'package:Kust/ui/kust_controls.dart';
+import 'package:Kust/ui/kust_sheet.dart';
+import 'package:Kust/ui/kust_nav_bar.dart';
+import 'package:Kust/ui/kust_top_bar.dart';
+import 'package:Kust/ui/tokens.dart';
+import 'package:Kust/widgets/more_sheet.dart';
 
-const Color kAccentColor = Color(0xFFFFBB00);
-const double kFlagSize = 14;
-
-const List<Bot> _challengeBots = [
-  Bot(
-    id: 'elizabeth',
-    name: 'Elizabeth',
-    elo: 600,
-    imagePath: 'assets/bots/Elizabeth.png',
-  ),
-  Bot(id: 'mark', name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.png'),
-  Bot(id: 'apex', name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.png'),
-  Bot(id: 'karl', name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.png'),
-  Bot(id: 'maya', name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.png'),
-  Bot(id: 'yura', name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.png'),
-];
-
-const List<Bot> _tkmChallengeBots = [
-  Bot(
-    id: 'bahar',
-    name: 'Bahar',
-    elo: 400,
-    imagePath: 'assets/bots/Bahar.png',
-    isTkm: true,
-  ),
-  Bot(
-    id: 'enejan',
-    name: 'Enejan',
-    elo: 1000,
-    imagePath: 'assets/bots/Enejan.png',
-    isTkm: true,
-  ),
-  Bot(
-    id: 'berdi',
-    name: 'Berdi',
-    elo: 2000,
-    imagePath: 'assets/bots/Berdi.png',
-    isTkm: true,
-  ),
-];
+/// Kept for the puzzle screens that still reference it.
+const Color kAccentColor = KustTokens.gold;
 
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
@@ -63,104 +32,45 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showWelcomeDialog();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showWelcome());
   }
 
-  Future<void> _showWelcomeDialog() async {
+  Future<void> _showWelcome() async {
     final prefs = await SharedPreferences.getInstance();
-    final alreadyShown = prefs.getBool('welcome_modal_shown') ?? false;
-
-    if (alreadyShown || !mounted) return;
-
+    if (prefs.getBool('welcome_modal_shown') ?? false) return;
+    if (!mounted) return;
     await prefs.setBool('welcome_modal_shown', true);
-
     if (!mounted) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        final theme = Theme.of(context);
-
-        return Dialog(
-          backgroundColor: theme.dialogBackgroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: kAccentColor,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 34,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                const Text(
-                  'Welcome to Kust!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Everything is ready. Find an opponent, '
-                  'play a game and start improving your chess.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.5,
-                    color: theme.textTheme.bodyMedium?.color?.withValues(
-                      alpha: 0.65,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: kAccentColor,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Let’s play',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ),
-              ],
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) {
+        final k = sheetContext.k;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: k.accent,
+                borderRadius: BorderRadius.circular(KustSpace.rMedium),
+              ),
+              child: Icon(Icons.auto_awesome_rounded, color: k.accentInk),
             ),
-          ),
+            const SizedBox(height: 20),
+            Text('Welcome to Küşt', style: k.display),
+            const SizedBox(height: 8),
+            Text(
+              'Play bots, solve puzzles and get better one move at a time.',
+              style: k.body.copyWith(color: k.muted),
+            ),
+            const SizedBox(height: 24),
+            KustButton(
+              label: 'Let’s play',
+              onTap: () => Navigator.of(sheetContext).pop(),
+            ),
+          ],
         );
       },
     );
@@ -231,234 +141,155 @@ class _PlayScreenState extends State<PlayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: MyAppBar(),
+    final k = context.k;
+    final name = AppStorage.instance.guestName;
 
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Hello Guest!',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+    return ColoredBox(
+      color: k.bg,
+      child: Column(
+        children: [
+          KustTopBar(
+            large: true,
+            title: 'Play',
+            subtitle: 'Hello, $name',
+            trailing: [
+              KustIconButton(
+                icon: Icons.tune_rounded,
+                label: 'Settings',
+                onTap: () => showSettingsSheet(context),
               ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text('You have played 10 games, wanna play again?'),
+            ],
+          ),
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: _HeroCard(onPlay: _showPlayChooser),
                   ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 120,
-                    child: TextButton(
-                      onPressed: _showPlayChooser,
-                      style: ButtonStyle(
-                        minimumSize: WidgetStateProperty.all(
-                          const Size(double.infinity, 50),
+                ),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: KustSectionLabel('Challenge a bot'),
+                  ),
+                ),
+                _botGrid(kInternationalBots),
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: KustSectionLabel('New students from Turkmenistan'),
+                  ),
+                ),
+                _botGrid(kTkmBots),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      24,
+                      20,
+                      24 + KustNavBar.clearance(context),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.asset(
+                          'assets/images/banner.png',
+                          fit: BoxFit.cover,
+                          cacheWidth: 900,
                         ),
-                        backgroundColor: WidgetStateProperty.all(kAccentColor),
-                        foregroundColor: WidgetStateProperty.all(Colors.black),
-                        shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      child: const Text(
-                        'Play a game',
-                        style: TextStyle(color: Color(0xFF181A1B)),
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              const Text(
-                'Announcements',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 10),
-
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.asset(
-                    'assets/images/banner.png',
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'Our bots wanna challenge you',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _challengeBots.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 130,
-                  mainAxisExtent: 150,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemBuilder: (context, index) {
-                  final bot = _challengeBots[index];
-                  return _BotChallengeCard(
-                    bot: bot,
-                    onTap: () => _startGameWithBot(bot),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-
-              const Text(
-                'New students from Turkmenistan want to challenge you',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _tkmChallengeBots.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 130,
-                  mainAxisExtent: 150,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemBuilder: (context, index) {
-                  final bot = _tkmChallengeBots[index];
-                  return _BotChallengeCard(
-                    bot: bot,
-                    onTap: () => _startGameWithBot(bot),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 24),
-            ],
+              ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _botGrid(List<Bot> bots) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      sliver: SliverGrid.builder(
+        itemCount: bots.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          mainAxisExtent: 132,
+        ),
+        itemBuilder: (context, i) => RepaintBoundary(
+          child: BotCard(bot: bots[i], onTap: () => _startGameWithBot(bots[i])),
         ),
       ),
     );
   }
 }
 
-class _BotChallengeCard extends StatelessWidget {
-  const _BotChallengeCard({required this.bot, required this.onTap});
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({required this.onPlay});
 
-  final Bot bot;
-  final VoidCallback onTap;
+  final VoidCallback onPlay;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final k = context.k;
+    final total = kInternationalBots.length + kTkmBots.length;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: theme.colorScheme.surface,
-          border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                bot.imagePath,
-                height: 53,
-                width: 53,
-                fit: BoxFit.cover,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: k.accent,
+        borderRadius: BorderRadius.circular(KustSpace.rLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ready for a game?',
+            style: k.title.copyWith(color: k.accentInk),
+          ),
+          const SizedBox(height: 4),
+          ValueListenableBuilder(
+            valueListenable: AppStorage.instance.botProgressListenable(),
+            builder: (context, _, _) => Text(
+              'Bots beaten: ${AppStorage.instance.beatenBotIds.length} of $total',
+              style: k.body.copyWith(color: k.accentInk.withValues(alpha: 0.7)),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: onPlay,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              height: 52,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: k.accentInk,
+                borderRadius: BorderRadius.circular(KustSpace.rMedium),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.play_arrow_rounded, color: k.accent),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Play a game',
+                    style: k.body.copyWith(
+                      color: k.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 6),
-
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    bot.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontSize:
-                          (theme.textTheme.titleSmall?.fontSize ?? 14) * 1.10,
-                    ),
-                  ),
-                ),
-                if (bot.isTkm) ...[
-                  const SizedBox(width: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(kFlagSize / 2),
-                    child: Image.asset(
-                      'assets/icons/TKM.webp',
-                      width: kFlagSize,
-                      height: kFlagSize,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
-              ],
-            ),
-            const SizedBox(height: 2),
-
-            ValueListenableBuilder(
-              valueListenable: AppStorage.instance.botProgressListenable(),
-              builder: (context, _, _) {
-                final beaten = AppStorage.instance.isBotBeaten(bot.id);
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${bot.elo} Elo',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize:
-                            (theme.textTheme.bodySmall?.fontSize ?? 12) * 1.10,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                    ),
-                    if (beaten) ...[
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.emoji_events_rounded,
-                        size: 15,
-                        color: kAccentColor,
-                      ),
-                    ],
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
