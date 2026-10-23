@@ -37,13 +37,15 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   bool _practice = false;
 
   Widget _grid(List<Bot> bots) {
-    return GridView.count(
+    return GridView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 0.92,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        mainAxisExtent: 132,
+      ),
       children: [
         for (final bot in bots)
           BotCard(

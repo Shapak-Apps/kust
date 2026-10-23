@@ -31,7 +31,7 @@ class BotCard extends StatelessWidget {
         haptic: true,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
             color: selected ? k.accent.withValues(alpha: 0.12) : k.surface,
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
@@ -42,6 +42,7 @@ class BotCard extends StatelessWidget {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(KustSpace.rSmall),

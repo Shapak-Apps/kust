@@ -61,9 +61,7 @@ void main() {
     expect(on, isTrue);
   });
 
-  testWidgets('KustNavBar shows the selected label and selects', (
-    tester,
-  ) async {
+  testWidgets('KustNavBar shows labels and selects', (tester) async {
     int selected = 0;
     await tester.pumpWidget(
       _app(
@@ -87,11 +85,10 @@ void main() {
       ),
     );
     expect(find.text('Play'), findsOneWidget);
-    expect(find.text('Puzzles'), findsNothing);
-    await tester.tap(find.byIcon(Icons.extension_outlined));
+    expect(find.text('Puzzles'), findsOneWidget);
+    await tester.tap(find.text('Puzzles'));
     await tester.pumpAndSettle();
     expect(selected, 1);
-    expect(find.text('Puzzles'), findsOneWidget);
   });
 
   testWidgets('KustSheet opens, shows content and closes on scrim tap', (

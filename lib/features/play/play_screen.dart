@@ -13,6 +13,7 @@ import 'package:Kust/features/play/play_mode_modal.dart';
 import 'package:Kust/ui/kust_button.dart';
 import 'package:Kust/ui/kust_controls.dart';
 import 'package:Kust/ui/kust_sheet.dart';
+import 'package:Kust/ui/kust_nav_bar.dart';
 import 'package:Kust/ui/kust_top_bar.dart';
 import 'package:Kust/ui/tokens.dart';
 import 'package:Kust/widgets/more_sheet.dart';
@@ -184,7 +185,12 @@ class _PlayScreenState extends State<PlayScreen> {
                 _botGrid(kTkmBots),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      24,
+                      20,
+                      24 + KustNavBar.clearance(context),
+                    ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(KustSpace.rMedium),
                       child: AspectRatio(
@@ -215,7 +221,7 @@ class _PlayScreenState extends State<PlayScreen> {
           crossAxisCount: 3,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 0.92,
+          mainAxisExtent: 132,
         ),
         itemBuilder: (context, i) => RepaintBoundary(
           child: BotCard(bot: bots[i], onTap: () => _startGameWithBot(bots[i])),

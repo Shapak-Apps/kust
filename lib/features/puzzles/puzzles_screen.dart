@@ -5,6 +5,7 @@ import 'package:Kust/core/storage/puzzle_progress_store.dart';
 import 'package:Kust/ui/kust_button.dart';
 import 'package:Kust/ui/kust_controls.dart';
 import 'package:Kust/ui/kust_sheet.dart';
+import 'package:Kust/ui/kust_nav_bar.dart';
 import 'package:Kust/ui/kust_top_bar.dart';
 import 'package:Kust/ui/tokens.dart';
 import 'package:Kust/features/puzzles/puzzle_data.dart';
@@ -140,7 +141,12 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             title: 'Puzzles',
             subtitle: 'Sharpen your tactics',
           ),
-          Expanded(child: _body(context)),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: KustNavBar.clearance(context)),
+              child: _body(context),
+            ),
+          ),
         ],
       ),
     );

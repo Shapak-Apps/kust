@@ -5,6 +5,7 @@ import 'package:Kust/features/game/game_screen.dart';
 import 'package:Kust/features/game/game_args.dart';
 import 'package:Kust/features/play/play_screen.dart';
 import 'package:Kust/features/puzzles/puzzle_game_screen.dart';
+import 'package:Kust/features/history/history_screen.dart';
 import 'package:Kust/features/puzzles/puzzles_screen.dart';
 import 'package:Kust/widgets/app_shell.dart';
 
@@ -53,6 +54,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
           GoRoute(
             path: '/puzzles',
             builder: (context, state) => const PuzzlesScreen(),
+          ),
+
+          GoRoute(
+            path: '/history',
+            builder: (context, state) => const HistoryScreen(),
           ),
         ],
       ),

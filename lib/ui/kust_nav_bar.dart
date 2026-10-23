@@ -11,8 +11,9 @@ class KustNavItem {
   final String label;
 }
 
-/// Floating pill navigation. The selected item expands into an accent pill
-/// that shows its label; the rest are icon-only.
+/// Compact floating capsule. Icon over label; the selected item sits in a soft
+/// gold capsule. The "glass" is a translucent fill plus a light inner edge,
+/// not a backdrop blur, so it costs nothing per frame.
 class KustNavBar extends StatelessWidget {
   const KustNavBar({
     super.key,
@@ -25,39 +26,54 @@ class KustNavBar extends StatelessWidget {
   final List<KustNavItem> items;
   final ValueChanged<int> onSelected;
 
+  /// Space content must leave at the bottom so nothing hides under the bar.
+  static double clearance(BuildContext context) =>
+      MediaQuery.of(context).padding.bottom + 64 + 8 + 12;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return ColoredBox(
-      color: k.bg,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: Center(
+          heightFactor: 1,
           child: RepaintBoundary(
             child: Container(
-              height: 64,
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
-                color: k.surface,
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: k.line),
+                color: k.surface.withValues(alpha: isDark ? 0.92 : 0.88),
+                borderRadius: BorderRadius.circular(34),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.white,
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   for (var i = 0; i < items.length; i++)
-                    Expanded(
-                      flex: i == selectedIndex ? 3 : 2,
-                      child: _NavButton(
-                        item: items[i],
-                        selected: i == selectedIndex,
-                        onTap: () {
-                          if (i != selectedIndex) {
-                            HapticFeedback.selectionClick();
-                          }
-                          onSelected(i);
-                        },
-                      ),
+                    _NavButton(
+                      item: items[i],
+                      selected: i == selectedIndex,
+                      onTap: () {
+                        if (i != selectedIndex) {
+                          HapticFeedback.selectionClick();
+                        }
+                        onSelected(i);
+                      },
                     ),
                 ],
               ),
@@ -83,6 +99,11 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Pure gold is too light as text on white; deepen it in light mode.
+    final tint = isDark ? k.accent : const Color(0xFFB07A00);
+    final color = selected ? tint : k.ink;
+
     return Semantics(
       button: true,
       selected: selected,
@@ -92,36 +113,35 @@ class _NavButton extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
+          width: 80,
+          height: 54,
           decoration: BoxDecoration(
-            color: selected ? k.accent : Colors.transparent,
-            borderRadius: BorderRadius.circular(26),
+            color: selected
+                ? k.accent.withValues(alpha: isDark ? 0.18 : 0.22)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(29),
           ),
-          child: Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 selected ? item.selectedIcon : item.icon,
-                size: 22,
-                color: selected ? k.accentInk : k.muted,
+                size: 24,
+                color: color,
               ),
-              if (selected) ...[
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    item.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.clip,
-                    style: k.body.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: k.accentInk,
-                    ),
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                maxLines: 1,
+                style: k.caption.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                  color: color,
                 ),
-              ],
+              ),
             ],
           ),
         ),
