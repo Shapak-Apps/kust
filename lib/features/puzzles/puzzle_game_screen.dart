@@ -4,16 +4,16 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:Kust/core/storage/puzzle_progress_store.dart';
-import 'package:Kust/features/game/chess/sound_service.dart';
-import 'package:Kust/features/puzzles/puzzle_board.dart';
-import 'package:Kust/features/puzzles/puzzle_data.dart';
-import 'package:Kust/features/puzzles/puzzle_session.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_top_bar.dart';
-import 'package:Kust/ui/pressable.dart';
-import 'package:Kust/ui/tokens.dart';
-import 'package:Kust/widgets/more_sheet.dart';
+import 'package:kust/core/storage/puzzle_progress_store.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/features/puzzles/puzzle_session.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/more_sheet.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);

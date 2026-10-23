@@ -3,14 +3,14 @@ import 'dart:math';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
-import 'package:Kust/features/play/bot_card.dart';
-import 'package:Kust/features/play/bots.dart';
-import 'package:Kust/features/play/practice_mode_checkbox.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
+import 'package:kust/features/play/bot_card.dart';
+import 'package:kust/features/play/bots.dart';
+import 'package:kust/features/play/practice_mode_checkbox.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 
-export 'package:Kust/features/play/bots.dart';
+export 'package:kust/features/play/bots.dart';
 
 class PickOpponentModal extends StatefulWidget {
   const PickOpponentModal({super.key, required this.onPlay});

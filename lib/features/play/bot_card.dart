@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/core/storage/app_storage.dart';
-import 'package:Kust/features/play/bots.dart';
-import 'package:Kust/ui/pressable.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/features/play/bots.dart';
+import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/tokens.dart';
 
 /// Compact bot card used on the home screen and in the opponent picker.
 class BotCard extends StatelessWidget {

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 
-import 'package:Kust/core/storage/puzzle_progress_store.dart';
-import 'package:Kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/core/storage/puzzle_progress_store.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
 
 const _a = PuzzleEntry(
   id: 'a',

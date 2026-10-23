@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:Kust/ui/pressable.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/tokens.dart';
 
 /// Replacement for AppBar. Plain layout, no elevation, no tint.
 ///

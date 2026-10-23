@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
 
 class EvaluationBar extends StatelessWidget {
   const EvaluationBar({

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/tokens.dart';
 
 const Color primaryGold = KustTokens.gold;
 

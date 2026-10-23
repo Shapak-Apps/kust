@@ -5,16 +5,18 @@ import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:Kust/core/storage/app_storage.dart';
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
-import 'package:Kust/features/game/chess/bot_policy.dart';
-import 'package:Kust/features/game/chess/chess_engine.dart';
-import 'package:Kust/features/game/chess/chess_helpers.dart';
-import 'package:Kust/features/game/chess/move_feedback.dart';
-import 'package:Kust/features/game/chess/move_record.dart';
-import 'package:Kust/features/game/chess/sound_service.dart';
-import 'package:Kust/features/game/time_control.dart';
-import 'package:Kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/bot_policy.dart';
+import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/move_record.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/features/play/pick_opponent_modal.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -58,6 +60,8 @@ class GameState {
     this.moveFeedbackEnabled = false,
     this.feedbackAnalyzing = false,
     this.pendingPromotion,
+    this.engineFailed = false,
+    this.ratingChange,
   });
 
   final Position position;
@@ -94,6 +98,12 @@ class GameState {
 
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
+
+  /// The engine could not start or stopped responding during a bot game.
+  final bool engineFailed;
+
+  /// Rating points gained or lost in this game, once it has been recorded.
+  final int? ratingChange;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -187,6 +197,8 @@ class GameState {
     bool? moveFeedbackEnabled,
     bool? feedbackAnalyzing,
     ({Square from, Square to})? pendingPromotion,
+    bool? engineFailed,
+    int? ratingChange,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -229,6 +241,8 @@ class GameState {
       pendingPromotion: clearSelection
           ? null
           : (pendingPromotion ?? this.pendingPromotion),
+      engineFailed: engineFailed ?? this.engineFailed,
+      ratingChange: ratingChange ?? this.ratingChange,
     );
   }
 }
@@ -254,6 +268,7 @@ class ChessController extends Notifier<GameState> {
       _isDisposed = true;
       _stopClock();
     });
+    listenSelf(_onStateChanged);
 
     final keepAliveLink = ref.keepAlive();
     Timer? keepAliveTimer;
@@ -569,20 +584,6 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  int _evalToCp(EvalScore score) {
-    if (score.mate != null) {
-      return score.mate! > 0 ? 100000 : -100000;
-    }
-    return score.cp ?? 0;
-  }
-
-  void _clearFeedbackAnalyzing() {
-    if (_isDisposed) return;
-    if (state.feedbackAnalyzing) {
-      state = state.copyWith(feedbackAnalyzing: false);
-    }
-  }
-
   bool _isPlayerMove(MoveRecord played) {
     if (state.mode == GameMode.local) return true;
     return played.side == state.playerSide;
@@ -764,13 +765,18 @@ class ChessController extends Notifier<GameState> {
     unawaited(_loadEvalEnabled());
 
     unawaited(
-      _engine.start().then((_) {
-        if (_isDisposed) return;
-        _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
-        if (state.position.turn != playerSide) {
-          _requestBotMove();
-        }
-      }),
+      _engine
+          .start()
+          .then((_) {
+            if (_isDisposed) return;
+            _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+            if (state.position.turn != playerSide) {
+              _requestBotMove();
+            }
+          })
+          .catchError((Object _) {
+            if (!_isDisposed) state = state.copyWith(engineFailed: true);
+          }),
     );
   }
 
@@ -827,10 +833,15 @@ class ChessController extends Notifier<GameState> {
     final id = ++_evalRequestId;
     final fen = state.position.fen;
 
-    final score = await _engine.evaluateFen(
-      fen,
-      isStale: () => _isDisposed || id != _evalRequestId,
-    );
+    final EvalScore? score;
+    try {
+      score = await _engine.evaluateFen(
+        fen,
+        isStale: () => _isDisposed || id != _evalRequestId,
+      );
+    } catch (_) {
+      return;
+    }
 
     if (_isDisposed || id != _evalRequestId) return;
     if (state.position.fen != fen) return;
@@ -1052,6 +1063,109 @@ class ChessController extends Notifier<GameState> {
     _engine.stopThinking();
   }
 
+  /// Tries to bring the engine back after [GameState.engineFailed].
+  Future<void> retryEngine() async {
+    if (state.mode != GameMode.bot || state.status != GameStatus.playing) {
+      return;
+    }
+    state = state.copyWith(engineFailed: false);
+    try {
+      await _engine.start();
+      if (_isDisposed) return;
+      _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+      if (state.position.turn != state.playerSide && !state.isBotThinking) {
+        _requestBotMove();
+      }
+    } catch (_) {
+      if (!_isDisposed) state = state.copyWith(engineFailed: true);
+    }
+  }
+
+  void _onStateChanged(GameState? previous, GameState next) {
+    if (previous == null) return;
+    final wasPlaying = previous.status == GameStatus.playing;
+    final isOver =
+        next.status != GameStatus.playing && next.status != GameStatus.loading;
+    if (wasPlaying && isOver) {
+      // Outside the notification so state can be updated afterwards.
+      scheduleMicrotask(() => _recordFinishedGame(next));
+    }
+  }
+
+  Future<void> _recordFinishedGame(GameState game) async {
+    if (_isDisposed || game.moves.isEmpty) return;
+    final isLocal = game.mode == GameMode.local;
+
+    final String result;
+    if (game.status == GameStatus.draw) {
+      result = GameRecord.draw;
+    } else {
+      final String? winner;
+      switch (game.status) {
+        case GameStatus.checkmate:
+          winner = game.position.turn == Side.white ? 'black' : 'white';
+        case GameStatus.timeout:
+          final text = game.endReason ?? '';
+          if (isLocal) {
+            winner = text.startsWith('White') ? 'white' : 'black';
+          } else {
+            winner = text.startsWith('You')
+                ? game.playerSide.name
+                : (game.playerSide == Side.white ? 'black' : 'white');
+          }
+        case GameStatus.resigned:
+          winner = game.playerSide == Side.white ? 'black' : 'white';
+        default:
+          winner = null;
+      }
+      if (isLocal) {
+        result = winner == 'white' ? GameRecord.whiteWon : GameRecord.blackWon;
+      } else {
+        result = winner == game.playerSide.name
+            ? GameRecord.win
+            : GameRecord.loss;
+      }
+    }
+
+    int? ratingChange;
+    final bot = game.bot;
+    if (!isLocal && !game.practiceMode && bot != null) {
+      final score = result == GameRecord.win
+          ? 1.0
+          : result == GameRecord.draw
+          ? 0.5
+          : 0.0;
+      ratingChange = await PlayerRatingStore.instance.record(
+        opponent: bot.elo,
+        score: score,
+      );
+      if (_isDisposed) return;
+      state = state.copyWith(ratingChange: ratingChange);
+    }
+
+    final tc = game.timeControl;
+    await GameHistoryStore.instance.add(
+      GameRecord(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        playedAt: DateTime.now().millisecondsSinceEpoch,
+        isLocal: isLocal,
+        result: result,
+        reason: game.endReason ?? '',
+        playerIsWhite: game.playerSide == Side.white,
+        uciMoves: [for (final m in game.moves) m.move.uci],
+        sanMoves: [for (final m in game.moves) m.san],
+        botId: bot?.id,
+        botName: bot?.name,
+        botElo: bot?.elo,
+        practice: game.practiceMode,
+        ratingChange: ratingChange,
+        timeControl: tc == null
+            ? null
+            : '${tc.baseMinutes}+${tc.incrementSeconds}',
+      ),
+    );
+  }
+
   Future<void> requestHint() async {
     if (!state.isPlayerTurn || state.isBotThinking) return;
     if (!state.practiceMode) return;
@@ -1060,7 +1174,15 @@ class ChessController extends Notifier<GameState> {
     final requestId = ++_moveRequestId;
     state = state.copyWith(isHintThinking: true);
 
-    final uci = await _engine.evaluateBestHint(state.position.fen);
+    final String uci;
+    try {
+      uci = await _engine.evaluateBestHint(state.position.fen);
+    } catch (_) {
+      if (!_isDisposed && requestId == _moveRequestId) {
+        state = state.copyWith(isHintThinking: false, engineFailed: true);
+      }
+      return;
+    }
 
     if (_isDisposed || requestId != _moveRequestId) return;
 
@@ -1223,10 +1345,18 @@ class ChessController extends Notifier<GameState> {
     }
 
     if (move == null) {
-      final uci = await _engine.bestMoveForFen(
-        state.position.fen,
-        thinkTime: policy.thinkTime,
-      );
+      final String uci;
+      try {
+        uci = await _engine.bestMoveForFen(
+          state.position.fen,
+          thinkTime: policy.thinkTime,
+        );
+      } catch (_) {
+        if (!_isDisposed && requestId == _moveRequestId) {
+          state = state.copyWith(isBotThinking: false, engineFailed: true);
+        }
+        return;
+      }
 
       if (uci == '(none)' || uci.length < 4) {
         if (_isDisposed || requestId != _moveRequestId) return;

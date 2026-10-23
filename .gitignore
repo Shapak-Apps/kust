@@ -48,7 +48,6 @@ packages/**/ios/Flutter/flutter_export_environment.sh
 packages/**/android/local.properties
 
 .env
-/assets/nnue
 
 # Python virtualenv and generator output
 .venv/
@@ -57,3 +56,10 @@ env/
 __pycache__/
 *.egg-info/
 .pytest_cache/
+# Android release signing
+android/key.properties
+*.jks
+*.keystore
+
+# Legacy local copies of the NNUE networks. They are downloaded at runtime now.
+/assets/nnue

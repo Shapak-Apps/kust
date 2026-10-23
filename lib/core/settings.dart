@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:Kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
 
 /// User-facing preferences. Backed by SharedPreferences.
 class AppSettings {

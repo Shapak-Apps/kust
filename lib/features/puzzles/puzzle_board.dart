@@ -4,8 +4,8 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
-import 'package:Kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/chess_helpers.dart';
 
 const Color _lightSquare = Color(0xFFF0E6D2);
 const Color _darkSquare = Color(0xFFB58863);
@@ -160,8 +160,7 @@ class _PuzzleBoardState extends State<PuzzleBoard> {
 
     final lastMove = widget.lastMove;
     final isLast =
-        lastMove != null &&
-        (square == lastMove.from || square == lastMove.to);
+        lastMove != null && (square == lastMove.from || square == lastMove.to);
     final isSelected = _selected == square;
     final isTarget = _targets.containsKey(square);
     final isHintFrom = widget.hintFrom == square;

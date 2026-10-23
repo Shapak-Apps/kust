@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
-import 'package:Kust/features/game/chess/chess_controller.dart';
-import 'package:Kust/features/game/chess/move_feedback.dart';
-import 'package:Kust/features/game/move_feedback_badge.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/move_feedback_badge.dart';
 
 const Color kLightSquare = Color(0xFFF0E6D2);
 const Color kDarkSquare = Color(0xFFB58863);

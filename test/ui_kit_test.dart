@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:Kust/theme.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_nav_bar.dart';
-import 'package:Kust/ui/kust_sheet.dart';
-import 'package:Kust/ui/kust_top_bar.dart';
+import 'package:kust/theme.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_nav_bar.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/kust_top_bar.dart';
 
 Widget _app(Widget home, {ThemeData? theme}) => MaterialApp(
   theme: theme ?? appTheme,

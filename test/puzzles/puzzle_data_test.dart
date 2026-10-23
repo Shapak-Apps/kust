@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:Kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
 
 const _mateFen = '6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1';
 

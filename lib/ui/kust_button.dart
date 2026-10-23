@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/ui/pressable.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/tokens.dart';
 
 enum KustButtonStyle { primary, secondary, outline }
 

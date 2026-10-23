@@ -14,15 +14,7 @@ const int _kingExchangeValue = 100;
 const int _brilliantMinNetLoss = 2;
 const int _brilliantLosingCp = -150;
 
-enum MoveQuality {
-  brilliant,
-  best,
-  good,
-  great,
-  inaccuracy,
-  mistake,
-  blunder,
-}
+enum MoveQuality { brilliant, best, good, great, inaccuracy, mistake, blunder }
 
 extension MoveQualityStyle on MoveQuality {
   String get label {
@@ -184,11 +176,8 @@ MoveQuality classifyByExpectedPoints({
   int rating = 800,
 }) {
   if (isBestMove) return MoveQuality.best;
-  final lost =
-      (expectedPointsFromCp(bestCp) - expectedPointsFromCp(playedCp)).clamp(
-        0.0,
-        1.0,
-      );
+  final lost = (expectedPointsFromCp(bestCp) - expectedPointsFromCp(playedCp))
+      .clamp(0.0, 1.0);
   final softness = rating < 600
       ? 1.6
       : rating < 1000

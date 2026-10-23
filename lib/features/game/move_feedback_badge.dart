@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 
 class MoveFeedbackBadge extends StatefulWidget {
   const MoveFeedbackBadge({
@@ -63,7 +63,8 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
   @override
   Widget build(BuildContext context) {
     final color = widget.feedback.quality.color;
-    final iconSize = widget.size * (widget.iconScale ?? widget.feedback.quality.iconScale);
+    final iconSize =
+        widget.size * (widget.iconScale ?? widget.feedback.quality.iconScale);
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -94,15 +95,9 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
             width: iconSize,
             height: iconSize,
             fit: BoxFit.contain,
-            colorFilter: const ColorFilter.mode(
-              Colors.white,
-              BlendMode.srcIn,
-            ),
-            placeholderBuilder: (_) => Icon(
-              Icons.star,
-              size: iconSize,
-              color: Colors.white,
-            ),
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            placeholderBuilder: (_) =>
+                Icon(Icons.star, size: iconSize, color: Colors.white),
           ),
         ),
       ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/core/settings.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
+import 'package:kust/core/settings.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 
 Future<void> showSettingsSheet(BuildContext context) {
   return showKustSheet<void>(context, builder: (_) => const _SettingsSheet());

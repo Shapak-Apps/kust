@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:Kust/features/game/chess/chess_controller.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
+import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 
 /// In-game options. Kept under its old name; now a Kust sheet.
 class MoreFloatingMenu extends ConsumerWidget {

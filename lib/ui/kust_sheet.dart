@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/tokens.dart';
 
 /// Shows Kust's own bottom sheet: flat surface, grabber, drag to dismiss.
 /// Built on a plain [PopupRoute] so nothing from Material's modal sheet leaks
