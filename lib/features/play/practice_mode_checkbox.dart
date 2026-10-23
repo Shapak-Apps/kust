@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:Kust/ui/kust_controls.dart';
+
 class PracticeModeCheckbox extends StatelessWidget {
   const PracticeModeCheckbox({
     super.key,
@@ -12,37 +14,12 @@ class PracticeModeCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: () => onChanged(!value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Practice mode', style: theme.textTheme.titleSmall),
-                  Text(
-                    'Allows undo & hints',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 4),
-            Checkbox(
-              value: value,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              onChanged: (v) => onChanged(v ?? false),
-            ),
-          ],
-        ),
-      ),
+    return KustToggleRow(
+      icon: Icons.school_outlined,
+      title: 'Practice mode',
+      subtitle: 'Allows undo, hints and move feedback',
+      value: value,
+      onChanged: onChanged,
     );
   }
 }

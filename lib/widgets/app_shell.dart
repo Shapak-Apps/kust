@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:Kust/widgets/more_floating_menu.dart';
+
+import 'package:Kust/ui/kust_nav_bar.dart';
+import 'package:Kust/ui/tokens.dart';
+import 'package:Kust/widgets/more_sheet.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -9,51 +12,43 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String location = GoRouterState.of(context).uri.path;
-
-    int selectedIndex = 0;
-    if (location.startsWith('/puzzles')) {
-      selectedIndex = 1;
-    }
+    final location = GoRouterState.of(context).uri.path;
+    final selected = location.startsWith('/puzzles') ? 1 : 0;
 
     return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          if (index == 2) {
-            showDialog(
-              context: context,
-              barrierColor: Colors.transparent,
-              builder: (context) => const MoreFloatingMenu(),
-            );
-            return;
-          }
-
-          switch (index) {
-            case 0:
-              context.go('/play');
-              break;
-            case 1:
-              context.go('/puzzles');
-              break;
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_filled),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.extension_outlined),
-            selectedIcon: Icon(Icons.extension),
-            label: 'Puzzles',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu),
-            selectedIcon: Icon(Icons.menu),
-            label: 'More',
+      backgroundColor: context.k.bg,
+      body: Column(
+        children: [
+          Expanded(child: child),
+          KustNavBar(
+            selectedIndex: selected,
+            items: const [
+              KustNavItem(
+                Icons.sports_esports_outlined,
+                Icons.sports_esports_rounded,
+                'Play',
+              ),
+              KustNavItem(
+                Icons.extension_outlined,
+                Icons.extension_rounded,
+                'Puzzles',
+              ),
+              KustNavItem(
+                Icons.grid_view_outlined,
+                Icons.grid_view_rounded,
+                'More',
+              ),
+            ],
+            onSelected: (index) {
+              switch (index) {
+                case 0:
+                  context.go('/play');
+                case 1:
+                  context.go('/puzzles');
+                case 2:
+                  showMoreSheet(context);
+              }
+            },
           ),
         ],
       ),

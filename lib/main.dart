@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:Kust/app.dart';
+import 'package:Kust/core/settings.dart';
 import 'package:Kust/core/storage/app_storage.dart';
 import 'package:Kust/features/game/chess/board/svg_precache.dart';
 import 'package:Kust/features/game/chess/chess_engine.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   await AppStorage.init();
+  await AppSettings.instance.load();
   if (_shouldWarmUpEngine) {
     ChessEngine.instance.warmUp();
   }

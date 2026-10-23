@@ -2,91 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:Kust/features/game/chess/chess_controller.dart';
+import 'package:Kust/ui/kust_controls.dart';
+import 'package:Kust/ui/kust_sheet.dart';
 
+/// In-game options. Kept under its old name; now a Kust sheet.
 class MoreFloatingMenu extends ConsumerWidget {
   const MoreFloatingMenu({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.transparent,
+    return showKustSheet<void>(
+      context,
       builder: (_) => const MoreFloatingMenu(),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(chessControllerProvider);
-    final double bottomNavHeight = MediaQuery.of(context).padding.bottom + 88;
+    final game = ref.watch(chessControllerProvider);
+    final controller = ref.read(chessControllerProvider.notifier);
 
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(color: Colors.transparent),
+        const KustSheetHeader(title: 'Game options'),
+        KustToggleRow(
+          icon: Icons.align_horizontal_left_rounded,
+          title: 'Evaluation bar',
+          subtitle: 'Shows who is better',
+          value: game.evaluationEnabled,
+          onChanged: controller.setEvaluationEnabled,
         ),
-        Positioned(
-          right: 16,
-          bottom: bottomNavHeight,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              width: 230,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.analytics_outlined, size: 20),
-                      title: const Text(
-                        'Evaluation bar',
-                        style: TextStyle(fontSize: 14),
-                      ),
-                      trailing: Checkbox(
-                        value: gameState.evaluationEnabled,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (v) => ref
-                            .read(chessControllerProvider.notifier)
-                            .setEvaluationEnabled(v ?? false),
-                      ),
-                    ),
-                    if (gameState.practiceMode)
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.feedback_outlined, size: 20),
-                        title: const Text(
-                          'Move feedback',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        trailing: Checkbox(
-                          value: gameState.moveFeedbackEnabled,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          onChanged: (v) => ref
-                              .read(chessControllerProvider.notifier)
-                              .setMoveFeedbackEnabled(v ?? false),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
+        if (game.practiceMode)
+          KustToggleRow(
+            icon: Icons.insights_rounded,
+            title: 'Move feedback',
+            subtitle: 'Rates each move you play',
+            value: game.moveFeedbackEnabled,
+            onChanged: controller.setMoveFeedbackEnabled,
           ),
-        ),
       ],
     );
   }

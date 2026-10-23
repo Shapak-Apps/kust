@@ -9,10 +9,14 @@ import 'package:Kust/features/game/chess/sound_service.dart';
 import 'package:Kust/features/puzzles/puzzle_board.dart';
 import 'package:Kust/features/puzzles/puzzle_data.dart';
 import 'package:Kust/features/puzzles/puzzle_session.dart';
+import 'package:Kust/ui/kust_button.dart';
+import 'package:Kust/ui/kust_top_bar.dart';
+import 'package:Kust/ui/pressable.dart';
+import 'package:Kust/ui/tokens.dart';
+import 'package:Kust/widgets/more_sheet.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
-const Color _accentColor = Color(0xFFFFBB00);
 
 class PuzzleGameScreen extends StatefulWidget {
   const PuzzleGameScreen({super.key, required this.level, required this.index});
@@ -284,12 +288,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     }
   }
 
-  void _showSettingsSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Puzzle settings coming soon')),
-    );
-  }
-
   Widget _buildBody(BuildContext context) {
     final error = _error;
     if (error != null) {
@@ -324,9 +322,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                       text: _statusText,
                       whiteToMove: _position.turn == Side.white,
                       highlight: _solved
-                          ? const Color(0xFF3CB371)
+                          ? context.k.success
                           : _mistakeFlash
-                          ? Colors.redAccent
+                          ? context.k.danger
                           : null,
                     ),
                   ),
@@ -374,29 +372,38 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => _exit(context),
-        ),
-        centerTitle: true,
-        title: Text(
-          'Puzzles #${widget.level}',
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            color: _accentColor,
+      backgroundColor: k.bg,
+      body: Column(
+        children: [
+          KustTopBar(
+            title: 'Puzzle ${_session == null ? '' : _index + 1}',
+            subtitle: _puzzle == null ? null : _themeLabel(_puzzle!.theme),
+            leading: KustIconButton(
+              icon: Icons.arrow_back_rounded,
+              label: 'Back',
+              onTap: () => _exit(context),
+            ),
+            trailing: [
+              KustIconButton(
+                icon: Icons.tune_rounded,
+                label: 'Settings',
+                onTap: () => showSettingsSheet(context),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_rounded),
-            onPressed: () => _showSettingsSoon(context),
-          ),
+          Expanded(child: _buildBody(context)),
         ],
       ),
-      body: _buildBody(context),
     );
+  }
+
+  String _themeLabel(String theme) {
+    if (theme.startsWith('mateIn')) {
+      return 'Mate in ${theme.substring('mateIn'.length)}';
+    }
+    return 'Win material';
   }
 }
 
@@ -417,28 +424,27 @@ class _MessageState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onAction,
-              style: FilledButton.styleFrom(
-                backgroundColor: _accentColor,
-                foregroundColor: Colors.black,
+            Icon(Icons.error_outline_rounded, size: 40, color: k.muted),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center, style: k.body),
+            const SizedBox(height: 20),
+            KustButton(label: actionLabel, onTap: onAction, expand: false),
+            if (secondaryLabel != null) ...[
+              const SizedBox(height: 8),
+              KustButton(
+                label: secondaryLabel!,
+                onTap: onSecondary,
+                style: KustButtonStyle.outline,
+                expand: false,
               ),
-              child: Text(actionLabel),
-            ),
-            if (secondaryLabel != null)
-              TextButton(onPressed: onSecondary, child: Text(secondaryLabel!)),
+            ],
           ],
         ),
       ),
@@ -459,7 +465,7 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final k = context.k;
     return Row(
       children: [
         Container(
@@ -468,19 +474,12 @@ class _StatusLine extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: whiteToMove ? Colors.white : Colors.black,
-            border: Border.all(color: Colors.black54, width: 1),
+            border: Border.all(color: k.muted),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: highlight ?? scheme.onSurface,
-            ),
-          ),
+          child: Text(text, style: k.title.copyWith(color: highlight ?? k.ink)),
         ),
       ],
     );
@@ -512,41 +511,50 @@ class _ControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
-      child: Row(
-        children: [
-          _ControlButton(
-            icon: Icons.lightbulb_outline_rounded,
-            label: 'Hint',
-            enabled: canHint,
-            onTap: onHint,
-          ),
-          _ControlButton(
-            icon: Icons.visibility_outlined,
-            label: 'Solution',
-            enabled: canReveal,
-            onTap: onReveal,
-          ),
-          _ControlButton(
-            icon: Icons.refresh_rounded,
-            label: 'Retry',
-            enabled: canReveal,
-            onTap: onRetry,
-          ),
-          _ControlButton(
-            icon: Icons.arrow_back_ios_new_rounded,
-            label: 'Back',
-            enabled: canBack,
-            onTap: onBack,
-          ),
-          _ControlButton(
-            icon: Icons.arrow_forward_ios_rounded,
-            label: 'Forward',
-            enabled: canForward,
-            onTap: onForward,
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: k.surface,
+          borderRadius: BorderRadius.circular(KustSpace.rLarge),
+          border: Border.all(color: k.line),
+        ),
+        child: Row(
+          children: [
+            _ControlButton(
+              icon: Icons.lightbulb_outline_rounded,
+              label: 'Hint',
+              enabled: canHint,
+              onTap: onHint,
+            ),
+            _ControlButton(
+              icon: Icons.visibility_outlined,
+              label: 'Solution',
+              enabled: canReveal,
+              onTap: onReveal,
+            ),
+            _ControlButton(
+              icon: Icons.refresh_rounded,
+              label: 'Retry',
+              enabled: canReveal,
+              onTap: onRetry,
+            ),
+            _ControlButton(
+              icon: Icons.chevron_left_rounded,
+              label: 'Back',
+              enabled: canBack,
+              onTap: onBack,
+            ),
+            _ControlButton(
+              icon: Icons.chevron_right_rounded,
+              label: 'Forward',
+              enabled: canForward,
+              onTap: onForward,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -567,21 +575,27 @@ class _ControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = enabled ? scheme.onSurface : scheme.outline;
+    final k = context.k;
+    final color = enabled ? k.ink : k.muted.withValues(alpha: 0.5);
     return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(height: 4),
-              Text(label, style: TextStyle(color: color)),
-            ],
+      child: Semantics(
+        button: true,
+        enabled: enabled,
+        label: label,
+        excludeSemantics: true,
+        child: Pressable(
+          onTap: enabled ? onTap : null,
+          scale: 0.92,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 24, color: color),
+                const SizedBox(height: 2),
+                Text(label, style: k.caption.copyWith(color: color)),
+              ],
+            ),
           ),
         ),
       ),
@@ -608,41 +622,17 @@ class _FinishedBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
         children: [
-          SizedBox(
-            width: 56,
-            height: 56,
-            child: OutlinedButton(
-              onPressed: busy ? null : onRetry,
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: const Icon(Icons.refresh_rounded),
-            ),
+          KustIconButton(
+            icon: Icons.refresh_rounded,
+            label: 'Retry',
+            size: 52,
+            onTap: busy ? null : onRetry,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: SizedBox(
-              height: 56,
-              child: FilledButton(
-                onPressed: busy ? null : onNext,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFBB00),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Text(
-                  hasNext ? 'Next puzzle' : 'Back to puzzles',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+            child: KustButton(
+              label: hasNext ? 'Next puzzle' : 'Back to puzzles',
+              onTap: busy ? null : onNext,
             ),
           ),
         ],
