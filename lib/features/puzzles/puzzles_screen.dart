@@ -11,6 +11,7 @@ const double _nodeSize = 68;
 const double _pathPadding = 24;
 const List<double> _zigzag = [0.5, 0.25, 0.5, 0.75];
 const Color _solvedColor = Color(0xFF3CB371);
+const Color _revealedColor = Color(0xFF8E8E93);
 
 double _pathHeight(int count) {
   return count * _nodeSpacing + _nodeSpacing + _pathPadding * 2;
@@ -23,7 +24,7 @@ double _nodeCenterY(int index, int count) {
 }
 
 int _currentIndex(PuzzleLevel level, PuzzleProgress progress) {
-  final index = level.puzzles.indexWhere((p) => !progress.isSolved(p.id));
+  final index = level.puzzles.indexWhere((p) => !progress.isCompleted(p.id));
   return index == -1 ? level.puzzles.length - 1 : index;
 }
 
@@ -43,7 +44,7 @@ class PuzzlesScreen extends StatefulWidget {
 
 class _PuzzlesScreenState extends State<PuzzlesScreen> {
   final ScrollController _scroll = ScrollController();
-  final Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
+  late Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
     kPuzzleLevel,
   );
   bool _initialJumpDone = false;
@@ -89,15 +90,20 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
               final puzzle = level.puzzles[index];
               final locked = index > current;
               final solved = progress.isSolved(puzzle.id);
+              final revealed = progress.isRevealed(puzzle.id);
               return ListTile(
                 enabled: !locked,
                 leading: Icon(
                   solved
                       ? Icons.check_circle_rounded
+                      : revealed
+                      ? Icons.visibility_rounded
                       : locked
                       ? Icons.lock_rounded
                       : Icons.play_circle_rounded,
-                  color: solved ? _solvedColor : null,
+                  color: solved
+                      ? _solvedColor
+                      : (revealed ? _revealedColor : null),
                 ),
                 title: Text('Puzzle ${index + 1}'),
                 subtitle: Text(
@@ -133,7 +139,23 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
         future: _levelFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('Could not load puzzles'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Could not load puzzles'),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => setState(() {
+                      _levelFuture = PuzzleRepository.instance.loadLevel(
+                        kPuzzleLevel,
+                      );
+                    }),
+                    child: const Text('Try again'),
+                  ),
+                ],
+              ),
+            );
           }
           final level = snapshot.data;
           if (level == null) {
@@ -242,6 +264,7 @@ class _PuzzlePath extends StatelessWidget {
                   child: _PuzzleNode(
                     index: i,
                     solved: progress.isSolved(level.puzzles[i].id),
+                    revealed: progress.isRevealed(level.puzzles[i].id),
                     current: i == currentIndex,
                     locked: i > currentIndex,
                     onTap: () => onOpen(i),
@@ -286,6 +309,7 @@ class _PuzzleNode extends StatelessWidget {
   const _PuzzleNode({
     required this.index,
     required this.solved,
+    required this.revealed,
     required this.current,
     required this.locked,
     required this.onTap,
@@ -293,6 +317,7 @@ class _PuzzleNode extends StatelessWidget {
 
   final int index;
   final bool solved;
+  final bool revealed;
   final bool current;
   final bool locked;
   final VoidCallback onTap;
@@ -302,12 +327,16 @@ class _PuzzleNode extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final fill = solved
         ? _solvedColor
+        : revealed
+        ? _revealedColor
         : locked
         ? scheme.surfaceContainerHighest
         : kAccentColor;
 
     final Widget center = solved
         ? const Icon(Icons.check_rounded, color: Colors.white, size: 34)
+        : revealed
+        ? const Icon(Icons.visibility_rounded, color: Colors.white, size: 30)
         : locked
         ? Icon(Icons.lock_rounded, color: scheme.onSurfaceVariant)
         : Text(

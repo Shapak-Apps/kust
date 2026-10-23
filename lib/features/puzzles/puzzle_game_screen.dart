@@ -6,9 +6,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:Kust/core/storage/puzzle_progress_store.dart';
 import 'package:Kust/features/game/chess/sound_service.dart';
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
 import 'package:Kust/features/puzzles/puzzle_board.dart';
 import 'package:Kust/features/puzzles/puzzle_data.dart';
+import 'package:Kust/features/puzzles/puzzle_session.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
@@ -26,17 +26,13 @@ class PuzzleGameScreen extends StatefulWidget {
 
 class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   PuzzleEntry? _puzzle;
+  PuzzleSession? _session;
+  String? _error;
   int _puzzleCount = 0;
   int _index = 0;
 
-  final List<Position> _positions = [];
-  final List<NormalMove?> _lastMoves = [];
   int _ply = 0;
-  int _step = 0;
-  int _mistakes = 0;
-  int _hintLevel = 0;
   bool _busy = false;
-  bool _solved = false;
   bool _mistakeFlash = false;
   Timer? _timer;
 
@@ -53,86 +49,47 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   Future<void> _load() async {
-    final level = await PuzzleRepository.instance.loadLevel(widget.level);
-    if (!mounted || level.puzzles.isEmpty) return;
+    setState(() {
+      _error = null;
+      _session = null;
+    });
+    final PuzzleLevel level;
+    try {
+      level = await PuzzleRepository.instance.loadLevel(widget.level);
+    } on PuzzleDataException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+      return;
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not load this puzzle');
+      return;
+    }
+    if (!mounted) return;
+    if (level.puzzles.isEmpty) {
+      setState(() => _error = 'No puzzles are available yet');
+      return;
+    }
 
     final index = widget.index.clamp(0, level.puzzles.length - 1).toInt();
     final puzzle = level.puzzles[index];
 
     setState(() {
       _puzzle = puzzle;
+      _session = PuzzleSession(puzzle);
       _puzzleCount = level.puzzles.length;
       _index = index;
-      _positions
-        ..clear()
-        ..add(Chess.fromSetup(Setup.parseFen(puzzle.fen)));
-      _lastMoves
-        ..clear()
-        ..add(null);
       _ply = 0;
     });
   }
 
-  Position get _position => _positions[_ply];
+  PuzzleSession get _s => _session!;
 
-  bool get _atTip => _ply == _positions.length - 1;
+  Position get _position => _s.positions[_ply];
 
-  Side get _startTurn => _positions.first.turn;
+  bool get _atTip => _ply == _s.positions.length - 1;
 
-  NormalMove? get _expectedMove {
-    final puzzle = _puzzle;
-    if (puzzle == null || _step >= puzzle.moves.length) return null;
-    return _parseUci(puzzle.moves[_step], _position);
-  }
+  bool get _solved => _s.status == PuzzleStatus.solved;
 
-  NormalMove? _parseUci(String uci, Position position) {
-    if (uci.length < 4) return null;
-    final from = squareAt(uci.codeUnitAt(0) - 97, int.parse(uci[1]) - 1);
-    var to = squareAt(uci.codeUnitAt(2) - 97, int.parse(uci[3]) - 1);
-
-    if (position.board.pieceAt(from)?.role == Role.king) {
-      if (from == Square.e1 && to == Square.g1) {
-        to = Square.h1;
-      } else if (from == Square.e1 && to == Square.c1) {
-        to = Square.a1;
-      } else if (from == Square.e8 && to == Square.g8) {
-        to = Square.h8;
-      } else if (from == Square.e8 && to == Square.c8) {
-        to = Square.a8;
-      }
-    }
-
-    return NormalMove(from: from, to: to, promotion: _roleFor(uci));
-  }
-
-  Role? _roleFor(String uci) {
-    if (uci.length < 5) return null;
-    switch (uci[4]) {
-      case 'q':
-        return Role.queen;
-      case 'r':
-        return Role.rook;
-      case 'b':
-        return Role.bishop;
-      case 'n':
-        return Role.knight;
-    }
-    return null;
-  }
-
-  bool _sameMove(NormalMove expected, NormalMove played) {
-    if (expected.from != played.from || expected.to != played.to) return false;
-    return expected.promotion == null || expected.promotion == played.promotion;
-  }
-
-  void _applyMove(NormalMove move) {
-    final next = _position.play(move);
-    _positions.removeRange(_ply + 1, _positions.length);
-    _lastMoves.removeRange(_ply + 1, _lastMoves.length);
-    _positions.add(next);
-    _lastMoves.add(move);
-    _ply = _positions.length - 1;
-  }
+  bool get _revealed => _s.status == PuzzleStatus.revealed;
 
   void _playMoveFeedback(
     Position before,
@@ -171,29 +128,28 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _onUserMove(NormalMove move) {
     final puzzle = _puzzle;
-    if (puzzle == null || _busy || _solved) return;
+    if (puzzle == null || _busy || _s.isFinished) return;
 
     if (!_atTip) {
-      setState(() => _ply = _positions.length - 1);
+      setState(() => _ply = _s.positions.length - 1);
       return;
     }
 
-    final expected = _expectedMove;
-    if (expected == null || !_sameMove(expected, move)) {
-      _onMistake(puzzle);
-      return;
+    final before = _s.position;
+    final result = _s.submit(move);
+    switch (result) {
+      case PuzzleMoveResult.ignored:
+        return;
+      case PuzzleMoveResult.incorrect:
+        _onMistake(puzzle);
+        return;
+      case PuzzleMoveResult.correct:
+      case PuzzleMoveResult.solved:
+        _playMoveFeedback(before, move, _s.position, true);
+        setState(() => _ply = _s.positions.length - 1);
     }
 
-    final before = _position;
-    _playMoveFeedback(before, move, before.play(move), true);
-
-    setState(() {
-      _applyMove(move);
-      _hintLevel = 0;
-    });
-    _step++;
-
-    if (_step >= puzzle.moves.length) {
+    if (result == PuzzleMoveResult.solved) {
       _onSolved(puzzle);
       return;
     }
@@ -204,31 +160,26 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _playOpponent(PuzzleEntry puzzle) {
     if (!mounted) return;
-    final reply = _parseUci(puzzle.moves[_step], _position);
+    final before = _s.position;
+    final reply = _s.playReply();
     if (reply == null) {
       setState(() => _busy = false);
       return;
     }
 
-    final before = _position;
-    _playMoveFeedback(before, reply, before.play(reply), false);
-
+    _playMoveFeedback(before, reply, _s.position, false);
     setState(() {
-      _applyMove(reply);
+      _ply = _s.positions.length - 1;
       _busy = false;
     });
-    _step++;
 
-    if (_step >= puzzle.moves.length) {
-      _onSolved(puzzle);
-    }
+    if (_solved) _onSolved(puzzle);
   }
 
   void _onMistake(PuzzleEntry puzzle) {
-    _mistakes++;
     SoundService.instance.playSfx('illegal.wav');
     SoundService.instance.buzz(heavy: true);
-    if (_mistakes == 1) {
+    if (_s.mistakes == 1) {
       unawaited(PuzzleProgressStore.instance.recordMistake(puzzle));
     }
 
@@ -250,15 +201,54 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     _busy = false;
     SoundService.instance.playJingle('game-win.wav');
     SoundService.instance.buzzMedium();
-    if (mounted) setState(() => _solved = true);
+    if (mounted) setState(() {});
     unawaited(
-      PuzzleProgressStore.instance.recordSolved(puzzle, clean: _mistakes == 0),
+      PuzzleProgressStore.instance.recordSolved(
+        puzzle,
+        clean: _s.mistakes == 0,
+      ),
     );
   }
 
   void _onHint() {
-    if (_busy || _solved || !_atTip || _hintLevel >= 2) return;
-    setState(() => _hintLevel++);
+    if (_busy || _s.isFinished || !_atTip) return;
+    setState(_s.useHint);
+  }
+
+  void _onReveal() {
+    final puzzle = _puzzle;
+    if (puzzle == null || _s.isFinished) return;
+    _timer?.cancel();
+    unawaited(PuzzleProgressStore.instance.recordRevealed(puzzle));
+    setState(() {
+      _mistakeFlash = false;
+      _busy = true;
+      _ply = _s.positions.length - 1;
+    });
+    _revealStep();
+  }
+
+  void _revealStep() {
+    if (!mounted) return;
+    final before = _s.position;
+    final move = _s.revealNext();
+    if (move == null) {
+      setState(() => _busy = false);
+      return;
+    }
+    _playMoveFeedback(before, move, _s.position, false);
+    setState(() => _ply = _s.positions.length - 1);
+    _timer = Timer(_opponentDelay * 2, _revealStep);
+  }
+
+  void _retry() {
+    _timer?.cancel();
+    setState(() {
+      _s.retry();
+      _ply = 0;
+      _busy = false;
+      _mistakeFlash = false;
+    });
   }
 
   void _back() {
@@ -273,6 +263,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   String get _statusText {
     if (_solved) return 'Puzzle solved!';
+    if (_revealed) return 'Solution shown';
     if (_mistakeFlash) return 'Not that one';
     return _position.turn == Side.white ? 'White to move' : 'Black to move';
   }
@@ -299,16 +290,90 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     );
   }
 
+  Widget _buildBody(BuildContext context) {
+    final error = _error;
+    if (error != null) {
+      return _MessageState(
+        message: error,
+        actionLabel: 'Try again',
+        onAction: _load,
+        secondaryLabel: 'Back to puzzles',
+        onSecondary: () => _exit(context),
+      );
+    }
+    if (_session == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final finished = _s.isFinished;
+    final hintFrom = _atTip && !finished ? _s.hintFrom : null;
+    final hintTo = _atTip && !finished ? _s.hintTo : null;
+    final hasNext = _index + 1 < _puzzleCount;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: _StatusLine(
+                      text: _statusText,
+                      whiteToMove: _position.turn == Side.white,
+                      highlight: _solved
+                          ? const Color(0xFF3CB371)
+                          : _mistakeFlash
+                          ? Colors.redAccent
+                          : null,
+                    ),
+                  ),
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: PuzzleBoard(
+                      position: _position,
+                      flipped: _s.solverSide == Side.black,
+                      interactive: _atTip && !_busy && !finished,
+                      onMove: _onUserMove,
+                      lastMove: _s.lastMoves[_ply],
+                      hintFrom: hintFrom,
+                      hintTo: hintTo,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          if (finished)
+            _FinishedBar(
+              hasNext: hasNext,
+              busy: _busy,
+              onRetry: _retry,
+              onNext: () => _nextPuzzle(context),
+            )
+          else
+            _ControlBar(
+              canHint:
+                  _atTip && !_busy && _s.hintLevel < PuzzleSession.maxHintLevel,
+              canReveal: !_busy,
+              canBack: _ply > 0 && !_busy,
+              canForward: !_atTip && !_busy,
+              onHint: _onHint,
+              onReveal: _onReveal,
+              onRetry: _retry,
+              onBack: _back,
+              onForward: _forward,
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final puzzle = _puzzle;
-    final hintFrom = _atTip && !_solved && _hintLevel >= 1
-        ? _expectedMove?.from
-        : null;
-    final hintTo = _atTip && !_solved && _hintLevel >= 2
-        ? _expectedMove?.to
-        : null;
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -330,62 +395,53 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           ),
         ],
       ),
-      body: puzzle == null
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: _StatusLine(
-                              text: _statusText,
-                              whiteToMove: _position.turn == Side.white,
-                              highlight: _solved
-                                  ? const Color(0xFF3CB371)
-                                  : _mistakeFlash
-                                  ? Colors.redAccent
-                                  : null,
-                            ),
-                          ),
-                          AspectRatio(
-                            aspectRatio: 1,
-                            child: PuzzleBoard(
-                              position: _position,
-                              flipped: _startTurn == Side.black,
-                              interactive: _atTip && !_busy && !_solved,
-                              onMove: _onUserMove,
-                              lastMove: _lastMoves[_ply],
-                              hintFrom: hintFrom,
-                              hintTo: hintTo,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+      body: _buildBody(context),
+    );
+  }
+}
 
-                  if (_solved)
-                    _SolvedBar(
-                      hasNext: _index + 1 < _puzzleCount,
-                      onNext: () => _nextPuzzle(context),
-                    )
-                  else
-                    _ControlBar(
-                      canHint: _atTip && !_busy && _hintLevel < 2,
-                      canBack: _ply > 0 && !_busy,
-                      canForward: !_atTip && !_busy,
-                      onHint: _onHint,
-                      onBack: _back,
-                      onForward: _forward,
-                    ),
-                ],
-              ),
+class _MessageState extends StatelessWidget {
+  const _MessageState({
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onAction,
+              style: FilledButton.styleFrom(
+                backgroundColor: _accentColor,
+                foregroundColor: Colors.black,
+              ),
+              child: Text(actionLabel),
+            ),
+            if (secondaryLabel != null)
+              TextButton(onPressed: onSecondary, child: Text(secondaryLabel!)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -434,24 +490,30 @@ class _StatusLine extends StatelessWidget {
 class _ControlBar extends StatelessWidget {
   const _ControlBar({
     required this.canHint,
+    required this.canReveal,
     required this.canBack,
     required this.canForward,
     required this.onHint,
+    required this.onReveal,
+    required this.onRetry,
     required this.onBack,
     required this.onForward,
   });
 
   final bool canHint;
+  final bool canReveal;
   final bool canBack;
   final bool canForward;
   final VoidCallback onHint;
+  final VoidCallback onReveal;
+  final VoidCallback onRetry;
   final VoidCallback onBack;
   final VoidCallback onForward;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
       child: Row(
         children: [
           _ControlButton(
@@ -459,6 +521,18 @@ class _ControlBar extends StatelessWidget {
             label: 'Hint',
             enabled: canHint,
             onTap: onHint,
+          ),
+          _ControlButton(
+            icon: Icons.visibility_outlined,
+            label: 'Solution',
+            enabled: canReveal,
+            onTap: onReveal,
+          ),
+          _ControlButton(
+            icon: Icons.refresh_rounded,
+            label: 'Retry',
+            enabled: canReveal,
+            onTap: onRetry,
           ),
           _ControlButton(
             icon: Icons.arrow_back_ios_new_rounded,
@@ -515,33 +589,63 @@ class _ControlButton extends StatelessWidget {
   }
 }
 
-class _SolvedBar extends StatelessWidget {
-  const _SolvedBar({required this.hasNext, required this.onNext});
+class _FinishedBar extends StatelessWidget {
+  const _FinishedBar({
+    required this.hasNext,
+    required this.busy,
+    required this.onRetry,
+    required this.onNext,
+  });
 
   final bool hasNext;
+  final bool busy;
+  final VoidCallback onRetry;
   final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: SizedBox(
-        width: double.infinity,
-        height: 56,
-        child: FilledButton(
-          onPressed: onNext,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFFFBB00),
-            foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: OutlinedButton(
+              onPressed: busy ? null : onRetry,
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Icon(Icons.refresh_rounded),
             ),
           ),
-          child: Text(
-            hasNext ? 'Next puzzle' : 'Back to puzzles',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          const SizedBox(width: 12),
+          Expanded(
+            child: SizedBox(
+              height: 56,
+              child: FilledButton(
+                onPressed: busy ? null : onNext,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFBB00),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  hasNext ? 'Next puzzle' : 'Back to puzzles',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
