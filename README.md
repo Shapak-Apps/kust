@@ -32,7 +32,7 @@ Toggle practice mode to play more freely while still getting the full board and 
 
 ### Rating System
 
-Küşt tracks your own Elo-style rating locally (starting at 1200) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
+Küşt tracks your own Elo-style rating locally (it starts at 1200, or at the value for the experience level you pick during onboarding) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
 
 ### Game History and Replay
 
