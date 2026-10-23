@@ -15,7 +15,6 @@ dependencies:
   flutter_svg: ^2.3.0
   dartchess: ^0.13.1
   shared_preferences: ^2.5.5
-  dio: ^5.11.1
   crypto: ^3.0.6
   stockfish: any
   audioplayers: ^6.8.1
@@ -66,3 +65,4 @@ flutter:
     - assets/pieces/
     - assets/sounds/
     - assets/puzzles/
+    - assets/engine/

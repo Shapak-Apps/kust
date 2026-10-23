@@ -63,3 +63,6 @@ android/key.properties
 
 # Legacy local copies of the NNUE networks. They are downloaded at runtime now.
 /assets/nnue
+
+# Engine networks packed by tools/pack_nnue.py. Never commit these (73MB).
+/assets/engine/*.gz

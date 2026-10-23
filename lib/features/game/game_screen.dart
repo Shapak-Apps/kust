@@ -142,8 +142,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
           KustSheetHeader(
             title: 'Engine unavailable',
             subtitle: ChessEngine.isSupported
-                ? 'The chess engine could not start. It needs a one-time '
-                      'download, so check your connection and try again.'
+                ? 'The chess engine could not start. Try again, or play '
+                      'on this device with a friend.'
                 : 'Playing against bots is not supported on this device.',
           ),
           if (ChessEngine.isSupported) ...[
@@ -378,7 +378,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 ),
             ],
           ),
-          const _EngineDownloadBanner(),
+          const _EngineSetupBanner(),
           Expanded(
             child: SafeArea(
               top: false,
@@ -468,9 +468,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 }
 
-/// Shown while the engine's network files are downloaded on first use.
-class _EngineDownloadBanner extends StatelessWidget {
-  const _EngineDownloadBanner();
+/// Shown while the engine's network files are unpacked on first use.
+class _EngineSetupBanner extends StatelessWidget {
+  const _EngineSetupBanner();
 
   @override
   Widget build(BuildContext context) {
@@ -485,7 +485,7 @@ class _EngineDownloadBanner extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Preparing the engine (one-time download) · '
+                'Preparing the engine (first launch only) · '
                 '${(value * 100).round()}%',
                 style: k.caption,
               ),

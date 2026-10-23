@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
-/// Thrown when a network file cannot be fetched or fails verification.
+/// Thrown when the engine's network files are missing or fail verification.
 class NnueException implements Exception {
   const NnueException(this.message);
 
@@ -14,28 +15,29 @@ class NnueException implements Exception {
   String toString() => 'NnueException: $message';
 }
 
-/// Downloads and verifies Stockfish's NNUE network files.
+/// Unpacks Stockfish's NNUE networks from the app bundle. No network access.
 ///
-/// The files are ~110MB so they are not bundled. A network named
-/// `nn-<12 hex>.nnue` is valid when the first 12 hex digits of the SHA-256 of
-/// its contents equal that name part, which is how Stockfish names them.
+/// Each network ships as gzip pieces `assets/engine/<name>.<n>.gz` (see
+/// `tools/pack_nnue.py`) because GitHub rejects files over 100MB. The pieces
+/// are decompressed one at a time, so memory stays low, and written to the
+/// app's support directory on first launch.
+///
+/// A network named `nn-<12 hex>.nnue` is valid when the first 12 hex digits of
+/// the SHA-256 of its contents equal that name part, which is how Stockfish
+/// names them.
 class NnueStore {
-  NnueStore({Dio? dio, this.baseUrl = 'https://data.stockfishchess.org/nn'})
-    : _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              connectTimeout: const Duration(seconds: 15),
-              receiveTimeout: const Duration(seconds: 60),
-            ),
-          );
+  NnueStore({AssetBundle? bundle, this.listParts})
+    : _bundle = bundle ?? rootBundle;
 
-  final Dio _dio;
-  final String baseUrl;
+  final AssetBundle _bundle;
 
-  /// Download progress of the file being fetched, 0..1, or null when idle.
+  /// Overrides how the pieces of a network are found; for tests.
+  final Future<List<String>> Function(String name)? listParts;
+
+  /// Unpack progress of the file being written, 0..1, or null when idle.
   static final ValueNotifier<double?> progress = ValueNotifier(null);
 
+  static const String assetDir = 'assets/engine';
   static final RegExp _nameRe = RegExp(r'^nn-([0-9a-f]{12})\.nnue$');
 
   /// Whether [file] holds the network that [name] promises.
@@ -46,48 +48,81 @@ class NnueStore {
     return digest.toString().startsWith(match.group(1)!);
   }
 
-  /// Returns the path to a verified copy of [name] inside [dir], downloading
-  /// it first when missing or corrupt. Safe to interrupt: data goes to a
-  /// `.part` file that is only renamed after verification.
+  Future<List<String>> _parts(String name) async {
+    final custom = listParts;
+    final List<String> keys;
+    if (custom != null) {
+      keys = await custom(name);
+    } else {
+      final manifest = await AssetManifest.loadFromAssetBundle(_bundle);
+      keys = manifest
+          .listAssets()
+          .where((k) => k.startsWith('$assetDir/$name.'))
+          .toList();
+    }
+    int index(String key) =>
+        int.tryParse(key.split('.').reversed.skip(1).first) ?? 1 << 30;
+    return keys.where((k) => k.endsWith('.gz')).toList()
+      ..sort((a, b) => index(a).compareTo(index(b)));
+  }
+
+  /// A file that was fully verified once is trusted on later launches if its
+  /// length still matches, which avoids hashing 100MB on every start.
+  Future<bool> _isTrusted(File target, File marker) async {
+    if (!await target.exists() || !await marker.exists()) return false;
+    final recorded = int.tryParse((await marker.readAsString()).trim());
+    return recorded != null && recorded == await target.length();
+  }
+
+  /// Returns the path to a verified copy of [name] inside [dir], unpacking it
+  /// first when missing or damaged. Safe to interrupt: data goes to a `.part`
+  /// file that is only renamed once it verifies.
   Future<String> ensure(
     String name,
     String dir, {
     double progressFrom = 0,
     double progressTo = 1,
-    int attempts = 3,
   }) async {
     final target = File('$dir/$name');
-    if (await verify(target, name)) return target.path;
+    final marker = File('${target.path}.ok');
+    if (await _isTrusted(target, marker)) return target.path;
+
+    if (await marker.exists()) await marker.delete();
     if (await target.exists()) await target.delete();
 
-    final part = File('${target.path}.part');
-    Object? lastError;
-    for (var attempt = 1; attempt <= attempts; attempt++) {
-      try {
-        if (await part.exists()) await part.delete();
-        await _dio.download(
-          '$baseUrl/$name',
-          part.path,
-          onReceiveProgress: (received, total) {
-            if (total > 0) {
-              progress.value =
-                  progressFrom + (progressTo - progressFrom) * received / total;
-            }
-          },
-        );
-        if (!await verify(part, name)) {
-          throw const NnueException('Downloaded network failed verification');
-        }
-        await part.rename(target.path);
-        return target.path;
-      } catch (e) {
-        lastError = e;
-        if (await part.exists()) await part.delete();
-        if (attempt < attempts) {
-          await Future<void>.delayed(Duration(seconds: attempt * 2));
-        }
-      }
+    final parts = await _parts(name);
+    if (parts.isEmpty) {
+      throw NnueException('$name is missing from this build');
     }
-    throw NnueException('Could not download $name: $lastError');
+
+    final part = File('${target.path}.part');
+    if (await part.exists()) await part.delete();
+    final sink = part.openWrite();
+    try {
+      for (var i = 0; i < parts.length; i++) {
+        final data = await _bundle.load(parts[i]);
+        final bytes = data.buffer.asUint8List(
+          data.offsetInBytes,
+          data.lengthInBytes,
+        );
+        sink.add(await Isolate.run(() => gzip.decode(bytes)));
+        progress.value =
+            progressFrom + (progressTo - progressFrom) * (i + 1) / parts.length;
+      }
+      await sink.flush();
+    } catch (e) {
+      await sink.close().catchError((Object _) {});
+      if (await part.exists()) await part.delete();
+      throw NnueException('Could not unpack $name: $e');
+    }
+    await sink.close();
+
+    if (!await verify(part, name)) {
+      await part.delete();
+      throw NnueException('$name is damaged');
+    }
+    await part.rename(target.path);
+    await marker.writeAsString('${await target.length()}');
+    return target.path;
   }
 }
