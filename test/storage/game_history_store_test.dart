@@ -50,6 +50,22 @@ void main() {
       expect(loaded.ratingChange, 12);
     });
 
+    test('stores accuracy and updates it later', () async {
+      final store = GameHistoryStore.withBox(box);
+      await store.add(_game('a', 1));
+      expect(store.byId('a')!.accuracy, isNull);
+
+      await store.setAccuracy('a', 71.6);
+      expect(store.byId('a')!.accuracy, closeTo(71.6, 0.001));
+      // The rest of the game is untouched.
+      expect(store.byId('a')!.uciMoves, ['e2e4', 'e7e5']);
+
+      // A deleted game is not brought back by a late analysis result.
+      await store.delete('a');
+      await store.setAccuracy('a', 50);
+      expect(store.byId('a'), isNull);
+    });
+
     test('skips unreadable entries instead of failing', () async {
       final store = GameHistoryStore.withBox(box);
       await store.add(_game('ok', 1));

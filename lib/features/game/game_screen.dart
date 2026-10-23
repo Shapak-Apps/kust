@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -15,13 +16,14 @@ import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
-import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
-import 'package:kust/features/game/chess/nnue_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/features/game/game_result_dialog.dart';
+import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
 
 const double kBoardMaxWidth = 480;
@@ -142,8 +144,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
           KustSheetHeader(
             title: 'Engine unavailable',
             subtitle: ChessEngine.isSupported
-                ? 'The chess engine could not start. It needs a one-time '
-                      'download, so check your connection and try again.'
+                ? 'The chess engine could not start. Try again, or play '
+                      'on this device with a friend.'
                 : 'Playing against bots is not supported on this device.',
           ),
           if (ChessEngine.isSupported) ...[
@@ -206,40 +208,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _showResultDialog(String title, String message) {
-    showKustSheet<void>(
+    showKustDialog<void>(
       context,
-      builder: (sheetContext) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          KustSheetHeader(title: title, subtitle: message),
-          const _RatingChange(),
-          KustButton(
-            label: 'Rematch',
-            icon: Icons.refresh_rounded,
-            onTap: () {
-              Navigator.of(sheetContext).pop();
-              final controller = ref.read(chessControllerProvider.notifier);
-              if (widget.isLocal) {
-                controller.startLocalGame(timeControl: widget.timeControl);
-              } else {
-                controller.startGame(
-                  widget.bot!,
-                  playerSide: widget.playerSide,
-                  practiceMode: widget.practiceMode,
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 8),
-          KustButton(
-            label: 'Back to lobby',
-            style: KustButtonStyle.outline,
-            onTap: () {
-              Navigator.of(sheetContext).pop();
-              context.go('/play');
-            },
-          ),
-        ],
+      builder: (dialogContext) => GameResultContent(
+        title: title,
+        message: message,
+        onRematch: () {
+          Navigator.of(dialogContext).pop();
+          final controller = ref.read(chessControllerProvider.notifier);
+          if (widget.isLocal) {
+            controller.startLocalGame(timeControl: widget.timeControl);
+          } else {
+            controller.startGame(
+              widget.bot!,
+              playerSide: widget.playerSide,
+              practiceMode: widget.practiceMode,
+            );
+          }
+        },
+        onLobby: () {
+          Navigator.of(dialogContext).pop();
+          context.go('/play');
+        },
       ),
     ).then((_) {
       if (mounted) {
@@ -378,7 +368,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 ),
             ],
           ),
-          const _EngineDownloadBanner(),
+          const _EngineSetupBanner(),
           Expanded(
             child: SafeArea(
               top: false,
@@ -468,70 +458,102 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 }
 
-/// Shown while the engine's network files are downloaded on first use.
-class _EngineDownloadBanner extends StatelessWidget {
-  const _EngineDownloadBanner();
+/// Friendly waiting line while the opponent is being set up. It says nothing
+/// about engines or files; it simply goes away when the game can start.
+class _EngineSetupBanner extends ConsumerWidget {
+  const _EngineSetupBanner();
 
   @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    return ValueListenableBuilder<double?>(
-      valueListenable: NnueStore.progress,
-      builder: (context, value, _) {
-        if (value == null) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Preparing the engine (one-time download) · '
-                '${(value * 100).round()}%',
-                style: k.caption,
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: LinearProgressIndicator(
-                  value: value,
-                  minHeight: 4,
-                  color: k.accent,
-                  backgroundColor: k.surfaceAlt,
-                ),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final game = ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          botName: g.mode == GameMode.bot ? g.bot?.name : null,
+          playing: g.status == GameStatus.playing,
+          failed: g.engineFailed,
+        ),
+      ),
+    );
+    final name = game.botName;
+    if (name == null || !game.playing || game.failed) {
+      return const SizedBox.shrink();
+    }
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: ChessEngine.readyNotifier,
+      builder: (context, ready, _) {
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: ready
+              ? const SizedBox(width: double.infinity)
+              : _WaitingLine(name: name),
         );
       },
     );
   }
 }
 
-/// "Rating 1200 → 1212" line in the result sheet, once it is recorded.
-class _RatingChange extends ConsumerWidget {
-  const _RatingChange();
+class _WaitingLine extends StatefulWidget {
+  const _WaitingLine({required this.name});
+
+  final String name;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final change = ref.watch(
-      chessControllerProvider.select((g) => g.ratingChange),
-    );
-    if (change == null) return const SizedBox.shrink();
+  State<_WaitingLine> createState() => _WaitingLineState();
+}
+
+class _WaitingLineState extends State<_WaitingLine> {
+  int _index = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 2400), (_) {
+      if (mounted) setState(() => _index++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final k = context.k;
-    final now = PlayerRatingStore.instance.rating;
-    final sign = change > 0 ? '+' : '';
+    final lines = [
+      'Inviting ${widget.name} to the game…',
+      '${widget.name} is taking a seat…',
+      'Setting up the board…',
+      '${widget.name} is getting ready…',
+    ];
+    final text = lines[_index % lines.length];
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        'Rating $now ($sign$change)',
-        style: k.body.copyWith(
-          fontWeight: FontWeight.w800,
-          color: change > 0
-              ? k.success
-              : change < 0
-              ? k.danger
-              : k.muted,
-        ),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: k.accent),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Align(
+                key: ValueKey(text),
+                alignment: Alignment.centerLeft,
+                child: Text(text, style: k.caption),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -556,8 +578,19 @@ class _HistorySlot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moves = ref.watch(chessControllerProvider.select((g) => g.moves));
-    return _MoveHistoryBar(moves: moves);
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (moves: g.moves, cursor: g.analysisCursor),
+      ),
+    );
+    return MoveStrip(
+      labels: [
+        for (var i = 0; i < data.moves.length; i++)
+          moveLabel(i, data.moves[i].san),
+      ],
+      // The move on the board: the latest, or the one being reviewed.
+      selected: data.cursor,
+    );
   }
 }
 
@@ -868,131 +901,6 @@ class _ClockChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MoveHistoryBar extends StatefulWidget {
-  const _MoveHistoryBar({required this.moves});
-
-  final List<MoveRecord> moves;
-
-  @override
-  State<_MoveHistoryBar> createState() => _MoveHistoryBarState();
-}
-
-class _MoveHistoryBarState extends State<_MoveHistoryBar> {
-  final ScrollController _controller = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
-  }
-
-  @override
-  void didUpdateWidget(covariant _MoveHistoryBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.moves.length != widget.moves.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _jumpToEnd() {
-    if (!mounted || !_controller.hasClients) return;
-    if (_controller.position.maxScrollExtent > 0) {
-      _controller.jumpTo(_controller.position.maxScrollExtent);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    final normalStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
-    final highlightStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w800,
-      color: theme.colorScheme.primary,
-    );
-
-    if (widget.moves.isEmpty) {
-      return SizedBox(
-        height: 40,
-        child: Center(
-          child: Text(
-            'No moves yet',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final children = <Widget>[const SizedBox(width: 16)];
-    int index = 0;
-    int number = 1;
-
-    if (widget.moves.first.side == Side.black) {
-      children.add(Text('$number...', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-      children.add(
-        Text(
-          widget.moves.first.san,
-          style: widget.moves.length == 1 ? highlightStyle : normalStyle,
-        ),
-      );
-      children.add(const SizedBox(width: 14));
-      index = 1;
-      number = 2;
-    }
-
-    for (; index < widget.moves.length; index += 2) {
-      children.add(Text('$number.', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-
-      final isWhiteLast = index == widget.moves.length - 1;
-      children.add(
-        Text(
-          widget.moves[index].san,
-          style: isWhiteLast ? highlightStyle : normalStyle,
-        ),
-      );
-
-      if (index + 1 < widget.moves.length) {
-        children.add(const SizedBox(width: 6));
-        final isBlackLast = (index + 1) == widget.moves.length - 1;
-        children.add(
-          Text(
-            widget.moves[index + 1].san,
-            style: isBlackLast ? highlightStyle : normalStyle,
-          ),
-        );
-      }
-
-      children.add(const SizedBox(width: 14));
-      number++;
-    }
-
-    children.add(const SizedBox(width: 16));
-
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        controller: _controller,
-        scrollDirection: Axis.horizontal,
-        children: children,
       ),
     );
   }

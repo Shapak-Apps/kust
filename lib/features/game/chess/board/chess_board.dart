@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter/foundation.dart' show listEquals, setEquals;
+import 'package:flutter/foundation.dart'
+    show listEquals, setEquals, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -158,6 +161,10 @@ class ChessBoard extends ConsumerStatefulWidget {
   ConsumerState<ChessBoard> createState() => _ChessBoardState();
 }
 
+const Duration _moveDuration = Duration(milliseconds: 220);
+const Duration _undoDuration = Duration(milliseconds: 120);
+const Duration _captureDuration = Duration(milliseconds: 160);
+
 class _ChessBoardState extends ConsumerState<ChessBoard>
     with TickerProviderStateMixin {
   late AnimationController _moveController;
@@ -172,18 +179,16 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   double _squareSize = 0;
   bool _flipped = false;
+  final Map<Square, ({BoardSquareProps props, Widget widget})> _cells = {};
 
   @override
   void initState() {
     super.initState();
 
-    _moveController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
+    _moveController = AnimationController(vsync: this, duration: _moveDuration);
     _captureController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: _captureDuration,
     );
 
     _moveController.addStatusListener((status) {
@@ -302,12 +307,12 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
               previous.position.board.pieceAt(visualFrom);
 
           if (_animPiece != null) {
-            final duration = next.wasUndo
-                ? const Duration(milliseconds: 120)
-                : const Duration(milliseconds: 200);
+            final duration = next.wasUndo ? _undoDuration : _moveDuration;
 
             _moveController.duration = duration;
-            _captureController.duration = duration;
+            _captureController.duration = next.wasUndo
+                ? _undoDuration
+                : _captureDuration;
             _moveController.reset();
             _moveController.forward();
           }
@@ -384,22 +389,29 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     width: _squareSize,
                     height: _squareSize,
                     child: IgnorePointer(
+                      // The piece is built once; each frame only changes
+                      // its opacity and scale on its own layer.
                       child: AnimatedBuilder(
                         animation: _captureController,
+                        child: RepaintBoundary(
+                          child: Padding(
+                            padding: EdgeInsets.all(_squareSize * 0.02),
+                            child: _buildRotatedPiece(_capPiece!, view),
+                          ),
+                        ),
                         builder: (context, child) {
-                          final opacity = view.wasUndo
-                              ? _captureController.value
-                              : 1.0 - _captureController.value;
-
+                          final t = Curves.easeIn.transform(
+                            _captureController.value,
+                          );
+                          final visible = view.wasUndo ? t : 1.0 - t;
                           return Opacity(
-                            opacity: opacity.clamp(0.0, 1.0),
-                            child: child,
+                            opacity: visible.clamp(0.0, 1.0),
+                            child: Transform.scale(
+                              scale: 0.7 + 0.3 * visible.clamp(0.0, 1.0),
+                              child: child,
+                            ),
                           );
                         },
-                        child: Padding(
-                          padding: EdgeInsets.all(_squareSize * 0.02),
-                          child: _buildRotatedPiece(_capPiece!, view),
-                        ),
                       ),
                     ),
                   ),
@@ -410,42 +422,43 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     _animTo != null)
                   Positioned.fill(
                     child: IgnorePointer(
+                      // The piece is built once and lives on its own layer,
+                      // so every frame only moves that layer: no widget
+                      // rebuilds and no SVG work while it glides.
                       child: AnimatedBuilder(
                         animation: _moveController,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: _squareSize,
+                            height: _squareSize,
+                            child: Padding(
+                              padding: EdgeInsets.all(_squareSize * 0.02),
+                              child: _buildRotatedPiece(_animPiece!, view),
+                            ),
+                          ),
+                        ),
                         builder: (context, child) {
-                          final fromOffset = _getSquareOffset(
+                          final from = _getSquareOffset(
                             _animFrom!,
                             _squareSize,
                           );
-                          final toOffset = _getSquareOffset(
-                            _animTo!,
-                            _squareSize,
-                          );
+                          final to = _getSquareOffset(_animTo!, _squareSize);
+                          final progress = _moveController.value;
+                          final t =
+                              (view.wasUndo
+                                      ? Curves.easeOut
+                                      : Curves.easeOutCubic)
+                                  .transform(progress);
+                          // A slight lift mid-flight, none when undoing.
+                          final lift = view.wasUndo
+                              ? 1.0
+                              : 1.0 + 0.1 * math.sin(math.pi * progress);
 
-                          final curve = view.wasUndo
-                              ? Curves.easeOut
-                              : Curves.easeInOut;
-
-                          final t = curve.transform(_moveController.value);
-
-                          final currentOffset = Offset.lerp(
-                            fromOffset,
-                            toOffset,
-                            t,
-                          )!;
-
-                          return Transform.translate(
-                            offset: currentOffset,
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: SizedBox(
-                                width: _squareSize,
-                                height: _squareSize,
-                                child: Padding(
-                                  padding: EdgeInsets.all(_squareSize * 0.02),
-                                  child: _buildRotatedPiece(_animPiece!, view),
-                                ),
-                              ),
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset: Offset.lerp(from, to, t)!,
+                              child: Transform.scale(scale: lift, child: child),
                             ),
                           );
                         },
@@ -535,8 +548,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       background = Color.alphaBlend(kHighlight, background);
     }
 
-    final coordinateColor = isLight ? kDarkSquare : kLightSquare;
-
     bool hidePiece = false;
 
     if (piece != null) {
@@ -551,69 +562,177 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       }
     }
 
-    final showRankLabel = fileOf(square) == (_flipped ? 7 : 0);
-    final showFileLabel = rankOf(square) == (_flipped ? 7 : 0);
+    final props = BoardSquareProps(
+      square: square,
+      size: _squareSize,
+      background: background,
+      coordinateColor: isLight ? kDarkSquare : kLightSquare,
+      piece: hidePiece ? null : piece,
+      hasPieceUnderneath: piece != null,
+      isLegalTarget: isLegalTarget,
+      rotatePiece:
+          view.mode == GameMode.local && view.position.turn == Side.black,
+      showRankLabel: fileOf(square) == (_flipped ? 7 : 0),
+      showFileLabel: rankOf(square) == (_flipped ? 7 : 0),
+    );
+
+    // Reuse the very same widget when a square looks the same as before.
+    // Flutter skips rebuilding an identical widget, so a move only rebuilds
+    // the squares that changed instead of all 64.
+    final cached = _cells[square];
+    if (cached != null && cached.props == props) return cached.widget;
+    final widget = BoardSquareCell(props: props);
+    _cells[square] = (props: props, widget: widget);
+    return widget;
+  }
+}
+
+/// Everything that decides how one square looks. Compared by value.
+@immutable
+class BoardSquareProps {
+  const BoardSquareProps({
+    required this.square,
+    required this.size,
+    required this.background,
+    required this.coordinateColor,
+    required this.piece,
+    required this.hasPieceUnderneath,
+    required this.isLegalTarget,
+    required this.rotatePiece,
+    required this.showRankLabel,
+    required this.showFileLabel,
+  });
+
+  final Square square;
+  final double size;
+  final Color background;
+  final Color coordinateColor;
+
+  /// The piece to draw, or null for an empty square or one hidden while a
+  /// moving copy is in flight.
+  final Piece? piece;
+
+  /// Whether a piece stands here at all (changes the legal-move marker).
+  final bool hasPieceUnderneath;
+  final bool isLegalTarget;
+  final bool rotatePiece;
+  final bool showRankLabel;
+  final bool showFileLabel;
+
+  @override
+  bool operator ==(Object other) =>
+      other is BoardSquareProps &&
+      other.square == square &&
+      other.size == size &&
+      other.background == background &&
+      other.coordinateColor == coordinateColor &&
+      other.piece == piece &&
+      other.hasPieceUnderneath == hasPieceUnderneath &&
+      other.isLegalTarget == isLegalTarget &&
+      other.rotatePiece == rotatePiece &&
+      other.showRankLabel == showRankLabel &&
+      other.showFileLabel == showFileLabel;
+
+  @override
+  int get hashCode => Object.hash(
+    square,
+    size,
+    background,
+    coordinateColor,
+    piece,
+    hasPieceUnderneath,
+    isLegalTarget,
+    rotatePiece,
+    showRankLabel,
+    showFileLabel,
+  );
+}
+
+/// One square of the board, drawn from [BoardSquareProps].
+class BoardSquareCell extends StatelessWidget {
+  const BoardSquareCell({super.key, required this.props});
+
+  final BoardSquareProps props;
+
+  /// Counts builds so tests can check that unchanged squares are skipped.
+  @visibleForTesting
+  static int debugBuildCount = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(() {
+      debugBuildCount++;
+      return true;
+    }());
+
+    final size = props.size;
+    final piece = props.piece;
+
+    final labelStyle = TextStyle(
+      fontSize: size * 0.16,
+      fontWeight: FontWeight.w700,
+      color: props.coordinateColor,
+    );
+
+    Widget? pieceWidget;
+    if (piece != null) {
+      final svg = SvgPicture.asset(_assetForPiece(piece));
+      pieceWidget = Padding(
+        padding: EdgeInsets.all(size * 0.02),
+        child: props.rotatePiece
+            ? RotatedBox(quarterTurns: 2, child: svg)
+            : svg,
+      );
+    }
 
     return Container(
-      width: _squareSize,
-      height: _squareSize,
-      color: background,
+      width: size,
+      height: size,
+      color: props.background,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (piece != null && !hidePiece)
-            Padding(
-              padding: EdgeInsets.all(_squareSize * 0.02),
-              child: _buildRotatedPiece(piece, view),
-            ),
+          ?pieceWidget,
 
-          if (isLegalTarget && piece == null)
+          if (props.isLegalTarget && !props.hasPieceUnderneath)
             Container(
-              width: _squareSize * 0.28,
-              height: _squareSize * 0.28,
+              width: size * 0.28,
+              height: size * 0.28,
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
             ),
 
-          if (isLegalTarget && piece != null)
+          if (props.isLegalTarget && props.hasPieceUnderneath)
             Container(
-              margin: EdgeInsets.all(_squareSize * 0.05),
+              margin: EdgeInsets.all(size * 0.05),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.black.withValues(alpha: 0.35),
-                  width: _squareSize * 0.06,
+                  width: size * 0.06,
                 ),
               ),
             ),
 
-          if (showRankLabel)
+          if (props.showRankLabel)
             Positioned(
               top: 2,
               left: 3,
               child: Text(
-                (rankOf(square) + 1).toString(),
-                style: TextStyle(
-                  fontSize: _squareSize * 0.16,
-                  fontWeight: FontWeight.w700,
-                  color: coordinateColor,
-                ),
+                (rankOf(props.square) + 1).toString(),
+                style: labelStyle,
               ),
             ),
 
-          if (showFileLabel)
+          if (props.showFileLabel)
             Positioned(
               bottom: 2,
               right: 3,
               child: Text(
-                String.fromCharCode('a'.codeUnitAt(0) + fileOf(square)),
-                style: TextStyle(
-                  fontSize: _squareSize * 0.16,
-                  fontWeight: FontWeight.w700,
-                  color: coordinateColor,
-                ),
+                String.fromCharCode('a'.codeUnitAt(0) + fileOf(props.square)),
+                style: labelStyle,
               ),
             ),
         ],

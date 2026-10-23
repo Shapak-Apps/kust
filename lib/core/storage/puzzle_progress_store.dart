@@ -37,7 +37,15 @@ class PuzzleProgress {
       solved.contains(puzzleId) || revealed.contains(puzzleId);
 }
 
-class PuzzleProgressStore {
+/// The part of the progress store the puzzle screen writes to, so tests can
+/// swap in a fake that touches no disk.
+abstract class PuzzleProgressRecorder {
+  Future<void> recordMistake(PuzzleEntry puzzle);
+  Future<void> recordSolved(PuzzleEntry puzzle, {required bool clean});
+  Future<void> recordRevealed(PuzzleEntry puzzle);
+}
+
+class PuzzleProgressStore implements PuzzleProgressRecorder {
   PuzzleProgressStore._() : _boxOverride = null, _userIdOverride = null;
 
   /// Builds a store over an arbitrary box, for tests.
@@ -75,16 +83,19 @@ class PuzzleProgressStore {
     );
   }
 
+  @override
   Future<void> recordMistake(PuzzleEntry puzzle) {
     return _record(puzzle, won: false);
   }
 
+  @override
   Future<void> recordSolved(PuzzleEntry puzzle, {required bool clean}) {
     return _record(puzzle, won: clean, solved: true);
   }
 
   /// The solution was shown. Counts as a failed first attempt and is stored
   /// separately from solved puzzles.
+  @override
   Future<void> recordRevealed(PuzzleEntry puzzle) {
     return _record(puzzle, won: false, revealed: true);
   }

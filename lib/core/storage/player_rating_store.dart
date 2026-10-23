@@ -30,6 +30,10 @@ class PlayerRatingStore {
     return value is int ? value : startRating;
   }
 
+  /// Sets the starting rating, e.g. from the level chosen in onboarding.
+  Future<void> setStartingRating(int value) =>
+      _box.put(_key, math.max(minRating, value));
+
   /// Rating change for [score] (1 win, 0.5 draw, 0 loss) against a bot.
   static int delta({
     required int rating,

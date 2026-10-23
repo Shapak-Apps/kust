@@ -122,6 +122,13 @@ class PuzzleSession {
     return reply;
   }
 
+  /// After a wrong move: highlight the piece that should move, but not where
+  /// it should go. A later hint request still reveals the target square.
+  void revealPieceHint() {
+    if (isFinished || _step.isOdd || hintLevel >= 1) return;
+    if (expectedMove != null) hintLevel = 1;
+  }
+
   /// Advances the hint. Returns false when no further hint is available.
   bool useHint() {
     if (isFinished || _step.isOdd || hintLevel >= maxHintLevel) return false;

@@ -23,6 +23,41 @@ Square _displayCastleTarget(Square target) {
   return target;
 }
 
+/// The glide for stepping from [fromPly] to [toPly] through [positions] and
+/// [moves] (as built by the replay and puzzle screens), or null when the
+/// squares are not one move apart. Stepping back reverses the move, and
+/// castling shows the king landing on its real square.
+({Square from, Square to})? slideBetween(
+  List<Position> positions,
+  List<NormalMove?> moves,
+  int fromPly,
+  int toPly,
+) {
+  Square landing(NormalMove move, Position before) {
+    final mover = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    final castles =
+        mover?.role == Role.king &&
+        target != null &&
+        target.color == mover?.color;
+    if (!castles) return move.to;
+    final kingSide = fileOf(move.to) > fileOf(move.from);
+    return squareAt(kingSide ? 6 : 2, rankOf(move.to));
+  }
+
+  if (toPly == fromPly + 1) {
+    final move = moves[toPly];
+    if (move == null) return null;
+    return (from: move.from, to: landing(move, positions[fromPly]));
+  }
+  if (toPly == fromPly - 1) {
+    final move = moves[fromPly];
+    if (move == null) return null;
+    return (from: landing(move, positions[toPly]), to: move.from);
+  }
+  return null;
+}
+
 class PuzzleBoard extends StatefulWidget {
   const PuzzleBoard({
     super.key,
@@ -33,6 +68,8 @@ class PuzzleBoard extends StatefulWidget {
     this.lastMove,
     this.hintFrom,
     this.hintTo,
+    this.slide,
+    this.slideKey = 0,
   });
 
   final Position position;
@@ -43,22 +80,59 @@ class PuzzleBoard extends StatefulWidget {
   final Square? hintFrom;
   final Square? hintTo;
 
+  /// Piece to glide into place: it now stands on [slide].to and travels from
+  /// [slide].from. A new [slideKey] starts the animation, so stepping back
+  /// can pass the reversed squares.
+  final ({Square from, Square to})? slide;
+  final int slideKey;
+
   @override
   State<PuzzleBoard> createState() => _PuzzleBoardState();
 }
 
-class _PuzzleBoardState extends State<PuzzleBoard> {
+class _PuzzleBoardState extends State<PuzzleBoard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _slideCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  ({Square from, Square to})? _sliding;
   Square? _selected;
   Map<Square, NormalMove> _targets = const {};
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild once the glide ends so the real piece is drawn again.
+    _slideCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) setState(() {});
+    });
+  }
+
+  @override
   void didUpdateWidget(PuzzleBoard oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.slideKey != oldWidget.slideKey) {
+      _sliding = widget.slide;
+      if (_sliding != null) {
+        _slideCtrl.forward(from: 0);
+      } else {
+        _slideCtrl.value = 1;
+      }
+    }
     if (oldWidget.position.fen != widget.position.fen) {
       _selected = null;
       _targets = const {};
     }
   }
+
+  @override
+  void dispose() {
+    _slideCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _isSliding => _sliding != null && _slideCtrl.isAnimating;
 
   Map<Square, NormalMove> _destinationsFrom(Square from) {
     final position = widget.position;
@@ -141,6 +215,7 @@ class _PuzzleBoardState extends State<PuzzleBoard> {
               children: [
                 for (var index = 0; index < 64; index++)
                   _buildCell(index, cell),
+                _buildSlidingPiece(cell),
               ],
             ),
           ),
@@ -155,7 +230,8 @@ class _PuzzleBoardState extends State<PuzzleBoard> {
     final file = widget.flipped ? 7 - col : col;
     final rank = widget.flipped ? row : 7 - row;
     final square = squareAt(file, rank);
-    final piece = widget.position.board.pieceAt(square);
+    final hideForSlide = _isSliding && _sliding!.to == square;
+    final piece = hideForSlide ? null : widget.position.board.pieceAt(square);
     final isLight = (file + rank).isOdd;
 
     final lastMove = widget.lastMove;
@@ -206,6 +282,49 @@ class _PuzzleBoardState extends State<PuzzleBoard> {
           ],
         ),
       ),
+    );
+  }
+
+  Offset _cellOrigin(Square square, double cell) {
+    final file = fileOf(square);
+    final rank = rankOf(square);
+    final col = widget.flipped ? 7 - file : file;
+    final row = widget.flipped ? rank : 7 - rank;
+    return Offset(col * cell, row * cell);
+  }
+
+  Widget _buildSlidingPiece(double cell) {
+    final sliding = _sliding;
+    if (sliding == null) return const SizedBox.shrink();
+    final piece = widget.position.board.pieceAt(sliding.to);
+    if (piece == null) return const SizedBox.shrink();
+
+    final from = _cellOrigin(sliding.from, cell);
+    final to = _cellOrigin(sliding.to, cell);
+    // The piece is built once and sits on its own layer; each frame only
+    // moves it, so gliding costs no widget rebuilds or SVG work.
+    return AnimatedBuilder(
+      animation: _slideCtrl,
+      child: IgnorePointer(
+        child: RepaintBoundary(
+          child: Padding(
+            padding: EdgeInsets.all(cell * 0.04),
+            child: SvgPicture.asset(assetForPiece(piece)),
+          ),
+        ),
+      ),
+      builder: (context, child) {
+        if (!_slideCtrl.isAnimating) return const SizedBox.shrink();
+        final t = Curves.easeOutCubic.transform(_slideCtrl.value);
+        final at = Offset.lerp(from, to, t)!;
+        return Positioned(
+          left: at.dx,
+          top: at.dy,
+          width: cell,
+          height: cell,
+          child: child!,
+        );
+      },
     );
   }
 }

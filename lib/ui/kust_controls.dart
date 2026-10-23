@@ -76,9 +76,12 @@ class KustOption extends StatelessWidget {
 
 /// Square icon tile for use as [KustOption.leading].
 class KustIconTile extends StatelessWidget {
-  const KustIconTile(this.icon, {super.key});
+  const KustIconTile(this.icon, {super.key, this.radius = KustSpace.rSmall});
 
   final IconData icon;
+
+  /// Corner radius; 0 gives a square tile.
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +91,7 @@ class KustIconTile extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(
         color: k.surfaceAlt,
-        borderRadius: BorderRadius.circular(KustSpace.rSmall),
+        borderRadius: BorderRadius.circular(radius),
       ),
       child: Icon(icon, size: 22, color: k.ink),
     );

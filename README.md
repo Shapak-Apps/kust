@@ -32,7 +32,7 @@ Toggle practice mode to play more freely while still getting the full board and 
 
 ### Rating System
 
-Küşt tracks your own Elo-style rating locally (starting at 1200) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
+Küşt tracks your own Elo-style rating locally (it starts at 1200, or at the value for the experience level you pick during onboarding) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
 
 ### Game History and Replay
 
@@ -61,7 +61,7 @@ Stockfish does not enforce chess rules. `dartchess` owns the game state and lega
 
 Stockfish currently runs on Android and iOS. On any other platform, or if the engine fails to start or stops responding, Küşt tells you and offers pass-and-play instead of freezing.
 
-The engine's two NNUE network files (about 110MB) are not bundled in the app. They are downloaded once on first use from `data.stockfishchess.org`, verified against the SHA-256 prefix in their file names, and cached in the app's support directory. A progress bar is shown in the game while this happens, and a failed download can be retried.
+The engine's two NNUE network files (about 110MB) ship inside the app, so bots work offline from the first launch. They are **not committed to git**. Run `python3 tools/pack_nnue.py` once after cloning (and before release builds): it downloads the networks from `data.stockfishchess.org`, verifies their names against their hash, and packs them into gzip pieces in `assets/engine/`, which is git-ignored. On first launch the app unpacks the pieces into its support directory (a few seconds, with a progress bar), checks them again, and reuses them afterwards. Without the packed files the app still builds, and bot games offer pass-and-play instead.
 
 ## Tech Stack
 
@@ -76,7 +76,6 @@ The engine's two NNUE network files (about 110MB) are not bundled in the app. Th
 | audioplayers       | Move and game event sounds                        |
 | shared_preferences | Onboarding state and settings persistence         |
 | Hive               | Local ratings, puzzle progress and game history   |
-| dio                | One-time download of the engine's network files  |
 | flutter_svg        | SVG asset rendering                               |
 
 ## Getting Started
@@ -87,13 +86,13 @@ The engine's two NNUE network files (about 110MB) are not bundled in the app. Th
 - Dart SDK compatible with the Flutter version
 - Git
 - An Android or iOS device or emulator to play against bots (other platforms run pass-and-play only)
-- An internet connection the first time you play a bot game, to download the engine files
 
 ### Clone and Run
 
 ```bash
 git clone https://github.com/Shapak-Apps/kust.git
 cd kust
+python3 tools/pack_nnue.py   # one-time: fetches and packs the engine
 flutter pub get
 flutter run
 ```

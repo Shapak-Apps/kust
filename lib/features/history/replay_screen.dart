@@ -1,49 +1,190 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/move_sounds.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/history/pgn.dart';
+import 'package:kust/features/history/replay_positions.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// Positions reached by [uciMoves], starting from the initial position.
-/// Stops at the first move that cannot be played, so a damaged record still
-/// opens up to that point.
-({List<Position> positions, List<NormalMove?> moves}) replayPositions(
-  List<String> uciMoves,
-) {
-  final positions = <Position>[Chess.initial];
-  final moves = <NormalMove?>[null];
-  for (final uci in uciMoves) {
-    final move = Move.parse(uci);
-    final current = positions.last;
-    if (move is! NormalMove || !current.isLegal(move)) break;
-    positions.add(current.play(move));
-    moves.add(move);
-  }
-  return (positions: positions, moves: moves);
-}
+export 'package:kust/features/history/replay_positions.dart';
+
+/// Evaluates a position for the replay's evaluation bar.
+typedef ReplayEvaluator = Future<EvalScore?> Function(String fen);
+
+Future<EvalScore?> _engineEvaluator(String fen) =>
+    ChessEngine.instance.evaluateFen(fen);
 
 class ReplayScreen extends StatefulWidget {
-  const ReplayScreen({super.key, required this.gameId});
+  const ReplayScreen({
+    super.key,
+    required this.gameId,
+    this.record,
+    this.evaluator,
+    this.playSound,
+  });
 
   final String gameId;
+
+  /// Use this game instead of looking [gameId] up in the store (for tests).
+  final GameRecord? record;
+
+  /// Overrides the chess engine for the evaluation bar (for tests).
+  final ReplayEvaluator? evaluator;
+
+  /// Overrides sound playback (for tests).
+  final void Function(String file)? playSound;
 
   @override
   State<ReplayScreen> createState() => _ReplayScreenState();
 }
 
 class _ReplayScreenState extends State<ReplayScreen> {
-  late final GameRecord? _game = GameHistoryStore.instance.byId(widget.gameId);
+  late final GameRecord? _game =
+      widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
   int _ply = 0;
+  ({Square from, Square to})? _slide;
+  int _slideKey = 0;
+
+  bool _evalOn = false;
+  bool _evalFailed = false;
+  final Map<int, EvalScore> _evals = {};
 
   int get _last => _replay.positions.length - 1;
 
-  void _go(int ply) => setState(() => _ply = ply.clamp(0, _last));
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  /// Jumps to [ply]. A single step glides the piece (backwards when going
+  /// back); bigger jumps just set the position.
+  void _go(int ply) {
+    final target = ply.clamp(0, _last);
+    if (target == _ply) return;
+    final slide = slideBetween(_replay.positions, _replay.moves, _ply, target);
+    final from = _ply;
+    setState(() {
+      _ply = target;
+      _slide = slide;
+      _slideKey++;
+    });
+    _playStepSound(from, target);
+    _evaluateCurrent();
+  }
+
+  /// Sound for a single step; jumps over several moves stay silent.
+  void _playStepSound(int from, int to) {
+    final String? file;
+    if (to == from + 1) {
+      file = moveSoundFor(
+        _replay.positions[from],
+        _replay.moves[to]!,
+        _replay.positions[to],
+      );
+    } else if (to == from - 1) {
+      file = 'move.wav';
+    } else {
+      file = null;
+    }
+    if (file == null) return;
+    (widget.playSound ?? SoundService.instance.playSfx)(file);
+  }
+
+  Future<void> _evaluateCurrent() async {
+    if (!_evalOn || _evals.containsKey(_ply)) return;
+    final ply = _ply;
+    final position = _replay.positions[ply];
+
+    if (position.isCheckmate) {
+      // Nothing to search: the side that just moved won.
+      final whiteWon = position.turn == Side.black;
+      setState(() => _evals[ply] = EvalScore(cp: whiteWon ? 3000 : -3000));
+      return;
+    }
+
+    try {
+      final score = await (widget.evaluator ?? _engineEvaluator)(position.fen);
+      if (!mounted) return;
+      setState(() {
+        if (score != null) _evals[ply] = score;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _evalFailed = true);
+    }
+  }
+
+  void _setEval(bool on) {
+    setState(() {
+      _evalOn = on;
+      _evalFailed = false;
+    });
+    _evaluateCurrent();
+  }
+
+  Future<void> _copyPgn(GameRecord game) async {
+    await Clipboard.setData(ClipboardData(text: buildPgn(game)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('PGN copied')));
+  }
+
+  void _openSettings(GameRecord game) {
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheet) {
+          final canEvaluate =
+              widget.evaluator != null || ChessEngine.isSupported;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const KustSheetHeader(title: 'Replay settings'),
+              KustToggleRow(
+                icon: Icons.align_horizontal_left_rounded,
+                title: 'Evaluation bar',
+                subtitle: canEvaluate
+                    ? 'Shows who is better at each move'
+                    : 'Not available on this device',
+                value: _evalOn && canEvaluate,
+                onChanged: (v) {
+                  if (!canEvaluate) return;
+                  _setEval(v);
+                  setSheet(() {});
+                },
+              ),
+              const SizedBox(height: 16),
+              KustButton(
+                label: 'Copy PGN',
+                icon: Icons.copy_rounded,
+                style: KustButtonStyle.secondary,
+                onTap: game.sanMoves.isEmpty
+                    ? null
+                    : () {
+                        Navigator.of(sheetContext).pop();
+                        _copyPgn(game);
+                      },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,32 +210,18 @@ class _ReplayScreenState extends State<ReplayScreen> {
               onTap: () =>
                   context.canPop() ? context.pop() : context.go('/history'),
             ),
+            trailing: [
+              if (game != null)
+                KustIconButton(
+                  icon: Icons.tune_rounded,
+                  label: 'Replay settings',
+                  onTap: () => _openSettings(game),
+                ),
+            ],
           ),
           Expanded(
             child: game == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline_rounded,
-                            size: 40,
-                            color: k.muted,
-                          ),
-                          const SizedBox(height: 12),
-                          Text('This game could not be found.', style: k.body),
-                          const SizedBox(height: 20),
-                          KustButton(
-                            label: 'Back to history',
-                            expand: false,
-                            onTap: () => context.go('/history'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
+                ? const _MissingGame()
                 : _buildReplay(context, game),
           ),
         ],
@@ -104,33 +231,51 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   Widget _buildReplay(BuildContext context, GameRecord game) {
     final k = context.k;
-    final san = _ply == 0 || _ply > game.sanMoves.length
-        ? 'Start position'
-        : '${(_ply + 1) ~/ 2}${_ply.isOdd ? '.' : '...'} ${game.sanMoves[_ply - 1]}';
+    final position = _replay.positions[_ply];
+    final score = _evals[_ply];
 
     return SafeArea(
       top: false,
       child: Column(
         children: [
+          MoveStrip(
+            labels: [
+              for (var i = 0; i < game.sanMoves.length; i++)
+                moveLabel(i, game.sanMoves[i]),
+            ],
+            selected: _ply,
+            onTap: _go,
+          ),
+          if (_evalOn)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: _evalFailed
+                  ? Text(
+                      'Evaluation is unavailable right now',
+                      style: k.caption,
+                    )
+                  : EvaluationBar(
+                      score: score,
+                      whiteOnLeft: game.isLocal || game.playerIsWhite,
+                      showLabel: !position.isCheckmate,
+                    ),
+            ),
           Expanded(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PuzzleBoard(
-                    position: _replay.positions[_ply],
-                    flipped: !game.isLocal && !game.playerIsWhite,
-                    interactive: false,
-                    onMove: (_) {},
-                    lastMove: _replay.moves[_ply],
-                  ),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: PuzzleBoard(
+                  position: position,
+                  flipped: !game.isLocal && !game.playerIsWhite,
+                  interactive: false,
+                  onMove: (_) {},
+                  lastMove: _replay.moves[_ply],
+                  slide: _slide,
+                  slideKey: _slideKey,
                 ),
               ),
             ),
           ),
-          Text(san, style: k.title),
-          Text('Move $_ply of $_last', style: k.caption),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Row(
@@ -164,6 +309,34 @@ class _ReplayScreenState extends State<ReplayScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MissingGame extends StatelessWidget {
+  const _MissingGame();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 40, color: k.muted),
+            const SizedBox(height: 12),
+            Text('This game could not be found.', style: k.body),
+            const SizedBox(height: 20),
+            KustButton(
+              label: 'Back to history',
+              expand: false,
+              onTap: () => context.go('/history'),
+            ),
+          ],
+        ),
       ),
     );
   }

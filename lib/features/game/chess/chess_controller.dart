@@ -9,6 +9,7 @@ import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
@@ -62,6 +63,8 @@ class GameState {
     this.pendingPromotion,
     this.engineFailed = false,
     this.ratingChange,
+    this.accuracy,
+    this.accuracyPending = false,
   });
 
   final Position position;
@@ -104,6 +107,13 @@ class GameState {
 
   /// Rating points gained or lost in this game, once it has been recorded.
   final int? ratingChange;
+
+  /// Average accuracy of the player's moves once the finished game has been
+  /// analyzed, 0..100.
+  final double? accuracy;
+
+  /// The finished game is still being analyzed for [accuracy].
+  final bool accuracyPending;
 
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
@@ -199,6 +209,8 @@ class GameState {
     ({Square from, Square to})? pendingPromotion,
     bool? engineFailed,
     int? ratingChange,
+    double? accuracy,
+    bool? accuracyPending,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -243,6 +255,8 @@ class GameState {
           : (pendingPromotion ?? this.pendingPromotion),
       engineFailed: engineFailed ?? this.engineFailed,
       ratingChange: ratingChange ?? this.ratingChange,
+      accuracy: accuracy ?? this.accuracy,
+      accuracyPending: accuracyPending ?? this.accuracyPending,
     );
   }
 }
@@ -253,6 +267,7 @@ class ChessController extends Notifier<GameState> {
   BotPolicy _policy = BotPolicy(elo: 1400);
   bool _isDisposed = false;
   int _feedbackEpoch = 0;
+  int _accuracyEpoch = 0;
   final Set<int> _feedbackPending = <int>{};
   final Map<String, int> _repCounts = <String, int>{};
 
@@ -736,6 +751,7 @@ class ChessController extends Notifier<GameState> {
   }) async {
     _moveRequestId++;
     _evalRequestId++;
+    _accuracyEpoch++;
     _resetFeedbackQueue();
     _policy = BotPolicy(
       elo: bot.elo,
@@ -783,6 +799,7 @@ class ChessController extends Notifier<GameState> {
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _moveRequestId++;
     _evalRequestId++;
+    _accuracyEpoch++;
     _resetFeedbackQueue();
     _initClocks(timeControl);
 
@@ -1144,9 +1161,10 @@ class ChessController extends Notifier<GameState> {
     }
 
     final tc = game.timeControl;
+    final recordId = DateTime.now().microsecondsSinceEpoch.toString();
     await GameHistoryStore.instance.add(
       GameRecord(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        id: recordId,
         playedAt: DateTime.now().millisecondsSinceEpoch,
         isLocal: isLocal,
         result: result,
@@ -1164,6 +1182,42 @@ class ChessController extends Notifier<GameState> {
             : '${tc.baseMinutes}+${tc.incrementSeconds}',
       ),
     );
+
+    if (!isLocal) unawaited(_computeAccuracy(game, recordId));
+  }
+
+  /// Most player moves analyzed per game, to keep the wait short.
+  static const int _maxAccuracyMoves = 80;
+
+  /// Rates every move the player made against the engine's best move, then
+  /// stores the average on the saved game and publishes it for the result
+  /// sheet. Stops quietly when a new game starts or the engine is missing.
+  Future<void> _computeAccuracy(GameState game, String recordId) async {
+    final epoch = ++_accuracyEpoch;
+    bool stale() => _isDisposed || epoch != _accuracyEpoch;
+
+    final jobs = playerMoveJobs(
+      positions: game.history,
+      moves: [for (final m in game.moves) m.move],
+      playerIsWhite: game.playerSide == Side.white,
+      maxMoves: _maxAccuracyMoves,
+    );
+    if (jobs.length < kMinAnalysisMoves) return;
+
+    state = state.copyWith(accuracyPending: true);
+    final double? value;
+    try {
+      value = await GameAnalyzer().accuracy(jobs, isStale: stale);
+    } catch (_) {
+      if (!stale()) state = state.copyWith(accuracyPending: false);
+      return;
+    }
+    if (stale()) return;
+
+    state = state.copyWith(accuracy: value, accuracyPending: false);
+    if (value != null) {
+      await GameHistoryStore.instance.setAccuracy(recordId, value);
+    }
   }
 
   Future<void> requestHint() async {
