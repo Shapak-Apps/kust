@@ -6,6 +6,9 @@ import 'package:hive_ce/hive.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/game_analyzer.dart';
+import 'package:kust/features/history/history_analysis.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_controls.dart';
@@ -98,6 +101,74 @@ void main() {
 
     // Rated games: one win, one loss -> 50% win rate.
     expect(find.text('50%'), findsOneWidget);
+  });
+
+  testWidgets('Analyze runs the analysis and then shows the accuracy', (
+    tester,
+  ) async {
+    final long = GameRecord(
+      id: 'long',
+      playedAt: 4,
+      isLocal: false,
+      result: GameRecord.win,
+      reason: '',
+      playerIsWhite: true,
+      uciMoves: const [
+        'e2e4',
+        'e7e5',
+        'g1f3',
+        'b8c6',
+        'f1c4',
+        'g8f6',
+        'd2d3',
+        'd7d6',
+      ],
+      sanMoves: const [],
+      botName: 'Karl',
+      botElo: 1000,
+    );
+    // Hive does real file IO, which needs the real event loop.
+    await tester.runAsync(() => GameHistoryStore.instance.add(long));
+
+    final saved = HistoryAnalysis.instance;
+    addTearDown(() => HistoryAnalysis.instance = saved);
+    final savedAccuracy = <String, double>{};
+    HistoryAnalysis.instance = HistoryAnalysis(
+      save: (id, value) async => savedAccuracy[id] = value,
+      analyzer: GameAnalyzer(
+        analyze: ({
+          required beforeFen,
+          required playedUci,
+          required afterFen,
+          required thinkTime,
+          isStale,
+        }) async => const MoveAnalysis(bestUci: 'a', bestCp: 0, playedCp: 0),
+      ),
+      tick: const Duration(milliseconds: 5),
+      finishHold: const Duration(milliseconds: 5),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: const Scaffold(body: HistoryScreen()),
+      ),
+    );
+    await tester.pump();
+
+    // Only the long, unanalyzed bot game offers the button.
+    expect(find.text('Analyze'), findsOneWidget);
+
+    await tester.tap(find.text('Analyze'));
+    await tester.pump();
+    // Let the paced percentage run and the finish hold pass (fake time).
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+
+    expect(savedAccuracy['long'], closeTo(100, 0.01));
+    // Back to idle after saving.
+    expect(HistoryAnalysis.instance.stateFor('long').value, isNull);
   });
 
   test('box is the one the screen reads', () {

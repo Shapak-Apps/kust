@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/history/history_analysis.dart';
 import 'package:kust/features/history/pgn.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
 String describeResult(GameRecord game) {
@@ -269,11 +271,7 @@ class _GameTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (accuracy != null)
-                Text(
-                  '${accuracy.toStringAsFixed(1)}%',
-                  style: k.body.copyWith(fontWeight: FontWeight.w800),
-                ),
+              _AnalysisSlot(game: game),
             ],
           ),
         ),
@@ -287,6 +285,93 @@ class _GameTile extends StatelessWidget {
     return game.timeControl == null
         ? Icons.hourglass_empty_rounded
         : Icons.bolt_rounded;
+  }
+}
+
+/// Right end of a history row: the game's accuracy, or an Analyze button that
+/// turns into a live percentage while it runs and then into the accuracy.
+class _AnalysisSlot extends StatelessWidget {
+  const _AnalysisSlot({required this.game});
+
+  final GameRecord game;
+
+  Future<void> _start(BuildContext context) async {
+    final ok = await HistoryAnalysis.instance.start(game);
+    if (ok || !context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Analysis is not available on this device right now'),
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final accuracy = game.accuracy;
+
+    Widget slot(Widget child) => SizedBox(
+      width: 76,
+      child: Align(alignment: Alignment.centerRight, child: child),
+    );
+
+    if (accuracy != null) {
+      return slot(
+        Text(
+          '${accuracy.toStringAsFixed(1)}%',
+          style: k.body.copyWith(fontWeight: FontWeight.w800),
+        ),
+      );
+    }
+    if (!HistoryAnalysis.canAnalyze(game)) return const SizedBox.shrink();
+
+    return ValueListenableBuilder<AnalysisState?>(
+      valueListenable: HistoryAnalysis.instance.stateFor(game.id),
+      builder: (context, state, _) {
+        if (state?.status == AnalysisStatus.running) {
+          return slot(
+            Text(
+              '${state!.percent}%',
+              style: k.body.copyWith(
+                fontWeight: FontWeight.w800,
+                color: k.accent,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          );
+        }
+        final failed = state?.status == AnalysisStatus.failed;
+        return slot(
+          Semantics(
+            button: true,
+            label: 'Analyze this game',
+            excludeSemantics: true,
+            child: Pressable(
+              onTap: () => _start(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
+                  border: Border.all(color: k.line, width: 1.5),
+                ),
+                child: Text(
+                  failed ? 'Retry' : 'Analyze',
+                  style: k.caption.copyWith(
+                    color: k.ink,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

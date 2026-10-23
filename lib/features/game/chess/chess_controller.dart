@@ -9,7 +9,7 @@ import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/core/storage/game_history_store.dart';
-import 'package:kust/features/game/chess/accuracy.dart';
+import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
@@ -1196,39 +1196,24 @@ class ChessController extends Notifier<GameState> {
     final epoch = ++_accuracyEpoch;
     bool stale() => _isDisposed || epoch != _accuracyEpoch;
 
-    final indexes = <int>[
-      for (var i = 0; i < game.moves.length; i++)
-        if (game.moves[i].side == game.playerSide) i,
-    ].take(_maxAccuracyMoves).toList();
-    if (indexes.length < 3) return;
+    final jobs = playerMoveJobs(
+      positions: game.history,
+      moves: [for (final m in game.moves) m.move],
+      playerIsWhite: game.playerSide == Side.white,
+      maxMoves: _maxAccuracyMoves,
+    );
+    if (jobs.length < kMinAnalysisMoves) return;
 
     state = state.copyWith(accuracyPending: true);
-    final scores = <double>[];
+    final double? value;
     try {
-      for (final i in indexes) {
-        if (stale()) return;
-        final before = game.history[i];
-        final move = game.moves[i].move;
-        final analysis = await _engine.analyzeMove(
-          beforeFen: before.fen,
-          playedUci: _uciFor(move, before),
-          afterFen: before.play(move).fen,
-          thinkTime: const Duration(milliseconds: 250),
-          isStale: stale,
-        );
-        if (stale()) return;
-        if (analysis == null) continue;
-        scores.add(
-          moveAccuracy(bestCp: analysis.bestCp, playedCp: analysis.playedCp),
-        );
-      }
+      value = await GameAnalyzer().accuracy(jobs, isStale: stale);
     } catch (_) {
       if (!stale()) state = state.copyWith(accuracyPending: false);
       return;
     }
     if (stale()) return;
 
-    final value = gameAccuracy(scores);
     state = state.copyWith(accuracy: value, accuracyPending: false);
     if (value != null) {
       await GameHistoryStore.instance.setAccuracy(recordId, value);
