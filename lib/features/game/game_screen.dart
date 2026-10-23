@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
-import 'package:kust/features/game/chess/nnue_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -468,41 +468,103 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 }
 
-/// Shown while the engine's network files are unpacked on first use.
-class _EngineSetupBanner extends StatelessWidget {
+/// Friendly waiting line while the opponent is being set up. It says nothing
+/// about engines or files; it simply goes away when the game can start.
+class _EngineSetupBanner extends ConsumerWidget {
   const _EngineSetupBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final game = ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          botName: g.mode == GameMode.bot ? g.bot?.name : null,
+          playing: g.status == GameStatus.playing,
+          failed: g.engineFailed,
+        ),
+      ),
+    );
+    final name = game.botName;
+    if (name == null || !game.playing || game.failed) {
+      return const SizedBox.shrink();
+    }
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: ChessEngine.readyNotifier,
+      builder: (context, ready, _) {
+        return AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: ready
+              ? const SizedBox(width: double.infinity)
+              : _WaitingLine(name: name),
+        );
+      },
+    );
+  }
+}
+
+class _WaitingLine extends StatefulWidget {
+  const _WaitingLine({required this.name});
+
+  final String name;
+
+  @override
+  State<_WaitingLine> createState() => _WaitingLineState();
+}
+
+class _WaitingLineState extends State<_WaitingLine> {
+  int _index = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 2400), (_) {
+      if (mounted) setState(() => _index++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return ValueListenableBuilder<double?>(
-      valueListenable: NnueStore.progress,
-      builder: (context, value, _) {
-        if (value == null) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Preparing the engine (first launch only) · '
-                '${(value * 100).round()}%',
-                style: k.caption,
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: LinearProgressIndicator(
-                  value: value,
-                  minHeight: 4,
-                  color: k.accent,
-                  backgroundColor: k.surfaceAlt,
-                ),
-              ),
-            ],
+    final lines = [
+      'Inviting ${widget.name} to the game…',
+      '${widget.name} is taking a seat…',
+      'Setting up the board…',
+      '${widget.name} is getting ready…',
+    ];
+    final text = lines[_index % lines.length];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: k.accent),
           ),
-        );
-      },
+          const SizedBox(width: 10),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Align(
+                key: ValueKey(text),
+                alignment: Alignment.centerLeft,
+                child: Text(text, style: k.caption),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
