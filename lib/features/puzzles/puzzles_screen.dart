@@ -8,6 +8,8 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/features/puzzles/carpet.dart';
+import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 
 const int kPuzzleLevel = 1;
@@ -197,6 +199,12 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
 
             return Column(
               children: [
+                _Coach(
+                  next: _themeLabel(level.puzzles[current].theme),
+                  allDone: level.puzzles.every(
+                    (p) => progress.isCompleted(p.id),
+                  ),
+                ),
                 Expanded(
                   child: Stack(
                     children: [
@@ -252,7 +260,8 @@ class _PuzzlePath extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = level.puzzles.length;
-    final lineColor = Theme.of(context).colorScheme.outlineVariant;
+    final k = context.k;
+    final colors = CarpetColors.of(Theme.of(context).brightness);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -268,9 +277,23 @@ class _PuzzlePath extends StatelessWidget {
           height: height,
           child: Stack(
             children: [
-              CustomPaint(
-                size: Size(width, height),
-                painter: _PathPainter(centers: centers, color: lineColor),
+              // Drawn once and kept as a layer while scrolling.
+              Positioned.fill(
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    painter: CarpetPatternPainter(colors: colors),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: ThreadPainter(
+                    centers: centers,
+                    reachedIndex: currentIndex,
+                    done: k.accent,
+                    todo: k.muted.withValues(alpha: 0.55),
+                  ),
+                ),
               ),
               for (var i = 0; i < count; i++)
                 Positioned(
@@ -290,33 +313,6 @@ class _PuzzlePath extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class _PathPainter extends CustomPainter {
-  _PathPainter({required this.centers, required this.color});
-
-  final List<Offset> centers;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (centers.length < 2) return;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    final path = Path()..moveTo(centers.first.dx, centers.first.dy);
-    for (final center in centers.skip(1)) {
-      path.lineTo(center.dx, center.dy);
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PathPainter oldDelegate) {
-    return oldDelegate.centers != centers || oldDelegate.color != color;
   }
 }
 
@@ -340,6 +336,9 @@ class _PuzzleNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = CarpetColors.of(Theme.of(context).brightness);
+
     final Color fill = solved
         ? k.success
         : revealed
@@ -347,6 +346,11 @@ class _PuzzleNode extends StatelessWidget {
         : locked
         ? k.surfaceAlt
         : k.accent;
+    final Color ring = solved || revealed
+        ? Colors.white.withValues(alpha: 0.85)
+        : locked
+        ? k.line
+        : k.accentInk.withValues(alpha: 0.55);
 
     final Widget center = solved
         ? const Icon(Icons.check_rounded, color: Colors.white, size: 32)
@@ -373,39 +377,80 @@ class _PuzzleNode extends StatelessWidget {
         child: SizedBox(
           width: _nodeSize,
           height: _nodeSize,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: fill,
-                  border: Border.all(color: k.bg, width: 4),
-                ),
-                child: Center(child: center),
-              ),
-              if (current)
-                Positioned(
-                  right: -4,
-                  top: -4,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: k.ink,
-                      border: Border.all(color: k.bg, width: 3),
-                    ),
-                    child: Icon(
-                      Icons.play_arrow_rounded,
-                      size: 14,
-                      color: k.bg,
-                    ),
-                  ),
-                ),
-            ],
+          child: CustomPaint(
+            painter: OctagonPainter(
+              fill: fill,
+              ring: ring,
+              halo: current ? (isDark ? colors.gold : colors.red) : null,
+            ),
+            child: Center(child: center),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The coach: a bot with a speech bubble saying what is next and a tip.
+class _Coach extends StatelessWidget {
+  const _Coach({required this.next, required this.allDone});
+
+  /// Theme label of the next puzzle, e.g. "Mate in 2".
+  final String next;
+  final bool allDone;
+
+  static const List<String> _tips = [
+    'Never skip puzzle day!',
+    'Look for checks, captures and threats first.',
+    'One puzzle a day keeps the blunders away.',
+    'Take your time: the best move is usually forcing.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final day = DateTime.now().difference(DateTime(2026)).inDays;
+    final bot = kInternationalBots[day % kInternationalBots.length];
+    final tip = _tips[day % _tips.length];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Image.asset(
+            bot.imagePath,
+            width: 52,
+            height: 52,
+            cacheWidth: 156,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const SizedBox(width: 52, height: 52),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: k.surface,
+                borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                border: Border.all(color: k.line),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    allDone ? 'You solved them all!' : 'Next: $next',
+                    style: k.body.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  Text(
+                    allDone ? 'More puzzles are coming soon.' : tip,
+                    style: k.caption,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
