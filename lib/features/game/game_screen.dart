@@ -22,6 +22,7 @@ import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
 
 const double kBoardMaxWidth = 480;
@@ -556,8 +557,19 @@ class _HistorySlot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moves = ref.watch(chessControllerProvider.select((g) => g.moves));
-    return _MoveHistoryBar(moves: moves);
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (moves: g.moves, cursor: g.analysisCursor),
+      ),
+    );
+    return MoveStrip(
+      labels: [
+        for (var i = 0; i < data.moves.length; i++)
+          moveLabel(i, data.moves[i].san),
+      ],
+      // The move on the board: the latest, or the one being reviewed.
+      selected: data.cursor,
+    );
   }
 }
 
@@ -868,131 +880,6 @@ class _ClockChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MoveHistoryBar extends StatefulWidget {
-  const _MoveHistoryBar({required this.moves});
-
-  final List<MoveRecord> moves;
-
-  @override
-  State<_MoveHistoryBar> createState() => _MoveHistoryBarState();
-}
-
-class _MoveHistoryBarState extends State<_MoveHistoryBar> {
-  final ScrollController _controller = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
-  }
-
-  @override
-  void didUpdateWidget(covariant _MoveHistoryBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.moves.length != widget.moves.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToEnd());
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _jumpToEnd() {
-    if (!mounted || !_controller.hasClients) return;
-    if (_controller.position.maxScrollExtent > 0) {
-      _controller.jumpTo(_controller.position.maxScrollExtent);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mutedStyle = theme.textTheme.bodyMedium?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    final normalStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
-    final highlightStyle = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: FontWeight.w800,
-      color: theme.colorScheme.primary,
-    );
-
-    if (widget.moves.isEmpty) {
-      return SizedBox(
-        height: 40,
-        child: Center(
-          child: Text(
-            'No moves yet',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final children = <Widget>[const SizedBox(width: 16)];
-    int index = 0;
-    int number = 1;
-
-    if (widget.moves.first.side == Side.black) {
-      children.add(Text('$number...', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-      children.add(
-        Text(
-          widget.moves.first.san,
-          style: widget.moves.length == 1 ? highlightStyle : normalStyle,
-        ),
-      );
-      children.add(const SizedBox(width: 14));
-      index = 1;
-      number = 2;
-    }
-
-    for (; index < widget.moves.length; index += 2) {
-      children.add(Text('$number.', style: mutedStyle));
-      children.add(const SizedBox(width: 5));
-
-      final isWhiteLast = index == widget.moves.length - 1;
-      children.add(
-        Text(
-          widget.moves[index].san,
-          style: isWhiteLast ? highlightStyle : normalStyle,
-        ),
-      );
-
-      if (index + 1 < widget.moves.length) {
-        children.add(const SizedBox(width: 6));
-        final isBlackLast = (index + 1) == widget.moves.length - 1;
-        children.add(
-          Text(
-            widget.moves[index + 1].san,
-            style: isBlackLast ? highlightStyle : normalStyle,
-          ),
-        );
-      }
-
-      children.add(const SizedBox(width: 14));
-      number++;
-    }
-
-    children.add(const SizedBox(width: 16));
-
-    return SizedBox(
-      height: 40,
-      child: ListView(
-        controller: _controller,
-        scrollDirection: Axis.horizontal,
-        children: children,
       ),
     );
   }

@@ -263,18 +263,21 @@ void main() {
 }
 
 void _layoutTests() {
-  testWidgets('the current move is centered in the strip', (tester) async {
+  testWidgets('a short game stays left-aligned while stepping', (tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(_app());
-    for (final label in ['1. e4', '2. Nf3', 'Nc6']) {
-      await tester.tap(find.text(label).first);
+    final startX = tester.getTopLeft(find.text('1. e4').first).dx;
+    expect(startX, closeTo(20, 1));
+
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(find.byIcon(Icons.chevron_right_rounded));
       await tester.pumpAndSettle();
-      final center = tester.getCenter(find.text(label).first);
-      expect(center.dx, closeTo(200, 2), reason: label);
     }
+    // Everything fits, so nothing scrolled.
+    expect(tester.getTopLeft(find.text('1. e4').first).dx, closeTo(20, 1));
   });
 
   testWidgets('the board uses the full width', (tester) async {

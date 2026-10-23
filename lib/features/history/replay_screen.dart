@@ -16,7 +16,7 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
-import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// Positions reached by [uciMoves], starting from the initial position.
@@ -71,12 +71,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
   late final GameRecord? _game =
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
-  final ScrollController _moveScroll = ScrollController();
-  late final List<GlobalKey> _moveKeys = List.generate(
-    _game?.sanMoves.length ?? 0,
-    (_) => GlobalKey(),
-  );
-
   int _ply = 0;
   ({Square from, Square to})? _slide;
   int _slideKey = 0;
@@ -89,7 +83,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   @override
   void dispose() {
-    _moveScroll.dispose();
     super.dispose();
   }
 
@@ -113,7 +106,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
       _slideKey++;
     });
     _playStepSound(from, target);
-    _scrollToCurrent();
     _evaluateCurrent();
   }
 
@@ -150,21 +142,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
     if (!castles) return to;
     final kingSide = fileOf(move.to) > fileOf(move.from);
     return squareAt(kingSide ? 6 : 2, rankOf(move.to));
-  }
-
-  /// Centers the current move in the strip.
-  void _scrollToCurrent() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _ply == 0 || _ply > _moveKeys.length) return;
-      final context = _moveKeys[_ply - 1].currentContext;
-      if (context == null) return;
-      Scrollable.ensureVisible(
-        context,
-        alignment: 0.5,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-      );
-    });
   }
 
   Future<void> _evaluateCurrent() async {
@@ -301,38 +278,13 @@ class _ReplayScreenState extends State<ReplayScreen> {
       top: false,
       child: Column(
         children: [
-          SizedBox(
-            height: 36,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Half a screen of space at both ends lets even the first
-                // and last move reach the center.
-                final edge = constraints.maxWidth / 2;
-                return SingleChildScrollView(
-                  controller: _moveScroll,
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      SizedBox(width: edge),
-                      for (var i = 0; i < game.sanMoves.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 16),
-                        KeyedSubtree(
-                          key: _moveKeys[i],
-                          child: _MoveText(
-                            label: i.isEven
-                                ? '${i ~/ 2 + 1}. ${game.sanMoves[i]}'
-                                : game.sanMoves[i],
-                            selected: _ply == i + 1,
-                            onTap: () => _go(i + 1),
-                          ),
-                        ),
-                      ],
-                      SizedBox(width: edge),
-                    ],
-                  ),
-                );
-              },
-            ),
+          MoveStrip(
+            labels: [
+              for (var i = 0; i < game.sanMoves.length; i++)
+                moveLabel(i, game.sanMoves[i]),
+            ],
+            selected: _ply,
+            onTap: _go,
           ),
           if (_evalOn)
             Padding(
@@ -424,40 +376,6 @@ class _MissingGame extends StatelessWidget {
               onTap: () => context.go('/history'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A move in the strip: plain text, gold when it is the one on the board.
-class _MoveText extends StatelessWidget {
-  const _MoveText({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Pure gold is hard to read on the light background.
-    final gold = isDark ? k.accent : const Color(0xFFD99B00);
-    return Pressable(
-      onTap: onTap,
-      scale: 0.95,
-      child: Center(
-        child: Text(
-          label,
-          style: k.body.copyWith(
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            color: selected ? gold : k.muted,
-          ),
         ),
       ),
     );
