@@ -214,6 +214,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         children: [
           KustSheetHeader(title: title, subtitle: message),
           const _RatingChange(),
+          const _AccuracyLine(),
           KustButton(
             label: 'Rematch',
             icon: Icons.refresh_rounded,
@@ -533,6 +534,61 @@ class _RatingChange extends ConsumerWidget {
               ? k.danger
               : k.muted,
         ),
+      ),
+    );
+  }
+}
+
+/// "Accuracy 71.6%" in the result sheet. While the finished game is being
+/// analyzed it shows progress instead, and it is hidden when no accuracy can
+/// be worked out (pass-and-play, no engine, very short games).
+class _AccuracyLine extends ConsumerWidget {
+  const _AccuracyLine();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (accuracy: g.accuracy, pending: g.accuracyPending),
+      ),
+    );
+    final k = context.k;
+
+    final Widget child;
+    if (data.accuracy != null) {
+      child = Row(
+        key: const ValueKey('accuracy'),
+        children: [
+          Icon(Icons.track_changes_rounded, size: 18, color: k.muted),
+          const SizedBox(width: 8),
+          Text(
+            'Accuracy ${data.accuracy!.toStringAsFixed(1)}%',
+            style: k.body.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ],
+      );
+    } else if (data.pending) {
+      child = Row(
+        key: const ValueKey('pending'),
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: k.accent),
+          ),
+          const SizedBox(width: 10),
+          Text('Checking your accuracy…', style: k.caption),
+        ],
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: child,
       ),
     );
   }

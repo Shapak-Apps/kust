@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
-import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/move_sounds.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
@@ -91,14 +90,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
   void _go(int ply) {
     final target = ply.clamp(0, _last);
     if (target == _ply) return;
-    ({Square from, Square to})? slide;
-    if (target == _ply + 1) {
-      final move = _replay.moves[target]!;
-      slide = (from: move.from, to: _displaySquare(move.to, target));
-    } else if (target == _ply - 1) {
-      final move = _replay.moves[_ply]!;
-      slide = (from: _displaySquare(move.to, _ply), to: move.from);
-    }
+    final slide = slideBetween(_replay.positions, _replay.moves, _ply, target);
     final from = _ply;
     setState(() {
       _ply = target;
@@ -125,23 +117,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
     }
     if (file == null) return;
     (widget.playSound ?? SoundService.instance.playSfx)(file);
-  }
-
-  /// dartchess writes castling as king-takes-rook; show the king landing on
-  /// its real square.
-  Square _displaySquare(Square to, int ply) {
-    final move = _replay.moves[ply];
-    if (move == null) return to;
-    final before = _replay.positions[ply - 1];
-    final mover = before.board.pieceAt(move.from);
-    final target = before.board.pieceAt(move.to);
-    final castles =
-        mover?.role == Role.king &&
-        target != null &&
-        target.color == mover?.color;
-    if (!castles) return to;
-    final kingSide = fileOf(move.to) > fileOf(move.from);
-    return squareAt(kingSide ? 6 : 2, rankOf(move.to));
   }
 
   Future<void> _evaluateCurrent() async {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +20,19 @@ const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
 
 class PuzzleGameScreen extends StatefulWidget {
-  const PuzzleGameScreen({super.key, required this.level, required this.index});
+  const PuzzleGameScreen({
+    super.key,
+    required this.level,
+    required this.index,
+    this.progress,
+  });
 
   final int level;
   final int index;
+
+  /// Where results are recorded; the saved progress store unless a test
+  /// passes its own.
+  final PuzzleProgressRecorder? progress;
 
   @override
   State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
@@ -36,6 +46,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   int _index = 0;
 
   int _ply = 0;
+  ({Square from, Square to})? _slide;
+  int _slideKey = 0;
   bool _busy = false;
   bool _mistakeFlash = false;
   Timer? _timer;
@@ -85,9 +97,22 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     });
   }
 
+  PuzzleProgressRecorder get _recorder =>
+      widget.progress ?? PuzzleProgressStore.instance;
+
   PuzzleSession get _s => _session!;
 
   Position get _position => _s.positions[_ply];
+
+  /// Shows [ply] and glides the piece there when it is one move away.
+  void _showPly(int ply) {
+    final slide = slideBetween(_s.positions, _s.lastMoves, _ply, ply);
+    setState(() {
+      _ply = ply;
+      _slide = slide;
+      _slideKey++;
+    });
+  }
 
   bool get _atTip => _ply == _s.positions.length - 1;
 
@@ -135,7 +160,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     if (puzzle == null || _busy || _s.isFinished) return;
 
     if (!_atTip) {
-      setState(() => _ply = _s.positions.length - 1);
+      _showPly(_s.positions.length - 1);
       return;
     }
 
@@ -150,7 +175,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       case PuzzleMoveResult.correct:
       case PuzzleMoveResult.solved:
         _playMoveFeedback(before, move, _s.position, true);
-        setState(() => _ply = _s.positions.length - 1);
+        _showPly(_s.positions.length - 1);
     }
 
     if (result == PuzzleMoveResult.solved) {
@@ -172,10 +197,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     }
 
     _playMoveFeedback(before, reply, _s.position, false);
-    setState(() {
-      _ply = _s.positions.length - 1;
-      _busy = false;
-    });
+    _busy = false;
+    _showPly(_s.positions.length - 1);
 
     if (_solved) _onSolved(puzzle);
   }
@@ -184,9 +207,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     SoundService.instance.playSfx('illegal.wav');
     SoundService.instance.buzz(heavy: true);
     if (_s.mistakes == 1) {
-      unawaited(PuzzleProgressStore.instance.recordMistake(puzzle));
+      unawaited(_recorder.recordMistake(puzzle));
     }
 
+    // Point at the piece to move, not at where it goes.
+    _s.revealPieceHint();
     setState(() {
       _mistakeFlash = true;
       _busy = true;
@@ -206,12 +231,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     SoundService.instance.playJingle('game-win.wav');
     SoundService.instance.buzzMedium();
     if (mounted) setState(() {});
-    unawaited(
-      PuzzleProgressStore.instance.recordSolved(
-        puzzle,
-        clean: _s.mistakes == 0,
-      ),
-    );
+    unawaited(_recorder.recordSolved(puzzle, clean: _s.mistakes == 0));
   }
 
   void _onHint() {
@@ -223,12 +243,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final puzzle = _puzzle;
     if (puzzle == null || _s.isFinished) return;
     _timer?.cancel();
-    unawaited(PuzzleProgressStore.instance.recordRevealed(puzzle));
+    unawaited(_recorder.recordRevealed(puzzle));
     setState(() {
       _mistakeFlash = false;
       _busy = true;
-      _ply = _s.positions.length - 1;
     });
+    _showPly(_s.positions.length - 1);
     _revealStep();
   }
 
@@ -241,7 +261,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       return;
     }
     _playMoveFeedback(before, move, _s.position, false);
-    setState(() => _ply = _s.positions.length - 1);
+    _showPly(_s.positions.length - 1);
     _timer = Timer(_opponentDelay * 2, _revealStep);
   }
 
@@ -250,6 +270,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     setState(() {
       _s.retry();
       _ply = 0;
+      _slide = null;
+      _slideKey++;
       _busy = false;
       _mistakeFlash = false;
     });
@@ -257,12 +279,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
   void _back() {
     if (_busy || _ply == 0) return;
-    setState(() => _ply--);
+    _showPly(_ply - 1);
   }
 
   void _forward() {
     if (_busy || _atTip) return;
-    setState(() => _ply++);
+    _showPly(_ply + 1);
   }
 
   String get _statusText {
@@ -308,16 +330,32 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final hintTo = _atTip && !finished ? _s.hintTo : null;
     final hasNext = _index + 1 < _puzzleCount;
 
+    // Fixed slots for the status line and the bottom bar, so the board never
+    // moves when the text changes or the controls swap for the result bar.
+    const statusHeight = 48.0;
+    const barHeight = 112.0;
+
     return SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = math
+              .max(
+                0.0,
+                math.min(
+                  constraints.maxWidth,
+                  constraints.maxHeight - statusHeight - barHeight,
+                ),
+              )
+              .toDouble();
+
+          return Column(
+            children: [
+              SizedBox(
+                height: statusHeight,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
                     child: _StatusLine(
                       text: _statusText,
                       whiteToMove: _position.turn == Side.white,
@@ -328,44 +366,54 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                           : null,
                     ),
                   ),
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: PuzzleBoard(
-                      position: _position,
-                      flipped: _s.solverSide == Side.black,
-                      interactive: _atTip && !_busy && !finished,
-                      onMove: _onUserMove,
-                      lastMove: _s.lastMoves[_ply],
-                      hintFrom: hintFrom,
-                      hintTo: hintTo,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-
-          if (finished)
-            _FinishedBar(
-              hasNext: hasNext,
-              busy: _busy,
-              onRetry: _retry,
-              onNext: () => _nextPuzzle(context),
-            )
-          else
-            _ControlBar(
-              canHint:
-                  _atTip && !_busy && _s.hintLevel < PuzzleSession.maxHintLevel,
-              canReveal: !_busy,
-              canBack: _ply > 0 && !_busy,
-              canForward: !_atTip && !_busy,
-              onHint: _onHint,
-              onReveal: _onReveal,
-              onRetry: _retry,
-              onBack: _back,
-              onForward: _forward,
-            ),
-        ],
+              SizedBox(
+                width: side,
+                height: side,
+                child: PuzzleBoard(
+                  position: _position,
+                  flipped: _s.solverSide == Side.black,
+                  interactive: _atTip && !_busy && !finished,
+                  onMove: _onUserMove,
+                  lastMove: _s.lastMoves[_ply],
+                  hintFrom: hintFrom,
+                  hintTo: hintTo,
+                  slide: _slide,
+                  slideKey: _slideKey,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                height: barHeight,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: finished
+                      ? _FinishedBar(
+                          hasNext: hasNext,
+                          busy: _busy,
+                          onRetry: _retry,
+                          onNext: () => _nextPuzzle(context),
+                        )
+                      : _ControlBar(
+                          canHint:
+                              _atTip &&
+                              !_busy &&
+                              _s.hintLevel < PuzzleSession.maxHintLevel,
+                          canReveal: !_busy,
+                          canBack: _ply > 0 && !_busy,
+                          canForward: !_atTip && !_busy,
+                          onHint: _onHint,
+                          onReveal: _onReveal,
+                          onRetry: _retry,
+                          onBack: _back,
+                          onForward: _forward,
+                        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

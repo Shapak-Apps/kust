@@ -23,6 +23,41 @@ Square _displayCastleTarget(Square target) {
   return target;
 }
 
+/// The glide for stepping from [fromPly] to [toPly] through [positions] and
+/// [moves] (as built by the replay and puzzle screens), or null when the
+/// squares are not one move apart. Stepping back reverses the move, and
+/// castling shows the king landing on its real square.
+({Square from, Square to})? slideBetween(
+  List<Position> positions,
+  List<NormalMove?> moves,
+  int fromPly,
+  int toPly,
+) {
+  Square landing(NormalMove move, Position before) {
+    final mover = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    final castles =
+        mover?.role == Role.king &&
+        target != null &&
+        target.color == mover?.color;
+    if (!castles) return move.to;
+    final kingSide = fileOf(move.to) > fileOf(move.from);
+    return squareAt(kingSide ? 6 : 2, rankOf(move.to));
+  }
+
+  if (toPly == fromPly + 1) {
+    final move = moves[toPly];
+    if (move == null) return null;
+    return (from: move.from, to: landing(move, positions[fromPly]));
+  }
+  if (toPly == fromPly - 1) {
+    final move = moves[fromPly];
+    if (move == null) return null;
+    return (from: landing(move, positions[toPly]), to: move.from);
+  }
+  return null;
+}
+
 class PuzzleBoard extends StatefulWidget {
   const PuzzleBoard({
     super.key,

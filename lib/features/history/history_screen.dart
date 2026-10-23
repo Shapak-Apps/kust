@@ -85,7 +85,9 @@ class HistoryScreen extends StatelessWidget {
                     KustNavBar.clearance(context),
                   ),
                   itemCount: games.length + (stats.total > 0 ? 1 : 0),
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  separatorBuilder: (context, i) => i == 0 && stats.total > 0
+                      ? const SizedBox(height: 8)
+                      : Divider(height: 1, thickness: 1, color: context.k.line),
                   itemBuilder: (context, i) {
                     if (stats.total > 0) {
                       if (i == 0) return _StatsCard(stats: stats);
@@ -203,52 +205,127 @@ class _GameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final color = resultColor(context, game);
     final plies = game.uciMoves.length;
+    final accuracy = game.accuracy;
     final change = game.ratingChange;
 
-    return GestureDetector(
-      onLongPress: () => _confirmDelete(context),
-      child: KustCard(
-        padding: const EdgeInsets.all(12),
+    // A flat row: no card around it. Rows are separated by hairlines.
+    return Semantics(
+      button: true,
+      label:
+          '${game.isLocal ? 'Pass and play' : 'Game against ${game.botName}'}, '
+          '${describeResult(game)}'
+          '${accuracy == null ? '' : ', accuracy ${accuracy.toStringAsFixed(1)} percent'}',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () => context.push('/history/${game.id}'),
-        child: Row(
-          children: [
-            _Avatar(game: game),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    game.isLocal
-                        ? 'Pass & Play'
-                        : 'vs ${game.botName ?? 'Bot'}',
-                    style: k.body.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    '${formatGameDate(game.date)} · ${(plies + 1) ~/ 2} moves'
-                    '${game.practice ? ' · Practice' : ''}',
-                    style: k.caption,
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  describeResult(game),
-                  style: k.body.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                  ),
+        onLongPress: () => _confirmDelete(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                child: Icon(
+                  _kindIcon(game),
+                  size: 22,
+                  color: game.isLocal || game.practice ? k.muted : k.accent,
                 ),
-                if (change != null)
-                  Text('${change > 0 ? '+' : ''}$change', style: k.caption),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(width: 12),
+              _Avatar(game: game),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            game.isLocal
+                                ? 'Pass & Play'
+                                : game.botName ?? 'Bot',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: k.body.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        if (game.botElo != null) ...[
+                          const SizedBox(width: 6),
+                          Text('(${game.botElo})', style: k.caption),
+                        ],
+                        const SizedBox(width: 8),
+                        _ResultBadge(game: game),
+                      ],
+                    ),
+                    Text(
+                      '${formatGameDate(game.date)} · ${(plies + 1) ~/ 2} moves'
+                      '${game.practice ? ' · Practice' : ''}'
+                      '${change == null ? '' : ' · ${change > 0 ? '+' : ''}$change'}',
+                      style: k.caption,
+                    ),
+                  ],
+                ),
+              ),
+              if (accuracy != null)
+                Text(
+                  '${accuracy.toStringAsFixed(1)}%',
+                  style: k.body.copyWith(fontWeight: FontWeight.w800),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static IconData _kindIcon(GameRecord game) {
+    if (game.isLocal) return Icons.people_outline_rounded;
+    if (game.practice) return Icons.school_outlined;
+    return game.timeControl == null
+        ? Icons.hourglass_empty_rounded
+        : Icons.bolt_rounded;
+  }
+}
+
+/// Small square with + (win), - (loss) or = (draw) like the reference list.
+class _ResultBadge extends StatelessWidget {
+  const _ResultBadge({required this.game});
+
+  final GameRecord game;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final String symbol;
+    final Color color;
+    if (game.isLocal || game.result == GameRecord.draw) {
+      symbol = '=';
+      color = k.muted;
+    } else if (game.result == GameRecord.win) {
+      symbol = '+';
+      color = k.success;
+    } else {
+      symbol = '\u2212';
+      color = k.danger;
+    }
+    return Container(
+      width: 18,
+      height: 18,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        symbol,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          height: 1,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
