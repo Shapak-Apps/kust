@@ -66,6 +66,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
   final ScrollController _moveScroll = ScrollController();
+  late final List<GlobalKey> _moveKeys = List.generate(
+    _game?.sanMoves.length ?? 0,
+    (_) => GlobalKey(),
+  );
 
   int _ply = 0;
   ({Square from, Square to})? _slide;
@@ -122,14 +126,17 @@ class _ReplayScreenState extends State<ReplayScreen> {
     return squareAt(kingSide ? 6 : 2, rankOf(move.to));
   }
 
+  /// Centers the current move in the strip.
   void _scrollToCurrent() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_moveScroll.hasClients || _last == 0) return;
-      final target = _moveScroll.position.maxScrollExtent * _ply / _last;
-      _moveScroll.animateTo(
-        target,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+      if (!mounted || _ply == 0 || _ply > _moveKeys.length) return;
+      final context = _moveKeys[_ply - 1].currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
       );
     });
   }
@@ -273,19 +280,35 @@ class _ReplayScreenState extends State<ReplayScreen> {
         children: [
           SizedBox(
             height: 36,
-            child: ListView.separated(
-              controller: _moveScroll,
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: game.sanMoves.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 16),
-              itemBuilder: (context, i) => _MoveText(
-                label: i.isEven
-                    ? '${i ~/ 2 + 1}. ${game.sanMoves[i]}'
-                    : game.sanMoves[i],
-                selected: _ply == i + 1,
-                onTap: () => _go(i + 1),
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Half a screen of space at both ends lets even the first
+                // and last move reach the center.
+                final edge = constraints.maxWidth / 2;
+                return SingleChildScrollView(
+                  controller: _moveScroll,
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(width: edge),
+                      for (var i = 0; i < game.sanMoves.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 16),
+                        KeyedSubtree(
+                          key: _moveKeys[i],
+                          child: _MoveText(
+                            label: i.isEven
+                                ? '${i ~/ 2 + 1}. ${game.sanMoves[i]}'
+                                : game.sanMoves[i],
+                            selected: _ply == i + 1,
+                            onTap: () => _go(i + 1),
+                          ),
+                        ),
+                      ],
+                      SizedBox(width: edge),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           Text(san, style: k.title),
@@ -306,19 +329,16 @@ class _ReplayScreenState extends State<ReplayScreen> {
             ),
           Expanded(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PuzzleBoard(
-                    position: position,
-                    flipped: !game.isLocal && !game.playerIsWhite,
-                    interactive: false,
-                    onMove: (_) {},
-                    lastMove: _replay.moves[_ply],
-                    slide: _slide,
-                    slideKey: _slideKey,
-                  ),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: PuzzleBoard(
+                  position: position,
+                  flipped: !game.isLocal && !game.playerIsWhite,
+                  interactive: false,
+                  onMove: (_) {},
+                  lastMove: _replay.moves[_ply],
+                  slide: _slide,
+                  slideKey: _slideKey,
                 ),
               ),
             ),

@@ -6,6 +6,7 @@ import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/replay_screen.dart';
+import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_controls.dart';
 
@@ -33,6 +34,7 @@ Future<void> _openSettings(WidgetTester tester) async {
 }
 
 void main() {
+  _layoutTests();
   testWidgets('shows the move text and steps through the game', (tester) async {
     await tester.pumpWidget(_app());
     expect(find.text('Start position'), findsOneWidget);
@@ -162,5 +164,32 @@ void main() {
 
     expect(find.byType(EvaluationBar), findsNothing);
     expect(find.text('Evaluation is unavailable right now'), findsOneWidget);
+  });
+}
+
+void _layoutTests() {
+  testWidgets('the current move is centered in the strip', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_app());
+    for (final label in ['1. e4', '2. Nf3', 'Nc6']) {
+      await tester.tap(find.text(label).first);
+      await tester.pumpAndSettle();
+      final center = tester.getCenter(find.text(label).first);
+      expect(center.dx, closeTo(200, 2), reason: label);
+    }
+  });
+
+  testWidgets('the board uses the full width', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_app());
+    final board = tester.getRect(find.byType(PuzzleBoard));
+    expect(board.left, 0);
+    expect(board.width, 400);
   });
 }
