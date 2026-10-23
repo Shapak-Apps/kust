@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
@@ -89,6 +90,9 @@ class ChessEngine {
   final List<Completer<String>> _waiters = [];
 
   bool _ready = false;
+
+  /// Mirrors [isReady] so the UI can react to the engine starting up.
+  static final ValueNotifier<bool> readyNotifier = ValueNotifier(false);
   Future<void>? _startFuture;
 
   Future<void> _chain = Future.value();
@@ -167,6 +171,7 @@ class ChessEngine {
     await _waitForLine((line) => line == 'readyok');
 
     _ready = true;
+    readyNotifier.value = true;
   }
 
   void _onLine(String line) {
@@ -383,6 +388,7 @@ class ChessEngine {
   /// Drops the process and fails everything still waiting on it.
   void _teardown() {
     _ready = false;
+    readyNotifier.value = false;
     _startFuture = null;
     _lastScoreLine = null;
     _scoreLines.clear();
