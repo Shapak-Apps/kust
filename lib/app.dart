@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:Kust/core/settings.dart';
-import 'package:Kust/theme.dart';
+import 'package:kust/core/settings.dart';
+import 'package:kust/theme.dart';
 
 /// Bouncy scrolling everywhere, no Android glow.
 class _KustScrollBehavior extends MaterialScrollBehavior {

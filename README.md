@@ -32,7 +32,11 @@ Toggle practice mode to play more freely while still getting the full board and 
 
 ### Rating System
 
-Küşt tracks your own Elo-style rating locally (starting at 1200), updates it after games against bots, and shows a rating-change badge in the post-game recap.
+Küşt tracks your own Elo-style rating locally (starting at 1200) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
+
+### Game History and Replay
+
+Every finished game is saved locally, newest first, with the opponent, result and moves. Open one from the History tab to step through it move by move. Long-press a game to delete it.
 
 ### Evaluation Bar
 
@@ -55,7 +59,9 @@ Used for two purposes:
 
 Stockfish does not enforce chess rules. `dartchess` owns the game state and legal move validation. Stockfish only sees FEN strings.
 
-Stockfish currently runs on Android and iOS. On unsupported platforms, Küşt falls back to local pass-and-play instead of failing silently.
+Stockfish currently runs on Android and iOS. On any other platform, or if the engine fails to start or stops responding, Küşt tells you and offers pass-and-play instead of freezing.
+
+The engine's two NNUE network files (about 110MB) are not bundled in the app. They are downloaded once on first use from `data.stockfishchess.org`, verified against the SHA-256 prefix in their file names, and cached in the app's support directory. A progress bar is shown in the game while this happens, and a failed download can be retried.
 
 ## Tech Stack
 
@@ -69,7 +75,8 @@ Stockfish currently runs on Android and iOS. On unsupported platforms, Küşt fa
 | go_router          | Declarative navigation                            |
 | audioplayers       | Move and game event sounds                        |
 | shared_preferences | Onboarding state and settings persistence         |
-| Hive               | Local rating storage                              |
+| Hive               | Local ratings, puzzle progress and game history   |
+| dio                | One-time download of the engine's network files  |
 | flutter_svg        | SVG asset rendering                               |
 
 ## Getting Started
@@ -79,9 +86,8 @@ Stockfish currently runs on Android and iOS. On unsupported platforms, Küşt fa
 - Flutter SDK
 - Dart SDK compatible with the Flutter version
 - Git
-- A working Stockfish integration for your target platform (Android/iOS)
-
-Stockfish setup differs between Android, iOS, and desktop. Follow the platform-specific configuration in the project when setting up the engine.
+- An Android or iOS device or emulator to play against bots (other platforms run pass-and-play only)
+- An internet connection the first time you play a bot game, to download the engine files
 
 ### Clone and Run
 
@@ -91,6 +97,19 @@ cd kust
 flutter pub get
 flutter run
 ```
+
+### Release builds
+
+Release builds are signed with `android/key.properties`, which is not committed:
+
+```properties
+storeFile=../upload-keystore.jks
+storePassword=...
+keyAlias=upload
+keyPassword=...
+```
+
+Without that file a release build falls back to the debug key so `flutter run --release` still works locally. Never publish such a build. The Android and iOS application ID is `com.shapakapps.kust`.
 
 ## Roadmap (will be updated soon)
 
@@ -102,10 +121,11 @@ flutter run
 - [x] Time controls
 - [x] Local Elo-style rating tracking
 - [x] Live evaluation bar
-- [ ] Puzzles
-- [ ] Complete game history
+- [x] Puzzles (level 1)
+- [x] Game history with replay
+- [x] Local game storage
+- [ ] More puzzle levels and themes
 - [ ] FEN and PGN support
-- [ ] Local game storage
 - [ ] Post-game analysis
 - [ ] Inaccuracy, mistake, and blunder detection
 - [ ] Missed opportunity detection

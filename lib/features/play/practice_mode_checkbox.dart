@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_controls.dart';
 
 class PracticeModeCheckbox extends StatelessWidget {
   const PracticeModeCheckbox({

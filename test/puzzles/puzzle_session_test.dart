@@ -1,8 +1,8 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:Kust/features/puzzles/puzzle_data.dart';
-import 'package:Kust/features/puzzles/puzzle_session.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/features/puzzles/puzzle_session.dart';
 
 NormalMove _m(String uci) => NormalMove.fromUci(uci);
 

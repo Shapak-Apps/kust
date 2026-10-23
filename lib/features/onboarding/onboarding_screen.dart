@@ -100,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         showSkip = true;
       }
     });
-  } 
+  }
 
   void skipAuth() {
     setState(() {

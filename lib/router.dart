@@ -1,14 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:Kust/features/onboarding/onboarding_screen.dart';
-import 'package:Kust/features/game/game_screen.dart';
-import 'package:Kust/features/game/game_args.dart';
-import 'package:Kust/features/play/play_screen.dart';
-import 'package:Kust/features/puzzles/puzzle_game_screen.dart';
-import 'package:Kust/features/history/history_screen.dart';
-import 'package:Kust/features/puzzles/puzzles_screen.dart';
-import 'package:Kust/widgets/app_shell.dart';
+import 'package:kust/features/onboarding/onboarding_screen.dart';
+import 'package:kust/features/game/game_screen.dart';
+import 'package:kust/features/game/game_args.dart';
+import 'package:kust/features/play/play_screen.dart';
+import 'package:kust/features/puzzles/puzzle_game_screen.dart';
+import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/history/replay_screen.dart';
+import 'package:kust/features/puzzles/puzzles_screen.dart';
+import 'package:kust/widgets/app_shell.dart';
 
 GoRouter createRouter({required bool onboardingCompleted}) {
   return GoRouter(
@@ -40,6 +41,12 @@ GoRouter createRouter({required bool onboardingCompleted}) {
           level: int.parse(state.pathParameters['level']!),
           index: int.parse(state.pathParameters['index']!),
         ),
+      ),
+
+      GoRoute(
+        path: '/history/:id',
+        builder: (context, state) =>
+            ReplayScreen(gameId: state.pathParameters['id']!),
       ),
 
       ShellRoute(

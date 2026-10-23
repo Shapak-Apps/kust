@@ -1,6 +1,6 @@
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 
 final List<String> _pieceAssets = [
   for (final color in ['w', 'b'])

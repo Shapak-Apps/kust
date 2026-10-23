@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/features/game/time_control.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 
 class PickTimeControlModal extends StatefulWidget {
   const PickTimeControlModal({super.key, required this.onPick});

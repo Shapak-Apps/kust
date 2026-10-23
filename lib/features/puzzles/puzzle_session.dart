@@ -1,6 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 
-import 'package:Kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
 
 enum PuzzleStatus { inProgress, solved, revealed }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:Kust/ui/kust_nav_bar.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/kust_nav_bar.dart';
+import 'package:kust/ui/tokens.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;

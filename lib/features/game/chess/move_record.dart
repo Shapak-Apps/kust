@@ -1,6 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 
-import 'package:Kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 
 class MoveRecord {
   const MoveRecord({
@@ -30,4 +30,3 @@ class MoveRecord {
     );
   }
 }
-

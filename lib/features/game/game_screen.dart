@@ -6,19 +6,23 @@ import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/game/chess/board/chess_board.dart';
-import 'package:Kust/features/game/chess/chess_controller.dart';
-import 'package:Kust/features/game/chess/sound_service.dart';
-import 'package:Kust/features/play/pick_opponent_modal.dart';
-import 'package:Kust/features/game/chess/chess_helpers.dart';
-import 'package:Kust/features/game/chess/move_record.dart';
-import 'package:Kust/features/game/evaluation_bar.dart';
-import 'package:Kust/features/game/more_floating_menu.dart';
-import 'package:Kust/features/game/time_control.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_sheet.dart';
-import 'package:Kust/ui/kust_top_bar.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/features/game/chess/board/chess_board.dart';
+import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/chess/move_record.dart';
+import 'package:kust/features/game/evaluation_bar.dart';
+import 'package:kust/features/game/more_floating_menu.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/nnue_store.dart';
+import 'package:kust/features/game/game_args.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/tokens.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
@@ -125,6 +129,54 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  bool _engineSheetOpen = false;
+
+  void _showEngineFailed() {
+    if (_engineSheetOpen || !mounted) return;
+    _engineSheetOpen = true;
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KustSheetHeader(
+            title: 'Engine unavailable',
+            subtitle: ChessEngine.isSupported
+                ? 'The chess engine could not start. It needs a one-time '
+                      'download, so check your connection and try again.'
+                : 'Playing against bots is not supported on this device.',
+          ),
+          if (ChessEngine.isSupported) ...[
+            KustButton(
+              label: 'Try again',
+              icon: Icons.refresh_rounded,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                ref.read(chessControllerProvider.notifier).retryEngine();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+          KustButton(
+            label: 'Play locally instead',
+            style: KustButtonStyle.outline,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              context.go(
+                '/game',
+                extra: GameArgs(
+                  playerSide: Side.white,
+                  isLocal: true,
+                  timeControl: widget.timeControl,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ).whenComplete(() => _engineSheetOpen = false);
+  }
+
   void _confirmResign() {
     showKustSheet<void>(
       context,
@@ -160,6 +212,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           KustSheetHeader(title: title, subtitle: message),
+          const _RatingChange(),
           KustButton(
             label: 'Rematch',
             icon: Icons.refresh_rounded,
@@ -233,6 +286,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
   @override
   Widget build(BuildContext context) {
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
+      if (next.engineFailed && previous?.engineFailed != true) {
+        _showEngineFailed();
+      }
       if (previous?.status == next.status) return;
 
       switch (next.status) {
@@ -322,6 +378,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 ),
             ],
           ),
+          const _EngineDownloadBanner(),
           Expanded(
             child: SafeArea(
               top: false,
@@ -406,6 +463,75 @@ class _GameScreenState extends ConsumerState<GameScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Shown while the engine's network files are downloaded on first use.
+class _EngineDownloadBanner extends StatelessWidget {
+  const _EngineDownloadBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder<double?>(
+      valueListenable: NnueStore.progress,
+      builder: (context, value, _) {
+        if (value == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Preparing the engine (one-time download) · '
+                '${(value * 100).round()}%',
+                style: k.caption,
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 4,
+                  color: k.accent,
+                  backgroundColor: k.surfaceAlt,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// "Rating 1200 → 1212" line in the result sheet, once it is recorded.
+class _RatingChange extends ConsumerWidget {
+  const _RatingChange();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final change = ref.watch(
+      chessControllerProvider.select((g) => g.ratingChange),
+    );
+    if (change == null) return const SizedBox.shrink();
+    final k = context.k;
+    final now = PlayerRatingStore.instance.rating;
+    final sign = change > 0 ? '+' : '';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        'Rating $now ($sign$change)',
+        style: k.body.copyWith(
+          fontWeight: FontWeight.w800,
+          color: change > 0
+              ? k.success
+              : change < 0
+              ? k.danger
+              : k.muted,
+        ),
       ),
     );
   }

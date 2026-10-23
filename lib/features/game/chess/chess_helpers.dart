@@ -1,7 +1,7 @@
 import 'package:dartchess/dartchess.dart';
 
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
-import 'package:Kust/features/game/chess/move_record.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/move_record.dart';
 
 String assetForPiece(Piece piece) {
   final color = piece.color == Side.white ? 'w' : 'b';

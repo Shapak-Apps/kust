@@ -4,12 +4,12 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:Kust/features/play/bots.dart';
-import 'package:Kust/features/play/practice_mode_checkbox.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/features/play/bots.dart';
+import 'package:kust/features/play/practice_mode_checkbox.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/tokens.dart';
 
 class PickSideModal extends StatefulWidget {
   const PickSideModal({super.key, required this.bot, required this.onPlay});

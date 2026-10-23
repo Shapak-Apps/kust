@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/tokens.dart';
 
 const double _itemWidth = 80;
 const double _itemHeight = 54;

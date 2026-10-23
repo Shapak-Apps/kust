@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:Kust/core/storage/app_storage.dart';
-import 'package:Kust/features/game/game_args.dart';
-import 'package:Kust/features/play/bot_card.dart';
-import 'package:Kust/features/play/pick_opponent_modal.dart';
-import 'package:Kust/features/play/pick_side_modal.dart';
-import 'package:Kust/features/play/pick_time_modal.dart';
-import 'package:Kust/features/play/play_mode_modal.dart';
-import 'package:Kust/ui/kust_button.dart';
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
-import 'package:Kust/ui/kust_nav_bar.dart';
-import 'package:Kust/ui/kust_top_bar.dart';
-import 'package:Kust/ui/tokens.dart';
-import 'package:Kust/widgets/more_sheet.dart';
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/game/game_args.dart';
+import 'package:kust/features/play/bot_card.dart';
+import 'package:kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/features/play/pick_side_modal.dart';
+import 'package:kust/features/play/pick_time_modal.dart';
+import 'package:kust/features/play/play_mode_modal.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/kust_nav_bar.dart';
+import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/more_sheet.dart';
 
 /// Kept for the puzzle screens that still reference it.
 const Color kAccentColor = KustTokens.gold;
@@ -257,9 +258,15 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 4),
           ValueListenableBuilder(
             valueListenable: AppStorage.instance.botProgressListenable(),
-            builder: (context, _, _) => Text(
-              'Bots beaten: ${AppStorage.instance.beatenBotIds.length} of $total',
-              style: k.body.copyWith(color: k.accentInk.withValues(alpha: 0.7)),
+            builder: (context, _, _) => ValueListenableBuilder(
+              valueListenable: PlayerRatingStore.instance.listenable(),
+              builder: (context, _, _) => Text(
+                'Rating ${PlayerRatingStore.instance.rating} · '
+                'Bots beaten ${AppStorage.instance.beatenBotIds.length} of $total',
+                style: k.body.copyWith(
+                  color: k.accentInk.withValues(alpha: 0.7),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),

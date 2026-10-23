@@ -2,21 +2,24 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
 
+import 'package:kust/features/game/chess/nnue_store.dart';
+
 const _nnueBig = 'nn-c288c895ea92.nnue';
 const _nnueSmall = 'nn-37f18f62d772.nnue';
 
-Future<String> _extractNnue(String assetName, String dirPath) async {
-  final file = File('$dirPath/$assetName');
-  if (!await file.exists()) {
-    final bytes = await rootBundle.load('assets/nnue/$assetName');
-    await file.writeAsBytes(bytes.buffer.asUint8List());
-  }
-  return file.path;
+/// The engine cannot be used right now (unsupported platform, missing
+/// network files, crashed or unresponsive process).
+class EngineUnavailableException implements Exception {
+  const EngineUnavailableException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'EngineUnavailableException: $message';
 }
 
 class EvalScore {
@@ -74,9 +77,16 @@ class ChessEngine {
   static final RegExp _multiPvRe = RegExp(r' multipv (\d+)');
   static final RegExp _pvMoveRe = RegExp(r' pv (\S+)');
 
+  /// Stockfish only ships native code for these platforms.
+  static bool get isSupported => Platform.isAndroid || Platform.isIOS;
+
+  /// How long a command may stay unanswered beyond its own think time.
+  static const Duration _responseGrace = Duration(seconds: 10);
+
   Stockfish? _engine;
   StreamSubscription<String>? _stdoutSubscription;
   final List<void Function(String)> _listeners = [];
+  final List<Completer<String>> _waiters = [];
 
   bool _ready = false;
   Future<void>? _startFuture;
@@ -96,9 +106,16 @@ class ChessEngine {
     return result;
   }
 
+  /// Starts the engine. A failed start is not cached, so calling again
+  /// retries from scratch.
   Future<void> start() {
     if (_ready) return Future.value();
-    return _startFuture ??= _start();
+    return _startFuture ??= _start().catchError((Object error) {
+      _teardown();
+      throw error is EngineUnavailableException
+          ? error
+          : EngineUnavailableException('$error');
+    });
   }
 
   void warmUp() {
@@ -106,9 +123,32 @@ class ChessEngine {
   }
 
   Future<void> _start() async {
+    if (!isSupported) {
+      throw const EngineUnavailableException(
+        'The engine is not available on this platform',
+      );
+    }
+
     final dir = await getApplicationSupportDirectory();
-    final bigPath = await _extractNnue(_nnueBig, dir.path);
-    final smallPath = await _extractNnue(_nnueSmall, dir.path);
+    final store = NnueStore();
+    final String bigPath;
+    final String smallPath;
+    try {
+      smallPath = await store.ensure(
+        _nnueSmall,
+        dir.path,
+        progressFrom: 0,
+        progressTo: 0.05,
+      );
+      bigPath = await store.ensure(
+        _nnueBig,
+        dir.path,
+        progressFrom: 0.05,
+        progressTo: 1,
+      );
+    } finally {
+      NnueStore.progress.value = null;
+    }
 
     Stockfish.setNnueDirectory(dir.path);
     _engine = await stockfishAsync();
@@ -175,8 +215,23 @@ class ChessEngine {
     _send('position fen $fen');
     _send('go movetime ${thinkTime.inMilliseconds}');
 
-    final line = await _waitForLine((line) => line.startsWith('bestmove '));
-    return line.split(' ')[1];
+    final line = await _waitForBestMove(thinkTime);
+    final parts = line.split(' ');
+    return parts.length > 1 ? parts[1] : '(none)';
+  }
+
+  /// Waits for `bestmove`. If the engine goes silent it is torn down so the
+  /// next call starts a fresh process instead of hanging forever.
+  Future<String> _waitForBestMove(Duration thinkTime) async {
+    try {
+      return await _waitForLine(
+        (line) => line.startsWith('bestmove '),
+        timeout: thinkTime + _responseGrace,
+      );
+    } on TimeoutException {
+      _teardown();
+      throw const EngineUnavailableException('The engine stopped responding');
+    }
   }
 
   Future<EvalScore?> evaluateFen(
@@ -195,7 +250,7 @@ class ChessEngine {
     _lastScoreLine = null;
     _send('position fen $fen');
     _send('go movetime ${thinkTime.inMilliseconds}');
-    await _waitForLine((line) => line.startsWith('bestmove '));
+    await _waitForBestMove(thinkTime);
 
     final score = _parseScore(_lastScoreLine);
     if (score == null) return null;
@@ -203,9 +258,7 @@ class ChessEngine {
     final whiteToMove = fen.split(' ')[1] == 'w';
     final whiteValue = whiteToMove ? score.value : -score.value;
 
-    return score.mate
-        ? EvalScore(mate: whiteValue)
-        : EvalScore(cp: whiteValue);
+    return score.mate ? EvalScore(mate: whiteValue) : EvalScore(cp: whiteValue);
   }
 
   Future<String> evaluateBestHint(String fen) {
@@ -290,7 +343,7 @@ class ChessEngine {
     _send('position fen $fen');
     _send('go movetime ${thinkTime.inMilliseconds}');
 
-    final line = await _waitForLine((l) => l.startsWith('bestmove '));
+    final line = await _waitForBestMove(thinkTime);
     _send('setoption name MultiPV value 1');
 
     final parts = line.split(' ');
@@ -325,7 +378,10 @@ class ChessEngine {
     _send('stop');
   }
 
-  void dispose() {
+  void dispose() => _teardown();
+
+  /// Drops the process and fails everything still waiting on it.
+  void _teardown() {
     _ready = false;
     _startFuture = null;
     _lastScoreLine = null;
@@ -333,7 +389,17 @@ class ChessEngine {
     _stdoutSubscription?.cancel();
     _stdoutSubscription = null;
     _listeners.clear();
-    _engine?.dispose();
+    for (final waiter in List.of(_waiters)) {
+      if (!waiter.isCompleted) {
+        waiter.completeError(
+          const EngineUnavailableException('The engine was shut down'),
+        );
+      }
+    }
+    _waiters.clear();
+    try {
+      _engine?.dispose();
+    } catch (_) {}
     _engine = null;
   }
 
@@ -345,8 +411,12 @@ class ChessEngine {
     engine.stdin = command;
   }
 
-  Future<String> _waitForLine(bool Function(String line) matcher) {
+  Future<String> _waitForLine(
+    bool Function(String line) matcher, {
+    Duration timeout = const Duration(seconds: 30),
+  }) {
     final completer = Completer<String>();
+    _waiters.add(completer);
 
     late void Function(String) listener;
     listener = (line) {
@@ -359,7 +429,15 @@ class ChessEngine {
     };
 
     _listeners.add(listener);
-    return completer.future;
+    return completer.future
+        .timeout(
+          timeout,
+          onTimeout: () {
+            _listeners.remove(listener);
+            throw TimeoutException('No response from the engine', timeout);
+          },
+        )
+        .whenComplete(() => _waiters.remove(completer));
   }
 }
 

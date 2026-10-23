@@ -1,6 +1,6 @@
 import 'package:dartchess/dartchess.dart';
-import 'package:Kust/features/play/pick_opponent_modal.dart';
-import 'package:Kust/features/game/time_control.dart';
+import 'package:kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/features/game/time_control.dart';
 
 class GameArgs {
   final Bot? bot;

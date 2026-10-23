@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:Kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:dartchess/dartchess.dart';
 
 class BotPolicy {

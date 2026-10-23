@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:Kust/ui/kust_controls.dart';
-import 'package:Kust/ui/kust_sheet.dart';
-import 'package:Kust/ui/tokens.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/tokens.dart';
 
 class PlayModeModal extends StatelessWidget {
   const PlayModeModal({super.key, required this.onBots, required this.onLocal});

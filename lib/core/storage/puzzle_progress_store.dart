@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import 'package:Kust/core/storage/app_storage.dart';
-import 'package:Kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/features/puzzles/puzzle_data.dart';
 
 class PuzzleProgress {
   const PuzzleProgress({
