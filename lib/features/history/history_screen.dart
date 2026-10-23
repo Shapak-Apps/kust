@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/history/pgn.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
@@ -75,6 +76,7 @@ class HistoryScreen extends StatelessWidget {
               builder: (context, _, _) {
                 final games = GameHistoryStore.instance.all();
                 if (games.isEmpty) return const _EmptyHistory();
+                final stats = HistoryStats.from(games);
                 return ListView.separated(
                   padding: EdgeInsets.fromLTRB(
                     20,
@@ -82,13 +84,49 @@ class HistoryScreen extends StatelessWidget {
                     20,
                     KustNavBar.clearance(context),
                   ),
-                  itemCount: games.length,
+                  itemCount: games.length + (stats.total > 0 ? 1 : 0),
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) => _GameTile(game: games[i]),
+                  itemBuilder: (context, i) {
+                    if (stats.total > 0) {
+                      if (i == 0) return _StatsCard(stats: stats);
+                      i--;
+                    }
+                    return _GameTile(game: games[i]);
+                  },
                 );
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsCard extends StatelessWidget {
+  const _StatsCard({required this.stats});
+
+  final HistoryStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    Widget cell(String value, String label, Color color) => Expanded(
+      child: Column(
+        children: [
+          Text(value, style: k.title.copyWith(color: color)),
+          Text(label, style: k.caption),
+        ],
+      ),
+    );
+
+    return KustCard(
+      child: Row(
+        children: [
+          cell('${stats.wins}', 'Wins', k.success),
+          cell('${stats.losses}', 'Losses', k.danger),
+          cell('${stats.draws}', 'Draws', k.muted),
+          cell('${stats.winRate}%', 'Win rate', k.ink),
         ],
       ),
     );

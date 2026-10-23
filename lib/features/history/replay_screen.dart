@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/history/pgn.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -28,22 +33,103 @@ import 'package:kust/ui/tokens.dart';
 }
 
 class ReplayScreen extends StatefulWidget {
-  const ReplayScreen({super.key, required this.gameId});
+  const ReplayScreen({super.key, required this.gameId, this.record});
 
   final String gameId;
+
+  /// Use this game instead of looking [gameId] up in the store (for tests).
+  final GameRecord? record;
 
   @override
   State<ReplayScreen> createState() => _ReplayScreenState();
 }
 
 class _ReplayScreenState extends State<ReplayScreen> {
-  late final GameRecord? _game = GameHistoryStore.instance.byId(widget.gameId);
+  late final GameRecord? _game =
+      widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
+  final ScrollController _moveScroll = ScrollController();
   int _ply = 0;
+  bool _playing = false;
+  bool _fast = false;
+  Timer? _timer;
+
+  static const Duration _slowStep = Duration(milliseconds: 1000);
+  static const Duration _fastStep = Duration(milliseconds: 450);
 
   int get _last => _replay.positions.length - 1;
 
-  void _go(int ply) => setState(() => _ply = ply.clamp(0, _last));
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _moveScroll.dispose();
+    super.dispose();
+  }
+
+  void _go(int ply) {
+    _stop();
+    _show(ply);
+  }
+
+  void _show(int ply) {
+    setState(() => _ply = ply.clamp(0, _last));
+    _scrollToCurrent();
+  }
+
+  void _stop() {
+    _timer?.cancel();
+    _timer = null;
+    if (_playing) setState(() => _playing = false);
+  }
+
+  /// Watch the game play out. Pressing play at the end starts over.
+  void _togglePlay() {
+    if (_playing) {
+      _stop();
+      return;
+    }
+    if (_last == 0) return;
+    if (_ply >= _last) _show(0);
+    setState(() => _playing = true);
+    _schedule();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_fast ? _fastStep : _slowStep, (_) {
+      if (_ply >= _last) {
+        _stop();
+        return;
+      }
+      _show(_ply + 1);
+      if (_ply >= _last) _stop();
+    });
+  }
+
+  void _toggleSpeed() {
+    setState(() => _fast = !_fast);
+    if (_playing) _schedule();
+  }
+
+  void _scrollToCurrent() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_moveScroll.hasClients || _last == 0) return;
+      final target = _moveScroll.position.maxScrollExtent * _ply / _last;
+      _moveScroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _copyPgn(GameRecord game) async {
+    await Clipboard.setData(ClipboardData(text: buildPgn(game)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('PGN copied')));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +155,14 @@ class _ReplayScreenState extends State<ReplayScreen> {
               onTap: () =>
                   context.canPop() ? context.pop() : context.go('/history'),
             ),
+            trailing: [
+              if (game != null && game.sanMoves.isNotEmpty)
+                KustIconButton(
+                  icon: Icons.copy_rounded,
+                  label: 'Copy PGN',
+                  onTap: () => _copyPgn(game),
+                ),
+            ],
           ),
           Expanded(
             child: game == null
@@ -129,6 +223,24 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
             ),
           ),
+          SizedBox(
+            height: 44,
+            child: ListView.separated(
+              controller: _moveScroll,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: game.sanMoves.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, i) => _MoveChip(
+                label: i.isEven
+                    ? '${i ~/ 2 + 1}. ${game.sanMoves[i]}'
+                    : game.sanMoves[i],
+                selected: _ply == i + 1,
+                onTap: () => _go(i + 1),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
           Text(san, style: k.title),
           Text('Move $_ply of $_last', style: k.caption),
           Padding(
@@ -149,6 +261,15 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   onTap: _ply > 0 ? () => _go(_ply - 1) : null,
                 ),
                 KustIconButton(
+                  icon: _playing
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  label: _playing ? 'Pause' : 'Watch game',
+                  size: 56,
+                  filled: true,
+                  onTap: _last == 0 ? null : _togglePlay,
+                ),
+                KustIconButton(
                   icon: Icons.chevron_right_rounded,
                   label: 'Next move',
                   size: 48,
@@ -163,7 +284,64 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Pressable(
+              onTap: _toggleSpeed,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: k.surfaceAlt,
+                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
+                ),
+                child: Text(
+                  _fast ? 'Speed 2x' : 'Speed 1x',
+                  style: k.caption.copyWith(color: k.ink),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _MoveChip extends StatelessWidget {
+  const _MoveChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Pressable(
+      onTap: onTap,
+      scale: 0.95,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: selected ? k.accent : k.surface,
+          borderRadius: BorderRadius.circular(KustSpace.rSmall),
+          border: Border.all(color: selected ? k.accent : k.line),
+        ),
+        child: Text(
+          label,
+          style: k.body.copyWith(
+            fontWeight: FontWeight.w700,
+            color: selected ? k.accentInk : k.ink,
+          ),
+        ),
       ),
     );
   }
