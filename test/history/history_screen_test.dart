@@ -89,6 +89,62 @@ void main() {
     expect(avatarOrIcon.dx, greaterThanOrEqualTo(20));
   });
 
+  testWidgets('the analyze icon has no circle around it and is larger', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => GameHistoryStore.instance.add(
+        const GameRecord(
+          id: 'big',
+          playedAt: 9,
+          isLocal: false,
+          result: GameRecord.win,
+          reason: '',
+          playerIsWhite: true,
+          uciMoves: [
+            'e2e4',
+            'e7e5',
+            'g1f3',
+            'b8c6',
+            'f1c4',
+            'g8f6',
+            'd2d3',
+            'd7d6',
+          ],
+          sanMoves: [],
+          botName: 'Karl',
+          botElo: 1000,
+        ),
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: const Scaffold(body: HistoryScreen()),
+      ),
+    );
+    await tester.pump();
+
+    final icon = find.byIcon(Icons.insights_rounded);
+    expect(icon, findsOneWidget);
+    expect(tester.widget<Icon>(icon).size, greaterThanOrEqualTo(26));
+    // No bordered round container (the old KustIconButton) around it.
+    expect(
+      find.ancestor(
+        of: icon,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration as BoxDecoration).shape == BoxShape.circle,
+        ),
+      ),
+      findsNothing,
+    );
+    // Still easy to hit.
+    expect(tester.getSize(icon.first).width, greaterThanOrEqualTo(26));
+  });
+
   testWidgets('rows show no move count', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

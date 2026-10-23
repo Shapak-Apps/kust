@@ -8,6 +8,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
 String describeResult(GameRecord game) {
@@ -305,11 +306,24 @@ class _AnalysisSlot extends StatelessWidget {
         }
         final failed = state?.status == AnalysisStatus.failed;
         return slot(
-          KustIconButton(
-            icon: failed ? Icons.refresh_rounded : Icons.insights_rounded,
+          // Just the icon, no circle around it; the hit area stays generous.
+          Semantics(
+            button: true,
             label: failed ? 'Retry analysis' : 'Analyze this game',
-            size: 38,
-            onTap: () => _start(context),
+            excludeSemantics: true,
+            child: Pressable(
+              onTap: () => _start(context),
+              scale: 0.9,
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(
+                  failed ? Icons.refresh_rounded : Icons.insights_rounded,
+                  size: 28,
+                  color: k.ink,
+                ),
+              ),
+            ),
           ),
         );
       },
