@@ -263,17 +263,18 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final path = game.botId == null ? null : 'assets/bots/${_asset(game)}.png';
-    if (path == null) return const KustIconTile(Icons.people_outline_rounded);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(KustSpace.rSmall),
-      child: Image.asset(
-        path,
-        width: 44,
-        height: 44,
-        cacheWidth: 132,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const KustIconTile(Icons.smart_toy_outlined),
-      ),
+    // Avatars here are square: no corner rounding.
+    if (path == null) {
+      return const KustIconTile(Icons.people_outline_rounded, radius: 0);
+    }
+    return Image.asset(
+      path,
+      width: 44,
+      height: 44,
+      cacheWidth: 132,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) =>
+          const KustIconTile(Icons.smart_toy_outlined, radius: 0),
     );
   }
 

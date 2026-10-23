@@ -1,17 +1,20 @@
-import 'dart:async';
-
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/history/pgn.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// Positions reached by [uciMoves], starting from the initial position.
@@ -32,13 +35,27 @@ import 'package:kust/ui/tokens.dart';
   return (positions: positions, moves: moves);
 }
 
+/// Evaluates a position for the replay's evaluation bar.
+typedef ReplayEvaluator = Future<EvalScore?> Function(String fen);
+
+Future<EvalScore?> _engineEvaluator(String fen) =>
+    ChessEngine.instance.evaluateFen(fen);
+
 class ReplayScreen extends StatefulWidget {
-  const ReplayScreen({super.key, required this.gameId, this.record});
+  const ReplayScreen({
+    super.key,
+    required this.gameId,
+    this.record,
+    this.evaluator,
+  });
 
   final String gameId;
 
   /// Use this game instead of looking [gameId] up in the store (for tests).
   final GameRecord? record;
+
+  /// Overrides the chess engine for the evaluation bar (for tests).
+  final ReplayEvaluator? evaluator;
 
   @override
   State<ReplayScreen> createState() => _ReplayScreenState();
@@ -49,66 +66,60 @@ class _ReplayScreenState extends State<ReplayScreen> {
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
   final ScrollController _moveScroll = ScrollController();
-  int _ply = 0;
-  bool _playing = false;
-  bool _fast = false;
-  Timer? _timer;
 
-  static const Duration _slowStep = Duration(milliseconds: 1000);
-  static const Duration _fastStep = Duration(milliseconds: 450);
+  int _ply = 0;
+  ({Square from, Square to})? _slide;
+  int _slideKey = 0;
+
+  bool _evalOn = false;
+  bool _evalFailed = false;
+  final Map<int, EvalScore> _evals = {};
 
   int get _last => _replay.positions.length - 1;
 
   @override
   void dispose() {
-    _timer?.cancel();
     _moveScroll.dispose();
     super.dispose();
   }
 
+  /// Jumps to [ply]. A single step glides the piece (backwards when going
+  /// back); bigger jumps just set the position.
   void _go(int ply) {
-    _stop();
-    _show(ply);
-  }
-
-  void _show(int ply) {
-    setState(() => _ply = ply.clamp(0, _last));
-    _scrollToCurrent();
-  }
-
-  void _stop() {
-    _timer?.cancel();
-    _timer = null;
-    if (_playing) setState(() => _playing = false);
-  }
-
-  /// Watch the game play out. Pressing play at the end starts over.
-  void _togglePlay() {
-    if (_playing) {
-      _stop();
-      return;
+    final target = ply.clamp(0, _last);
+    if (target == _ply) return;
+    ({Square from, Square to})? slide;
+    if (target == _ply + 1) {
+      final move = _replay.moves[target]!;
+      slide = (from: move.from, to: _displaySquare(move.to, target));
+    } else if (target == _ply - 1) {
+      final move = _replay.moves[_ply]!;
+      slide = (from: _displaySquare(move.to, _ply), to: move.from);
     }
-    if (_last == 0) return;
-    if (_ply >= _last) _show(0);
-    setState(() => _playing = true);
-    _schedule();
-  }
-
-  void _schedule() {
-    _timer?.cancel();
-    _timer = Timer.periodic(_fast ? _fastStep : _slowStep, (_) {
-      if (_ply >= _last) {
-        _stop();
-        return;
-      }
-      _show(_ply + 1);
-      if (_ply >= _last) _stop();
+    setState(() {
+      _ply = target;
+      _slide = slide;
+      _slideKey++;
     });
+    _scrollToCurrent();
+    _evaluateCurrent();
   }
 
-  void _toggleSpeed() {
-    setState(() => _fast = !_fast);
-    if (_playing) _schedule();
+  /// dartchess writes castling as king-takes-rook; show the king landing on
+  /// its real square.
+  Square _displaySquare(Square to, int ply) {
+    final move = _replay.moves[ply];
+    if (move == null) return to;
+    final before = _replay.positions[ply - 1];
+    final mover = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    final castles =
+        mover?.role == Role.king &&
+        target != null &&
+        target.color == mover?.color;
+    if (!castles) return to;
+    final kingSide = fileOf(move.to) > fileOf(move.from);
+    return squareAt(kingSide ? 6 : 2, rankOf(move.to));
   }
 
   void _scrollToCurrent() {
@@ -123,12 +134,86 @@ class _ReplayScreenState extends State<ReplayScreen> {
     });
   }
 
+  Future<void> _evaluateCurrent() async {
+    if (!_evalOn || _evals.containsKey(_ply)) return;
+    final ply = _ply;
+    final position = _replay.positions[ply];
+
+    if (position.isCheckmate) {
+      // Nothing to search: the side that just moved won.
+      final whiteWon = position.turn == Side.black;
+      setState(() => _evals[ply] = EvalScore(cp: whiteWon ? 3000 : -3000));
+      return;
+    }
+
+    try {
+      final score = await (widget.evaluator ?? _engineEvaluator)(position.fen);
+      if (!mounted) return;
+      setState(() {
+        if (score != null) _evals[ply] = score;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _evalFailed = true);
+    }
+  }
+
+  void _setEval(bool on) {
+    setState(() {
+      _evalOn = on;
+      _evalFailed = false;
+    });
+    _evaluateCurrent();
+  }
+
   Future<void> _copyPgn(GameRecord game) async {
     await Clipboard.setData(ClipboardData(text: buildPgn(game)));
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(content: Text('PGN copied')));
+  }
+
+  void _openSettings(GameRecord game) {
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheet) {
+          final canEvaluate =
+              widget.evaluator != null || ChessEngine.isSupported;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const KustSheetHeader(title: 'Replay settings'),
+              KustToggleRow(
+                icon: Icons.align_horizontal_left_rounded,
+                title: 'Evaluation bar',
+                subtitle: canEvaluate
+                    ? 'Shows who is better at each move'
+                    : 'Not available on this device',
+                value: _evalOn && canEvaluate,
+                onChanged: (v) {
+                  if (!canEvaluate) return;
+                  _setEval(v);
+                  setSheet(() {});
+                },
+              ),
+              const SizedBox(height: 16),
+              KustButton(
+                label: 'Copy PGN',
+                icon: Icons.copy_rounded,
+                style: KustButtonStyle.secondary,
+                onTap: game.sanMoves.isEmpty
+                    ? null
+                    : () {
+                        Navigator.of(sheetContext).pop();
+                        _copyPgn(game);
+                      },
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -156,39 +241,17 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   context.canPop() ? context.pop() : context.go('/history'),
             ),
             trailing: [
-              if (game != null && game.sanMoves.isNotEmpty)
+              if (game != null)
                 KustIconButton(
-                  icon: Icons.copy_rounded,
-                  label: 'Copy PGN',
-                  onTap: () => _copyPgn(game),
+                  icon: Icons.tune_rounded,
+                  label: 'Replay settings',
+                  onTap: () => _openSettings(game),
                 ),
             ],
           ),
           Expanded(
             child: game == null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline_rounded,
-                            size: 40,
-                            color: k.muted,
-                          ),
-                          const SizedBox(height: 12),
-                          Text('This game could not be found.', style: k.body),
-                          const SizedBox(height: 20),
-                          KustButton(
-                            label: 'Back to history',
-                            expand: false,
-                            onTap: () => context.go('/history'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
+                ? const _MissingGame()
                 : _buildReplay(context, game),
           ),
         ],
@@ -201,37 +264,22 @@ class _ReplayScreenState extends State<ReplayScreen> {
     final san = _ply == 0 || _ply > game.sanMoves.length
         ? 'Start position'
         : '${(_ply + 1) ~/ 2}${_ply.isOdd ? '.' : '...'} ${game.sanMoves[_ply - 1]}';
+    final position = _replay.positions[_ply];
+    final score = _evals[_ply];
 
     return SafeArea(
       top: false,
       child: Column(
         children: [
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: PuzzleBoard(
-                    position: _replay.positions[_ply],
-                    flipped: !game.isLocal && !game.playerIsWhite,
-                    interactive: false,
-                    onMove: (_) {},
-                    lastMove: _replay.moves[_ply],
-                  ),
-                ),
-              ),
-            ),
-          ),
           SizedBox(
-            height: 44,
+            height: 36,
             child: ListView.separated(
               controller: _moveScroll,
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: game.sanMoves.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 6),
-              itemBuilder: (context, i) => _MoveChip(
+              separatorBuilder: (_, _) => const SizedBox(width: 16),
+              itemBuilder: (context, i) => _MoveText(
                 label: i.isEven
                     ? '${i ~/ 2 + 1}. ${game.sanMoves[i]}'
                     : game.sanMoves[i],
@@ -240,9 +288,41 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 4),
           Text(san, style: k.title),
           Text('Move $_ply of $_last', style: k.caption),
+          if (_evalOn)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: _evalFailed
+                  ? Text(
+                      'Evaluation is unavailable right now',
+                      style: k.caption,
+                    )
+                  : EvaluationBar(
+                      score: score,
+                      whiteOnLeft: game.isLocal || game.playerIsWhite,
+                      showLabel: !position.isCheckmate,
+                    ),
+            ),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: PuzzleBoard(
+                    position: position,
+                    flipped: !game.isLocal && !game.playerIsWhite,
+                    interactive: false,
+                    onMove: (_) {},
+                    lastMove: _replay.moves[_ply],
+                    slide: _slide,
+                    slideKey: _slideKey,
+                  ),
+                ),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Row(
@@ -261,15 +341,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   onTap: _ply > 0 ? () => _go(_ply - 1) : null,
                 ),
                 KustIconButton(
-                  icon: _playing
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  label: _playing ? 'Pause' : 'Watch game',
-                  size: 56,
-                  filled: true,
-                  onTap: _last == 0 ? null : _togglePlay,
-                ),
-                KustIconButton(
                   icon: Icons.chevron_right_rounded,
                   label: 'Next move',
                   size: 48,
@@ -284,34 +355,43 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Pressable(
-              onTap: _toggleSpeed,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: k.surfaceAlt,
-                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
-                ),
-                child: Text(
-                  _fast ? 'Speed 2x' : 'Speed 1x',
-                  style: k.caption.copyWith(color: k.ink),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _MoveChip extends StatelessWidget {
-  const _MoveChip({
+class _MissingGame extends StatelessWidget {
+  const _MissingGame();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 40, color: k.muted),
+            const SizedBox(height: 12),
+            Text('This game could not be found.', style: k.body),
+            const SizedBox(height: 20),
+            KustButton(
+              label: 'Back to history',
+              expand: false,
+              onTap: () => context.go('/history'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A move in the strip: plain text, gold when it is the one on the board.
+class _MoveText extends StatelessWidget {
+  const _MoveText({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -324,22 +404,18 @@ class _MoveChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Pure gold is hard to read on the light background.
+    final gold = isDark ? k.accent : const Color(0xFFD99B00);
     return Pressable(
       onTap: onTap,
       scale: 0.95,
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: selected ? k.accent : k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rSmall),
-          border: Border.all(color: selected ? k.accent : k.line),
-        ),
+      child: Center(
         child: Text(
           label,
           style: k.body.copyWith(
-            fontWeight: FontWeight.w700,
-            color: selected ? k.accentInk : k.ink,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+            color: selected ? gold : k.muted,
           ),
         ),
       ),
