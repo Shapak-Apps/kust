@@ -15,11 +15,12 @@ import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
-import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/nnue_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/features/game/game_result_dialog.dart';
+import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
@@ -207,41 +208,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _showResultDialog(String title, String message) {
-    showKustSheet<void>(
+    showKustDialog<void>(
       context,
-      builder: (sheetContext) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          KustSheetHeader(title: title, subtitle: message),
-          const _RatingChange(),
-          const _AccuracyLine(),
-          KustButton(
-            label: 'Rematch',
-            icon: Icons.refresh_rounded,
-            onTap: () {
-              Navigator.of(sheetContext).pop();
-              final controller = ref.read(chessControllerProvider.notifier);
-              if (widget.isLocal) {
-                controller.startLocalGame(timeControl: widget.timeControl);
-              } else {
-                controller.startGame(
-                  widget.bot!,
-                  playerSide: widget.playerSide,
-                  practiceMode: widget.practiceMode,
-                );
-              }
-            },
-          ),
-          const SizedBox(height: 8),
-          KustButton(
-            label: 'Back to lobby',
-            style: KustButtonStyle.outline,
-            onTap: () {
-              Navigator.of(sheetContext).pop();
-              context.go('/play');
-            },
-          ),
-        ],
+      builder: (dialogContext) => GameResultContent(
+        title: title,
+        message: message,
+        onRematch: () {
+          Navigator.of(dialogContext).pop();
+          final controller = ref.read(chessControllerProvider.notifier);
+          if (widget.isLocal) {
+            controller.startLocalGame(timeControl: widget.timeControl);
+          } else {
+            controller.startGame(
+              widget.bot!,
+              playerSide: widget.playerSide,
+              practiceMode: widget.practiceMode,
+            );
+          }
+        },
+        onLobby: () {
+          Navigator.of(dialogContext).pop();
+          context.go('/play');
+        },
       ),
     ).then((_) {
       if (mounted) {
@@ -505,91 +493,6 @@ class _EngineSetupBanner extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// "Rating 1200 → 1212" line in the result sheet, once it is recorded.
-class _RatingChange extends ConsumerWidget {
-  const _RatingChange();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final change = ref.watch(
-      chessControllerProvider.select((g) => g.ratingChange),
-    );
-    if (change == null) return const SizedBox.shrink();
-    final k = context.k;
-    final now = PlayerRatingStore.instance.rating;
-    final sign = change > 0 ? '+' : '';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        'Rating $now ($sign$change)',
-        style: k.body.copyWith(
-          fontWeight: FontWeight.w800,
-          color: change > 0
-              ? k.success
-              : change < 0
-              ? k.danger
-              : k.muted,
-        ),
-      ),
-    );
-  }
-}
-
-/// "Accuracy 71.6%" in the result sheet. While the finished game is being
-/// analyzed it shows progress instead, and it is hidden when no accuracy can
-/// be worked out (pass-and-play, no engine, very short games).
-class _AccuracyLine extends ConsumerWidget {
-  const _AccuracyLine();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(
-      chessControllerProvider.select(
-        (g) => (accuracy: g.accuracy, pending: g.accuracyPending),
-      ),
-    );
-    final k = context.k;
-
-    final Widget child;
-    if (data.accuracy != null) {
-      child = Row(
-        key: const ValueKey('accuracy'),
-        children: [
-          Icon(Icons.track_changes_rounded, size: 18, color: k.muted),
-          const SizedBox(width: 8),
-          Text(
-            'Accuracy ${data.accuracy!.toStringAsFixed(1)}%',
-            style: k.body.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ],
-      );
-    } else if (data.pending) {
-      child = Row(
-        key: const ValueKey('pending'),
-        children: [
-          SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(strokeWidth: 2, color: k.accent),
-          ),
-          const SizedBox(width: 10),
-          Text('Checking your accuracy…', style: k.caption),
-        ],
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: child,
-      ),
     );
   }
 }
