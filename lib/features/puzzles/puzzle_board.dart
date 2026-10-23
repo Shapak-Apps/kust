@@ -266,9 +266,19 @@ class _PuzzleBoardState extends State<PuzzleBoard>
 
     final from = _cellOrigin(sliding.from, cell);
     final to = _cellOrigin(sliding.to, cell);
+    // The piece is built once and sits on its own layer; each frame only
+    // moves it, so gliding costs no widget rebuilds or SVG work.
     return AnimatedBuilder(
       animation: _slideCtrl,
-      builder: (context, _) {
+      child: IgnorePointer(
+        child: RepaintBoundary(
+          child: Padding(
+            padding: EdgeInsets.all(cell * 0.04),
+            child: SvgPicture.asset(assetForPiece(piece)),
+          ),
+        ),
+      ),
+      builder: (context, child) {
         if (!_slideCtrl.isAnimating) return const SizedBox.shrink();
         final t = Curves.easeOutCubic.transform(_slideCtrl.value);
         final at = Offset.lerp(from, to, t)!;
@@ -277,12 +287,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
           top: at.dy,
           width: cell,
           height: cell,
-          child: IgnorePointer(
-            child: Padding(
-              padding: EdgeInsets.all(cell * 0.04),
-              child: SvgPicture.asset(assetForPiece(piece)),
-            ),
-          ),
+          child: child!,
         );
       },
     );
