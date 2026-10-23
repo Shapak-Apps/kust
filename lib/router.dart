@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:Kust/features/onboarding/onboarding_screen.dart';
@@ -48,20 +49,49 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         routes: [
           GoRoute(
             path: '/play',
-            builder: (context, state) => const PlayScreen(),
+            pageBuilder: (context, state) =>
+                _tabPage(state, const PlayScreen()),
           ),
 
           GoRoute(
             path: '/puzzles',
-            builder: (context, state) => const PuzzlesScreen(),
+            pageBuilder: (context, state) =>
+                _tabPage(state, const PuzzlesScreen()),
           ),
 
           GoRoute(
             path: '/history',
-            builder: (context, state) => const HistoryScreen(),
+            pageBuilder: (context, state) =>
+                _tabPage(state, const HistoryScreen()),
           ),
         ],
       ),
     ],
+  );
+}
+
+/// Tab switch: quick fade with a slight rise, like iOS cross-fades.
+CustomTransitionPage<void> _tabPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 260),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondary, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
   );
 }

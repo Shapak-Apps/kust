@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 
 import 'package:Kust/ui/tokens.dart';
 
+const double _itemWidth = 80;
+const double _itemHeight = 54;
+
 class KustNavItem {
   const KustNavItem(this.icon, this.selectedIcon, this.label);
 
@@ -61,21 +64,44 @@ class KustNavBar extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < items.length; i++)
-                    _NavButton(
-                      item: items[i],
-                      selected: i == selectedIndex,
-                      onTap: () {
-                        if (i != selectedIndex) {
-                          HapticFeedback.selectionClick();
-                        }
-                        onSelected(i);
-                      },
+              child: SizedBox(
+                width: items.length * _itemWidth,
+                height: _itemHeight,
+                child: Stack(
+                  children: [
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 280),
+                      curve: Curves.easeOutCubic,
+                      left: selectedIndex * _itemWidth,
+                      top: 0,
+                      width: _itemWidth,
+                      height: _itemHeight,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: k.accent.withValues(
+                            alpha: isDark ? 0.13 : 0.17,
+                          ),
+                          borderRadius: BorderRadius.circular(29),
+                        ),
+                      ),
                     ),
-                ],
+                    Row(
+                      children: [
+                        for (var i = 0; i < items.length; i++)
+                          _NavButton(
+                            item: items[i],
+                            selected: i == selectedIndex,
+                            onTap: () {
+                              if (i != selectedIndex) {
+                                HapticFeedback.selectionClick();
+                              }
+                              onSelected(i);
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -112,17 +138,9 @@ class _NavButton extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          width: 80,
-          height: 54,
-          decoration: BoxDecoration(
-            color: selected
-                ? k.accent.withValues(alpha: isDark ? 0.18 : 0.22)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(29),
-          ),
+        child: SizedBox(
+          width: _itemWidth,
+          height: _itemHeight,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
