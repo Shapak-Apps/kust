@@ -23,10 +23,22 @@ const _game = GameRecord(
   botElo: 1000,
 );
 
-Widget _app({ReplayEvaluator? evaluator}) => MaterialApp(
+Widget _app({
+  ReplayEvaluator? evaluator,
+  GameRecord record = _game,
+  void Function(String)? playSound,
+}) => MaterialApp(
   theme: appTheme,
-  home: ReplayScreen(gameId: 'g', record: _game, evaluator: evaluator),
+  home: ReplayScreen(
+    gameId: 'g',
+    record: record,
+    evaluator: evaluator,
+    playSound: playSound ?? (_) {},
+  ),
 );
+
+String _fen(WidgetTester tester) =>
+    tester.widget<PuzzleBoard>(find.byType(PuzzleBoard)).position.fen;
 
 Future<void> _openSettings(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.tune_rounded));
@@ -35,23 +47,106 @@ Future<void> _openSettings(WidgetTester tester) async {
 
 void main() {
   _layoutTests();
-  testWidgets('shows the move text and steps through the game', (tester) async {
+  testWidgets('steps through the game and the strip jumps to a move', (
+    tester,
+  ) async {
     await tester.pumpWidget(_app());
-    expect(find.text('Start position'), findsOneWidget);
-    expect(find.text('Move 0 of 4'), findsOneWidget);
+    final start = _fen(tester);
 
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     await tester.pumpAndSettle();
-    expect(find.text('Move 1 of 4'), findsOneWidget);
-    expect(find.text('1. e4'), findsWidgets);
+    expect(_fen(tester), isNot(start));
 
     await tester.tap(find.text('2. Nf3'));
     await tester.pumpAndSettle();
-    expect(find.text('Move 3 of 4'), findsOneWidget);
+    expect(_fen(tester), contains('5N2'));
 
     await tester.tap(find.byIcon(Icons.chevron_left_rounded));
     await tester.pumpAndSettle();
-    expect(find.text('Move 2 of 4'), findsOneWidget);
+    expect(_fen(tester), isNot(contains('5N2')));
+
+    await tester.tap(find.byIcon(Icons.first_page_rounded));
+    await tester.pumpAndSettle();
+    expect(_fen(tester), start);
+  });
+
+  testWidgets('hides the move title and counter block', (tester) async {
+    await tester.pumpWidget(_app());
+    await tester.tap(find.text('2. Nf3'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Move '), findsNothing);
+    expect(find.text('Start position'), findsNothing);
+    // The only place a move reads "2. Nf3" is the strip.
+    expect(find.text('2. Nf3'), findsOneWidget);
+  });
+
+  testWidgets('plays move, capture, castle and check sounds when stepping', (
+    tester,
+  ) async {
+    final played = <String>[];
+    const record = GameRecord(
+      id: 'g2',
+      playedAt: 0,
+      isLocal: true,
+      result: GameRecord.whiteWon,
+      reason: '',
+      playerIsWhite: true,
+      // 1.e4 d5 2.exd5 Qxd5 3.Nc3 Qa5 4.Nf3 e6 5.Bc4 Nf6 6.O-O Bb4 7.Bxe6 fxe6
+      uciMoves: [
+        'e2e4',
+        'd7d5',
+        'e4d5',
+        'd8d5',
+        'b1c3',
+        'd5a5',
+        'g1f3',
+        'e7e6',
+        'f1c4',
+        'g8f6',
+        'e1h1',
+        'f8b4',
+        'c4e6',
+        'f7e6',
+      ],
+      sanMoves: [
+        'e4',
+        'd5',
+        'exd5',
+        'Qxd5',
+        'Nc3',
+        'Qa5',
+        'Nf3',
+        'e6',
+        'Bc4',
+        'Nf6',
+        'O-O',
+        'Bb4',
+        'Bxe6',
+        'fxe6',
+      ],
+    );
+    await tester.pumpWidget(_app(record: record, playSound: played.add));
+
+    final next = find.byIcon(Icons.chevron_right_rounded);
+    for (var i = 0; i < 14; i++) {
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+    }
+    expect(played.first, 'move.wav'); // 1. e4
+    expect(played[2], 'capture.wav'); // 2. exd5
+    expect(played[10], 'castle.wav'); // 6. O-O
+    expect(played[12], 'capture.wav'); // 7. Bxe6
+    expect(played.length, 14);
+
+    // Stepping back is a plain move sound; jumping is silent.
+    played.clear();
+    await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+    await tester.pumpAndSettle();
+    expect(played, ['move.wav']);
+    played.clear();
+    await tester.tap(find.byIcon(Icons.first_page_rounded));
+    await tester.pumpAndSettle();
+    expect(played, isEmpty);
   });
 
   testWidgets('has no play button, speed control or copy button up top', (

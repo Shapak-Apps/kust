@@ -8,6 +8,7 @@ GameRecord _game({
   bool isLocal = false,
   bool playerIsWhite = true,
   String? timeControl,
+  bool practice = false,
 }) => GameRecord(
   id: '1',
   playedAt: DateTime(2026, 10, 5).millisecondsSinceEpoch,
@@ -20,6 +21,7 @@ GameRecord _game({
   botName: isLocal ? null : 'Karl',
   botElo: isLocal ? null : 1000,
   timeControl: timeControl,
+  practice: practice,
 );
 
 void main() {
@@ -102,6 +104,17 @@ void main() {
       expect(stats.losses, 1);
       expect(stats.draws, 1);
       expect(stats.winRate, 50);
+    });
+
+    test('practice games are not rated, so they are not counted', () {
+      final stats = HistoryStats.from([
+        _game(),
+        _game(practice: true),
+        _game(practice: true, result: GameRecord.loss),
+      ]);
+      expect(stats.total, 1);
+      expect(stats.wins, 1);
+      expect(stats.winRate, 100);
     });
 
     test('no games means no win rate', () {

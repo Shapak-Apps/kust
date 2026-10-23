@@ -61,7 +61,8 @@ String _timeControl(String stored) {
 String _escape(String value) =>
     value.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
 
-/// Win/loss/draw totals over rated and unrated bot games.
+/// Win/loss/draw totals over rated bot games. Practice and pass-and-play
+/// games are not rated, so they are not counted.
 class HistoryStats {
   const HistoryStats({
     required this.total,
@@ -73,7 +74,7 @@ class HistoryStats {
   factory HistoryStats.from(Iterable<GameRecord> games) {
     var total = 0, wins = 0, losses = 0, draws = 0;
     for (final g in games) {
-      if (g.isLocal) continue;
+      if (g.isLocal || g.practice) continue;
       total++;
       switch (g.result) {
         case GameRecord.win:

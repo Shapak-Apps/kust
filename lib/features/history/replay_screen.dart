@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/move_sounds.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/history/pgn.dart';
@@ -47,6 +49,7 @@ class ReplayScreen extends StatefulWidget {
     required this.gameId,
     this.record,
     this.evaluator,
+    this.playSound,
   });
 
   final String gameId;
@@ -56,6 +59,9 @@ class ReplayScreen extends StatefulWidget {
 
   /// Overrides the chess engine for the evaluation bar (for tests).
   final ReplayEvaluator? evaluator;
+
+  /// Overrides sound playback (for tests).
+  final void Function(String file)? playSound;
 
   @override
   State<ReplayScreen> createState() => _ReplayScreenState();
@@ -100,13 +106,33 @@ class _ReplayScreenState extends State<ReplayScreen> {
       final move = _replay.moves[_ply]!;
       slide = (from: _displaySquare(move.to, _ply), to: move.from);
     }
+    final from = _ply;
     setState(() {
       _ply = target;
       _slide = slide;
       _slideKey++;
     });
+    _playStepSound(from, target);
     _scrollToCurrent();
     _evaluateCurrent();
+  }
+
+  /// Sound for a single step; jumps over several moves stay silent.
+  void _playStepSound(int from, int to) {
+    final String? file;
+    if (to == from + 1) {
+      file = moveSoundFor(
+        _replay.positions[from],
+        _replay.moves[to]!,
+        _replay.positions[to],
+      );
+    } else if (to == from - 1) {
+      file = 'move.wav';
+    } else {
+      file = null;
+    }
+    if (file == null) return;
+    (widget.playSound ?? SoundService.instance.playSfx)(file);
   }
 
   /// dartchess writes castling as king-takes-rook; show the king landing on
@@ -268,9 +294,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   Widget _buildReplay(BuildContext context, GameRecord game) {
     final k = context.k;
-    final san = _ply == 0 || _ply > game.sanMoves.length
-        ? 'Start position'
-        : '${(_ply + 1) ~/ 2}${_ply.isOdd ? '.' : '...'} ${game.sanMoves[_ply - 1]}';
     final position = _replay.positions[_ply];
     final score = _evals[_ply];
 
@@ -311,8 +334,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
               },
             ),
           ),
-          Text(san, style: k.title),
-          Text('Move $_ply of $_last', style: k.caption),
           if (_evalOn)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
