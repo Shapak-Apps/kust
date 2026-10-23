@@ -3,13 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/history/history_analysis.dart';
-import 'package:kust/features/history/pgn.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
-import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
 String describeResult(GameRecord game) {
@@ -78,59 +76,23 @@ class HistoryScreen extends StatelessWidget {
               builder: (context, _, _) {
                 final games = GameHistoryStore.instance.all();
                 if (games.isEmpty) return const _EmptyHistory();
-                final stats = HistoryStats.from(games);
+                // No side padding on the list, so the hairlines run edge to
+                // edge; each row pads its own content.
                 return ListView.separated(
                   padding: EdgeInsets.fromLTRB(
-                    20,
+                    0,
                     8,
-                    20,
+                    0,
                     KustNavBar.clearance(context),
                   ),
-                  itemCount: games.length + (stats.total > 0 ? 1 : 0),
-                  separatorBuilder: (context, i) => i == 0 && stats.total > 0
-                      ? const SizedBox(height: 8)
-                      : Divider(height: 1, thickness: 1, color: context.k.line),
-                  itemBuilder: (context, i) {
-                    if (stats.total > 0) {
-                      if (i == 0) return _StatsCard(stats: stats);
-                      i--;
-                    }
-                    return _GameTile(game: games[i]);
-                  },
+                  itemCount: games.length,
+                  separatorBuilder: (context, _) =>
+                      Divider(height: 1, thickness: 1, color: context.k.line),
+                  itemBuilder: (context, i) => _GameTile(game: games[i]),
                 );
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatsCard extends StatelessWidget {
-  const _StatsCard({required this.stats});
-
-  final HistoryStats stats;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    Widget cell(String value, String label, Color color) => Expanded(
-      child: Column(
-        children: [
-          Text(value, style: k.title.copyWith(color: color)),
-          Text(label, style: k.caption),
-        ],
-      ),
-    );
-
-    return KustCard(
-      child: Row(
-        children: [
-          cell('${stats.wins}', 'Wins', k.success),
-          cell('${stats.losses}', 'Losses', k.danger),
-          cell('${stats.draws}', 'Draws', k.muted),
-          cell('${stats.winRate}%', 'Win rate', k.ink),
         ],
       ),
     );
@@ -207,7 +169,6 @@ class _GameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final plies = game.uciMoves.length;
     final accuracy = game.accuracy;
     final change = game.ratingChange;
 
@@ -224,7 +185,7 @@ class _GameTile extends StatelessWidget {
         onTap: () => context.push('/history/${game.id}'),
         onLongPress: () => _confirmDelete(context),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
               SizedBox(
@@ -263,7 +224,7 @@ class _GameTile extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      '${formatGameDate(game.date)} · ${(plies + 1) ~/ 2} moves'
+                      '${formatGameDate(game.date)}'
                       '${game.practice ? ' · Practice' : ''}'
                       '${change == null ? '' : ' · ${change > 0 ? '+' : ''}$change'}',
                       style: k.caption,
@@ -344,30 +305,11 @@ class _AnalysisSlot extends StatelessWidget {
         }
         final failed = state?.status == AnalysisStatus.failed;
         return slot(
-          Semantics(
-            button: true,
-            label: 'Analyze this game',
-            excludeSemantics: true,
-            child: Pressable(
-              onTap: () => _start(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
-                  border: Border.all(color: k.line, width: 1.5),
-                ),
-                child: Text(
-                  failed ? 'Retry' : 'Analyze',
-                  style: k.caption.copyWith(
-                    color: k.ink,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
+          KustIconButton(
+            icon: failed ? Icons.refresh_rounded : Icons.insights_rounded,
+            label: failed ? 'Retry analysis' : 'Analyze this game',
+            size: 38,
+            onTap: () => _start(context),
           ),
         );
       },

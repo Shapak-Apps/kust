@@ -54,7 +54,13 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  testWidgets('games are flat rows, not cards', (tester) async {
+  testWidgets('games are flat rows with edge-to-edge hairlines', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       MaterialApp(
         theme: appTheme,
@@ -64,10 +70,36 @@ void main() {
     await tester.pump();
 
     expect(find.text('Karl'), findsNWidgets(3));
-    // Only the summary at the top is a card; the games themselves are not.
-    expect(find.byType(KustCard), findsOneWidget);
-    // Hairlines between rows (3 games, plus the gap after the summary).
-    expect(find.byType(Divider), findsNWidgets(2));
+    // No cards at all, and no summary block.
+    expect(find.byType(KustCard), findsNothing);
+    expect(find.text('Wins'), findsNothing);
+    expect(find.text('Win rate'), findsNothing);
+
+    // Hairlines between the 3 rows, running across the whole screen.
+    final dividers = find.byType(Divider);
+    expect(dividers, findsNWidgets(2));
+    final rect = tester.getRect(dividers.first);
+    expect(rect.left, 0);
+    expect(rect.width, 400);
+
+    // The content is padded inside the row instead.
+    final avatarOrIcon = tester.getTopLeft(
+      find.byIcon(Icons.hourglass_empty_rounded).first,
+    );
+    expect(avatarOrIcon.dx, greaterThanOrEqualTo(20));
+  });
+
+  testWidgets('rows show no move count', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: const Scaffold(body: HistoryScreen()),
+      ),
+    );
+    await tester.pump();
+    expect(find.textContaining('moves'), findsNothing);
+    expect(find.textContaining('Today'), findsNothing); // old dates
+    expect(find.textContaining('Practice'), findsOneWidget);
   });
 
   testWidgets('shows a result badge and the accuracy of each game', (
@@ -82,25 +114,10 @@ void main() {
     await tester.pump();
 
     expect(find.text('+'), findsOneWidget);
-    expect(find.text('−'), findsOneWidget);
+    expect(find.text('\u2212'), findsOneWidget);
     expect(find.text('='), findsOneWidget);
     expect(find.text('71.6%'), findsOneWidget);
-    // Games without a worked-out accuracy show none.
-    expect(find.textContaining('%'), findsWidgets);
     expect(find.text('(1000)'), findsNWidgets(3));
-  });
-
-  testWidgets('the summary ignores the practice game', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: appTheme,
-        home: const Scaffold(body: HistoryScreen()),
-      ),
-    );
-    await tester.pump();
-
-    // Rated games: one win, one loss -> 50% win rate.
-    expect(find.text('50%'), findsOneWidget);
   });
 
   testWidgets('Analyze runs the analysis and then shows the accuracy', (
@@ -156,10 +173,11 @@ void main() {
     );
     await tester.pump();
 
-    // Only the long, unanalyzed bot game offers the button.
-    expect(find.text('Analyze'), findsOneWidget);
+    // Only the long, unanalyzed bot game offers the button, as an icon.
+    expect(find.text('Analyze'), findsNothing);
+    expect(find.byIcon(Icons.insights_rounded), findsOneWidget);
 
-    await tester.tap(find.text('Analyze'));
+    await tester.tap(find.byIcon(Icons.insights_rounded));
     await tester.pump();
     // Let the paced percentage run and the finish hold pass (fake time).
     for (var i = 0; i < 40; i++) {
