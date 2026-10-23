@@ -16,10 +16,13 @@ const int kPuzzleLevel = 1;
 const double _nodeSpacing = 112;
 const double _nodeSize = 68;
 const double _pathPadding = 24;
+
+/// Room above the last puzzle for the coach, which floats over the carpet.
+const double _coachSpace = 92;
 const List<double> _zigzag = [0.5, 0.25, 0.5, 0.75];
 
 double _pathHeight(int count) {
-  return count * _nodeSpacing + _nodeSpacing + _pathPadding * 2;
+  return count * _nodeSpacing + _nodeSpacing + _pathPadding * 2 + _coachSpace;
 }
 
 double _nodeCenterY(int index, int count) {
@@ -199,12 +202,6 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
 
             return Column(
               children: [
-                _Coach(
-                  next: _themeLabel(level.puzzles[current].theme),
-                  allDone: level.puzzles.every(
-                    (p) => progress.isCompleted(p.id),
-                  ),
-                ),
                 Expanded(
                   child: Stack(
                     children: [
@@ -215,6 +212,17 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                           progress: progress,
                           currentIndex: current,
                           onOpen: (index) => _openPuzzle(context, index),
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 16,
+                        right: 16,
+                        child: _Coach(
+                          next: _themeLabel(level.puzzles[current].theme),
+                          allDone: level.puzzles.every(
+                            (p) => progress.isCompleted(p.id),
+                          ),
                         ),
                       ),
                       Positioned(
@@ -413,27 +421,27 @@ class _Coach extends StatelessWidget {
     final bot = kInternationalBots[day % kInternationalBots.length];
     final tip = _tips[day % _tips.length];
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Image.asset(
-            bot.imagePath,
-            width: 52,
-            height: 52,
-            cacheWidth: 156,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const SizedBox(width: 52, height: 52),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: k.surface,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                border: Border.all(color: k.line),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Image.asset(
+          bot.imagePath,
+          width: 56,
+          height: 56,
+          cacheWidth: 168,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const SizedBox(width: 56, height: 56),
+        ),
+        Expanded(
+          child: CustomPaint(
+            painter: SpeechBubblePainter(fill: k.surface, border: k.line),
+            child: Padding(
+              // Extra room on the left for the bubble's tail.
+              padding: const EdgeInsets.fromLTRB(
+                BubbleMetrics.tail + 14,
+                10,
+                14,
+                10,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,8 +458,8 @@ class _Coach extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -247,3 +247,61 @@ class ThreadPainter extends CustomPainter {
       oldDelegate.done != done ||
       oldDelegate.todo != todo;
 }
+
+/// Sizes shared by the speech bubble and the content padded inside it.
+class BubbleMetrics {
+  BubbleMetrics._();
+
+  /// Width of the tail sticking out on the left.
+  static const double tail = 10;
+  static const double radius = 18;
+}
+
+/// A message bubble: a rounded body with a small tail on the lower left,
+/// pointing at the speaker. Fill and outline are one shape, so the tail joins
+/// the body without a seam.
+class SpeechBubblePainter extends CustomPainter {
+  const SpeechBubblePainter({required this.fill, required this.border});
+
+  final Color fill;
+  final Color border;
+
+  /// The outline for a bubble of [size].
+  static Path shape(Size size) {
+    const tail = BubbleMetrics.tail;
+    final body = Path()
+      ..addRRect(
+        RRect.fromLTRBR(
+          tail,
+          0,
+          size.width,
+          size.height,
+          const Radius.circular(BubbleMetrics.radius),
+        ),
+      );
+    final y = size.height - 22;
+    final pointer = Path()
+      ..moveTo(tail + 1, y - 8)
+      ..lineTo(0, y + 4)
+      ..lineTo(tail + 1, y + 12)
+      ..close();
+    return Path.combine(PathOperation.union, body, pointer);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = shape(size);
+    canvas.drawPath(path, Paint()..color = fill);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = border,
+    );
+  }
+
+  @override
+  bool shouldRepaint(SpeechBubblePainter oldDelegate) =>
+      oldDelegate.fill != fill || oldDelegate.border != border;
+}

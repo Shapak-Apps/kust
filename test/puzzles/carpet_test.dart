@@ -32,6 +32,46 @@ void main() {
     });
   });
 
+  group('speech bubble', () {
+    test('has a body with a tail sticking out on the left', () {
+      const size = Size(300, 80);
+      final path = SpeechBubblePainter.shape(size);
+      final bounds = path.getBounds();
+      expect(bounds.left, 0); // the tail tip
+      expect(bounds.right, size.width);
+      expect(bounds.top, 0);
+      expect(bounds.bottom, size.height);
+
+      // The body starts after the tail; the tail is only low on the left.
+      expect(path.contains(const Offset(BubbleMetrics.tail + 20, 40)), isTrue);
+      expect(path.contains(const Offset(2, 80 - 22 + 4)), isTrue); // tail
+      expect(path.contains(const Offset(2, 8)), isFalse); // above the tail
+    });
+
+    test('corners are rounded', () {
+      final path = SpeechBubblePainter.shape(const Size(300, 80));
+      expect(path.contains(const Offset(BubbleMetrics.tail + 1, 1)), isFalse);
+      expect(path.contains(const Offset(299, 1)), isFalse);
+    });
+
+    test('paints and only repaints when colors change', () {
+      const a = SpeechBubblePainter(fill: Colors.white, border: Colors.grey);
+      _paint(a, const Size(300, 80));
+      expect(
+        a.shouldRepaint(
+          const SpeechBubblePainter(fill: Colors.white, border: Colors.grey),
+        ),
+        isFalse,
+      );
+      expect(
+        a.shouldRepaint(
+          const SpeechBubblePainter(fill: Colors.black, border: Colors.grey),
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('painters', () {
     test('the carpet paints in both themes at path size', () {
       for (final colors in [CarpetColors.light, CarpetColors.dark]) {
@@ -162,6 +202,35 @@ void main() {
             (w) => w is CustomPaint && w.painter is OctagonPainter,
           ),
           findsWidgets,
+        );
+        // The coach is a speech bubble floating over the carpet, in the same
+        // stack as the scrolling path, not a block above it.
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.painter is SpeechBubblePainter,
+          ),
+          findsOneWidget,
+        );
+        final coach = tester.getRect(find.textContaining('Next: Mate in 1'));
+        final path = tester.getRect(find.byType(SingleChildScrollView));
+        expect(path.overlaps(coach), isTrue);
+        expect(
+          find
+              .ancestor(
+                of: find.textContaining('Next: Mate in 1'),
+                matching: find.byType(Stack),
+              )
+              .evaluate()
+              .any(
+                (e) => find
+                    .descendant(
+                      of: find.byWidget(e.widget),
+                      matching: find.byType(SingleChildScrollView),
+                    )
+                    .evaluate()
+                    .isNotEmpty,
+              ),
+          isTrue,
         );
         expect(tester.takeException(), isNull);
       });
