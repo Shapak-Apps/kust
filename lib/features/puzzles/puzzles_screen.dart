@@ -479,7 +479,7 @@ class _Carpet extends StatelessWidget {
     return Positioned(
       left: left,
       width: width,
-      top: center - (onLoom ? 46 : 26),
+      top: center - 22,
       child: ExcludeSemantics(
         excluding: index == 0,
         child: Column(
@@ -487,19 +487,6 @@ class _Carpet extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            Text(
-              level.tribe.toUpperCase(),
-              textAlign: align,
-              style: k.caption.copyWith(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-                color: onLoom
-                    ? LoomColors.saffron
-                    : LoomColors.cream.withValues(alpha: dim ? 0.65 : 0.75),
-              ),
-            ),
-            const SizedBox(height: 2),
             Text(
               level.theme,
               textAlign: align,

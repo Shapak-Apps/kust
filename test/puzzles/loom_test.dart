@@ -154,7 +154,8 @@ void main() {
           findsOneWidget,
         );
         for (final level in kLoomLevels) {
-          expect(find.text(level.tribe.toUpperCase()), findsOneWidget);
+          expect(find.text(level.theme), findsOneWidget);
+          expect(find.text(level.tribe.toUpperCase()), findsNothing);
         }
         expect(find.textContaining('0 of 36 knots'), findsOneWidget);
         expect(find.text('Coming soon'), findsNWidgets(4));

@@ -334,6 +334,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     // moves when the text changes or the controls swap for the result bar.
     const statusHeight = 48.0;
     const barHeight = 112.0;
+    const sideMargin = 16.0;
 
     return SafeArea(
       child: LayoutBuilder(
@@ -342,7 +343,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               .max(
                 0.0,
                 math.min(
-                  constraints.maxWidth,
+                  constraints.maxWidth - sideMargin * 2,
                   constraints.maxHeight - statusHeight - barHeight,
                 ),
               )
@@ -368,22 +369,25 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   ),
                 ),
               ),
-              SizedBox(
-                width: side,
-                height: side,
-                child: PuzzleBoard(
-                  position: _position,
-                  flipped: _s.solverSide == Side.black,
-                  interactive: _atTip && !_busy && !finished,
-                  onMove: _onUserMove,
-                  lastMove: _s.lastMoves[_ply],
-                  hintFrom: hintFrom,
-                  hintTo: hintTo,
-                  slide: _slide,
-                  slideKey: _slideKey,
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: side,
+                    height: side,
+                    child: PuzzleBoard(
+                      position: _position,
+                      flipped: _s.solverSide == Side.black,
+                      interactive: _atTip && !_busy && !finished,
+                      onMove: _onUserMove,
+                      lastMove: _s.lastMoves[_ply],
+                      hintFrom: hintFrom,
+                      hintTo: hintTo,
+                      slide: _slide,
+                      slideKey: _slideKey,
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
               SizedBox(
                 height: barHeight,
                 child: Align(
