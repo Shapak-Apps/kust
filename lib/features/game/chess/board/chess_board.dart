@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/core/board_theme.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
 
-const Color kLightSquare = Color(0xFFF0E6D2);
-const Color kDarkSquare = Color(0xFFB58863);
 const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
 const Color kHintHighlight = Color(0x552ECC71);
@@ -181,9 +181,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   bool _flipped = false;
   final Map<Square, ({BoardSquareProps props, Widget widget})> _cells = {};
 
+  void _onBoardTheme() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
+    AppSettings.instance.boardTheme.addListener(_onBoardTheme);
 
     _moveController = AnimationController(vsync: this, duration: _moveDuration);
     _captureController = AnimationController(
@@ -208,6 +213,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   @override
   void dispose() {
+    AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
     _moveController.dispose();
     _captureController.dispose();
     super.dispose();
@@ -523,14 +529,16 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   ) {
     final piece = view.position.board.pieceAt(square);
 
-    final isLight = (fileOf(square) + rankOf(square)).isEven;
+    // a1 is a dark square, so light squares have an odd file + rank sum.
+    final isLight = (fileOf(square) + rankOf(square)).isOdd;
     final isSelected = view.selected == square;
     final isLegalTarget = view.legal.contains(square);
     final isLastMove = view.moveSquares.contains(square);
     final isHint = view.hints.contains(square);
     final isCheckSquare = checkedKing == square;
 
-    var background = isLight ? kLightSquare : kDarkSquare;
+    final theme = AppSettings.instance.boardTheme.value;
+    var background = isLight ? theme.light : theme.dark;
 
     if (isLastMove) {
       background = Color.alphaBlend(kLastMoveHighlight, background);
@@ -566,7 +574,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       square: square,
       size: _squareSize,
       background: background,
-      coordinateColor: isLight ? kDarkSquare : kLightSquare,
+      coordinateColor: isLight ? theme.dark : theme.light,
+      grain: theme.grain,
       piece: hidePiece ? null : piece,
       hasPieceUnderneath: piece != null,
       isLegalTarget: isLegalTarget,
@@ -595,6 +604,7 @@ class BoardSquareProps {
     required this.size,
     required this.background,
     required this.coordinateColor,
+    required this.grain,
     required this.piece,
     required this.hasPieceUnderneath,
     required this.isLegalTarget,
@@ -607,6 +617,9 @@ class BoardSquareProps {
   final double size;
   final Color background;
   final Color coordinateColor;
+
+  /// Whether the square carries a wood grain (see [BoardTheme.grain]).
+  final bool grain;
 
   /// The piece to draw, or null for an empty square or one hidden while a
   /// moving copy is in flight.
@@ -626,6 +639,7 @@ class BoardSquareProps {
       other.size == size &&
       other.background == background &&
       other.coordinateColor == coordinateColor &&
+      other.grain == grain &&
       other.piece == piece &&
       other.hasPieceUnderneath == hasPieceUnderneath &&
       other.isLegalTarget == isLegalTarget &&
@@ -639,6 +653,7 @@ class BoardSquareProps {
     size,
     background,
     coordinateColor,
+    grain,
     piece,
     hasPieceUnderneath,
     isLegalTarget,
@@ -692,6 +707,15 @@ class BoardSquareCell extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          if (props.grain)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: WoodGrainPainter(
+                  seed: props.square,
+                  light: (fileOf(props.square) + rankOf(props.square)).isOdd,
+                ),
+              ),
+            ),
           ?pieceWidget,
 
           if (props.isLegalTarget && !props.hasPieceUnderneath)
