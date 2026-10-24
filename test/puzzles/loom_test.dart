@@ -9,6 +9,7 @@ import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/puzzles_screen.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/theme.dart';
 
 void _paint(CustomPainter painter, Size size) {
@@ -158,11 +159,41 @@ void main() {
           expect(find.text(level.tribe.toUpperCase()), findsNothing);
         }
         expect(find.textContaining('0 of 36 knots'), findsOneWidget);
-        expect(find.text('Coming soon'), findsNWidgets(4));
+        // Levels 2 to 5 have puzzles but wait for level 1 to be woven.
+        expect(find.text('Not started'), findsNWidgets(4));
         expect(find.text('Continue · Mate in 1'), findsOneWidget);
         expect(
           find.bySemanticsLabel(RegExp('Mate in 1, 0 of 36 knots')),
           findsOneWidget,
+        );
+        // The coach is a speech bubble floating over the carpet: in the same
+        // stack as the scrolling path, not a block in the header.
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.painter is SpeechBubblePainter,
+          ),
+          findsOneWidget,
+        );
+        final coach = tester.getRect(find.textContaining('Next: Mate in 1'));
+        final path = tester.getRect(find.byType(SingleChildScrollView));
+        expect(path.overlaps(coach), isTrue);
+        expect(
+          find
+              .ancestor(
+                of: find.textContaining('Next: Mate in 1'),
+                matching: find.byType(Stack),
+              )
+              .evaluate()
+              .any(
+                (e) => find
+                    .descendant(
+                      of: find.byWidget(e.widget),
+                      matching: find.byType(SingleChildScrollView),
+                    )
+                    .evaluate()
+                    .isNotEmpty,
+              ),
+          isTrue,
         );
         expect(tester.takeException(), isNull);
       });

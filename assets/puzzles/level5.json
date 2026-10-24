@@ -1,0 +1,446 @@
+{
+  "level": 5,
+  "puzzles": [
+    {
+      "fen": "7k/pp3p1p/2q2p2/4n3/1P6/P6P/6QK/6R1 b - - 0 29",
+      "moves": [
+        "e5f3",
+        "h2g3",
+        "f3g1"
+      ],
+      "rating": 1210,
+      "theme": "endgame",
+      "id": "l5-001"
+    },
+    {
+      "fen": "8/5pk1/4bbp1/8/4B3/5PN1/1q3QKP/8 b - - 19 58",
+      "moves": [
+        "e6h3",
+        "g2h3",
+        "b2f2"
+      ],
+      "rating": 1221,
+      "theme": "endgame",
+      "id": "l5-002"
+    },
+    {
+      "fen": "2kr1r2/1pp5/7p/1PN5/1Q3p1P/8/5pP1/R3q2K w - - 2 36",
+      "moves": [
+        "a1e1",
+        "f2e1r",
+        "b4e1"
+      ],
+      "rating": 1228,
+      "theme": "endgame",
+      "id": "l5-003"
+    },
+    {
+      "fen": "3b1k1r/2p3p1/p2pQp2/3P4/1P4P1/3q4/PB3PK1/4R3 b - - 3 31",
+      "moves": [
+        "d3h3",
+        "g2g1",
+        "h3h1"
+      ],
+      "rating": 1239,
+      "theme": "endgame",
+      "id": "l5-004"
+    },
+    {
+      "fen": "8/2K5/3Pk3/1R2npp1/P1P5/3r4/5P1P/8 w - - 8 49",
+      "moves": [
+        "b5e5",
+        "e6e5",
+        "d6d7"
+      ],
+      "rating": 1262,
+      "theme": "endgame",
+      "id": "l5-005"
+    },
+    {
+      "fen": "4r1k1/4Ppp1/1R5p/3r4/p2p1B2/P5P1/5K1P/8 w - - 1 41",
+      "moves": [
+        "b6b8",
+        "e8b8",
+        "f4b8"
+      ],
+      "rating": 1269,
+      "theme": "endgame",
+      "id": "l5-006"
+    },
+    {
+      "fen": "8/6k1/6p1/1r5p/R4K2/P3N1P1/3n1PP1/8 b - - 5 48",
+      "moves": [
+        "g6g5"
+      ],
+      "rating": 1284,
+      "theme": "endgame",
+      "id": "l5-007"
+    },
+    {
+      "fen": "3r2k1/ppR2ppp/4pq2/8/4B3/bP2P2P/P3QPP1/6K1 b - - 0 21",
+      "moves": [
+        "f6a1",
+        "e2f1",
+        "d8d1"
+      ],
+      "rating": 1291,
+      "theme": "endgame",
+      "id": "l5-008"
+    },
+    {
+      "fen": "3k4/1pp2R2/p3B3/6P1/r6p/3b3P/1P6/6K1 w - - 0 34",
+      "moves": [
+        "f7d7",
+        "d8e8",
+        "d7d3"
+      ],
+      "rating": 1302,
+      "theme": "endgame",
+      "id": "l5-009"
+    },
+    {
+      "fen": "4R2r/k1p3p1/pp1p4/P4P2/2N2q2/3P3r/7P/6QK w - - 0 37",
+      "moves": [
+        "a5b6",
+        "c7b6",
+        "g1g7"
+      ],
+      "rating": 1320,
+      "theme": "endgame",
+      "alternatives": [
+        [
+          "a5b6",
+          "c7b6",
+          "g1b6"
+        ]
+      ],
+      "id": "l5-010"
+    },
+    {
+      "fen": "8/8/3pk3/7p/8/3B1RP1/1r3PK1/4b3 w - - 0 75",
+      "moves": [
+        "f3e3",
+        "e6f6",
+        "e3e1"
+      ],
+      "rating": 1331,
+      "theme": "endgame",
+      "id": "l5-011"
+    },
+    {
+      "fen": "2r3k1/p3B1p1/1p1Rp1P1/2pb1r2/8/P7/1P6/2K2R2 w - - 2 32",
+      "moves": [
+        "f1f5",
+        "e6f5",
+        "d6d5"
+      ],
+      "rating": 1349,
+      "theme": "endgame",
+      "id": "l5-012"
+    },
+    {
+      "fen": "1R6/5pkp/6p1/4P3/5PKP/6P1/1p6/1r6 b - - 0 36",
+      "moves": [
+        "h7h5",
+        "g4f3",
+        "b1f1"
+      ],
+      "rating": 1351,
+      "theme": "endgame",
+      "id": "l5-013"
+    },
+    {
+      "fen": "8/8/6pp/4k3/6P1/4K2P/1r1R4/8 b - - 0 50",
+      "moves": [
+        "b2d2",
+        "e3d2",
+        "e5f4"
+      ],
+      "rating": 1369,
+      "theme": "endgame",
+      "id": "l5-014"
+    },
+    {
+      "fen": "8/RP3pp1/2k5/8/3b1B2/5r1P/8/4K3 b - - 0 50",
+      "moves": [
+        "d4a7",
+        "b7b8q",
+        "a7b8"
+      ],
+      "rating": 1378,
+      "theme": "endgame",
+      "id": "l5-015"
+    },
+    {
+      "fen": "rn3q1k/pp5p/2pQ2p1/8/3P4/2P5/2PK1PP1/4R2R b - - 0 24",
+      "moves": [
+        "f8d6",
+        "e1e8",
+        "h8g7"
+      ],
+      "rating": 1395,
+      "theme": "endgame",
+      "id": "l5-016"
+    },
+    {
+      "fen": "8/3n1kp1/p3r2p/1p1pPK1P/2n5/P1P5/1P2R3/6R1 w - - 6 41",
+      "moves": [
+        "g1g7",
+        "f7g7",
+        "f5e6"
+      ],
+      "rating": 1400,
+      "theme": "endgame",
+      "id": "l5-017"
+    },
+    {
+      "fen": "8/6k1/pp4pp/2p5/1PP1K3/P6Q/6PP/2R2rq1 b - - 7 33",
+      "moves": [
+        "g1d4"
+      ],
+      "rating": 1415,
+      "theme": "endgame",
+      "id": "l5-018"
+    },
+    {
+      "fen": "2k4r/ppb2p1b/2p2p2/3p1P1P/N2N2P1/3P4/PPP5/2K3R1 b - - 5 28",
+      "moves": [
+        "c7f4",
+        "c1d1",
+        "f4e3"
+      ],
+      "rating": 1434,
+      "theme": "endgame",
+      "id": "l5-019"
+    },
+    {
+      "fen": "3r1bk1/p2P1p2/2p3p1/2N1pb1p/4N2P/3R4/PPP2PP1/3K4 b - - 0 27",
+      "moves": [
+        "f8c5",
+        "e4c5",
+        "f5d3"
+      ],
+      "rating": 1444,
+      "theme": "endgame",
+      "id": "l5-020"
+    },
+    {
+      "fen": "4r3/3p2k1/4pp2/5Rp1/p1BP2p1/q2PQ1P1/4N2K/8 b - - 0 30",
+      "moves": [
+        "e8h8",
+        "h2g2",
+        "e6f5"
+      ],
+      "rating": 1451,
+      "theme": "endgame",
+      "id": "l5-021"
+    },
+    {
+      "fen": "8/8/4P1pk/pp6/3p4/PP1q2N1/5RK1/8 w - - 0 48",
+      "moves": [
+        "e6e7",
+        "d3e3",
+        "f2e2"
+      ],
+      "rating": 1468,
+      "theme": "endgame",
+      "id": "l5-022"
+    },
+    {
+      "fen": "7k/q2R2p1/5p1p/4p3/4P3/3Q3P/1r3PP1/6K1 b - - 5 26",
+      "moves": [
+        "a7f2",
+        "g1h2",
+        "f2g2"
+      ],
+      "rating": 1487,
+      "theme": "endgame",
+      "id": "l5-023"
+    },
+    {
+      "fen": "8/1R5p/1P6/6k1/8/5K2/2r4P/2N2b2 b - - 0 46",
+      "moves": [
+        "f1g2",
+        "f3e3",
+        "g2b7"
+      ],
+      "rating": 1488,
+      "theme": "endgame",
+      "id": "l5-024"
+    },
+    {
+      "fen": "8/pp2k1p1/2p3Q1/3p4/3P1q2/2P1r2P/P3p1K1/4R1R1 b - - 3 40",
+      "moves": [
+        "f4f3",
+        "g2h2",
+        "f3h3"
+      ],
+      "rating": 1511,
+      "theme": "endgame",
+      "id": "l5-025"
+    },
+    {
+      "fen": "r6k/pp4p1/4Q2p/4n3/4q3/2PB4/P1P3PP/5RK1 b - - 2 22",
+      "moves": [
+        "e5f3",
+        "f1f3",
+        "e4e6"
+      ],
+      "rating": 1520,
+      "theme": "endgame",
+      "id": "l5-026"
+    },
+    {
+      "fen": "r6k/4p2P/2p2q1B/7K/1p1p2Q1/1B4P1/1PP5/5b2 w - - 0 37",
+      "moves": [
+        "g4g8",
+        "a8g8",
+        "h7g8q"
+      ],
+      "rating": 1530,
+      "theme": "endgame",
+      "id": "l5-027"
+    },
+    {
+      "fen": "3r1rk1/ppp2ppp/4P3/8/3pQ3/P3q2P/1PP3P1/R4RK1 w - - 1 21",
+      "moves": [
+        "e4e3",
+        "d4e3",
+        "e6e7"
+      ],
+      "rating": 1546,
+      "theme": "endgame",
+      "id": "l5-028"
+    },
+    {
+      "fen": "1r6/R7/1Pkbn2p/2B1pp2/1PK5/6PP/5P2/8 w - - 9 40",
+      "moves": [
+        "b4b5"
+      ],
+      "rating": 1561,
+      "theme": "endgame",
+      "id": "l5-029"
+    },
+    {
+      "fen": "8/1p1R3p/p1k2N2/6p1/6Pn/6KP/PP3P2/4r3 b - - 0 30",
+      "moves": [
+        "e1g1",
+        "g3h2",
+        "h4f3"
+      ],
+      "rating": 1574,
+      "theme": "endgame",
+      "id": "l5-030"
+    },
+    {
+      "fen": "1rq3k1/R3Q2p/3p2p1/1p1P1p2/1P3P2/2b3P1/4B2P/6K1 b - - 1 30",
+      "moves": [
+        "c3d4",
+        "g1f1",
+        "d4a7"
+      ],
+      "rating": 1582,
+      "theme": "endgame",
+      "id": "l5-031"
+    },
+    {
+      "fen": "6k1/5p1p/6p1/p7/P7/1P3P2/2Nr1nPP/2R3K1 b - - 0 34",
+      "moves": [
+        "f2d3",
+        "c1a1",
+        "d2c2"
+      ],
+      "rating": 1597,
+      "theme": "endgame",
+      "id": "l5-032"
+    },
+    {
+      "fen": "r7/p2k4/1np2np1/8/3P1P1N/4P3/PP1B4/R3K3 b Q - 1 27",
+      "moves": [
+        "a8h8",
+        "e1e2",
+        "h8h4"
+      ],
+      "rating": 1605,
+      "theme": "endgame",
+      "id": "l5-033"
+    },
+    {
+      "fen": "8/8/1Q3n1k/7p/5pp1/3B3P/P1P2PPK/4q3 b - - 1 36",
+      "moves": [
+        "g4g3",
+        "f2g3",
+        "f4g3"
+      ],
+      "rating": 1617,
+      "theme": "endgame",
+      "id": "l5-034"
+    },
+    {
+      "fen": "8/5p1p/rPNb2p1/3kp1P1/8/1R3K1P/8/8 w - - 3 51",
+      "moves": [
+        "c6b4",
+        "d6b4",
+        "b3b4"
+      ],
+      "rating": 1635,
+      "theme": "endgame",
+      "id": "l5-035"
+    },
+    {
+      "fen": "5rk1/6q1/p7/1p3Rp1/2p5/P1P1PQ2/1P6/6K1 w - - 3 44",
+      "moves": [
+        "f3d5",
+        "g8h7",
+        "f5g5"
+      ],
+      "rating": 1643,
+      "theme": "endgame",
+      "id": "l5-036"
+    },
+    {
+      "fen": "8/8/p2p2k1/1pPPpp1p/3r4/1P4PK/P7/5R2 w - - 1 37",
+      "moves": [
+        "c5c6",
+        "d4d3",
+        "f1c1"
+      ],
+      "rating": 1652,
+      "theme": "endgame",
+      "id": "l5-037"
+    },
+    {
+      "fen": "8/8/8/1p4pp/1n2Np2/1P5P/P4RP1/3qk1K1 w - - 0 59",
+      "moves": [
+        "f2f1",
+        "e1e2",
+        "e4c3"
+      ],
+      "rating": 1666,
+      "theme": "endgame",
+      "id": "l5-038"
+    },
+    {
+      "fen": "8/6pk/4Rp1p/5KPP/5P2/8/6r1/8 b - - 0 58",
+      "moves": [
+        "h6g5",
+        "f4g5",
+        "g2g5"
+      ],
+      "rating": 1677,
+      "theme": "endgame",
+      "id": "l5-039"
+    },
+    {
+      "fen": "8/3k1pp1/2p4p/1p2r3/1P1P1P2/2K4P/6P1/8 w - - 0 38",
+      "moves": [
+        "d4e5",
+        "d7e6",
+        "c3d4"
+      ],
+      "rating": 1698,
+      "theme": "endgame",
+      "id": "l5-040"
+    }
+  ]
+}
