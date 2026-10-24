@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:kust/core/board_theme.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 
 /// User-facing preferences. Backed by SharedPreferences.
@@ -11,6 +12,9 @@ class AppSettings {
   final ValueNotifier<ThemeMode> themeMode = ValueNotifier(ThemeMode.system);
   final ValueNotifier<bool> sound = ValueNotifier(true);
   final ValueNotifier<bool> haptics = ValueNotifier(true);
+  final ValueNotifier<BoardTheme> boardTheme = ValueNotifier(
+    BoardTheme.defaultTheme,
+  );
 
   SharedPreferences? _prefs;
 
@@ -23,6 +27,7 @@ class AppSettings {
     };
     sound.value = prefs.getBool('sound_enabled') ?? true;
     haptics.value = prefs.getBool('haptics_enabled') ?? true;
+    boardTheme.value = BoardTheme.fromName(prefs.getString('board_theme'));
     _apply();
   }
 
@@ -41,6 +46,11 @@ class AppSettings {
     haptics.value = value;
     _apply();
     await _prefs?.setBool('haptics_enabled', value);
+  }
+
+  Future<void> setBoardTheme(BoardTheme theme) async {
+    boardTheme.value = theme;
+    await _prefs?.setString('board_theme', theme.name);
   }
 
   void _apply() {
