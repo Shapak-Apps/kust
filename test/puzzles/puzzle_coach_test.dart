@@ -89,14 +89,20 @@ void main() {
     test('is big enough for the bubble at every text size', () {
       // Measured on a phone at normal size: the bubble's text needed 64 px
       // (59 were available and it overflowed by 5), plus 21 px of padding in
-      // the bubble and 16 px around it. The text scales with the text size.
+      // the bubble and the gap above the board. The text scales with the
+      // text size.
       for (var scale = 1.0; scale <= 2.0; scale += 0.1) {
         expect(
           coachSlotHeight(scale),
-          greaterThanOrEqualTo(64 * scale + 21 + 16),
+          greaterThanOrEqualTo(64 * scale + 21 + CoachBubble.standingGap),
           reason: 'text scale $scale',
         );
+        expect(coachSlotHeight(scale), greaterThanOrEqualTo(coachFigureHeight));
       }
+    });
+
+    test('is as tall as the person at normal size', () {
+      expect(coachSlotHeight(1), coachFigureHeight);
     });
 
     test('never shrinks below the normal size, nor grows without limit', () {
@@ -233,6 +239,25 @@ void main() {
             .firstWhere((h) => h > 60);
         expect(slot, coachSlotHeight(scale));
       }
+    });
+
+    testWidgets('the coach stands right on top of the board', (tester) async {
+      await pump(tester, 2, 0);
+      final coach = tester.getRect(find.byType(CoachBubble));
+      final board = tester.getRect(find.byType(PuzzleBoard));
+      // Flush: the coach's slot ends where the board begins, and both are
+      // as wide as the screen allows.
+      expect(coach.bottom, board.top);
+      expect(board.width, 400);
+      expect(coach.left, greaterThanOrEqualTo(0));
+      final image = tester.getRect(
+        find.descendant(
+          of: find.byType(CoachBubble),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(image.bottom, board.top);
+      expect(image.height, coachFigureHeight);
     });
 
     testWidgets('the board stays in place whatever the coach says', (

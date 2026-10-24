@@ -81,11 +81,18 @@ String coachTip({
   return lines[seed.abs() % lines.length];
 }
 
-/// Height of the fixed slot above the board that holds the coach's bubble.
+/// Height of the person standing on the board, in the puzzle screen.
+const double coachFigureHeight = 116;
+
+/// Height of the fixed slot above the board that holds the coach and its
+/// bubble.
 ///
 /// The bubble is a title line and up to two lines of tip: about 64 px of text
-/// at normal size, plus 21 px of padding in the bubble and 16 px around it in
-/// the slot. The text grows with the system text size, so the slot grows with
-/// it. It stays fixed while the words change, so the board never moves.
-double coachSlotHeight(double textScale) =>
-    46 + 62 * textScale.clamp(1.0, 2.0).toDouble();
+/// at normal size, plus 21 px of padding and 14 px of gap above the board. The
+/// text grows with the system text size, so the slot grows with it once the
+/// bubble is taller than the person. It stays fixed while the words change, so
+/// the board never moves.
+double coachSlotHeight(double textScale) {
+  final bubble = 64 * textScale.clamp(1.0, 2.0).toDouble() + 21 + 14;
+  return bubble > coachFigureHeight ? bubble : coachFigureHeight;
+}
