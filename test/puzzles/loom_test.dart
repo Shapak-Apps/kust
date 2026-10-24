@@ -8,6 +8,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/loom.dart';
+import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/puzzles_screen.dart';
 import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/theme.dart';
@@ -166,35 +167,18 @@ void main() {
           find.bySemanticsLabel(RegExp('Mate in 1, 0 of 36 knots')),
           findsOneWidget,
         );
-        // The coach is a speech bubble floating over the carpet: in the same
-        // stack as the scrolling path, not a block in the header.
+        // The coach is a speech bubble above the carpet: it takes its own
+        // space, so the scrolling carpet never goes under it.
         expect(
           find.byWidgetPredicate(
             (w) => w is CustomPaint && w.painter is SpeechBubblePainter,
           ),
           findsOneWidget,
         );
-        final coach = tester.getRect(find.textContaining('Next: Mate in 1'));
+        final coach = tester.getRect(find.byType(CoachBubble));
         final path = tester.getRect(find.byType(SingleChildScrollView));
-        expect(path.overlaps(coach), isTrue);
-        expect(
-          find
-              .ancestor(
-                of: find.textContaining('Next: Mate in 1'),
-                matching: find.byType(Stack),
-              )
-              .evaluate()
-              .any(
-                (e) => find
-                    .descendant(
-                      of: find.byWidget(e.widget),
-                      matching: find.byType(SingleChildScrollView),
-                    )
-                    .evaluate()
-                    .isNotEmpty,
-              ),
-          isTrue,
-        );
+        expect(coach.bottom, lessThanOrEqualTo(path.top));
+        expect(find.textContaining('Next: Mate in 1'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }
