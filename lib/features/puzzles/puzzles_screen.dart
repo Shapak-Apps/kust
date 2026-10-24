@@ -37,6 +37,9 @@ const List<LoomLevel> kLoomLevels = [
 
 final List<GolKind> _gols = [for (final l in kLoomLevels) l.gol];
 
+/// Room kept above the carpet for the coach: its face (64) plus margins.
+const double _coachInset = 88;
+
 /// How far the carpet was woven when the screen last showed it, so returning
 /// after a solve weaves the new knots in front of the player.
 double? _lastWoven;
@@ -73,7 +76,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     final position = _scroll.position;
     final fell = LoomMetrics.fell(kLoomLevels.length, woven);
     position.jumpTo(
-      (fell - position.viewportDimension * 0.55)
+      (fell + _coachInset - position.viewportDimension * 0.55)
           .clamp(0.0, position.maxScrollExtent)
           .toDouble(),
     );
@@ -214,27 +217,37 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     return _Frame(
       child: Column(
         children: [
-          // The coach takes its own space above the carpet, so the carpet
-          // scrolls below it and never goes under it.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-            child: CoachBubble(
-              title: loom.allDone
-                  ? 'All puzzles woven!'
-                  : 'Next: ${puzzleThemeLabel(next.theme)}',
-              tip: loom.allDone
-                  ? 'More are coming soon.'
-                  : CoachBubble.tipOfTheDay(),
-            ),
-          ),
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              child: _Carpet(
-                from: from,
-                loom: loom,
-                onOpen: loom.allDone ? list : play,
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scroll,
+                  // The coach floats over the top of the carpet; keep the
+                  // carpet's start below it.
+                  padding: const EdgeInsets.only(top: _coachInset),
+                  child: _Carpet(
+                    from: from,
+                    loom: loom,
+                    onOpen: loom.allDone ? list : play,
+                  ),
+                ),
+                // Touches pass through the coach to the carpet below.
+                Positioned(
+                  top: 10,
+                  left: 16,
+                  right: 16,
+                  child: IgnorePointer(
+                    child: CoachBubble(
+                      title: loom.allDone
+                          ? 'All puzzles woven!'
+                          : 'Next: ${puzzleThemeLabel(next.theme)}',
+                      tip: loom.allDone
+                          ? 'More are coming soon.'
+                          : CoachBubble.tipOfTheDay(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           _Panel(
@@ -338,12 +351,7 @@ class _Carpet extends StatelessWidget {
                           ),
                     curve: Curves.easeInOutCubic,
                     builder: (context, value, _) => CustomPaint(
-                      painter: LoomPainter(
-                        gols: _gols,
-                        woven: value,
-                        // Past the last göl nothing is on the loom.
-                        current: value.floor() >= count ? -1 : value.floor(),
-                      ),
+                      painter: LoomPainter(gols: _gols, woven: value),
                     ),
                   ),
                 ),
