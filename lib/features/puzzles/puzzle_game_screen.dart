@@ -7,7 +7,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/puzzles/coach_bubble.dart';
+import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/features/puzzles/puzzle_coach.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
@@ -310,6 +313,26 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     return _position.turn == Side.white ? 'White to move' : 'Black to move';
   }
 
+  CoachMood get _coachMood => _solved
+      ? CoachMood.solved
+      : _revealed
+      ? CoachMood.revealed
+      : _mistakeFlash
+      ? CoachMood.mistake
+      : CoachMood.thinking;
+
+  /// The coach's second line. It stays the same while the puzzle is open,
+  /// and changes with each new mistake.
+  String get _coachTip {
+    final puzzle = _puzzle;
+    if (puzzle == null) return '';
+    return coachTip(
+      mood: _coachMood,
+      theme: puzzle.theme,
+      seed: coachSeed(puzzle.id) + (_session?.mistakes ?? 0),
+    );
+  }
+
   void _exit(BuildContext context) {
     if (context.canPop()) {
       context.pop();
@@ -350,7 +373,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     // Fixed slots for the status line and the bottom bar, so the board never
     // moves when the text changes or the controls swap for the result bar.
-    const statusHeight = 48.0;
+    const statusHeight = 96.0;
     const barHeight = 112.0;
     const sideMargin = 0.0;
 
@@ -372,17 +395,22 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
               SizedBox(
                 height: statusHeight,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: _StatusLine(
-                      text: _statusText,
-                      whiteToMove: _position.turn == Side.white,
-                      highlight: _solved
-                          ? context.k.success
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Center(
+                    child: CoachBubble(
+                      title: _statusText,
+                      tip: _coachTip,
+                      leading: _SideDot(
+                        whiteToMove: _position.turn == Side.white,
+                      ),
+                      titleColor: _solved
+                          ? const Color(0xFF1F7A4D)
                           : _mistakeFlash
-                          ? context.k.danger
-                          : null,
+                          ? const Color(0xFFB3261E)
+                          : LoomColors.indigo,
                     ),
                   ),
                 ),
@@ -516,36 +544,22 @@ class _MessageState extends StatelessWidget {
   }
 }
 
-class _StatusLine extends StatelessWidget {
-  const _StatusLine({
-    required this.text,
-    required this.whiteToMove,
-    this.highlight,
-  });
+/// The colour to move, as a small disc.
+class _SideDot extends StatelessWidget {
+  const _SideDot({required this.whiteToMove});
 
-  final String text;
   final bool whiteToMove;
-  final Color? highlight;
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
-    return Row(
-      children: [
-        Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: whiteToMove ? Colors.white : Colors.black,
-            border: Border.all(color: k.muted),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(text, style: k.title.copyWith(color: highlight ?? k.ink)),
-        ),
-      ],
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: whiteToMove ? Colors.white : Colors.black,
+        border: Border.all(color: LoomColors.walnut, width: 1.5),
+      ),
     );
   }
 }
