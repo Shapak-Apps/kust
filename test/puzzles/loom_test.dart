@@ -158,7 +158,8 @@ void main() {
           expect(find.text(level.tribe.toUpperCase()), findsNothing);
         }
         expect(find.textContaining('0 of 36 knots'), findsOneWidget);
-        expect(find.text('Coming soon'), findsNWidgets(4));
+        // Levels 2 to 5 have puzzles but wait for level 1 to be woven.
+        expect(find.text('Not started'), findsNWidgets(4));
         expect(find.text('Continue · Mate in 1'), findsOneWidget);
         expect(
           find.bySemanticsLabel(RegExp('Mate in 1, 0 of 36 knots')),
