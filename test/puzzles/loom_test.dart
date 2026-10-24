@@ -161,7 +161,7 @@ void main() {
         expect(find.text('Coming soon'), findsNWidgets(4));
         expect(find.text('Continue · Mate in 1'), findsOneWidget);
         expect(
-          find.bySemanticsLabel(RegExp('Teke göl, Mate in 1, 0 of 36')),
+          find.bySemanticsLabel(RegExp('Mate in 1, 0 of 36 knots')),
           findsOneWidget,
         );
         expect(tester.takeException(), isNull);
