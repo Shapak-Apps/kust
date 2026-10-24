@@ -313,23 +313,23 @@ class _Coach extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 56,
+          height: 56,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: LoomColors.saffron,
           ),
-          padding: const EdgeInsets.all(1.5),
+          padding: const EdgeInsets.all(2),
           child: ClipOval(
             child: Image.asset(
               bot.imagePath,
-              cacheWidth: 84,
+              cacheWidth: 168,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => const SizedBox.shrink(),
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Text(
             line,
@@ -338,7 +338,7 @@ class _Coach extends StatelessWidget {
             style: k.caption.copyWith(
               color: LoomColors.cream.withValues(alpha: 0.85),
               fontWeight: FontWeight.w600,
-              fontSize: 13,
+              fontSize: 14,
             ),
           ),
         ),
