@@ -373,7 +373,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
     // Fixed slots for the status line and the bottom bar, so the board never
     // moves when the text changes or the controls swap for the result bar.
-    const statusHeight = 96.0;
+    // The coach's bubble grows with the text size, and so does its slot.
+    final statusHeight = coachSlotHeight(
+      MediaQuery.textScalerOf(context).scale(1),
+    );
     const barHeight = 112.0;
     const sideMargin = 0.0;
 

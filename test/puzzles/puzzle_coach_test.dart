@@ -85,6 +85,26 @@ void main() {
     });
   });
 
+  group('slot', () {
+    test('is big enough for the bubble at every text size', () {
+      // Measured on a phone at normal size: the bubble's text needed 64 px
+      // (59 were available and it overflowed by 5), plus 21 px of padding in
+      // the bubble and 16 px around it. The text scales with the text size.
+      for (var scale = 1.0; scale <= 2.0; scale += 0.1) {
+        expect(
+          coachSlotHeight(scale),
+          greaterThanOrEqualTo(64 * scale + 21 + 16),
+          reason: 'text scale $scale',
+        );
+      }
+    });
+
+    test('never shrinks below the normal size, nor grows without limit', () {
+      expect(coachSlotHeight(0.5), coachSlotHeight(1));
+      expect(coachSlotHeight(5), coachSlotHeight(2));
+    });
+  });
+
   group('puzzle screen', () {
     Future<void> pump(WidgetTester tester, int level, int index) async {
       tester.view.physicalSize = const Size(400, 800);
@@ -167,6 +187,52 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets('the slot above the board grows with the text size', (
+      tester,
+    ) async {
+      // The row of buttons below the board has its own limits at big text
+      // sizes; this test only measures the slot above the board.
+      final previous = FlutterError.onError;
+      FlutterError.onError = (_) {};
+      addTearDown(() => FlutterError.onError = previous);
+      for (final scale in [1.0, 1.5]) {
+        tester.view.physicalSize = const Size(400, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: appTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: PuzzleGameScreen(
+              level: 3,
+              index: 0,
+              progress: _FakeRecorder(),
+            ),
+          ),
+        );
+        for (var i = 0; i < 50; i++) {
+          if (find.byType(PuzzleBoard).evaluate().isNotEmpty) break;
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+        final slot = find
+            .ancestor(
+              of: find.byType(CoachBubble),
+              matching: find.byType(SizedBox),
+            )
+            .evaluate()
+            .map((e) => tester.getSize(find.byWidget(e.widget)).height)
+            .firstWhere((h) => h > 60);
+        expect(slot, coachSlotHeight(scale));
+      }
     });
 
     testWidgets('the board stays in place whatever the coach says', (
