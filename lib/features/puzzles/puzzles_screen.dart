@@ -102,7 +102,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             KustSheetHeader(
-              title: '${kLoomLevels.first.tribe} göl',
+              title: 'All puzzles',
               subtitle:
                   '${level.puzzles.where((p) => progress.isSolved(p.id)).length} of ${level.puzzles.length} solved',
             ),
@@ -216,7 +216,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     return _Frame(
       coach: _Coach(
         line: allDone
-            ? 'Teke göl woven! New göls are coming soon.'
+            ? 'All puzzles woven! More are coming soon.'
             : 'Next: ${_themeLabel(level.puzzles[current].theme)}. '
                   '${_Coach.tipOfTheDay()}',
       ),
@@ -437,7 +437,7 @@ class _Carpet extends StatelessWidget {
                 child: Semantics(
                   button: true,
                   label:
-                      '${kLoomLevels.first.tribe} göl, ${kLoomLevels.first.theme}, '
+                      '${kLoomLevels.first.theme}, '
                       '$done of $total knots woven',
                   excludeSemantics: true,
                   child: GestureDetector(
