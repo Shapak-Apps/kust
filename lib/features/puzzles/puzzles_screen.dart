@@ -9,13 +9,12 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/features/play/bots.dart';
+import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
-import 'package:kust/features/puzzles/speech_bubble.dart';
 
 /// One level of the carpet: the tribal göl it weaves and its puzzle theme.
 class LoomLevel {
@@ -215,34 +214,27 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     return _Frame(
       child: Column(
         children: [
+          // The coach takes its own space above the carpet, so the carpet
+          // scrolls below it and never goes under it.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+            child: CoachBubble(
+              title: loom.allDone
+                  ? 'All puzzles woven!'
+                  : 'Next: ${puzzleThemeLabel(next.theme)}',
+              tip: loom.allDone
+                  ? 'More are coming soon.'
+                  : CoachBubble.tipOfTheDay(),
+            ),
+          ),
           Expanded(
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  controller: _scroll,
-                  child: _Carpet(
-                    from: from,
-                    loom: loom,
-                    onOpen: loom.allDone ? list : play,
-                  ),
-                ),
-                // Floats over the carpet; touches pass through to it.
-                Positioned(
-                  top: 10,
-                  left: 16,
-                  right: 16,
-                  child: IgnorePointer(
-                    child: _Coach(
-                      title: loom.allDone
-                          ? 'All puzzles woven!'
-                          : 'Next: ${puzzleThemeLabel(next.theme)}',
-                      tip: loom.allDone
-                          ? 'More are coming soon.'
-                          : _Coach.tipOfTheDay(),
-                    ),
-                  ),
-                ),
-              ],
+            child: SingleChildScrollView(
+              controller: _scroll,
+              child: _Carpet(
+                from: from,
+                loom: loom,
+                onOpen: loom.allDone ? list : play,
+              ),
             ),
           ),
           _Panel(
@@ -297,98 +289,6 @@ class _Frame extends StatelessWidget {
         ),
         Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
         Expanded(child: child),
-      ],
-    );
-  }
-}
-
-/// The coach: a bot's face with a speech bubble saying what is next. It
-/// floats over the carpet.
-class _Coach extends StatelessWidget {
-  const _Coach({required this.title, required this.tip});
-
-  final String title;
-  final String tip;
-
-  static const List<String> _tips = [
-    'Never skip puzzle day!',
-    'Look for checks, captures and threats first.',
-    'One puzzle a day keeps the blunders away.',
-    'Take your time: the best move is usually forcing.',
-  ];
-
-  static int get _day => DateTime.now().difference(DateTime(2026)).inDays;
-
-  static String tipOfTheDay() => _tips[_day % _tips.length];
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final bot = kInternationalBots[_day % kInternationalBots.length];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: LoomColors.saffron,
-          ),
-          padding: const EdgeInsets.all(2.5),
-          child: ClipOval(
-            child: Image.asset(
-              bot.imagePath,
-              cacheWidth: 192,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const SizedBox.shrink(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 2),
-        Expanded(
-          child: CustomPaint(
-            painter: const SpeechBubblePainter(
-              fill: LoomColors.cream,
-              border: LoomColors.indigo,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                BubbleMetrics.tail + 14,
-                10,
-                14,
-                11,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(
-                      color: LoomColors.indigo,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    tip,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.caption.copyWith(
-                      color: LoomColors.walnut,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
