@@ -12,9 +12,10 @@ import 'package:kust/ui/tokens.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/loom.dart';
+import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
-
-const int kPuzzleLevel = 1;
+import 'package:kust/features/puzzles/puzzle_theme.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 
 /// One level of the carpet: the tribal göl it weaves and its puzzle theme.
 class LoomLevel {
@@ -25,8 +26,8 @@ class LoomLevel {
   final String theme;
 }
 
-/// The five göls of the carpet, bottom to top. Only the first level has
-/// puzzles so far; the others show as charted göls still to come.
+/// The five göls of the carpet, bottom to top, one per puzzle level
+/// (`assets/puzzles/level1.json` to `level5.json`).
 const List<LoomLevel> kLoomLevels = [
   LoomLevel(GolKind.teke, 'Teke', 'Mate in 1'),
   LoomLevel(GolKind.yomut, 'Ýomut', 'Mate in 2'),
@@ -41,17 +42,14 @@ final List<GolKind> _gols = [for (final l in kLoomLevels) l.gol];
 /// after a solve weaves the new knots in front of the player.
 double? _lastWoven;
 
-int _currentIndex(PuzzleLevel level, PuzzleProgress progress) {
-  final index = level.puzzles.indexWhere((p) => !progress.isCompleted(p.id));
-  return index == -1 ? level.puzzles.length - 1 : index;
-}
-
-String _themeLabel(String theme) {
-  if (theme.startsWith('mateIn')) {
-    return 'Mate in ${theme.substring('mateIn'.length)}';
-  }
-  return 'Win material';
-}
+/// Loads every level. A level that cannot be read counts as having no
+/// puzzles yet, so one missing file never hides the others.
+Future<List<PuzzleLevel?>> _loadLevels() => Future.wait([
+  for (var n = 1; n <= kLoomLevels.length; n++)
+    PuzzleRepository.instance
+        .loadLevel(n)
+        .then<PuzzleLevel?>((level) => level, onError: (_) => null),
+]);
 
 class PuzzlesScreen extends StatefulWidget {
   const PuzzlesScreen({super.key});
@@ -62,9 +60,7 @@ class PuzzlesScreen extends StatefulWidget {
 
 class _PuzzlesScreenState extends State<PuzzlesScreen> {
   final ScrollController _scroll = ScrollController();
-  late Future<PuzzleLevel> _levelFuture = PuzzleRepository.instance.loadLevel(
-    kPuzzleLevel,
-  );
+  late Future<List<PuzzleLevel?>> _levelsFuture = _loadLevels();
   bool _initialJumpDone = false;
 
   @override
@@ -84,12 +80,14 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     );
   }
 
-  void _openPuzzle(BuildContext context, int index) {
-    context.push('/puzzle/$kPuzzleLevel/$index');
+  /// Opens puzzle [index] of the level at [levelIndex] (0 for the first).
+  void _openPuzzle(BuildContext context, int levelIndex, int index) {
+    context.push('/puzzle/${levelIndex + 1}/$index');
   }
 
   void _showList(
     BuildContext context,
+    int levelIndex,
     PuzzleLevel level,
     PuzzleProgress progress,
     int current,
@@ -104,6 +102,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             KustSheetHeader(
               title: 'All puzzles',
               subtitle:
+                  '${kLoomLevels[levelIndex].theme} · '
                   '${level.puzzles.where((p) => progress.isSolved(p.id)).length} of ${level.puzzles.length} solved',
             ),
             for (var index = 0; index < level.puzzles.length; index++)
@@ -114,7 +113,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                   child: KustOption(
                     title: 'Puzzle ${index + 1}',
                     subtitle:
-                        '${_themeLabel(level.puzzles[index].theme)} · ${level.puzzles[index].rating}',
+                        '${puzzleThemeLabel(level.puzzles[index].theme)} · ${level.puzzles[index].rating}',
                     leading: KustIconTile(
                       progress.isSolved(level.puzzles[index].id)
                           ? Icons.check_rounded
@@ -131,7 +130,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                         ? null
                         : () {
                             Navigator.pop(sheetContext);
-                            _openPuzzle(context, index);
+                            _openPuzzle(context, levelIndex, index);
                           },
                   ),
                 ),
@@ -150,25 +149,11 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
         color: Theme.of(context).brightness == Brightness.dark
             ? LoomColors.feltDark
             : LoomColors.felt,
-        child: FutureBuilder<PuzzleLevel>(
-          future: _levelFuture,
+        child: FutureBuilder<List<PuzzleLevel?>>(
+          future: _levelsFuture,
           builder: (context, snapshot) {
-            if (snapshot.hasError) {
-              return _Frame(
-                child: _StateMessage(
-                  icon: Icons.cloud_off_rounded,
-                  message: 'Could not load puzzles',
-                  actionLabel: 'Try again',
-                  onAction: () => setState(() {
-                    _levelFuture = PuzzleRepository.instance.loadLevel(
-                      kPuzzleLevel,
-                    );
-                  }),
-                ),
-              );
-            }
-            final level = snapshot.data;
-            if (level == null) {
+            final levels = snapshot.data;
+            if (levels == null) {
               return const _Frame(
                 child: Center(
                   child: CircularProgressIndicator(
@@ -178,7 +163,19 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                 ),
               );
             }
-            if (level.puzzles.isEmpty) {
+            if (levels.first == null) {
+              return _Frame(
+                child: _StateMessage(
+                  icon: Icons.cloud_off_rounded,
+                  message: 'Could not load puzzles',
+                  actionLabel: 'Try again',
+                  onAction: () => setState(() {
+                    _levelsFuture = _loadLevels();
+                  }),
+                ),
+              );
+            }
+            if (levels.every((l) => l == null || l.puzzles.isEmpty)) {
               return const _Frame(
                 child: _StateMessage(
                   icon: Icons.extension_off_rounded,
@@ -188,7 +185,7 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             }
             return ValueListenableBuilder(
               valueListenable: PuzzleProgressStore.instance.listenable(),
-              builder: (context, _, _) => _loaded(context, level),
+              builder: (context, _, _) => _loaded(context, levels),
             );
           },
         ),
@@ -196,15 +193,13 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
     );
   }
 
-  Widget _loaded(BuildContext context, PuzzleLevel level) {
+  Widget _loaded(BuildContext context, List<PuzzleLevel?> levels) {
     final progress = PuzzleProgressStore.instance.load();
-    final total = level.puzzles.length;
-    final done = level.puzzles.where((p) => progress.isCompleted(p.id)).length;
-    final allDone = done == total;
-    final current = _currentIndex(level, progress);
-    final woven = done / total;
-    final from = _lastWoven ?? woven;
-    _lastWoven = woven;
+    final loom = LoomProgress.from(levels, progress);
+    final level = levels[loom.current]!;
+    final next = level.puzzles[loom.nextPuzzle];
+    final from = _lastWoven ?? loom.woven;
+    _lastWoven = loom.woven;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_initialJumpDone && mounted) {
@@ -213,40 +208,52 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
       }
     });
 
+    void play() => _openPuzzle(context, loom.current, loom.nextPuzzle);
+    void list() =>
+        _showList(context, loom.current, level, progress, loom.nextPuzzle);
+
     return _Frame(
-      coach: _Coach(
-        line: allDone
-            ? 'All puzzles woven! More are coming soon.'
-            : 'Next: ${_themeLabel(level.puzzles[current].theme)}. '
-                  '${_Coach.tipOfTheDay()}',
-      ),
       child: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              child: _Carpet(
-                from: from,
-                woven: woven,
-                done: done,
-                total: total,
-                onOpen: allDone
-                    ? () => _showList(context, level, progress, current)
-                    : () => _openPuzzle(context, current),
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scroll,
+                  child: _Carpet(
+                    from: from,
+                    loom: loom,
+                    onOpen: loom.allDone ? list : play,
+                  ),
+                ),
+                // Floats over the carpet; touches pass through to it.
+                Positioned(
+                  top: 10,
+                  left: 16,
+                  right: 16,
+                  child: IgnorePointer(
+                    child: _Coach(
+                      title: loom.allDone
+                          ? 'All puzzles woven!'
+                          : 'Next: ${puzzleThemeLabel(next.theme)}',
+                      tip: loom.allDone
+                          ? 'More are coming soon.'
+                          : _Coach.tipOfTheDay(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           _Panel(
             progress: progress,
-            done: done,
-            total: total,
-            action: allDone
+            done: loom.done,
+            total: loom.total,
+            action: loom.allDone
                 ? 'Review puzzles'
-                : 'Continue · ${_themeLabel(level.puzzles[current].theme)}',
-            onAction: allDone
-                ? () => _showList(context, level, progress, current)
-                : () => _openPuzzle(context, current),
-            onList: () => _showList(context, level, progress, current),
+                : 'Continue · ${puzzleThemeLabel(next.theme)}',
+            onAction: loom.allDone ? list : play,
+            onList: list,
           ),
         ],
       ),
@@ -256,10 +263,9 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
 
 /// The screen chrome on the felt: title, coach line and the content below.
 class _Frame extends StatelessWidget {
-  const _Frame({required this.child, this.coach});
+  const _Frame({required this.child});
 
   final Widget child;
-  final Widget? coach;
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +276,7 @@ class _Frame extends StatelessWidget {
         SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 14),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -285,7 +291,6 @@ class _Frame extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (coach != null) ...[const SizedBox(height: 8), coach!],
               ],
             ),
           ),
@@ -297,11 +302,13 @@ class _Frame extends StatelessWidget {
   }
 }
 
-/// The coach: a bot's face and one line saying what is next.
+/// The coach: a bot's face with a speech bubble saying what is next. It
+/// floats over the carpet.
 class _Coach extends StatelessWidget {
-  const _Coach({required this.line});
+  const _Coach({required this.title, required this.tip});
 
-  final String line;
+  final String title;
+  final String tip;
 
   static const List<String> _tips = [
     'Never skip puzzle day!',
@@ -319,34 +326,66 @@ class _Coach extends StatelessWidget {
     final k = context.k;
     final bot = kInternationalBots[_day % kInternationalBots.length];
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 64,
+          height: 64,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: LoomColors.saffron,
           ),
-          padding: const EdgeInsets.all(1.5),
+          padding: const EdgeInsets.all(2.5),
           child: ClipOval(
             child: Image.asset(
               bot.imagePath,
-              cacheWidth: 84,
+              cacheWidth: 192,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => const SizedBox.shrink(),
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 2),
         Expanded(
-          child: Text(
-            line,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: k.caption.copyWith(
-              color: LoomColors.cream.withValues(alpha: 0.85),
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+          child: CustomPaint(
+            painter: const SpeechBubblePainter(
+              fill: LoomColors.cream,
+              border: LoomColors.indigo,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BubbleMetrics.tail + 14,
+                10,
+                14,
+                11,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(
+                      color: LoomColors.indigo,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    tip,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.caption.copyWith(
+                      color: LoomColors.walnut,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -357,18 +396,10 @@ class _Coach extends StatelessWidget {
 
 /// The runner with each level's label beside its göl.
 class _Carpet extends StatelessWidget {
-  const _Carpet({
-    required this.from,
-    required this.woven,
-    required this.done,
-    required this.total,
-    required this.onOpen,
-  });
+  const _Carpet({required this.from, required this.loom, required this.onOpen});
 
   final double from;
-  final double woven;
-  final int done;
-  final int total;
+  final LoomProgress loom;
   final VoidCallback onOpen;
 
   @override
@@ -376,7 +407,8 @@ class _Carpet extends StatelessWidget {
     final count = kLoomLevels.length;
     final height = LoomMetrics.height(count) + 24;
     final reduceMotion = MediaQuery.of(context).disableAnimations;
-    final current = woven >= 1 ? 1 : 0;
+    final woven = loom.woven;
+    final onLoom = loom.levels[loom.current];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -409,7 +441,8 @@ class _Carpet extends StatelessWidget {
                       painter: LoomPainter(
                         gols: _gols,
                         woven: value,
-                        current: value >= 1 ? 1 : 0,
+                        // Past the last göl nothing is on the loom.
+                        current: value.floor() >= count ? -1 : value.floor(),
                       ),
                     ),
                   ),
@@ -422,23 +455,19 @@ class _Carpet extends StatelessWidget {
                   left: i.isEven ? 16 : left + LoomMetrics.width + 10,
                   width: labelWidth,
                   alignRight: i.isOdd,
-                  state: i < current
-                      ? _GolState.woven
-                      : i == current
-                      ? _GolState.onLoom
-                      : _GolState.charted,
+                  progress: loom.levels[i],
                 ),
               // Tapping the göl on the loom opens the next puzzle.
               Positioned(
                 left: left,
                 width: LoomMetrics.width,
-                top: LoomMetrics.golTop(count, 0),
+                top: LoomMetrics.golTop(count, loom.current),
                 height: LoomMetrics.slot,
                 child: Semantics(
                   button: true,
                   label:
-                      '${kLoomLevels.first.theme}, '
-                      '$done of $total knots woven',
+                      '${kLoomLevels[loom.current].theme}, '
+                      '${onLoom.done} of ${onLoom.total} knots woven',
                   excludeSemantics: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -459,29 +488,25 @@ class _Carpet extends StatelessWidget {
     required double left,
     required double width,
     required bool alignRight,
-    required _GolState state,
+    required LevelProgress progress,
   }) {
     final k = context.k;
     final level = kLoomLevels[index];
-    final dim = state == _GolState.charted;
-    final onLoom = state == _GolState.onLoom;
+    final dim =
+        progress.state == LevelState.waiting ||
+        progress.state == LevelState.comingSoon;
+    final onLoom = progress.state == LevelState.onLoom;
     final color = LoomColors.cream.withValues(alpha: dim ? 0.65 : 1);
     final align = alignRight ? TextAlign.right : TextAlign.left;
     final center = LoomMetrics.golCenter(kLoomLevels.length, index);
-
-    final status = switch (state) {
-      _GolState.woven => 'Woven ✓',
-      _GolState.onLoom when index == 0 => '$done of $total knots',
-      _GolState.onLoom => 'Coming soon',
-      _GolState.charted => 'Coming soon',
-    };
 
     return Positioned(
       left: left,
       width: width,
       top: center - 22,
       child: ExcludeSemantics(
-        excluding: index == 0,
+        // The göl on the loom is described by the tap area instead.
+        excluding: index == loom.current,
         child: Column(
           crossAxisAlignment: alignRight
               ? CrossAxisAlignment.end
@@ -500,7 +525,7 @@ class _Carpet extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              status,
+              progress.status,
               textAlign: align,
               style: k.caption.copyWith(
                 fontSize: 12,
@@ -516,8 +541,6 @@ class _Carpet extends StatelessWidget {
     );
   }
 }
-
-enum _GolState { woven, onLoom, charted }
 
 /// Stats and the main action, on a panel the carpet's fringe hangs over.
 class _Panel extends StatelessWidget {

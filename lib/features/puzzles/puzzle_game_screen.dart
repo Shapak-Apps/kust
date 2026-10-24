@@ -10,6 +10,7 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
+import 'package:kust/features/puzzles/puzzle_theme.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -44,6 +45,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   String? _error;
   int _puzzleCount = 0;
   int _index = 0;
+
+  /// Whether the level after this one has puzzles to move on to.
+  bool _hasNextLevel = false;
 
   int _ply = 0;
   ({Square from, Square to})? _slide;
@@ -95,6 +99,18 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       _index = index;
       _ply = 0;
     });
+    _probeNextLevel();
+  }
+
+  /// Finds out whether a next level exists, so the last puzzle of a level
+  /// can offer to continue there.
+  Future<void> _probeNextLevel() async {
+    try {
+      final next = await PuzzleRepository.instance.loadLevel(widget.level + 1);
+      if (mounted) setState(() => _hasNextLevel = next.puzzles.isNotEmpty);
+    } catch (_) {
+      if (mounted) setState(() => _hasNextLevel = false);
+    }
   }
 
   PuzzleProgressRecorder get _recorder =>
@@ -305,6 +321,8 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   void _nextPuzzle(BuildContext context) {
     if (_index + 1 < _puzzleCount) {
       context.pushReplacement('/puzzle/${widget.level}/${_index + 1}');
+    } else if (_hasNextLevel) {
+      context.pushReplacement('/puzzle/${widget.level + 1}/0');
     } else {
       _exit(context);
     }
@@ -395,6 +413,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   child: finished
                       ? _FinishedBar(
                           hasNext: hasNext,
+                          nextLevel: _hasNextLevel,
                           busy: _busy,
                           onRetry: _retry,
                           onNext: () => _nextPuzzle(context),
@@ -431,7 +450,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         children: [
           KustTopBar(
             title: 'Puzzle ${_session == null ? '' : _index + 1}',
-            subtitle: _puzzle == null ? null : _themeLabel(_puzzle!.theme),
+            subtitle: _puzzle == null ? null : puzzleThemeLabel(_puzzle!.theme),
             leading: KustIconButton(
               icon: Icons.arrow_back_rounded,
               label: 'Back',
@@ -449,13 +468,6 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
         ],
       ),
     );
-  }
-
-  String _themeLabel(String theme) {
-    if (theme.startsWith('mateIn')) {
-      return 'Mate in ${theme.substring('mateIn'.length)}';
-    }
-    return 'Win material';
   }
 }
 
@@ -658,12 +670,16 @@ class _ControlButton extends StatelessWidget {
 class _FinishedBar extends StatelessWidget {
   const _FinishedBar({
     required this.hasNext,
+    required this.nextLevel,
     required this.busy,
     required this.onRetry,
     required this.onNext,
   });
 
   final bool hasNext;
+
+  /// The last puzzle of a level, with another level after it.
+  final bool nextLevel;
   final bool busy;
   final VoidCallback onRetry;
   final VoidCallback onNext;
@@ -683,7 +699,11 @@ class _FinishedBar extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: KustButton(
-              label: hasNext ? 'Next puzzle' : 'Back to puzzles',
+              label: hasNext
+                  ? 'Next puzzle'
+                  : nextLevel
+                  ? 'Next level'
+                  : 'Back to puzzles',
               onTap: busy ? null : onNext,
             ),
           ),

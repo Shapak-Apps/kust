@@ -17,8 +17,8 @@ abstract final class LoomMetrics {
   /// Vertical room for each level's göl.
   static const double slot = 100;
 
-  /// Bare warp above the last göl.
-  static const double top = 40;
+  /// Bare warp above the last göl, with room for the coach floating over it.
+  static const double top = 110;
 
   /// End band and fringe below the woven carpet.
   static const double band = 10;
