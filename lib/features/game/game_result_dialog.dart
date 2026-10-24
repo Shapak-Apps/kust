@@ -52,12 +52,7 @@ class GameResultContent extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: KustButton(
-                label: 'Rematch',
-                icon: Icons.refresh_rounded,
-                height: 48,
-                onTap: onRematch,
-              ),
+              child: KustButton(label: 'Rematch', height: 48, onTap: onRematch),
             ),
           ],
         ),
