@@ -371,9 +371,9 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final hintTo = _atTip && !finished ? _s.hintTo : null;
     final hasNext = _index + 1 < _puzzleCount;
 
-    // Fixed slots for the status line and the bottom bar, so the board never
-    // moves when the text changes or the controls swap for the result bar.
-    // The coach's bubble grows with the text size, and so does its slot.
+    // Fixed slots for the coach and the bottom bar, so the board never moves
+    // when the words change or the controls swap for the result bar. The
+    // coach's bubble grows with the text size, and so does its slot.
     final statusHeight = coachSlotHeight(
       MediaQuery.textScalerOf(context).scale(1),
     );
@@ -395,45 +395,50 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
           return Column(
             children: [
-              SizedBox(
-                height: statusHeight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Center(
-                    child: CoachBubble(
-                      title: _statusText,
-                      tip: _coachTip,
-                      leading: _SideDot(
-                        whiteToMove: _position.turn == Side.white,
-                      ),
-                      titleColor: _solved
-                          ? const Color(0xFF1F7A4D)
-                          : _mistakeFlash
-                          ? const Color(0xFFB3261E)
-                          : LoomColors.indigo,
-                    ),
-                  ),
-                ),
-              ),
+              // The coach stands on the top edge of the board, and the two
+              // sit together right under the top bar.
               Expanded(
-                child: Center(
-                  child: SizedBox(
-                    width: side,
-                    height: side,
-                    child: PuzzleBoard(
-                      position: _position,
-                      flipped: _s.solverSide == Side.black,
-                      interactive: _atTip && !_busy && !finished,
-                      onMove: _onUserMove,
-                      lastMove: _s.lastMoves[_ply],
-                      hintFrom: hintFrom,
-                      hintTo: hintTo,
-                      slide: _slide,
-                      slideKey: _slideKey,
-                    ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: statusHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: CoachBubble(
+                            standing: true,
+                            size: coachFigureHeight,
+                            title: _statusText,
+                            tip: _coachTip,
+                            leading: _SideDot(
+                              whiteToMove: _position.turn == Side.white,
+                            ),
+                            titleColor: _solved
+                                ? const Color(0xFF1F7A4D)
+                                : _mistakeFlash
+                                ? const Color(0xFFB3261E)
+                                : LoomColors.indigo,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: side,
+                        height: side,
+                        child: PuzzleBoard(
+                          position: _position,
+                          flipped: _s.solverSide == Side.black,
+                          interactive: _atTip && !_busy && !finished,
+                          onMove: _onUserMove,
+                          lastMove: _s.lastMoves[_ply],
+                          hintFrom: hintFrom,
+                          hintTo: hintTo,
+                          slide: _slide,
+                          slideKey: _slideKey,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
