@@ -4,11 +4,11 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/core/board_theme.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 
-const Color _lightSquare = Color(0xFFF0E6D2);
-const Color _darkSquare = Color(0xFFB58863);
 const Color _lastMoveColor = Color(0x66FFBB00);
 const Color _selectedColor = Color(0x99FFBB00);
 const Color _hintFromColor = Color(0x6622C55E);
@@ -100,9 +100,14 @@ class _PuzzleBoardState extends State<PuzzleBoard>
   Square? _selected;
   Map<Square, NormalMove> _targets = const {};
 
+  void _onBoardTheme() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
+    AppSettings.instance.boardTheme.addListener(_onBoardTheme);
     // Rebuild once the glide ends so the real piece is drawn again.
     _slideCtrl.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) setState(() {});
@@ -128,6 +133,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
 
   @override
   void dispose() {
+    AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
     _slideCtrl.dispose();
     super.dispose();
   }
@@ -242,7 +248,8 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     final isHintFrom = widget.hintFrom == square;
     final isHintTo = widget.hintTo == square;
 
-    var background = isLight ? _lightSquare : _darkSquare;
+    final theme = AppSettings.instance.boardTheme.value;
+    var background = isLight ? theme.light : theme.dark;
     if (isLast) background = Color.alphaBlend(_lastMoveColor, background);
     if (isHintFrom) {
       background = Color.alphaBlend(_hintFromColor, background);
@@ -262,6 +269,12 @@ class _PuzzleBoardState extends State<PuzzleBoard>
         child: Stack(
           alignment: Alignment.center,
           children: [
+            if (theme.grain)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: WoodGrainPainter(seed: square, light: isLight),
+                ),
+              ),
             if (piece != null)
               Padding(
                 padding: EdgeInsets.all(cell * 0.04),
