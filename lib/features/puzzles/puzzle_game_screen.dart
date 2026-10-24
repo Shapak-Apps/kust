@@ -396,9 +396,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
           return Column(
             children: [
               // The coach stands on the top edge of the board, and the two
-              // sit together in the space above the buttons.
+              // sit together right under the top bar.
               Expanded(
-                child: Center(
+                child: Align(
+                  alignment: Alignment.topCenter,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

@@ -82,7 +82,7 @@ String coachTip({
 }
 
 /// Height of the person standing on the board, in the puzzle screen.
-const double coachFigureHeight = 116;
+const double coachFigureHeight = 100;
 
 /// Height of the fixed slot above the board that holds the coach and its
 /// bubble.

@@ -9,6 +9,7 @@ import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/theme.dart';
+import 'package:kust/ui/kust_top_bar.dart';
 import 'package:dartchess/dartchess.dart';
 
 class _FakeRecorder implements PuzzleProgressRecorder {
@@ -258,6 +259,9 @@ void main() {
       );
       expect(image.bottom, board.top);
       expect(image.height, coachFigureHeight);
+      // Both sit right under the top bar, not in the middle of the screen.
+      final topBar = tester.getRect(find.byType(KustTopBar));
+      expect(coach.top - topBar.bottom, lessThan(12));
     });
 
     testWidgets('the board stays in place whatever the coach says', (
