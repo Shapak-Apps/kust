@@ -117,10 +117,9 @@ void main() {
       expect(find.byType(PuzzleBoard), findsOneWidget);
 
       final start = tester.getRect(find.byType(PuzzleBoard));
-      // Side margins of 16 on each side, and centred in the space above the bar.
-      expect(start.width, 368);
-      expect(start.left, 16);
-      expect(start.center.dx, 200);
+      // Full width, no side padding, centred in the space above the bar.
+      expect(start.width, 400);
+      expect(start.left, 0);
 
       void play(String uci) => tester
           .widget<PuzzleBoard>(find.byType(PuzzleBoard))
