@@ -334,7 +334,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     // moves when the text changes or the controls swap for the result bar.
     const statusHeight = 48.0;
     const barHeight = 112.0;
-    const sideMargin = 16.0;
+    const sideMargin = 0.0;
 
     return SafeArea(
       child: LayoutBuilder(
