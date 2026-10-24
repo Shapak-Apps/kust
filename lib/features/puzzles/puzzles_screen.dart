@@ -15,6 +15,7 @@ import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 
 /// One level of the carpet: the tribal göl it weaves and its puzzle theme.
 class LoomLevel {
@@ -212,22 +213,36 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
         _showList(context, loom.current, level, progress, loom.nextPuzzle);
 
     return _Frame(
-      coach: _Coach(
-        line: loom.allDone
-            ? 'All puzzles woven! More are coming soon.'
-            : 'Next: ${puzzleThemeLabel(next.theme)}. '
-                  '${_Coach.tipOfTheDay()}',
-      ),
       child: Column(
         children: [
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scroll,
-              child: _Carpet(
-                from: from,
-                loom: loom,
-                onOpen: loom.allDone ? list : play,
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  controller: _scroll,
+                  child: _Carpet(
+                    from: from,
+                    loom: loom,
+                    onOpen: loom.allDone ? list : play,
+                  ),
+                ),
+                // Floats over the carpet; touches pass through to it.
+                Positioned(
+                  top: 10,
+                  left: 16,
+                  right: 16,
+                  child: IgnorePointer(
+                    child: _Coach(
+                      title: loom.allDone
+                          ? 'All puzzles woven!'
+                          : 'Next: ${puzzleThemeLabel(next.theme)}',
+                      tip: loom.allDone
+                          ? 'More are coming soon.'
+                          : _Coach.tipOfTheDay(),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           _Panel(
@@ -248,10 +263,9 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
 
 /// The screen chrome on the felt: title, coach line and the content below.
 class _Frame extends StatelessWidget {
-  const _Frame({required this.child, this.coach});
+  const _Frame({required this.child});
 
   final Widget child;
-  final Widget? coach;
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +276,7 @@ class _Frame extends StatelessWidget {
         SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 14),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -277,7 +291,6 @@ class _Frame extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (coach != null) ...[const SizedBox(height: 8), coach!],
               ],
             ),
           ),
@@ -289,11 +302,13 @@ class _Frame extends StatelessWidget {
   }
 }
 
-/// The coach: a bot's face and one line saying what is next.
+/// The coach: a bot's face with a speech bubble saying what is next. It
+/// floats over the carpet.
 class _Coach extends StatelessWidget {
-  const _Coach({required this.line});
+  const _Coach({required this.title, required this.tip});
 
-  final String line;
+  final String title;
+  final String tip;
 
   static const List<String> _tips = [
     'Never skip puzzle day!',
@@ -311,34 +326,66 @@ class _Coach extends StatelessWidget {
     final k = context.k;
     final bot = kInternationalBots[_day % kInternationalBots.length];
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: LoomColors.saffron,
           ),
-          padding: const EdgeInsets.all(2),
+          padding: const EdgeInsets.all(2.5),
           child: ClipOval(
             child: Image.asset(
               bot.imagePath,
-              cacheWidth: 168,
+              cacheWidth: 192,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => const SizedBox.shrink(),
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 2),
         Expanded(
-          child: Text(
-            line,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: k.caption.copyWith(
-              color: LoomColors.cream.withValues(alpha: 0.85),
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
+          child: CustomPaint(
+            painter: const SpeechBubblePainter(
+              fill: LoomColors.cream,
+              border: LoomColors.indigo,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BubbleMetrics.tail + 14,
+                10,
+                14,
+                11,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(
+                      color: LoomColors.indigo,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    tip,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.caption.copyWith(
+                      color: LoomColors.walnut,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
