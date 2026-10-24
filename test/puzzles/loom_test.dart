@@ -7,6 +7,7 @@ import 'package:hive_ce/hive.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/puzzles/gol.dart';
+import 'package:kust/features/puzzles/gol_charts.dart';
 import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/puzzles_screen.dart';
@@ -21,27 +22,32 @@ void _paint(CustomPainter painter, Size size) {
 
 void main() {
   group('göls', () {
+    final letters = RegExp(r'^[.rywgk]+$');
+
     for (final kind in GolKind.values) {
-      test('${kind.name} is symmetric and has a saffron heart', () {
-        final chart = GolChart.of(kind);
+      test('${kind.name} is a full chart of the flag göl', () {
+        final rows = kGolChartRows[kind.name]!;
+        expect(rows.length.isOdd, isTrue);
+        expect(rows.length, inInclusiveRange(25, 37));
+        for (final row in rows) {
+          expect(row.length, golChartWidth);
+          expect(row, matches(letters));
+        }
         var knots = 0;
-        var saffron = false;
+        final used = <Knot>{};
         for (var j = -golRows; j <= golRows; j++) {
           for (var i = -golCols; i <= golCols; i++) {
             final knot = golKnot(kind, i, j);
             if (knot == null) continue;
             knots++;
-            saffron |= knot == Knot.saffron;
-            // The outline mirrors both ways; colours (diagonal quarter pairs,
-            // S-hooks) repeat when turned half a circle.
-            expect(golKnot(kind, -i, j), isNotNull, reason: '($i, $j)');
-            expect(golKnot(kind, i, -j), isNotNull, reason: '($i, $j)');
-            expect(golKnot(kind, -i, -j), knot, reason: '($i, $j)');
+            used.add(knot);
           }
         }
-        expect(saffron, isTrue);
         expect(knots, greaterThan(600));
-        // Nothing is cut off by the chart's edge.
+        expect(used, containsAll([Knot.saffron, Knot.ivory, Knot.indigo]));
+
+        // The chart sits inside the grid with a margin on every side.
+        final chart = GolChart.of(kind);
         for (final row in [chart.knots.first, chart.knots.last]) {
           expect(row.every((k) => k == null), isTrue);
         }
@@ -49,8 +55,68 @@ void main() {
           expect(row.first, isNull);
           expect(row.last, isNull);
         }
+        // Lines of the design exist, and the edge is part of them.
+        var contour = 0;
+        for (var r = 0; r < chart.rows; r++) {
+          for (var c = 0; c < chart.cols; c++) {
+            if (chart.outline[r][c]) expect(chart.contour[r][c], isTrue);
+            if (chart.contour[r][c]) contour++;
+          }
+        }
+        expect(contour, greaterThan(100));
       });
     }
+
+    double similarity(GolKind kind, bool Function(int, int) mirrored) {
+      final rows = kGolChartRows[kind.name]!;
+      final h = rows.length, w = golChartWidth;
+      var same = 0;
+      for (var r = 0; r < h; r++) {
+        for (var c = 0; c < w; c++) {
+          final other = mirrored(r, c)
+              ? rows[h - 1 - r][w - 1 - c]
+              : rows[r][w - 1 - c];
+          if (rows[r][c] == other) same++;
+        }
+      }
+      return same / (h * w);
+    }
+
+    test('the göls have the symmetry of the real designs', () {
+      // The Teke göl turns into itself after half a turn.
+      expect(similarity(GolKind.teke, (_, _) => true), greaterThan(0.9));
+      // The others are mirror images left to right.
+      for (final kind in [GolKind.yomut, GolKind.arsary, GolKind.cowdur]) {
+        expect(
+          similarity(kind, (_, _) => false),
+          greaterThan(0.9),
+          reason: kind.name,
+        );
+      }
+    });
+
+    test('the five göls are different from each other', () {
+      final seen = <String>{};
+      for (final kind in GolKind.values) {
+        expect(seen.add(kGolChartRows[kind.name]!.join()), isTrue);
+      }
+    });
+
+    test('only known flag letters make knots', () {
+      expect(knotOfLetter('y'), Knot.saffron);
+      expect(knotOfLetter('w'), Knot.ivory);
+      expect(knotOfLetter('g'), Knot.indigo);
+      expect(knotOfLetter('k'), Knot.deep);
+      expect(knotOfLetter('r'), Knot.rust);
+      expect(knotOfLetter('.'), isNull);
+      expect(knotOfLetter('?'), isNull);
+    });
+
+    test('knots outside the chart are empty', () {
+      expect(golKnot(GolKind.teke, 40, 0), isNull);
+      expect(golKnot(GolKind.teke, 0, -40), isNull);
+      expect(golKnot(GolKind.teke, 0, 0), isNotNull);
+    });
 
     test('charts are cached and outlines sit on the edge', () {
       final chart = GolChart.of(GolKind.teke);
@@ -167,8 +233,8 @@ void main() {
           find.bySemanticsLabel(RegExp('Mate in 1, 0 of 36 knots')),
           findsOneWidget,
         );
-        // The coach is a speech bubble above the carpet: it takes its own
-        // space, so the scrolling carpet never goes under it.
+        // The coach is a speech bubble floating over the carpet, in the same
+        // stack as the scrolling path, and the carpet starts below it.
         expect(
           find.byWidgetPredicate(
             (w) => w is CustomPaint && w.painter is SpeechBubblePainter,
@@ -177,8 +243,35 @@ void main() {
         );
         final coach = tester.getRect(find.byType(CoachBubble));
         final path = tester.getRect(find.byType(SingleChildScrollView));
-        expect(coach.bottom, lessThanOrEqualTo(path.top));
+        expect(path.overlaps(coach), isTrue);
+        expect(
+          find
+              .ancestor(
+                of: find.byType(CoachBubble),
+                matching: find.byType(Stack),
+              )
+              .evaluate()
+              .any(
+                (e) => find
+                    .descendant(
+                      of: find.byWidget(e.widget),
+                      matching: find.byType(SingleChildScrollView),
+                    )
+                    .evaluate()
+                    .isNotEmpty,
+              ),
+          isTrue,
+        );
         expect(find.textContaining('Next: Mate in 1'), findsOneWidget);
+        // The scrolling content has padding so the carpet starts below the
+        // coach's face.
+        final scroll = tester.widget<SingleChildScrollView>(
+          find.byType(SingleChildScrollView),
+        );
+        expect(
+          (scroll.padding! as EdgeInsets).top,
+          greaterThanOrEqualTo(coach.height - 10),
+        );
         expect(tester.takeException(), isNull);
       });
     }

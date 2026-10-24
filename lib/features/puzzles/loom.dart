@@ -228,6 +228,7 @@ class LoomPainter extends CustomPainter {
       final woven = y >= fell;
       final row = chart.knots[r];
       final outline = chart.outline[r];
+      final contour = chart.contour[r];
       if (woven) {
         // Merge runs of one colour into a single rect.
         var start = 0;
@@ -256,11 +257,11 @@ class LoomPainter extends CustomPainter {
         }
       } else {
         for (var c = 0; c < row.length; c++) {
-          final knot = row[c];
-          if (knot == null) continue;
-          final charted =
-              (outline[c] && (r + c).isEven) || knot == Knot.saffron;
-          if (charted) _rect(canvas, left + c * g + 0.3, y + 0.3, 2, 2, dot);
+          if (row[c] == null) continue;
+          // Sketch the lines of the design with a dot on every other knot.
+          if (contour[c] && (r + c).isEven) {
+            _rect(canvas, left + c * g + 0.3, y + 0.3, 2, 2, dot);
+          }
         }
       }
     }
