@@ -351,12 +351,7 @@ class _Carpet extends StatelessWidget {
                           ),
                     curve: Curves.easeInOutCubic,
                     builder: (context, value, _) => CustomPaint(
-                      painter: LoomPainter(
-                        gols: _gols,
-                        woven: value,
-                        // Past the last göl nothing is on the loom.
-                        current: value.floor() >= count ? -1 : value.floor(),
-                      ),
+                      painter: LoomPainter(gols: _gols, woven: value),
                     ),
                   ),
                 ),

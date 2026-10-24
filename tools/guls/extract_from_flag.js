@@ -3,16 +3,16 @@
 // How to run: open
 //   https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Turkmenistan.svg
 // in a browser, open the developer console, paste this whole file and press
-// Enter. It prints the five charts as JSON; save them as tools/guls/flag_guls.json
-// (keys gul1..gul5), then run tools/guls/make_gol_charts.py.
+// Enter. It prints the charts as JSON; save them as tools/guls/flag_guls.json
+// (keys gul1..gul5 and border), then run tools/guls/make_gol_charts.py.
 //
 // The flag is public domain. The rough boxes below are in the flag's own units
 // (900 x 600); each box is then fitted tightly around its gul.
 (async () => {
   const XH = 'http://www.w3.org/1999/xhtml';
-  const S = 6, W = 900, H = 600, COLS = 49;
+  const S = 6, W = 900, H = 600, COLS = 97;   // knots across a gul
   const img = document.createElementNS(XH, 'img');
-  img.src = location.href;
+  img.src = window.__FLAG_URL || location.href;
   await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('image failed')); });
   const cv = document.createElementNS(XH, 'canvas');
   cv.width = W * S; cv.height = H * S;
@@ -115,6 +115,30 @@
     }
     result['gul' + (i + 1)] = clean(sample(cx, cy, cell, rows)).map(r => r.join(''));
   });
-  console.log(JSON.stringify(result, null, 2));
+  // The strip's side border repeats every 114 units. Take one repeat from the
+  // gap between the first two guls, where nothing else is drawn, and chart it
+  // with the same knot size as the guls (a gul is 130 units across).
+  const cellB = 130 / COLS;
+  const bx0 = 108, bw = 12, by0 = 96, period = 114;
+  const bCols = Math.round(bw / cellB), bRows = Math.round(period / cellB);
+  const border = [];
+  for (let r = 0; r < bRows; r++) {
+    let row = '';
+    for (let c = 0; c < bCols; c++) {
+      const counts = {};
+      for (let sy = 0; sy < 3; sy++) for (let sx = 0; sx < 3; sx++) {
+        const k = pixel(bx0 + (c + (sx + 0.5) / 3) * cellB, by0 + (r + (sy + 0.5) / 3) * cellB);
+        counts[k] = (counts[k] || 0) + 1;
+      }
+      const k = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+      row += k === 'R' ? '.' : k;
+    }
+    border.push(row);
+  }
+  result.border = border;
+  const text = JSON.stringify(result, null, 2);
+  console.log(text);
+  // Optional: send it to a local server that saves it (used while developing).
+  if (window.__SEND_TO) await fetch(window.__SEND_TO, { method: 'POST', body: text });
   return result;
 })();

@@ -28,7 +28,7 @@ void main() {
       test('${kind.name} is a full chart of the flag göl', () {
         final rows = kGolChartRows[kind.name]!;
         expect(rows.length.isOdd, isTrue);
-        expect(rows.length, inInclusiveRange(25, 37));
+        expect(rows.length, inInclusiveRange(51, 75));
         for (final row in rows) {
           expect(row.length, golChartWidth);
           expect(row, matches(letters));
@@ -43,7 +43,7 @@ void main() {
             used.add(knot);
           }
         }
-        expect(knots, greaterThan(600));
+        expect(knots, greaterThan(2500));
         expect(used, containsAll([Knot.saffron, Knot.ivory, Knot.indigo]));
 
         // The chart sits inside the grid with a margin on every side.
@@ -63,7 +63,7 @@ void main() {
             if (chart.contour[r][c]) contour++;
           }
         }
-        expect(contour, greaterThan(100));
+        expect(contour, greaterThan(300));
       });
     }
 
@@ -113,8 +113,8 @@ void main() {
     });
 
     test('knots outside the chart are empty', () {
-      expect(golKnot(GolKind.teke, 40, 0), isNull);
-      expect(golKnot(GolKind.teke, 0, -40), isNull);
+      expect(golKnot(GolKind.teke, 60, 0), isNull);
+      expect(golKnot(GolKind.teke, 0, -60), isNull);
       expect(golKnot(GolKind.teke, 0, 0), isNotNull);
     });
 
@@ -125,6 +125,28 @@ void main() {
       final firstKnot = chart.knots[middle].indexWhere((k) => k != null);
       expect(chart.outline[middle][firstKnot], isTrue);
       expect(chart.outline[middle][chart.cols ~/ 2], isFalse);
+    });
+
+    test('the border is one repeat of the flag strip that tiles', () {
+      expect(kBorderRows.length, greaterThan(50));
+      final width = kBorderRows.first.length;
+      expect(width, lessThanOrEqualTo(10));
+      for (final row in kBorderRows) {
+        expect(row.length, width);
+        expect(row, matches(letters));
+      }
+      // It has a pattern, and its last row leads into its first.
+      expect(kBorderRows.join().contains('y'), isTrue);
+      var same = 0;
+      for (var c = 0; c < width; c++) {
+        if (kBorderRows.last[c] == kBorderRows.first[c]) same++;
+      }
+      expect(same, greaterThanOrEqualTo(width ~/ 2));
+      // The tile and its guard line fit in the border of the runner.
+      expect(
+        width * LoomMetrics.knot + LoomMetrics.knot,
+        lessThanOrEqualTo(LoomMetrics.border),
+      );
     });
 
     test('every göl fits inside the runner between its borders', () {
@@ -158,20 +180,11 @@ void main() {
       final gols = GolKind.values.toList();
       final size = Size(LoomMetrics.width, LoomMetrics.height(gols.length));
       for (final woven in [0.0, 0.3, 0.99, 1.0, 2.5, 5.0]) {
-        _paint(
-          LoomPainter(gols: gols, woven: woven, current: woven.floor()),
-          size,
-        );
+        _paint(LoomPainter(gols: gols, woven: woven), size);
       }
-      final a = LoomPainter(gols: gols, woven: 0.2, current: 0);
-      expect(
-        a.shouldRepaint(LoomPainter(gols: gols, woven: 0.2, current: 0)),
-        isFalse,
-      );
-      expect(
-        a.shouldRepaint(LoomPainter(gols: gols, woven: 0.3, current: 0)),
-        isTrue,
-      );
+      final a = LoomPainter(gols: gols, woven: 0.2);
+      expect(a.shouldRepaint(LoomPainter(gols: gols, woven: 0.2)), isFalse);
+      expect(a.shouldRepaint(LoomPainter(gols: gols, woven: 0.3)), isTrue);
     });
   });
 

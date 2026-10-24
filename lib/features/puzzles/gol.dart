@@ -38,12 +38,12 @@ abstract final class LoomColors {
 }
 
 /// Width of every chart, in knots.
-const int golChartWidth = 49;
+const int golChartWidth = 97;
 
 /// Columns and rows either side of the centre of the chart grid. The tallest
-/// göl is 35 knots high.
-const int golCols = 27;
-const int golRows = 18;
+/// göl is 67 knots high.
+const int golCols = 50;
+const int golRows = 37;
 
 /// The knot a flag colour becomes: the flag's yellow is the carpet's saffron
 /// dye, green becomes dark indigo, white wool stays ivory, the dark outline is

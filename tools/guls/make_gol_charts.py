@@ -6,8 +6,9 @@ Cowdur, Salyr), as charts of knots. Run from the project root:
 
     python3 tools/guls/make_gol_charts.py
 
-Leftover bits of the flag's side border (small yellow or dark pieces that
-touch the edge of a chart and are not part of the gul) are removed.
+Leftover bits of the flag's side border (yellow or dark pieces that touch the
+edge of a chart and are not part of the gul) are removed. The side border of
+the strip is written too, as one repeat that tiles top to bottom.
 """
 
 import json
@@ -19,7 +20,9 @@ TARGET = ROOT / "lib/features/puzzles/gol_charts.dart"
 
 # Flag order, top to bottom, is the order of the levels, bottom to top.
 KINDS = ["teke", "yomut", "arsary", "cowdur", "salyr"]
-MAX_STRAY = 12
+# A stray piece of the strip's border is yellow or dark, cut off from the gul,
+# touches the edge of the chart and is small next to the gul.
+MAX_STRAY = 150
 
 
 def components(grid):
@@ -47,9 +50,11 @@ def components(grid):
 
 def clean(rows):
     grid = [list(r) for r in rows]
+    rows, cols = len(grid), len(grid[0])
     for cells in components(grid)[1:]:
         letters = {grid[a][b] for a, b in cells}
-        if len(cells) < MAX_STRAY and letters <= {"y", "k"}:
+        at_edge = any(a in (0, rows - 1) or b in (0, cols - 1) for a, b in cells)
+        if len(cells) < MAX_STRAY and letters <= {"y", "k"} and at_edge:
             for a, b in cells:
                 grid[a][b] = "."
     rows = ["".join(r) for r in grid]
@@ -59,6 +64,10 @@ def clean(rows):
         rows.pop(0)
     while rows and set(rows[-1]) == {"."}:
         rows.pop()
+    # An odd number of rows keeps a middle row. A blank row at the bottom
+    # does not move the centre of the gul.
+    if len(rows) % 2 == 0:
+        rows.append("." * len(rows[0]))
     return rows
 
 
@@ -81,6 +90,15 @@ def main():
         lines += [f"    '{r}'," for r in rows]
         lines.append("  ],")
     lines.append("};")
+    border = data["border"]
+    assert len({len(r) for r in border}) == 1
+    lines += [
+        "",
+        "/// One repeat of the strip's side border; it tiles from top to bottom.",
+        "const List<String> kBorderRows = [",
+    ]
+    lines += [f"  '{r}'," for r in border]
+    lines.append("];")
     TARGET.write_text("\n".join(lines) + "\n")
     print(f"wrote {TARGET.relative_to(ROOT)}")
 
