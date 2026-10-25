@@ -307,18 +307,14 @@ class ChessEngine {
     required String playedUci,
     required String afterFen,
     Duration thinkTime = const Duration(milliseconds: 400),
+    int depth = analysisDepth,
     bool Function()? isStale,
   }) {
     return _run<MoveAnalysis?>(() async {
       if (isStale != null && isStale()) return null;
       if (!_ready) await start();
       return _atFullStrength<MoveAnalysis?>(() async {
-        final top = await _searchTop(
-          beforeFen,
-          thinkTime,
-          2,
-          depth: analysisDepth,
-        );
+        final top = await _searchTop(beforeFen, thinkTime, 2, depth: depth);
         if (top.isEmpty) return null;
 
         final best = top.first;
@@ -334,7 +330,7 @@ class ChessEngine {
             beforeFen,
             thinkTime,
             1,
-            depth: analysisDepth,
+            depth: depth,
             searchMove: playedUci,
           );
           if (only.isNotEmpty && only.first.uci == playedUci) {

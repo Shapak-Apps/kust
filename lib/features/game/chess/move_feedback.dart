@@ -14,6 +14,10 @@ const int _kingExchangeValue = 100;
 const int _brilliantMinNetLoss = 2;
 const int _brilliantLosingCp = -150;
 
+/// Already this far ahead, a sacrifice is just good technique, not
+/// brilliant (the way chess.com rates it too).
+const int _brilliantWinningCp = 400;
+
 enum MoveQuality { brilliant, best, good, great, inaccuracy, mistake, blunder }
 
 extension MoveQualityStyle on MoveQuality {
@@ -224,6 +228,7 @@ bool isBrilliantSacrifice({
 }) {
   if (!isBest) return false;
   if (playedCp < _brilliantLosingCp) return false;
+  if (playedCp > _brilliantWinningCp) return false;
 
   final mover = before.turn;
   final opponent = mover.opposite;

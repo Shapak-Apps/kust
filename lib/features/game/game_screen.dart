@@ -20,6 +20,7 @@ import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -354,6 +355,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
               },
             ),
             trailing: [
+              KustIconButton(
+                icon: Icons.ios_share_rounded,
+                label: 'Export game',
+                onTap: () {
+                  final g = ref.read(chessControllerProvider);
+                  showExportSheet(
+                    context,
+                    position: g.displayPosition,
+                    flipped:
+                        g.mode == GameMode.bot && g.playerSide == Side.black,
+                    pgn: livePgn(g),
+                    highlight: g.displayMoveSquares,
+                  );
+                },
+              ),
               if (status == GameStatus.playing)
                 KustIconButton(
                   icon: Icons.flag_outlined,
