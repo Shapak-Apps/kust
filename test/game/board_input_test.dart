@@ -188,6 +188,46 @@ void main() {
     });
   });
 
+  testWidgets('promotion: a column of pieces on the file, then the pick', (
+    tester,
+  ) async {
+    final c = await _board(tester);
+    _stage(c, '7k/P7/8/8/8/8/1P6/K7 w - - 0 1');
+    c.selectSquare(Square.a7);
+    c.selectSquare(Square.a8);
+    await tester.pump();
+    expect(c.state.pendingPromotion, isNotNull);
+    for (final role in ['queen', 'knight', 'rook', 'bishop']) {
+      expect(find.bySemanticsLabel('Promote to $role'), findsOneWidget);
+    }
+    // The column starts on a8 and runs down the a-file.
+    final board = tester.getRect(find.byType(ChessBoard));
+    final queen = tester.getRect(find.bySemanticsLabel('Promote to queen'));
+    final knight = tester.getRect(find.bySemanticsLabel('Promote to knight'));
+    expect(queen.left, closeTo(board.left, 0.5));
+    expect(queen.top, closeTo(board.top, 0.5));
+    expect(knight.top, greaterThan(queen.top));
+
+    await tester.tap(find.bySemanticsLabel('Promote to knight'));
+    await tester.pump();
+    expect(c.state.position.board.pieceAt(Square.a8)?.role, Role.knight);
+    await tester.pump(const Duration(milliseconds: 400));
+    await _finish(tester);
+  });
+
+  testWidgets('promotion can be cancelled', (tester) async {
+    final c = await _board(tester);
+    _stage(c, '7k/P7/8/8/8/8/1P6/K7 w - - 0 1');
+    c.selectSquare(Square.a7);
+    c.selectSquare(Square.a8);
+    await tester.pump();
+    await tester.tap(find.bySemanticsLabel('Cancel promotion'));
+    await tester.pump();
+    expect(c.state.pendingPromotion, isNull);
+    expect(c.state.position.board.pieceAt(Square.a7)?.role, Role.pawn);
+    await _finish(tester);
+  });
+
   testWidgets('a hint shows as an arrow from the piece to its square', (
     tester,
   ) async {

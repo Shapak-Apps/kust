@@ -299,6 +299,34 @@ void main() {
     await _finish(tester);
   });
 
+  testWidgets('a premoved pawn promotes to the piece you pick', (tester) async {
+    final (c, engine) = await _game(tester, ['h8g8', 'g8h8']);
+    c.state = c.state.copyWith(
+      position: Chess.fromSetup(
+        Setup.parseFen('7k/P7/8/8/8/8/1P6/K7 b - - 0 1'),
+      ),
+      status: GameStatus.playing,
+      engineFailed: true,
+    );
+    await c.retryEngine();
+    await tester.pump();
+
+    c.selectSquare(Square.a7);
+    c.selectSquare(Square.a8);
+    // Not queued yet: the picker is up.
+    expect(c.state.premoves, isEmpty);
+    expect(c.state.pendingPromotion, (from: Square.a7, to: Square.a8));
+    c.completePromotion(Role.knight);
+    expect(c.state.premoves, [_p(Square.a7, Square.a8, Role.knight)]);
+    expect(c.state.boardPosition.board.pieceAt(Square.a8)?.role, Role.knight);
+
+    await _reply(tester, engine);
+    expect(c.state.moves.last.san, 'a8=N');
+    expect(c.state.position.board.pieceAt(Square.a8)?.role, Role.knight);
+    await _reply(tester, engine);
+    await _finish(tester);
+  });
+
   test('the setting is saved, on by default', () async {
     SharedPreferences.setMockInitialValues({});
     await AppSettings.instance.load();

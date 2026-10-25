@@ -309,6 +309,9 @@ class ChessController extends Notifier<GameState> {
   BotPolicy _policy = BotPolicy(elo: 1400);
   bool _isDisposed = false;
   int _feedbackEpoch = 0;
+
+  /// Whether a move of this game was rated brilliant.
+  bool _brilliantThisGame = false;
   int _accuracyEpoch = 0;
   final Set<int> _feedbackPending = <int>{};
   final Map<String, int> _repCounts = <String, int>{};
@@ -770,9 +773,8 @@ class ChessController extends Notifier<GameState> {
       );
       state = state.copyWith(moves: updated);
       unawaited(_playQualityFeedback(quality));
-      if (quality == MoveQuality.brilliant) {
-        unawaited(AchievementTracker.brilliantMove());
-      }
+      // Celebrated when the game ends, not over the board mid-game.
+      if (quality == MoveQuality.brilliant) _brilliantThisGame = true;
     } catch (_) {
     } finally {
       if (epoch == _feedbackEpoch) _feedbackPending.remove(moveIndex);
@@ -821,6 +823,7 @@ class ChessController extends Notifier<GameState> {
     _evalRequestId++;
     _accuracyEpoch++;
     _resetFeedbackQueue();
+    _brilliantThisGame = false;
     _policy = BotPolicy(
       elo: bot.elo,
       seed: DateTime.now().microsecondsSinceEpoch,
@@ -869,6 +872,7 @@ class ChessController extends Notifier<GameState> {
     _evalRequestId++;
     _accuracyEpoch++;
     _resetFeedbackQueue();
+    _brilliantThisGame = false;
     _initClocks(timeControl);
 
     final base = timeControl?.base ?? Duration.zero;
@@ -1424,6 +1428,7 @@ class ChessController extends Notifier<GameState> {
           playerRating: PlayerRatingStore.instance.rating - (ratingChange ?? 0),
         ),
       );
+      if (_brilliantThisGame) unawaited(AchievementTracker.brilliantMove());
     }
     if (!isLocal) unawaited(_computeAccuracy(game, recordId));
   }
@@ -1459,7 +1464,13 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(accuracy: value, accuracyPending: false);
     if (value != null) {
       unawaited(AchievementTracker.accuracy(value));
-      await GameHistoryStore.instance.setAccuracy(recordId, value);
+      // The result sheet has just shown it, so History shows it too, for
+      // good, instead of hiding it behind Analyze.
+      await GameHistoryStore.instance.setAccuracy(
+        recordId,
+        value,
+        analyzed: true,
+      );
     }
   }
 
