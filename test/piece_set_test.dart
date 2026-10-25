@@ -43,6 +43,7 @@ void main() {
             text,
             anyOf(
               contains('viewBox="0 0 45 45"'),
+              contains('viewBox="2 1.5 41 41"'),
               contains('viewBox="0 0 100 100"'),
             ),
             reason: asset,

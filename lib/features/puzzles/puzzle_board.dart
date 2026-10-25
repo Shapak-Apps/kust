@@ -279,7 +279,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
               ),
             if (piece != null)
               Padding(
-                padding: EdgeInsets.all(cell * 0.04),
+                padding: EdgeInsets.all(cell * 0.02),
                 child: SvgPicture.asset(assetForPiece(piece)),
               ),
             if (isTarget)
@@ -323,7 +323,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
       child: IgnorePointer(
         child: RepaintBoundary(
           child: Padding(
-            padding: EdgeInsets.all(cell * 0.04),
+            padding: EdgeInsets.all(cell * 0.02),
             child: SvgPicture.asset(assetForPiece(piece)),
           ),
         ),
