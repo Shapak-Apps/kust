@@ -40,6 +40,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         builder: (context, state) => PuzzleGameScreen(
           level: int.parse(state.pathParameters['level']!),
           index: int.parse(state.pathParameters['index']!),
+          daily: state.uri.queryParameters['daily'] == '1',
         ),
       ),
 
