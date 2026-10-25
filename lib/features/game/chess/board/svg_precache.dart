@@ -1,16 +1,16 @@
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 
-final List<String> _pieceAssets = [
-  for (final color in ['w', 'b'])
-    for (final role in ['K', 'Q', 'R', 'B', 'N', 'P'])
-      'assets/pieces/$color$role.svg',
-];
-
+/// Loads the pieces of the chosen set and the move icons ahead of time, and
+/// the pieces of a newly chosen set as soon as it is picked.
 Future<void> precacheGameSvgs() async {
+  AppSettings.instance.pieceSet.addListener(
+    () => Future.wait(AppSettings.instance.pieceSet.value.assets.map(_cache)),
+  );
   final paths = <String>{
-    ..._pieceAssets,
+    ...AppSettings.instance.pieceSet.value.assets,
     for (final quality in MoveQuality.values) quality.asset,
   };
   await Future.wait(paths.map(_cache));

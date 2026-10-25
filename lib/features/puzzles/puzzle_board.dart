@@ -108,6 +108,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
   void initState() {
     super.initState();
     AppSettings.instance.boardTheme.addListener(_onBoardTheme);
+    AppSettings.instance.pieceSet.addListener(_onBoardTheme);
     // Rebuild once the glide ends so the real piece is drawn again.
     _slideCtrl.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) setState(() {});
@@ -134,6 +135,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
   @override
   void dispose() {
     AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
+    AppSettings.instance.pieceSet.removeListener(_onBoardTheme);
     _slideCtrl.dispose();
     super.dispose();
   }
