@@ -19,11 +19,11 @@ void main() {
   });
 
   group('sets', () {
-    test('there are four, the classic one and three shaded ones', () {
+    test('there are four, the classic one and three new ones', () {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
+        'Shaded',
         'Neo',
-        'Walnut',
         'Carpet',
       ]);
       expect(PieceSet.classic.asset('w', 'K'), 'assets/pieces/wK.svg');
@@ -155,11 +155,11 @@ void main() {
           .selected;
       expect(selected(PieceSet.neo), isTrue);
 
-      await tester.ensureVisible(find.text('Walnut'));
-      await tester.tap(find.text('Walnut'));
+      await tester.ensureVisible(find.text('Shaded'));
+      await tester.tap(find.text('Shaded'));
       await tester.pumpAndSettle();
-      expect(AppSettings.instance.pieceSet.value, PieceSet.walnut);
-      expect(selected(PieceSet.walnut), isTrue);
+      expect(AppSettings.instance.pieceSet.value, PieceSet.shaded);
+      expect(selected(PieceSet.shaded), isTrue);
       expect(selected(PieceSet.neo), isFalse);
     });
 
