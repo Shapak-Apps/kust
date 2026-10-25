@@ -29,8 +29,20 @@ void main() {
     expect(weak.depth, lessThan(mid.depth));
     expect(mid.depth, lessThan(strong.depth));
     expect(weak.thinkTime, lessThan(strong.thinkTime));
-    expect(BotPolicy(elo: 100).depth, 3);
+    expect(BotPolicy(elo: 100).depth, 2);
     expect(BotPolicy(elo: 9000).depth, 18);
+  });
+
+  test('2000 and up play as before; below they are weaker', () {
+    final master = BotPolicy(elo: 2000);
+    expect(master.depth, 10);
+    expect(master.temperature, 25);
+    expect(master.maxLoss, 70);
+    expect(master.slipChance, 0);
+    final club = BotPolicy(elo: 1400);
+    expect(club.depth, 5);
+    expect(club.temperature, greaterThan(80));
+    expect(BotPolicy(elo: 600).depth, 2);
   });
 
   test('the engine itself always plays at full strength', () {
@@ -56,8 +68,10 @@ void main() {
     // ...but far more often a weaker one than the 2000 bot.
     expect(weak['best']!, lessThan(strong['best']!));
     expect((weak['bad'] ?? 0), greaterThan(0));
-    // Even a slip never reaches the move that throws the game away.
-    expect(weak['awful'] ?? 0, 0);
+    // A slip that throws the game away stays rare at 600...
+    expect((weak['awful'] ?? 0) / 4000, lessThan(0.01));
+    // ...and never happens from 1400 up.
+    expect(_picks(1400)['awful'] ?? 0, 0);
   });
 
   test('a bot takes a forced mate and never walks into one', () {
@@ -87,7 +101,8 @@ void main() {
       expect(t(elo), greaterThanOrEqualTo(t(elo + 100)));
       expect(m(elo), greaterThanOrEqualTo(m(elo + 100)));
     }
-    expect(BotPolicy(elo: 1200).slipChance, 0);
-    expect(BotPolicy(elo: 400).slipChance, greaterThan(0));
+    expect(BotPolicy(elo: 1600).slipChance, 0);
+    expect(BotPolicy(elo: 1200).slipChance, greaterThan(0));
+    expect(BotPolicy(elo: 400).slipChance, greaterThan(0.1));
   });
 }

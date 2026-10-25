@@ -13,6 +13,7 @@ import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/history/pgn.dart';
 import 'package:kust/features/history/replay_positions.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -289,32 +290,28 @@ class _ReplayScreenState extends State<ReplayScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                KustIconButton(
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+            child: KustActionBar(
+              actions: [
+                KustAction(
                   icon: Icons.first_page_rounded,
-                  label: 'First move',
-                  size: 48,
+                  label: 'Start',
                   onTap: _ply > 0 ? () => _go(0) : null,
                 ),
-                KustIconButton(
+                KustAction(
                   icon: Icons.chevron_left_rounded,
-                  label: 'Previous move',
-                  size: 48,
+                  label: 'Back',
                   onTap: _ply > 0 ? () => _go(_ply - 1) : null,
                 ),
-                KustIconButton(
+                KustAction(
                   icon: Icons.chevron_right_rounded,
-                  label: 'Next move',
-                  size: 48,
+                  label: 'Forward',
+                  primary: true,
                   onTap: _ply < _last ? () => _go(_ply + 1) : null,
                 ),
-                KustIconButton(
+                KustAction(
                   icon: Icons.last_page_rounded,
-                  label: 'Last move',
-                  size: 48,
+                  label: 'End',
                   onTap: _ply < _last ? () => _go(_last) : null,
                 ),
               ],

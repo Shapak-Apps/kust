@@ -205,8 +205,18 @@ class AchievementStore {
   final Box<dynamic>? _boxOverride;
   final String? _userIdOverride;
 
-  /// The latest achievement unlocked, for the toast. Cleared once shown.
+  /// The latest achievement unlocked, a signal for the celebration.
+  /// Cleared once picked up.
   final ValueNotifier<Achievement?> justUnlocked = ValueNotifier(null);
+
+  final List<Achievement> _toCelebrate = [];
+
+  /// Every achievement unlocked since the last call, oldest first.
+  List<Achievement> takeUnlocked() {
+    final taken = List<Achievement>.of(_toCelebrate);
+    _toCelebrate.clear();
+    return taken;
+  }
 
   Box<dynamic> get _box => _boxOverride ?? Hive.box(AppStorage.userBoxName);
 
@@ -240,6 +250,7 @@ class AchievementStore {
       for (final e in have.entries) e.key: e.value.millisecondsSinceEpoch,
       for (final a in fresh) a.id: now,
     });
+    _toCelebrate.addAll(fresh);
     justUnlocked.value = fresh.first;
     return fresh;
   }

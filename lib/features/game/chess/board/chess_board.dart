@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
@@ -15,6 +16,7 @@ import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
@@ -27,6 +29,20 @@ const Color kPremoveHighlight = Color(0x80D9534F);
 const Color kHintHighlight = Color(0x552ECC71);
 
 final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
+
+/// The king of the side to move when it is in check.
+Square? _checkedKing(Position position) {
+  if (!position.isCheck) return null;
+  for (final square in Square.values) {
+    final piece = position.board.pieceAt(square);
+    if (piece != null &&
+        piece.role == Role.king &&
+        piece.color == position.turn) {
+      return square;
+    }
+  }
+  return null;
+}
 
 Square _castlingDisplaySquare(Square target) {
   if (target == Square.h1) return Square.g1;
@@ -56,7 +72,8 @@ class _BoardView {
     required this.badgeSquare,
     required this.badgeIndex,
     required this.pendingPromotion,
-    required this.premove,
+    required this.premoves,
+    required this.checkedKing,
   });
 
   factory _BoardView.from(GameState g) {
@@ -91,7 +108,8 @@ class _BoardView {
     }
 
     return _BoardView(
-      position: g.displayPosition,
+      position: g.boardPosition,
+      checkedKing: _checkedKing(g.displayPosition),
       mode: g.mode,
       playerSide: g.playerSide,
       selected: g.displaySelectedSquare,
@@ -113,7 +131,7 @@ class _BoardView {
           !g.isSelfAnalysisActive && g.status == GameStatus.playing
           ? g.pendingPromotion
           : null,
-      premove: g.isSelfAnalysisActive ? null : g.premove,
+      premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
     );
   }
 
@@ -140,8 +158,12 @@ class _BoardView {
   final int? badgeIndex;
   final ({Square from, Square to})? pendingPromotion;
 
-  /// A queued premove, tinted on its two squares.
-  final ({Square from, Square to})? premove;
+  /// Queued premoves, each tinted on its two squares.
+  final List<Premove> premoves;
+
+  /// The king in check on the real board (the board shown may have
+  /// premoves drawn on it).
+  final Square? checkedKing;
 
   @override
   bool operator ==(Object other) {
@@ -160,7 +182,8 @@ class _BoardView {
         badgeSquare == other.badgeSquare &&
         badgeIndex == other.badgeIndex &&
         pendingPromotion == other.pendingPromotion &&
-        premove == other.premove;
+        listEquals(premoves, other.premoves) &&
+        checkedKing == other.checkedKing;
   }
 
   @override
@@ -179,7 +202,8 @@ class _BoardView {
     badgeSquare,
     badgeIndex,
     pendingPromotion,
-    premove,
+    premoves.length,
+    checkedKing,
   );
 }
 
@@ -351,9 +375,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (square == null) return;
     final controller = ref.read(chessControllerProvider.notifier);
     if (!controller.pickUp(square)) return;
+    // Where the queued premoves left the pieces, as the board shows them.
     final piece = ref
         .read(chessControllerProvider)
-        .position
+        .boardPosition
         .board
         .pieceAt(square);
     if (piece == null) return;
@@ -388,7 +413,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       played = ref.read(chessControllerProvider.notifier).dropOn(target);
       // A drop that only queued a premove leaves the piece where it is;
       // the move glides when it is played.
-      if (!played || ref.read(chessControllerProvider).premove != null) {
+      if (!played || ref.read(chessControllerProvider).canPremove) {
         _dropped = null;
       }
     }
@@ -407,19 +432,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     });
     _dragAt.value = null;
     if (!played) _snapController.forward(from: 0);
-  }
-
-  Square? _checkedKingSquare(Position position) {
-    if (!position.isCheck) return null;
-    for (final square in Square.values) {
-      final piece = position.board.pieceAt(square);
-      if (piece != null &&
-          piece.role == Role.king &&
-          piece.color == position.turn) {
-        return square;
-      }
-    }
-    return null;
   }
 
   Widget _buildRotatedPiece(Piece piece, _BoardView view) {
@@ -470,34 +482,37 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
           // The rook slides beside the king: from its corner to the square
           // the king crossed, or back again when undoing.
-          _rookPiece = null;
+          Square? rookFrom;
+          Square? rookTo;
+          Piece? rook;
           if (isForwardCastling) {
             visualTo = _castlingDisplaySquare(move.to);
-            _rookFrom = move.to;
-            _rookTo = _rookCastledSquare(move.to);
-            _rookPiece = next.position.board.pieceAt(_rookTo!);
+            rookFrom = move.to;
+            rookTo = _rookCastledSquare(move.to);
+            rook = next.position.board.pieceAt(rookTo);
           } else if (isReverseCastling) {
             visualFrom = _castlingDisplaySquare(move.from);
-            _rookFrom = _rookCastledSquare(move.from);
-            _rookTo = move.from;
-            _rookPiece = next.position.board.pieceAt(_rookTo!);
+            rookFrom = _rookCastledSquare(move.from);
+            rookTo = move.from;
+            rook = next.position.board.pieceAt(rookTo);
           }
 
-          // A dropped piece is already where it belongs: no glide.
+          // Already shown where it belongs: a dropped piece, or a premove
+          // the board drew made. Those do not glide, and whatever is still
+          // gliding (the bot's piece) carries on undisturbed.
           final dropped = _dropped;
           _dropped = null;
           final wasDropped =
               dropped != null &&
               dropped.from == move.from &&
               (dropped.to == move.to || dropped.to == visualTo);
-
-          _animFrom = visualFrom;
-          _animTo = visualTo;
-          _animPiece = wasDropped
+          final instant = next.lastMoveInstant;
+          final glidePiece = wasDropped || instant
               ? null
               : next.position.board.pieceAt(move.to) ??
                     next.position.board.pieceAt(visualTo) ??
                     previous.position.board.pieceAt(visualFrom);
+          final glideRook = instant ? null : rook;
 
           final distance = math.sqrt(
             math.pow(fileOf(visualTo) - fileOf(visualFrom), 2) +
@@ -506,7 +521,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           final duration = next.wasUndo
               ? _undoDuration
               : glideDuration(distance.toDouble());
-          if (_animPiece != null || _rookPiece != null) {
+          if (glidePiece != null || glideRook != null) {
+            _animFrom = visualFrom;
+            _animTo = visualTo;
+            _animPiece = glidePiece;
+            _rookFrom = rookFrom;
+            _rookTo = rookTo;
+            _rookPiece = glideRook;
             _moveController.duration = duration;
             _moveController.forward(from: 0);
           }
@@ -514,8 +535,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           if (next.capturedPiece != null && next.capturedSquare != null) {
             _capSquare = next.capturedSquare;
             _capPiece = next.capturedPiece;
-            _capAtOnce = wasDropped || next.wasUndo;
-            _captureController.duration = wasDropped
+            _capAtOnce = wasDropped || instant || next.wasUndo;
+            _captureController.duration = wasDropped || instant
                 ? const Duration(milliseconds: 140)
                 : duration;
             _captureController.forward(from: 0);
@@ -545,7 +566,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
-        final checkedKing = _checkedKingSquare(displayPosition);
+        final checkedKing = view.checkedKing;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final colors = [
           for (final rank in ranks)
@@ -861,11 +882,19 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   Positioned.fill(
                     key: const ValueKey('promotion'),
                     child: _PromotionPicker(
-                      color: displayPosition.turn,
+                      // The pawn's own colour: for a premove it is not the
+                      // side to move.
+                      color:
+                          displayPosition.board
+                              .pieceAt(view.pendingPromotion!.from)
+                              ?.color ??
+                          displayPosition.turn,
                       rotated:
                           view.mode == GameMode.local &&
                           displayPosition.turn == Side.black,
                       squareSize: _squareSize,
+                      col: files.indexOf(fileOf(view.pendingPromotion!.to)),
+                      row: ranks.indexOf(rankOf(view.pendingPromotion!.to)),
                       onPick: (role) => ref
                           .read(chessControllerProvider.notifier)
                           .completePromotion(role),
@@ -935,9 +964,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (checkedKing == square) {
       background = Color.alphaBlend(kCheckSquareHighlight, background);
     }
-    final premove = view.premove;
-    if (premove != null && (premove.from == square || premove.to == square)) {
-      background = Color.alphaBlend(kPremoveHighlight, background);
+    for (final p in view.premoves) {
+      if (p.from == square || p.to == square) {
+        background = Color.alphaBlend(kPremoveHighlight, background);
+        break;
+      }
     }
     if (view.selected == square) {
       background = Color.alphaBlend(kHighlight, background);
@@ -1187,11 +1218,16 @@ String _assetForPiece(Piece piece) {
   return AppSettings.instance.pieceSet.value.asset(color, role);
 }
 
+/// Picks the piece a pawn becomes: a column of the four pieces standing on
+/// the promotion square's file, running from that square into the board,
+/// with a cancel button at its end. Anywhere else cancels too.
 class _PromotionPicker extends StatelessWidget {
   const _PromotionPicker({
     required this.color,
     required this.rotated,
     required this.squareSize,
+    required this.col,
+    required this.row,
     required this.onPick,
     required this.onCancel,
   });
@@ -1199,57 +1235,100 @@ class _PromotionPicker extends StatelessWidget {
   final Side color;
   final bool rotated;
   final double squareSize;
+
+  /// The promotion square as shown, from the top left.
+  final int col;
+  final int row;
   final ValueChanged<Role> onPick;
   final VoidCallback onCancel;
 
   static const List<Role> _roles = [
     Role.queen,
+    Role.knight,
     Role.rook,
     Role.bishop,
-    Role.knight,
   ];
 
   @override
   Widget build(BuildContext context) {
-    final card = Container(
-      padding: EdgeInsets.all(squareSize * 0.15),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(squareSize * 0.3),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 16),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final role in _roles)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onPick(role),
-              child: SizedBox(
-                width: squareSize * 1.1,
-                height: squareSize * 1.1,
-                child: Padding(
-                  padding: EdgeInsets.all(squareSize * 0.05),
-                  child: PieceImage(
-                    _assetForPiece(Piece(color: color, role: role)),
-                  ),
-                ),
-              ),
+    final k = context.k;
+    // From the top row the column runs down; from the bottom row, up.
+    final down = row < 4;
+    // Four pieces and half a square for cancel: from the bottom row the
+    // column ends at that square's lower edge.
+    final top = down ? row * squareSize : (row - 3.5) * squareSize;
+    Widget piece(Role role) {
+      final image = PieceImage(_assetForPiece(Piece(color: color, role: role)));
+      return Semantics(
+        button: true,
+        label: 'Promote to ${role.name}',
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onPick(role),
+          child: SizedBox.square(
+            dimension: squareSize,
+            child: Padding(
+              padding: EdgeInsets.all(squareSize * 0.04),
+              child: rotated
+                  ? RotatedBox(quarterTurns: 2, child: image)
+                  : image,
             ),
-        ],
+          ),
+        ),
+      );
+    }
+
+    final cancel = Semantics(
+      button: true,
+      label: 'Cancel promotion',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onCancel,
+        child: SizedBox(
+          width: squareSize,
+          height: squareSize * 0.5,
+          child: Icon(
+            Icons.close_rounded,
+            size: squareSize * 0.36,
+            color: Colors.black.withValues(alpha: 0.55),
+          ),
+        ),
       ),
     );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onCancel,
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.45),
-        alignment: Alignment.center,
-        child: rotated ? RotatedBox(quarterTurns: 2, child: card) : card,
+    final pieces = [for (final role in _roles) piece(role)];
+    final column = Container(
+      width: squareSize,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(squareSize * 0.08),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: squareSize * 0.3,
+            offset: Offset(0, squareSize * 0.06),
+          ),
+        ],
       ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: down ? [...pieces, cancel] : [cancel, ...pieces.reversed],
+      ),
+    );
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onCancel,
+            child: ColoredBox(color: k.ink.withValues(alpha: 0.25)),
+          ),
+        ),
+        Positioned(left: col * squareSize, top: top, child: column),
+      ],
     );
   }
 }

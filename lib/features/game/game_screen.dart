@@ -19,6 +19,7 @@ import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/game_args.dart';
+import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
@@ -648,52 +649,37 @@ class _ControlsBar extends ConsumerWidget {
     final controller = ref.read(chessControllerProvider.notifier);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          KustIconButton(
-            label: 'Previous move',
-            onTap: s.cursor > 0 ? controller.analysisMoveBack : null,
-            icon: Icons.chevron_left_rounded,
-          ),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      child: KustActionBar(
+        actions: [
           if (isLocal || practiceMode)
-            KustIconButton(
-              label: 'Take back',
+            KustAction(
+              icon: Icons.tune_rounded,
+              label: 'Options',
+              onTap: () => MoreFloatingMenu.show(context),
+            ),
+          if (isLocal || practiceMode)
+            KustAction(
               icon: Icons.undo_rounded,
+              label: 'Take back',
               onTap: s.canUndo ? controller.undoLastMove : null,
             ),
           if (!isLocal && practiceMode)
-            s.hintThinking
-                ? SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: context.k.accent,
-                        ),
-                      ),
-                    ),
-                  )
-                : KustIconButton(
-                    label: 'Hint',
-                    icon: Icons.lightbulb_outline_rounded,
-                    filled: s.hintEnabled,
-                    onTap: s.hintEnabled ? controller.requestHint : null,
-                  ),
-          if (isLocal || practiceMode)
-            KustIconButton(
-              label: 'Game options',
-              icon: Icons.tune_rounded,
-              onTap: () => MoreFloatingMenu.show(context),
+            KustAction(
+              icon: Icons.lightbulb_outline_rounded,
+              label: 'Hint',
+              primary: true,
+              busy: s.hintThinking,
+              onTap: s.hintEnabled ? controller.requestHint : null,
             ),
-          KustIconButton(
-            label: 'Next move',
+          KustAction(
+            icon: Icons.chevron_left_rounded,
+            label: 'Back',
+            onTap: s.cursor > 0 ? controller.analysisMoveBack : null,
+          ),
+          KustAction(
             icon: Icons.chevron_right_rounded,
+            label: 'Forward',
             onTap: s.analysisActive ? controller.analysisMoveNext : null,
           ),
         ],

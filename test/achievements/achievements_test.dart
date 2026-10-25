@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,29 +135,59 @@ void main() {
       expect(earned('Knot by knot'), isFalse);
     });
 
-    testWidgets('an unlock slides a banner in, then away', (tester) async {
+    testWidgets('unlocks are celebrated one after another, then close', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(
         MaterialApp(
           theme: appTheme,
           home: const AchievementToastHost(child: Scaffold()),
         ),
       );
-      AchievementStore.instance.justUnlocked.value = achievementById(
-        'checkmate',
+      await tester.runAsync(
+        () => AchievementStore.instance.unlock({'first_game', 'checkmate'}),
       );
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 1200));
       expect(find.text('Achievement unlocked'), findsOneWidget);
-      expect(find.text('Checkmate!'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 4));
+      expect(find.text('First move'), findsOneWidget);
+      expect(find.byType(AchievementCelebration), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // A tap closes it and the next one follows.
+      await tester.tap(find.text('Continue'));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
-      final opacity = tester.widget<FadeTransition>(
-        find.ancestor(
-          of: find.byType(AchievementBanner),
-          matching: find.byType(FadeTransition),
-        ),
+      expect(find.text('Checkmate!'), findsOneWidget);
+
+      // Left alone, it closes by itself.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(AchievementCelebration), findsNothing);
+    });
+
+    test('confetti falls within the screen and is gone at the end', () {
+      final painter = ConfettiPainter(progress: 0.5, seed: 1);
+      expect(
+        painter.shouldRepaint(ConfettiPainter(progress: 0.5, seed: 1)),
+        isFalse,
       );
-      expect(opacity.opacity.value, 0);
+      expect(
+        painter.shouldRepaint(ConfettiPainter(progress: 0.6, seed: 1)),
+        isTrue,
+      );
+      // Painting at every stage works.
+      for (final p in [0.0, 0.1, 0.5, 0.9, 1.0]) {
+        final recorder = ui.PictureRecorder();
+        ConfettiPainter(
+          progress: p,
+          seed: 3,
+        ).paint(Canvas(recorder), const Size(400, 800));
+        recorder.endRecording().dispose();
+      }
     });
   });
 
