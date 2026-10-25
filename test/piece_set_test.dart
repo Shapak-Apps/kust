@@ -1,4 +1,5 @@
 import 'dart:io' as io;
+import 'dart:ui' as ui;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/widgets/more_sheet.dart';
+import 'package:kust/widgets/piece_image.dart';
 
 void main() {
   tearDown(() {
@@ -19,43 +21,76 @@ void main() {
   });
 
   group('sets', () {
-    test('there are four, the classic one and three new ones', () {
+    test('there are four: two drawn and two textured', () {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
         'Shaded',
-        'Neo',
-        'Modern',
+        'Graphite',
+        'Brushed',
       ]);
       expect(PieceSet.classic.asset('w', 'K'), 'assets/pieces/wK.svg');
-      expect(PieceSet.neo.asset('b', 'N'), 'assets/pieces/neo/bN.svg');
+      expect(
+        PieceSet.graphite.asset('b', 'N'),
+        'assets/pieces/graphite/bN.webp',
+      );
+      expect(PieceSet.values.where((s) => s.textured), [
+        PieceSet.graphite,
+        PieceSet.brushed,
+      ]);
     });
 
-    test('every piece of every set is bundled and is a square svg', () {
+    test('every piece of every set is bundled', () {
       final pubspec = io.File('pubspec.yaml').readAsStringSync();
       for (final set in PieceSet.values) {
         expect(set.assets, hasLength(12));
         for (final asset in set.assets) {
           final file = io.File(asset);
           expect(file.existsSync(), isTrue, reason: asset);
+          final folder = asset.substring(0, asset.lastIndexOf('/') + 1);
+          expect(pubspec, contains('- $folder\n'), reason: folder);
+          if (set.textured) continue;
           final text = file.readAsStringSync();
           expect(text, contains('<svg'), reason: asset);
           expect(
             text,
             anyOf(
               contains('viewBox="0 0 45 45"'),
-              contains('viewBox="0 0 100 100"'),
+              contains('viewBox="2 1.5 41 41"'),
             ),
             reason: asset,
           );
-          final folder = asset.substring(0, asset.lastIndexOf('/') + 1);
-          expect(pubspec, contains('- $folder\n'), reason: folder);
         }
+      }
+    });
+
+    test('textured pieces are WebP images', () {
+      for (final set in PieceSet.values.where((s) => s.textured)) {
+        for (final asset in set.assets) {
+          final bytes = io.File(asset).readAsBytesSync();
+          // RIFF....WEBP, then a VP8L or VP8X chunk.
+          expect(String.fromCharCodes(bytes.sublist(0, 4)), 'RIFF');
+          expect(String.fromCharCodes(bytes.sublist(8, 12)), 'WEBP');
+        }
+      }
+    });
+
+    testWidgets('textured pieces decode at full size', (tester) async {
+      for (final asset in PieceSet.graphite.assets.take(2)) {
+        final bytes = io.File(asset).readAsBytesSync();
+        final image = await tester.runAsync(() async {
+          final codec = await ui.instantiateImageCodec(bytes);
+          return (await codec.getNextFrame()).image;
+        });
+        expect(image!.width, 384, reason: asset);
+        expect(image.height, 384, reason: asset);
       }
     });
 
     test('gradient ids are unique to each piece, so pieces never clash', () {
       final ids = <String>{};
-      for (final set in PieceSet.values.where((s) => s != PieceSet.classic)) {
+      for (final set in PieceSet.values.where(
+        (s) => s != PieceSet.classic && !s.textured,
+      )) {
         for (final asset in set.assets) {
           final text = io.File(asset).readAsStringSync();
           for (final m in RegExp(r'id="([^"]+)"').allMatches(text)) {
@@ -73,8 +108,8 @@ void main() {
       expect(PieceSet.fromName('glass'), PieceSet.defaultSet);
     });
 
-    testWidgets('every piece parses and draws', (tester) async {
-      for (final set in PieceSet.values) {
+    testWidgets('every drawn piece parses and draws', (tester) async {
+      for (final set in PieceSet.values.where((s) => !s.textured)) {
         for (final asset in set.assets) {
           final text = io.File(asset).readAsStringSync();
           await tester.pumpWidget(
@@ -97,13 +132,13 @@ void main() {
 
   group('settings', () {
     test('the choice is saved, loaded again and used for pieces', () async {
-      SharedPreferences.setMockInitialValues({'piece_set': 'modern'});
+      SharedPreferences.setMockInitialValues({'piece_set': 'brushed'});
       final s = AppSettings.instance;
       await s.load();
-      expect(s.pieceSet.value, PieceSet.modern);
+      expect(s.pieceSet.value, PieceSet.brushed);
       expect(
         assetForPiece(const Piece(color: Side.black, role: Role.queen)),
-        'assets/pieces/modern/bQ.svg',
+        'assets/pieces/brushed/bQ.webp',
       );
 
       await s.setPieceSet(PieceSet.classic);
@@ -155,11 +190,11 @@ void main() {
           .selected;
       expect(selected(PieceSet.shaded), isTrue);
 
-      await tester.ensureVisible(find.text('Neo'));
-      await tester.tap(find.text('Neo'));
-      await tester.pumpAndSettle();
-      expect(AppSettings.instance.pieceSet.value, PieceSet.neo);
-      expect(selected(PieceSet.neo), isTrue);
+      await tester.ensureVisible(find.text('Graphite'));
+      await tester.tap(find.text('Graphite'));
+      await tester.pump();
+      expect(AppSettings.instance.pieceSet.value, PieceSet.graphite);
+      expect(selected(PieceSet.graphite), isTrue);
       expect(selected(PieceSet.shaded), isFalse);
     });
 
@@ -181,16 +216,12 @@ void main() {
         ),
       );
       String firstPiece() =>
-          (tester
-                      .widgetList<SvgPicture>(find.byType(SvgPicture))
-                      .first
-                      .bytesLoader
-                  as SvgAssetLoader)
-              .assetName;
+          tester.widgetList<PieceImage>(find.byType(PieceImage)).first.asset;
       expect(firstPiece(), startsWith('assets/pieces/shaded/'));
-      AppSettings.instance.pieceSet.value = PieceSet.modern;
+      AppSettings.instance.pieceSet.value = PieceSet.graphite;
       await tester.pump();
-      expect(firstPiece(), startsWith('assets/pieces/modern/'));
+      expect(firstPiece(), startsWith('assets/pieces/graphite/'));
+      expect(find.byType(Image), findsWidgets);
     });
   });
 }

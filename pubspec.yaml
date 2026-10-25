@@ -63,9 +63,9 @@ flutter:
     - assets/bots/
     - assets/images/
     - assets/pieces/
-    - assets/pieces/neo/
+    - assets/pieces/graphite/
     - assets/pieces/shaded/
-    - assets/pieces/modern/
+    - assets/pieces/brushed/
     - assets/sounds/
     - assets/puzzles/
     - assets/engine/

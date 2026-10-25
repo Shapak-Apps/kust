@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
@@ -279,8 +279,8 @@ class _PuzzleBoardState extends State<PuzzleBoard>
               ),
             if (piece != null)
               Padding(
-                padding: EdgeInsets.all(cell * 0.04),
-                child: SvgPicture.asset(assetForPiece(piece)),
+                padding: EdgeInsets.all(cell * 0.02),
+                child: PieceImage(assetForPiece(piece)),
               ),
             if (isTarget)
               Container(
@@ -323,8 +323,8 @@ class _PuzzleBoardState extends State<PuzzleBoard>
       child: IgnorePointer(
         child: RepaintBoundary(
           child: Padding(
-            padding: EdgeInsets.all(cell * 0.04),
-            child: SvgPicture.asset(assetForPiece(piece)),
+            padding: EdgeInsets.all(cell * 0.02),
+            child: PieceImage(assetForPiece(piece)),
           ),
         ),
       ),
