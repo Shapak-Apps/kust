@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/puzzle_progress_store.dart';
+import 'package:kust/features/achievements/achievement_tracker.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/daily.dart';
@@ -269,7 +270,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     );
     if (widget.daily) {
       unawaited(
-        (widget.dailyStore ?? DailyStore.instance).markSolved(DateTime.now()),
+        (widget.dailyStore ?? DailyStore.instance)
+            .markSolved(DateTime.now())
+            .then((_) {
+              if (widget.dailyStore == null) {
+                return AchievementTracker.dailySolved();
+              }
+            }),
       );
     }
   }
@@ -282,6 +289,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }) async {
     final before = _recorder.load();
     await write();
+    if (widget.progress == null) unawaited(AchievementTracker.puzzleDone());
     if (!mounted) return;
     final after = _recorder.load();
     if (!levelJustWoven(_levelPuzzles, before, after)) return;

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:kust/features/achievements/achievements_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
@@ -42,6 +43,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
           index: int.parse(state.pathParameters['index']!),
           daily: state.uri.queryParameters['daily'] == '1',
         ),
+      ),
+
+      GoRoute(
+        path: '/achievements',
+        builder: (context, state) => const AchievementsScreen(),
       ),
 
       GoRoute(

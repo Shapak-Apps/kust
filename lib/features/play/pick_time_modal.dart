@@ -57,24 +57,32 @@ class _PickTimeControlModalState extends State<PickTimeControlModal> {
           title: 'Time control',
           subtitle: 'How long does each player get?',
         ),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 2.6,
-          children: [
-            for (var i = 0; i < _options.length; i++)
-              KustOption(
-                title: _options[i].label,
-                subtitle: _options[i].subtitle,
-                selected: selected == i,
-                trailing: const SizedBox.shrink(),
-                onTap: () => setState(() => _selected = i),
-              ),
-          ],
-        ),
+        // Two per row, as tall as their text needs: a fixed aspect ratio
+        // cut the subtitle off with larger fonts.
+        for (var row = 0; row < _options.length; row += 2) ...[
+          if (row > 0) const SizedBox(height: 8),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = row; i < row + 2; i++) ...[
+                  if (i > row) const SizedBox(width: 8),
+                  Expanded(
+                    child: i < _options.length
+                        ? KustOption(
+                            title: _options[i].label,
+                            subtitle: _options[i].subtitle,
+                            selected: selected == i,
+                            trailing: const SizedBox.shrink(),
+                            onTap: () => setState(() => _selected = i),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         KustOption(
           title: 'No clock',
