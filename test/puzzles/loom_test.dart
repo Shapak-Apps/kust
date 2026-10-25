@@ -239,6 +239,8 @@ void main() {
           expect(find.text(level.tribe.toUpperCase()), findsNothing);
         }
         expect(find.textContaining('0 of 20 knots'), findsOneWidget);
+        // The puzzle of the day sits above the stats, with no streak yet.
+        expect(find.text('Daily puzzle'), findsOneWidget);
         // Levels 2 to 5 have puzzles but wait for level 1 to be woven.
         expect(find.text('Not started'), findsNWidgets(4));
         expect(find.text('Continue · Mate in 1'), findsOneWidget);

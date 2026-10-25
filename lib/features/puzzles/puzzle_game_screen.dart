@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
+import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/features/puzzles/puzzle_coach.dart';
@@ -32,6 +33,8 @@ class PuzzleGameScreen extends StatefulWidget {
     required this.level,
     required this.index,
     this.progress,
+    this.daily = false,
+    this.dailyStore,
   });
 
   final int level;
@@ -40,6 +43,12 @@ class PuzzleGameScreen extends StatefulWidget {
   /// Where results are recorded; the saved progress store unless a test
   /// passes its own.
   final PuzzleProgressRecorder? progress;
+
+  /// Whether this is the puzzle of the day, whose solving feeds the streak.
+  final bool daily;
+
+  /// Where the streak is kept; the saved one unless a test passes its own.
+  final DailyRecorder? dailyStore;
 
   @override
   State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
@@ -258,6 +267,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     unawaited(
       _record(() => _recorder.recordSolved(puzzle, clean: _s.mistakes == 0)),
     );
+    if (widget.daily) {
+      unawaited(
+        (widget.dailyStore ?? DailyStore.instance).markSolved(DateTime.now()),
+      );
+    }
   }
 
   /// Saves a result, and when it weaves the last knot of the level, shows the

@@ -8,8 +8,10 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
+import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/loom_progress.dart';
@@ -187,7 +189,10 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             }
             return ValueListenableBuilder(
               valueListenable: PuzzleProgressStore.instance.listenable(),
-              builder: (context, _, _) => _loaded(context, levels),
+              builder: (context, _, _) => ValueListenableBuilder(
+                valueListenable: DailyStore.instance.listenable(),
+                builder: (context, _, _) => _loaded(context, levels),
+              ),
             );
           },
         ),
@@ -209,6 +214,10 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
         _scrollToFell(from);
       }
     });
+
+    final now = DateTime.now();
+    final daily = dailyPuzzle(levels, now);
+    final streak = DailyStore.instance.load();
 
     void play() => _openPuzzle(context, loom.current, loom.nextPuzzle);
     void list() =>
@@ -251,6 +260,17 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             ),
           ),
           _Panel(
+            daily: daily == null
+                ? null
+                : _DailyTile(
+                    subtitle:
+                        '${puzzleThemeLabel(daily.puzzle.theme)} · ${daily.puzzle.rating}',
+                    solved: streak.doneOn(now),
+                    streak: streak.on(now),
+                    onTap: () => context.push(
+                      '/puzzle/${daily.level}/${daily.index}?daily=1',
+                    ),
+                  ),
             progress: progress,
             done: loom.done,
             total: loom.total,
@@ -453,6 +473,7 @@ class _Carpet extends StatelessWidget {
 /// Stats and the main action, on a panel the carpet's fringe hangs over.
 class _Panel extends StatelessWidget {
   const _Panel({
+    required this.daily,
     required this.progress,
     required this.done,
     required this.total,
@@ -461,6 +482,7 @@ class _Panel extends StatelessWidget {
     required this.onList,
   });
 
+  final Widget? daily;
   final PuzzleProgress progress;
   final int done;
   final int total;
@@ -487,6 +509,7 @@ class _Panel extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (daily != null) ...[daily!, const SizedBox(height: 14)],
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -519,6 +542,89 @@ class _Panel extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The puzzle of the day, with the player's streak.
+class _DailyTile extends StatelessWidget {
+  const _DailyTile({
+    required this.subtitle,
+    required this.solved,
+    required this.streak,
+    required this.onTap,
+  });
+
+  final String subtitle;
+  final bool solved;
+
+  /// Days in a row the daily puzzle was solved.
+  final int streak;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final days = streak == 1 ? '1 day' : '$streak days';
+    return Semantics(
+      button: true,
+      label:
+          'Daily puzzle, ${solved ? 'solved' : subtitle}'
+          '${streak > 0 ? ', streak $days' : ''}',
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+          decoration: BoxDecoration(
+            color: k.surface,
+            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            border: Border.all(color: k.line),
+          ),
+          child: Row(
+            children: [
+              KustIconTile(solved ? Icons.check_rounded : Icons.today_rounded),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daily puzzle',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      solved ? 'Solved today' : subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.caption,
+                    ),
+                  ],
+                ),
+              ),
+              if (streak > 0) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 20,
+                  color: LoomColors.rust,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  days,
+                  style: k.caption.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: k.ink,
+                  ),
+                ),
+              ] else
+                Icon(Icons.chevron_right_rounded, color: k.muted),
+            ],
+          ),
+        ),
       ),
     );
   }
