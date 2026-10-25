@@ -1370,10 +1370,12 @@ class ChessController extends Notifier<GameState> {
 
     if (state.status == GameStatus.playing) {
       _addIncrement(oldPosition.turn);
-      if (state.mode == GameMode.bot) _requestBotMove();
+      // The engine works one request at a time, in order: rate the move
+      // first so its feedback shows at once instead of after the bot's reply.
       unawaited(
         _analyzeMoveAt(state.moves.length - 1).whenComplete(_refreshEvaluation),
       );
+      if (state.mode == GameMode.bot) _requestBotMove();
     } else {
       _stopClock();
       _playGameEndSound(newPosition);

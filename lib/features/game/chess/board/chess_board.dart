@@ -10,8 +10,10 @@ import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
 
 const Color kHighlight = Color(0x77FFBB00);
@@ -364,6 +366,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
         final checkedKing = _checkedKingSquare(displayPosition);
+        final dpr = MediaQuery.devicePixelRatioOf(context);
+        final colors = [
+          for (final rank in ranks)
+            for (final file in files)
+              _squareColor(squareAt(file, rank), view, checkedKing),
+        ];
+        final badgeSquare = view.badgeSquare;
+        final badgeFeedback = view.badgeFeedback;
 
         return AbsorbPointer(
           absorbing: view.blocked,
@@ -372,6 +382,31 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             height: side,
             child: Stack(
               children: [
+                // Square colours in one pass on whole pixels; the squares
+                // above are transparent and only hold pieces and markers.
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      painter: BoardSquaresPainter(
+                        colors: colors,
+                        devicePixelRatio: dpr,
+                      ),
+                    ),
+                  ),
+                ),
+
+                if (badgeFeedback != null && badgeSquare != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: FeedbackGlow(
+                        key: ValueKey('glow_${view.badgeIndex}'),
+                        color: badgeFeedback.quality.color,
+                        row: ranks.indexOf(rankOf(badgeSquare)),
+                        col: files.indexOf(fileOf(badgeSquare)),
+                      ),
+                    ),
+                  ),
+
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (details) => _handleTap(details.localPosition),
@@ -530,39 +565,37 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     );
   }
 
+  /// The colour of [square]: its own, with any highlight on top.
+  Color _squareColor(Square square, _BoardView view, Square? checkedKing) {
+    // a1 is a dark square, so light squares have an odd file + rank sum.
+    final isLight = (fileOf(square) + rankOf(square)).isOdd;
+    final theme = AppSettings.instance.boardTheme.value;
+    var background = isLight ? theme.light : theme.dark;
+    if (view.moveSquares.contains(square)) {
+      background = Color.alphaBlend(kLastMoveHighlight, background);
+    }
+    if (view.hints.contains(square)) {
+      background = Color.alphaBlend(kHintHighlight, background);
+    }
+    if (checkedKing == square) {
+      background = Color.alphaBlend(kCheckSquareHighlight, background);
+    }
+    if (view.selected == square) {
+      background = Color.alphaBlend(kHighlight, background);
+    }
+    return background;
+  }
+
   Widget _buildBoardSquare(
     Square square,
     _BoardView view,
     Square? checkedKing,
   ) {
     final piece = view.position.board.pieceAt(square);
-
-    // a1 is a dark square, so light squares have an odd file + rank sum.
     final isLight = (fileOf(square) + rankOf(square)).isOdd;
-    final isSelected = view.selected == square;
     final isLegalTarget = view.legal.contains(square);
-    final isLastMove = view.moveSquares.contains(square);
-    final isHint = view.hints.contains(square);
-    final isCheckSquare = checkedKing == square;
-
     final theme = AppSettings.instance.boardTheme.value;
-    var background = isLight ? theme.light : theme.dark;
-
-    if (isLastMove) {
-      background = Color.alphaBlend(kLastMoveHighlight, background);
-    }
-
-    if (isHint) {
-      background = Color.alphaBlend(kHintHighlight, background);
-    }
-
-    if (isCheckSquare) {
-      background = Color.alphaBlend(kCheckSquareHighlight, background);
-    }
-
-    if (isSelected) {
-      background = Color.alphaBlend(kHighlight, background);
-    }
+    final background = _squareColor(square, view, checkedKing);
 
     bool hidePiece = false;
 
@@ -708,10 +741,10 @@ class BoardSquareCell extends StatelessWidget {
       );
     }
 
-    return Container(
+    // The colour itself is painted under the grid by [BoardSquaresPainter].
+    return SizedBox(
       width: size,
       height: size,
-      color: props.background,
       child: Stack(
         alignment: Alignment.center,
         children: [

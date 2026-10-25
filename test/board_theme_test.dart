@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
+import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/play/bots.dart';
@@ -157,10 +158,15 @@ void main() {
       );
     }
 
-    int count(WidgetTester tester, Color color) => tester
-        .widgetList<Container>(find.byType(Container))
-        .where((c) => c.color == color)
-        .length;
+    List<Color> squares(WidgetTester tester) => tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((c) => c.painter)
+        .whereType<BoardSquaresPainter>()
+        .single
+        .colors;
+
+    int count(WidgetTester tester, Color color) =>
+        squares(tester).where((c) => c == color).length;
 
     testWidgets('draws 32 squares of each colour, with a1 dark', (
       tester,
@@ -169,19 +175,9 @@ void main() {
       final theme = BoardTheme.defaultTheme;
       expect(count(tester, theme.light), 32);
       expect(count(tester, theme.dark), 32);
-
-      // a1 is the bottom-left square.
-      final bottomLeft = tester
-          .widgetList<Container>(find.byType(Container))
-          .where((c) => c.color == theme.dark || c.color == theme.light)
-          .toList();
-      final a1 = find.byWidget(
-        bottomLeft.firstWhere((c) {
-          final rect = tester.getRect(find.byWidget(c));
-          return rect.left == 0 && rect.bottom == 600;
-        }),
-      );
-      expect(tester.widget<Container>(a1).color, theme.dark);
+      // a1 is the bottom-left square: row 7, column 0.
+      expect(squares(tester)[56], theme.dark);
+      expect(squares(tester)[63], theme.light);
     });
 
     testWidgets('changes colour when the setting changes', (tester) async {
