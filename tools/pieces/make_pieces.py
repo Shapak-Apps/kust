@@ -21,9 +21,9 @@ ROLES = "KQRBNP"
 # Per side: body gradient from the lit corner to the far one, how strong the
 # gloss on the upper half is, the outline colour and, on black pieces, the
 # colour of the detail lines.
-WHITE = dict(stops=["#ffffff", "#f4ecdc", "#d0bf9b"], gloss=0.6,
+WHITE = dict(stops=["#ffffff", "#f9f3e8", "#e2d4b6"], gloss=0.6,
              line="#111111")
-BLACK = dict(stops=["#666666", "#333333", "#101010"], gloss=0.32,
+BLACK = dict(stops=["#7a7a7a", "#444444", "#1c1c1c"], gloss=0.32,
              line="#000000", detail="#ececec")
 SIDES = {"w": WHITE, "b": BLACK}
 

@@ -9,6 +9,7 @@ import 'package:kust/features/game/chess/move_sounds.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/history/pgn.dart';
 import 'package:kust/features/history/replay_positions.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
@@ -211,6 +212,17 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   context.canPop() ? context.pop() : context.go('/history'),
             ),
             trailing: [
+              if (game != null)
+                KustIconButton(
+                  icon: Icons.ios_share_rounded,
+                  label: 'Export game',
+                  onTap: () => showExportSheet(
+                    context,
+                    position: _replay.positions[_ply],
+                    flipped: !game.isLocal && !game.playerIsWhite,
+                    pgn: buildPgn(game),
+                  ),
+                ),
               if (game != null)
                 KustIconButton(
                   icon: Icons.tune_rounded,
