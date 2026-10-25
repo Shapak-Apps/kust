@@ -3,11 +3,11 @@ import 'package:flutter/painting.dart';
 import 'package:kust/features/puzzles/gol_charts.dart';
 
 /// The five göls of the Turkmen flag (the carpet guls of the Teke, Yomut,
-/// Arsary, Chowdur and Saryk or Salyr tribes) the puzzle carpet is woven
+/// Arsary, Chowdur and Saryk tribes) the puzzle carpet is woven
 /// from, one per level. Each is a chart the way carpets are charted: every
 /// cell is one knot with one colour. The charts come from the flag itself,
 /// see `tools/guls`.
-enum GolKind { teke, yomut, arsary, cowdur, salyr }
+enum GolKind { teke, yomut, arsary, cowdur, saryk }
 
 /// The colour of a single knot.
 enum Knot { ivory, deep, indigo, rust, saffron }

@@ -54,8 +54,9 @@ class KustTopBar extends StatelessWidget {
     } else {
       content = Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: SizedBox(
-          height: 44,
+        // At least 44 high, and taller when big text needs the room.
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
           child: Row(
             children: [
               SizedBox(
@@ -67,6 +68,7 @@ class KustTopBar extends StatelessWidget {
               ),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(

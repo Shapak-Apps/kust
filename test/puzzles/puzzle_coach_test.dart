@@ -199,11 +199,7 @@ void main() {
     testWidgets('the slot above the board grows with the text size', (
       tester,
     ) async {
-      // The row of buttons below the board has its own limits at big text
-      // sizes; this test only measures the slot above the board.
-      final previous = FlutterError.onError;
-      FlutterError.onError = (_) {};
-      addTearDown(() => FlutterError.onError = previous);
+      // Nothing on the screen, the control bar included, overflows.
       for (final scale in [1.0, 1.5]) {
         tester.view.physicalSize = const Size(400, 900);
         tester.view.devicePixelRatio = 1;
@@ -239,6 +235,7 @@ void main() {
             .map((e) => tester.getSize(find.byWidget(e.widget)).height)
             .firstWhere((h) => h > 60);
         expect(slot, coachSlotHeight(scale));
+        expect(tester.takeException(), isNull);
       }
     });
 
