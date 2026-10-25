@@ -40,6 +40,7 @@ class PuzzleProgress {
 /// The part of the progress store the puzzle screen writes to, so tests can
 /// swap in a fake that touches no disk.
 abstract class PuzzleProgressRecorder {
+  PuzzleProgress load();
   Future<void> recordMistake(PuzzleEntry puzzle);
   Future<void> recordSolved(PuzzleEntry puzzle, {required bool clean});
   Future<void> recordRevealed(PuzzleEntry puzzle);
@@ -69,6 +70,7 @@ class PuzzleProgressStore implements PuzzleProgressRecorder {
 
   ValueListenable<Box<dynamic>> listenable() => _box.listenable(keys: [_key]);
 
+  @override
   PuzzleProgress load() {
     final raw = _box.get(_key);
     if (raw is! Map) {

@@ -139,3 +139,15 @@ class LoomProgress {
 
   bool get hasPuzzles => total > 0;
 }
+
+/// Whether solving or revealing a puzzle just finished its level: every
+/// puzzle is done in [after], and one was still open in [before].
+bool levelJustWoven(
+  List<PuzzleEntry> puzzles,
+  PuzzleProgress before,
+  PuzzleProgress after,
+) {
+  if (puzzles.isEmpty) return false;
+  return puzzles.every((p) => after.isCompleted(p.id)) &&
+      !puzzles.every((p) => before.isCompleted(p.id));
+}

@@ -14,6 +14,9 @@ import 'package:dartchess/dartchess.dart';
 
 class _FakeRecorder implements PuzzleProgressRecorder {
   @override
+  PuzzleProgress load() => const PuzzleProgress();
+
+  @override
   Future<void> recordMistake(PuzzleEntry puzzle) async {}
 
   @override

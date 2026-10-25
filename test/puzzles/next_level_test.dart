@@ -9,6 +9,9 @@ import 'package:kust/theme.dart';
 
 class _FakeRecorder implements PuzzleProgressRecorder {
   @override
+  PuzzleProgress load() => const PuzzleProgress();
+
+  @override
   Future<void> recordMistake(PuzzleEntry puzzle) async {}
 
   @override
@@ -57,7 +60,7 @@ void main() {
   testWidgets('the last puzzle of a level offers the next level', (
     tester,
   ) async {
-    await _showSolution(tester, 1, 35);
+    await _showSolution(tester, 1, 19);
     expect(find.text('Next level'), findsOneWidget);
     expect(find.text('Next puzzle'), findsNothing);
   });
@@ -72,7 +75,7 @@ void main() {
   testWidgets('the last puzzle of the last level goes back to the map', (
     tester,
   ) async {
-    await _showSolution(tester, 5, 39);
+    await _showSolution(tester, 5, 19);
     expect(find.text('Back to puzzles'), findsOneWidget);
     expect(find.text('Next level'), findsNothing);
   });

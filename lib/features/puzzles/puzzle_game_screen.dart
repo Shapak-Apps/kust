@@ -13,7 +13,10 @@ import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/features/puzzles/puzzle_coach.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
+import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
+import 'package:kust/features/puzzles/puzzles_screen.dart' show kLoomLevels;
+import 'package:kust/features/puzzles/woven_dialog.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -47,6 +50,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   PuzzleSession? _session;
   String? _error;
   int _puzzleCount = 0;
+  List<PuzzleEntry> _levelPuzzles = const [];
   int _index = 0;
 
   /// Whether the level after this one has puzzles to move on to.
@@ -99,6 +103,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       _puzzle = puzzle;
       _session = PuzzleSession(puzzle);
       _puzzleCount = level.puzzles.length;
+      _levelPuzzles = level.puzzles;
       _index = index;
       _ply = 0;
     });
@@ -250,7 +255,36 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     SoundService.instance.playJingle('game-win.wav');
     SoundService.instance.buzzMedium();
     if (mounted) setState(() {});
-    unawaited(_recorder.recordSolved(puzzle, clean: _s.mistakes == 0));
+    unawaited(
+      _record(() => _recorder.recordSolved(puzzle, clean: _s.mistakes == 0)),
+    );
+  }
+
+  /// Saves a result, and when it weaves the last knot of the level, shows the
+  /// finished göl.
+  Future<void> _record(
+    Future<void> Function() write, {
+    Duration wait = const Duration(milliseconds: 900),
+  }) async {
+    final before = _recorder.load();
+    await write();
+    if (!mounted) return;
+    final after = _recorder.load();
+    if (!levelJustWoven(_levelPuzzles, before, after)) return;
+    await Future<void>.delayed(wait);
+    if (!mounted) return;
+    final i = widget.level - 1;
+    if (i < 0 || i >= kLoomLevels.length) return;
+    final next = i + 1 < kLoomLevels.length && _hasNextLevel
+        ? kLoomLevels[i + 1].tribe
+        : null;
+    await showWovenDialog(
+      context,
+      gol: kLoomLevels[i].gol,
+      tribe: kLoomLevels[i].tribe,
+      knots: _levelPuzzles.length,
+      nextTribe: next,
+    );
   }
 
   void _onHint() {
@@ -262,7 +296,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final puzzle = _puzzle;
     if (puzzle == null || _s.isFinished) return;
     _timer?.cancel();
-    unawaited(_recorder.recordRevealed(puzzle));
+    unawaited(
+      _record(
+        () => _recorder.recordRevealed(puzzle),
+        // Let the solution play out first.
+        wait: const Duration(milliseconds: 2400),
+      ),
+    );
     setState(() {
       _mistakeFlash = false;
       _busy = true;
