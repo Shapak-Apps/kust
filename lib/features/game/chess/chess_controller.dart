@@ -656,7 +656,7 @@ class ChessController extends Notifier<GameState> {
 
       state = state.copyWith(feedbackAnalyzing: true);
 
-      final analysis = await _engine.analyzeMove(
+      var analysis = await _engine.analyzeMove(
         beforeFen: beforePos.fen,
         playedUci: playedUci,
         afterFen: afterPos.fen,
@@ -664,6 +664,38 @@ class ChessController extends Notifier<GameState> {
       );
 
       if (_isDisposed || epoch != _feedbackEpoch || analysis == null) return;
+      if (moveIndex >= state.moves.length) return;
+      if (state.moves[moveIndex].san != played.san) return;
+
+      MoveQuality rate(MoveAnalysis a) => classifyPlayedMove(
+        before: beforePos,
+        after: afterPos,
+        move: played.move,
+        bestCp: a.bestCp,
+        playedCp: a.playedCp,
+        secondBestCp: a.secondBestCp,
+        isBest: a.bestUci == playedUci || (a.bestCp - a.playedCp).abs() <= 10,
+        rating: ratingForFeedback(botElo: state.bot?.elo),
+      );
+
+      var quality = rate(analysis);
+      // A sacrifice that looks right at a shallow depth can be refuted
+      // deeper down. Brilliant is rare, so it gets a longer second look.
+      if (quality == MoveQuality.brilliant) {
+        final deeper = await _engine.analyzeMove(
+          beforeFen: beforePos.fen,
+          playedUci: playedUci,
+          afterFen: afterPos.fen,
+          thinkTime: const Duration(milliseconds: 1500),
+          depth: 18,
+          isStale: () => _isDisposed || epoch != _feedbackEpoch,
+        );
+        if (_isDisposed || epoch != _feedbackEpoch) return;
+        if (deeper != null) {
+          analysis = deeper;
+          quality = rate(deeper);
+        }
+      }
       if (moveIndex >= state.moves.length) return;
       if (state.moves[moveIndex].san != played.san) return;
 
@@ -678,17 +710,6 @@ class ChessController extends Notifier<GameState> {
       );
 
       final lossCp = (analysis.bestCp - analysis.playedCp).clamp(0, 100000);
-      final isBest = analysis.bestUci == playedUci || lossCp <= 10;
-      final quality = classifyPlayedMove(
-        before: beforePos,
-        after: afterPos,
-        move: played.move,
-        bestCp: analysis.bestCp,
-        playedCp: analysis.playedCp,
-        secondBestCp: analysis.secondBestCp,
-        isBest: isBest,
-        rating: ratingForFeedback(botElo: state.bot?.elo),
-      );
 
       final feedback = MoveFeedback(
         quality: quality,
