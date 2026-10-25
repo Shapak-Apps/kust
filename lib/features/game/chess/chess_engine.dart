@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
 
+import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/features/game/chess/nnue_store.dart';
 
 const _nnueBig = 'nn-c288c895ea92.nnue';
@@ -212,6 +213,21 @@ class ChessEngine {
     Duration thinkTime = const Duration(milliseconds: 700),
   }) {
     return _run(() => _search(fen, thinkTime));
+  }
+
+  /// The best [lines] moves of [fen] with their scores, from a search that
+  /// stops at [depth] or [thinkTime], whichever comes first.
+  Future<List<CandidateMove>> candidateMoves(
+    String fen, {
+    required int lines,
+    required int depth,
+    required Duration thinkTime,
+  }) {
+    return _run(() async {
+      if (!_ready) await start();
+      final top = await _searchTop(fen, thinkTime, lines, depth: depth);
+      return [for (final line in top) CandidateMove(line.uci, line.cp)];
+    });
   }
 
   Future<String> _search(String fen, Duration thinkTime) async {
