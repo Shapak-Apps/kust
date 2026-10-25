@@ -7,6 +7,7 @@ import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 
 const Color _lastMoveColor = Color(0x66FFBB00);
@@ -221,6 +222,16 @@ class _PuzzleBoardState extends State<PuzzleBoard>
             height: boardSize,
             child: Stack(
               children: [
+                // Square colours in one pass on whole pixels; the cells
+                // above are transparent and only hold pieces and markers.
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: BoardSquaresPainter(
+                      colors: [for (var i = 0; i < 64; i++) _cellColor(i)],
+                      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+                    ),
+                  ),
+                ),
                 for (var index = 0; index < 64; index++)
                   _buildCell(index, cell),
                 _buildSlidingPiece(cell),
@@ -232,42 +243,54 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     );
   }
 
-  Widget _buildCell(int index, double cell) {
+  /// The square shown at [index], counted row by row from the top left.
+  Square _squareOf(int index) {
     final row = index ~/ 8;
     final col = index % 8;
     final file = widget.flipped ? 7 - col : col;
     final rank = widget.flipped ? row : 7 - row;
-    final square = squareAt(file, rank);
-    final hideForSlide = _isSliding && _sliding!.to == square;
-    final piece = hideForSlide ? null : widget.position.board.pieceAt(square);
-    final isLight = (file + rank).isOdd;
+    return squareAt(file, rank);
+  }
 
+  /// The colour of the square shown at [index], with any highlight on top.
+  Color _cellColor(int index) {
+    final square = _squareOf(index);
+    final isLight = (fileOf(square) + rankOf(square)).isOdd;
     final lastMove = widget.lastMove;
-    final isLast =
-        lastMove != null && (square == lastMove.from || square == lastMove.to);
-    final isSelected = _selected == square;
-    final isTarget = _targets.containsKey(square);
-    final isHintFrom = widget.hintFrom == square;
-    final isHintTo = widget.hintTo == square;
-
     final theme = AppSettings.instance.boardTheme.value;
     var background = isLight ? theme.light : theme.dark;
-    if (isLast) background = Color.alphaBlend(_lastMoveColor, background);
-    if (isHintFrom) {
+    if (lastMove != null &&
+        (square == lastMove.from || square == lastMove.to)) {
+      background = Color.alphaBlend(_lastMoveColor, background);
+    }
+    if (widget.hintFrom == square) {
       background = Color.alphaBlend(_hintFromColor, background);
     }
-    if (isHintTo) background = Color.alphaBlend(_hintToColor, background);
-    if (isSelected) {
+    if (widget.hintTo == square) {
+      background = Color.alphaBlend(_hintToColor, background);
+    }
+    if (_selected == square) {
       background = Color.alphaBlend(_selectedColor, background);
     }
+    return background;
+  }
+
+  Widget _buildCell(int index, double cell) {
+    final row = index ~/ 8;
+    final col = index % 8;
+    final square = _squareOf(index);
+    final hideForSlide = _isSliding && _sliding!.to == square;
+    final piece = hideForSlide ? null : widget.position.board.pieceAt(square);
+    final isLight = (fileOf(square) + rankOf(square)).isOdd;
+    final isTarget = _targets.containsKey(square);
+    final theme = AppSettings.instance.boardTheme.value;
 
     return Positioned(
       left: col * cell,
       top: row * cell,
       width: cell,
       height: cell,
-      child: Container(
-        color: background,
+      child: SizedBox.expand(
         child: Stack(
           alignment: Alignment.center,
           children: [

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1370,10 +1369,12 @@ class ChessController extends Notifier<GameState> {
 
     if (state.status == GameStatus.playing) {
       _addIncrement(oldPosition.turn);
-      if (state.mode == GameMode.bot) _requestBotMove();
+      // The engine works one request at a time, in order: rate the move
+      // first so its feedback shows at once instead of after the bot's reply.
       unawaited(
         _analyzeMoveAt(state.moves.length - 1).whenComplete(_refreshEvaluation),
       );
+      if (state.mode == GameMode.bot) _requestBotMove();
     } else {
       _stopClock();
       _playGameEndSound(newPosition);
@@ -1388,38 +1389,29 @@ class ChessController extends Notifier<GameState> {
     final startedAt = DateTime.now();
     final policy = _policy;
 
-    Move? move;
-    if (policy.shouldBlunder()) {
-      move = policy.randomLegalMove(state.position);
-      if (move != null) {
-        await Future.delayed(
-          Duration(milliseconds: 250 + Random().nextInt(350)),
-        );
+    final String uci;
+    try {
+      final candidates = await _engine.candidateMoves(
+        state.position.fen,
+        lines: policy.lines,
+        depth: policy.depth,
+        thinkTime: policy.thinkTime,
+      );
+      uci = candidates.isEmpty ? '(none)' : policy.pick(candidates);
+    } catch (_) {
+      if (!_isDisposed && requestId == _moveRequestId) {
+        state = state.copyWith(isBotThinking: false, engineFailed: true);
       }
+      return;
     }
 
-    if (move == null) {
-      final String uci;
-      try {
-        uci = await _engine.bestMoveForFen(
-          state.position.fen,
-          thinkTime: policy.thinkTime,
-        );
-      } catch (_) {
-        if (!_isDisposed && requestId == _moveRequestId) {
-          state = state.copyWith(isBotThinking: false, engineFailed: true);
-        }
-        return;
-      }
-
-      if (uci == '(none)' || uci.length < 4) {
-        if (_isDisposed || requestId != _moveRequestId) return;
-        state = state.copyWith(isBotThinking: false);
-        return;
-      }
-
-      move = _parseUciMove(uci, state.position);
+    if (uci == '(none)' || uci.length < 4) {
+      if (_isDisposed || requestId != _moveRequestId) return;
+      state = state.copyWith(isBotThinking: false);
+      return;
     }
+
+    final move = _parseUciMove(uci, state.position);
 
     final remaining = kBotMinMoveTime - DateTime.now().difference(startedAt);
     if (remaining > Duration.zero) await Future.delayed(remaining);
@@ -1431,7 +1423,7 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    if (move is! NormalMove || !state.position.isLegal(move)) {
+    if (!state.position.isLegal(move)) {
       state = state.copyWith(isBotThinking: false);
       return;
     }
