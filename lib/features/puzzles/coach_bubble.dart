@@ -15,6 +15,7 @@ class CoachBubble extends StatelessWidget {
     this.leading,
     this.titleColor = LoomColors.indigo,
     this.size = 64,
+    this.standing = false,
   });
 
   /// The bold first line, e.g. "Next: Mate in 2".
@@ -29,6 +30,10 @@ class CoachBubble extends StatelessWidget {
 
   /// Width and height of the face.
   final double size;
+
+  /// Draws the coach as a bust standing at the bottom edge, as if on top of
+  /// the board below, with the bubble beside it. Otherwise a round face.
+  final bool standing;
 
   static int get _day => DateTime.now().difference(DateTime(2026)).inDays;
 
@@ -46,7 +51,7 @@ class CoachBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
+    if (standing) return _buildStanding(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -68,60 +73,86 @@ class CoachBubble extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 2),
+        Expanded(child: _bubble(context, tailAt: 0.5)),
+      ],
+    );
+  }
+
+  /// The bust sits on the bottom edge and the bubble stands beside it, a
+  /// little above the edge, with its tail pointing at the face.
+  Widget _buildStanding(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        SizedBox(
+          width: size,
+          height: size,
+          child: Image.asset(
+            bot.imagePath,
+            cacheWidth: (size * 3).round(),
+            fit: BoxFit.contain,
+            alignment: Alignment.bottomCenter,
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          ),
+        ),
         Expanded(
-          child: CustomPaint(
-            painter: const SpeechBubblePainter(
-              fill: LoomColors.cream,
-              border: LoomColors.indigo,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                BubbleMetrics.tail + 14,
-                10,
-                14,
-                11,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      if (leading != null) ...[
-                        leading!,
-                        const SizedBox(width: 8),
-                      ],
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(
-                            color: titleColor,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    tip,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.caption.copyWith(
-                      color: LoomColors.walnut,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: standingGap),
+            child: _bubble(context, tailAt: 0.62),
           ),
         ),
       ],
+    );
+  }
+
+  /// Space between the bottom of the bubble and the board below it.
+  static const double standingGap = 14;
+
+  Widget _bubble(BuildContext context, {required double tailAt}) {
+    final k = context.k;
+    return CustomPaint(
+      painter: SpeechBubblePainter(
+        fill: LoomColors.cream,
+        border: LoomColors.indigo,
+        tailAt: tailAt,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(BubbleMetrics.tail + 14, 10, 14, 11),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                if (leading != null) ...[leading!, const SizedBox(width: 8)],
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(
+                      color: titleColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 1),
+            Text(
+              tip,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: k.caption.copyWith(
+                color: LoomColors.walnut,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

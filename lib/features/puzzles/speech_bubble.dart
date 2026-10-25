@@ -11,14 +11,21 @@ abstract final class BubbleMetrics {
 
 /// A flat speech bubble with a tail on its left, pointing at the speaker.
 class SpeechBubblePainter extends CustomPainter {
-  const SpeechBubblePainter({required this.fill, required this.border});
+  const SpeechBubblePainter({
+    required this.fill,
+    required this.border,
+    this.tailAt = 0.5,
+  });
 
   final Color fill;
   final Color border;
 
+  /// Where the tail sits on the left edge, from 0 (top) to 1 (bottom).
+  final double tailAt;
+
   /// The outline: a rounded body that starts after the tail, and a tail
   /// reaching the left edge at mid height.
-  static Path shape(Size size) {
+  static Path shape(Size size, {double tailAt = 0.5}) {
     const tail = BubbleMetrics.tail;
     final body = RRect.fromLTRBR(
       tail,
@@ -27,7 +34,12 @@ class SpeechBubblePainter extends CustomPainter {
       size.height,
       const Radius.circular(BubbleMetrics.radius),
     );
-    final midY = size.height / 2;
+    // Keep the tail clear of the rounded corners.
+    final margin = BubbleMetrics.radius + BubbleMetrics.tailHalf;
+    final midY = (size.height * tailAt).clamp(
+      margin,
+      (size.height - margin).clamp(margin, double.infinity),
+    );
     final path = Path()..addRRect(body);
     path.addPath(
       Path()
@@ -42,7 +54,7 @@ class SpeechBubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = shape(size);
+    final path = shape(size, tailAt: tailAt);
     canvas.drawPath(path, Paint()..color = fill);
     canvas.drawPath(
       path,
@@ -56,5 +68,5 @@ class SpeechBubblePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(SpeechBubblePainter old) =>
-      old.fill != fill || old.border != border;
+      old.fill != fill || old.border != border || old.tailAt != tailAt;
 }

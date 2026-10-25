@@ -9,9 +9,13 @@ import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/theme.dart';
+import 'package:kust/ui/kust_top_bar.dart';
 import 'package:dartchess/dartchess.dart';
 
 class _FakeRecorder implements PuzzleProgressRecorder {
+  @override
+  PuzzleProgress load() => const PuzzleProgress();
+
   @override
   Future<void> recordMistake(PuzzleEntry puzzle) async {}
 
@@ -82,6 +86,32 @@ void main() {
         coachTip(mood: CoachMood.thinking, theme: 'fork', seed: -7),
         isNotEmpty,
       );
+    });
+  });
+
+  group('slot', () {
+    test('is big enough for the bubble at every text size', () {
+      // Measured on a phone at normal size: the bubble's text needed 64 px
+      // (59 were available and it overflowed by 5), plus 21 px of padding in
+      // the bubble and the gap above the board. The text scales with the
+      // text size.
+      for (var scale = 1.0; scale <= 2.0; scale += 0.1) {
+        expect(
+          coachSlotHeight(scale),
+          greaterThanOrEqualTo(64 * scale + 21 + CoachBubble.standingGap),
+          reason: 'text scale $scale',
+        );
+        expect(coachSlotHeight(scale), greaterThanOrEqualTo(coachFigureHeight));
+      }
+    });
+
+    test('is as tall as the person at normal size', () {
+      expect(coachSlotHeight(1), coachFigureHeight);
+    });
+
+    test('never shrinks below the normal size, nor grows without limit', () {
+      expect(coachSlotHeight(0.5), coachSlotHeight(1));
+      expect(coachSlotHeight(5), coachSlotHeight(2));
     });
   });
 
@@ -167,6 +197,71 @@ void main() {
         ),
         findsOneWidget,
       );
+    });
+
+    testWidgets('the slot above the board grows with the text size', (
+      tester,
+    ) async {
+      // Nothing on the screen, the control bar included, overflows.
+      for (final scale in [1.0, 1.5]) {
+        tester.view.physicalSize = const Size(400, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: appTheme,
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(scale)),
+              child: child!,
+            ),
+            home: PuzzleGameScreen(
+              level: 3,
+              index: 0,
+              progress: _FakeRecorder(),
+            ),
+          ),
+        );
+        for (var i = 0; i < 50; i++) {
+          if (find.byType(PuzzleBoard).evaluate().isNotEmpty) break;
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)),
+          );
+          await tester.pump(const Duration(milliseconds: 20));
+        }
+        final slot = find
+            .ancestor(
+              of: find.byType(CoachBubble),
+              matching: find.byType(SizedBox),
+            )
+            .evaluate()
+            .map((e) => tester.getSize(find.byWidget(e.widget)).height)
+            .firstWhere((h) => h > 60);
+        expect(slot, coachSlotHeight(scale));
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets('the coach stands right on top of the board', (tester) async {
+      await pump(tester, 2, 0);
+      final coach = tester.getRect(find.byType(CoachBubble));
+      final board = tester.getRect(find.byType(PuzzleBoard));
+      // Flush: the coach's slot ends where the board begins, and both are
+      // as wide as the screen allows.
+      expect(coach.bottom, board.top);
+      expect(board.width, 400);
+      expect(coach.left, greaterThanOrEqualTo(0));
+      final image = tester.getRect(
+        find.descendant(
+          of: find.byType(CoachBubble),
+          matching: find.byType(Image),
+        ),
+      );
+      expect(image.bottom, board.top);
+      expect(image.height, coachFigureHeight);
+      // Both sit right under the top bar, not in the middle of the screen.
+      final topBar = tester.getRect(find.byType(KustTopBar));
+      expect(coach.top - topBar.bottom, lessThan(12));
     });
 
     testWidgets('the board stays in place whatever the coach says', (

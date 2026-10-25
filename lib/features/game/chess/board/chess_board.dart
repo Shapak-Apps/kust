@@ -185,10 +185,17 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (mounted) setState(() {});
   }
 
+  /// The cached squares hold the old pieces, so they are built again.
+  void _onPieceSet() {
+    if (!mounted) return;
+    setState(_cells.clear);
+  }
+
   @override
   void initState() {
     super.initState();
     AppSettings.instance.boardTheme.addListener(_onBoardTheme);
+    AppSettings.instance.pieceSet.addListener(_onPieceSet);
 
     _moveController = AnimationController(vsync: this, duration: _moveDuration);
     _captureController = AnimationController(
@@ -214,6 +221,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   @override
   void dispose() {
     AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
+    AppSettings.instance.pieceSet.removeListener(_onPieceSet);
     _moveController.dispose();
     _captureController.dispose();
     super.dispose();
@@ -777,7 +785,7 @@ String _assetForPiece(Piece piece) {
     Role.pawn => 'P',
   };
 
-  return 'assets/pieces/$color$role.svg';
+  return AppSettings.instance.pieceSet.value.asset(color, role);
 }
 
 class _PromotionPicker extends StatelessWidget {

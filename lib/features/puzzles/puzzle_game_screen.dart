@@ -8,12 +8,16 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
+import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/features/puzzles/puzzle_coach.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
+import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
+import 'package:kust/features/puzzles/puzzles_screen.dart' show kLoomLevels;
+import 'package:kust/features/puzzles/woven_dialog.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -29,6 +33,8 @@ class PuzzleGameScreen extends StatefulWidget {
     required this.level,
     required this.index,
     this.progress,
+    this.daily = false,
+    this.dailyStore,
   });
 
   final int level;
@@ -37,6 +43,12 @@ class PuzzleGameScreen extends StatefulWidget {
   /// Where results are recorded; the saved progress store unless a test
   /// passes its own.
   final PuzzleProgressRecorder? progress;
+
+  /// Whether this is the puzzle of the day, whose solving feeds the streak.
+  final bool daily;
+
+  /// Where the streak is kept; the saved one unless a test passes its own.
+  final DailyRecorder? dailyStore;
 
   @override
   State<PuzzleGameScreen> createState() => _PuzzleGameScreenState();
@@ -47,6 +59,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   PuzzleSession? _session;
   String? _error;
   int _puzzleCount = 0;
+  List<PuzzleEntry> _levelPuzzles = const [];
   int _index = 0;
 
   /// Whether the level after this one has puzzles to move on to.
@@ -99,6 +112,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       _puzzle = puzzle;
       _session = PuzzleSession(puzzle);
       _puzzleCount = level.puzzles.length;
+      _levelPuzzles = level.puzzles;
       _index = index;
       _ply = 0;
     });
@@ -250,7 +264,41 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     SoundService.instance.playJingle('game-win.wav');
     SoundService.instance.buzzMedium();
     if (mounted) setState(() {});
-    unawaited(_recorder.recordSolved(puzzle, clean: _s.mistakes == 0));
+    unawaited(
+      _record(() => _recorder.recordSolved(puzzle, clean: _s.mistakes == 0)),
+    );
+    if (widget.daily) {
+      unawaited(
+        (widget.dailyStore ?? DailyStore.instance).markSolved(DateTime.now()),
+      );
+    }
+  }
+
+  /// Saves a result, and when it weaves the last knot of the level, shows the
+  /// finished göl.
+  Future<void> _record(
+    Future<void> Function() write, {
+    Duration wait = const Duration(milliseconds: 900),
+  }) async {
+    final before = _recorder.load();
+    await write();
+    if (!mounted) return;
+    final after = _recorder.load();
+    if (!levelJustWoven(_levelPuzzles, before, after)) return;
+    await Future<void>.delayed(wait);
+    if (!mounted) return;
+    final i = widget.level - 1;
+    if (i < 0 || i >= kLoomLevels.length) return;
+    final next = i + 1 < kLoomLevels.length && _hasNextLevel
+        ? kLoomLevels[i + 1].tribe
+        : null;
+    await showWovenDialog(
+      context,
+      gol: kLoomLevels[i].gol,
+      tribe: kLoomLevels[i].tribe,
+      knots: _levelPuzzles.length,
+      nextTribe: next,
+    );
   }
 
   void _onHint() {
@@ -262,7 +310,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final puzzle = _puzzle;
     if (puzzle == null || _s.isFinished) return;
     _timer?.cancel();
-    unawaited(_recorder.recordRevealed(puzzle));
+    unawaited(
+      _record(
+        () => _recorder.recordRevealed(puzzle),
+        // Let the solution play out first.
+        wait: const Duration(milliseconds: 2400),
+      ),
+    );
     setState(() {
       _mistakeFlash = false;
       _busy = true;
@@ -371,9 +425,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final hintTo = _atTip && !finished ? _s.hintTo : null;
     final hasNext = _index + 1 < _puzzleCount;
 
-    // Fixed slots for the status line and the bottom bar, so the board never
-    // moves when the text changes or the controls swap for the result bar.
-    const statusHeight = 96.0;
+    // Fixed slots for the coach and the bottom bar, so the board never moves
+    // when the words change or the controls swap for the result bar. The
+    // coach's bubble grows with the text size, and so does its slot.
+    final statusHeight = coachSlotHeight(
+      MediaQuery.textScalerOf(context).scale(1),
+    );
     const barHeight = 112.0;
     const sideMargin = 0.0;
 
@@ -392,45 +449,50 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
 
           return Column(
             children: [
-              SizedBox(
-                height: statusHeight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Center(
-                    child: CoachBubble(
-                      title: _statusText,
-                      tip: _coachTip,
-                      leading: _SideDot(
-                        whiteToMove: _position.turn == Side.white,
-                      ),
-                      titleColor: _solved
-                          ? const Color(0xFF1F7A4D)
-                          : _mistakeFlash
-                          ? const Color(0xFFB3261E)
-                          : LoomColors.indigo,
-                    ),
-                  ),
-                ),
-              ),
+              // The coach stands on the top edge of the board, and the two
+              // sit together right under the top bar.
               Expanded(
-                child: Center(
-                  child: SizedBox(
-                    width: side,
-                    height: side,
-                    child: PuzzleBoard(
-                      position: _position,
-                      flipped: _s.solverSide == Side.black,
-                      interactive: _atTip && !_busy && !finished,
-                      onMove: _onUserMove,
-                      lastMove: _s.lastMoves[_ply],
-                      hintFrom: hintFrom,
-                      hintTo: hintTo,
-                      slide: _slide,
-                      slideKey: _slideKey,
-                    ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: statusHeight,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: CoachBubble(
+                            standing: true,
+                            size: coachFigureHeight,
+                            title: _statusText,
+                            tip: _coachTip,
+                            leading: _SideDot(
+                              whiteToMove: _position.turn == Side.white,
+                            ),
+                            titleColor: _solved
+                                ? const Color(0xFF1F7A4D)
+                                : _mistakeFlash
+                                ? const Color(0xFFB3261E)
+                                : LoomColors.indigo,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: side,
+                        height: side,
+                        child: PuzzleBoard(
+                          position: _position,
+                          flipped: _s.solverSide == Side.black,
+                          interactive: _atTip && !_busy && !finished,
+                          onMove: _onUserMove,
+                          lastMove: _s.lastMoves[_ply],
+                          hintFrom: hintFrom,
+                          hintTo: hintTo,
+                          slide: _slide,
+                          slideKey: _slideKey,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -671,7 +733,18 @@ class _ControlButton extends StatelessWidget {
               children: [
                 Icon(icon, size: 24, color: color),
                 const SizedBox(height: 2),
-                Text(label, style: k.caption.copyWith(color: color)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    // The bar has a fixed slot under the board, so its labels
+                    // stop growing a little above the normal size.
+                    textScaler: MediaQuery.textScalerOf(context)
+                        .clamp(maxScaleFactor: 1.15),
+                    style: k.caption.copyWith(color: color),
+                  ),
+                ),
               ],
             ),
           ),
