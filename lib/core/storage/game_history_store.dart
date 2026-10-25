@@ -22,6 +22,7 @@ class GameRecord {
     this.ratingChange,
     this.timeControl,
     this.accuracy,
+    this.analyzed = false,
   });
 
   /// Result values for bot games.
@@ -55,6 +56,11 @@ class GameRecord {
   /// (or could not be) worked out.
   final double? accuracy;
 
+  /// Whether the player has run Analyze on this game in History. The
+  /// accuracy may be known before (it is worked out when the game ends),
+  /// but History reveals it only once Analyze is tapped.
+  final bool analyzed;
+
   DateTime get date => DateTime.fromMillisecondsSinceEpoch(playedAt);
 
   Map<String, Object?> toMap() => {
@@ -73,6 +79,7 @@ class GameRecord {
     'ratingChange': ratingChange,
     'timeControl': timeControl,
     'accuracy': accuracy,
+    'analyzed': analyzed,
   };
 
   /// Returns null when [raw] is not a usable record.
@@ -105,6 +112,7 @@ class GameRecord {
         ratingChange: raw['ratingChange'] as int?,
         timeControl: raw['timeControl'] as String?,
         accuracy: (raw['accuracy'] as num?)?.toDouble(),
+        analyzed: raw['analyzed'] == true,
       );
     } catch (_) {
       return null;
@@ -150,10 +158,18 @@ class GameHistoryStore {
 
   /// Stores the accuracy of an already saved game. Does nothing when the game
   /// is gone (for example deleted while it was being analyzed).
-  Future<void> setAccuracy(String id, double accuracy) async {
+  Future<void> setAccuracy(
+    String id,
+    double accuracy, {
+    bool analyzed = false,
+  }) async {
     final record = byId(id);
     if (record == null) return;
-    await _box.put(id, {...record.toMap(), 'accuracy': accuracy});
+    await _box.put(id, {
+      ...record.toMap(),
+      'accuracy': accuracy,
+      'analyzed': analyzed || record.analyzed,
+    });
   }
 
   Future<void> delete(String id) => _box.delete(id);

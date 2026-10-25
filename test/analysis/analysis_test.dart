@@ -253,15 +253,22 @@ void main() {
       );
     }
 
-    test('canAnalyze needs a bot game with enough moves and no accuracy', () {
+    test('canAnalyze needs a bot game with enough moves, not yet analyzed', () {
       expect(HistoryAnalysis.canAnalyze(game()), isTrue);
       expect(HistoryAnalysis.canAnalyze(game(local: true)), isFalse);
       expect(HistoryAnalysis.canAnalyze(game(moves: 4)), isFalse); // 2 moves
+      // An accuracy worked out when the game ended still waits for Analyze.
       final rated = GameRecord.tryFromMap({
         ...game().toMap(),
         'accuracy': 80.0,
       })!;
-      expect(HistoryAnalysis.canAnalyze(rated), isFalse);
+      expect(HistoryAnalysis.canAnalyze(rated), isTrue);
+      final analyzed = GameRecord.tryFromMap({
+        ...game().toMap(),
+        'accuracy': 80.0,
+        'analyzed': true,
+      })!;
+      expect(HistoryAnalysis.canAnalyze(analyzed), isFalse);
     });
 
     test('shows rising percentages, then stores the accuracy', () async {

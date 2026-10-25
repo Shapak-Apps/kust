@@ -7,8 +7,8 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
-import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
 
 String describeResult(GameRecord game) {
@@ -66,11 +66,7 @@ class HistoryScreen extends StatelessWidget {
       color: k.bg,
       child: Column(
         children: [
-          const KustTopBar(
-            large: true,
-            title: 'History',
-            subtitle: 'Your past games',
-          ),
+          const FeltHeader(title: 'History'),
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: GameHistoryStore.instance.listenable(),
@@ -170,7 +166,7 @@ class _GameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final accuracy = game.accuracy;
+    final accuracy = game.analyzed ? game.accuracy : null;
     final change = game.ratingChange;
 
     // A flat row: no card around it. Rows are separated by hairlines.
@@ -272,7 +268,8 @@ class _AnalysisSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final accuracy = game.accuracy;
+    // Shown only once Analyze has been tapped, even if already worked out.
+    final accuracy = game.analyzed ? game.accuracy : null;
 
     Widget slot(Widget child) => SizedBox(
       width: 76,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
@@ -41,6 +42,7 @@ class HistoryAnalysis {
     this.pacer = const AnalysisPacer(),
     this.tick = const Duration(milliseconds: 100),
     this.finishHold = const Duration(milliseconds: 350),
+    this.knownRun = const Duration(milliseconds: 1400),
   }) : _analyzer = analyzer ?? GameAnalyzer();
 
   /// The app-wide instance. Tests swap in one with a fake analyzer.
@@ -57,6 +59,12 @@ class HistoryAnalysis {
   /// How long 100% stays on screen before the accuracy replaces it.
   final Duration finishHold;
 
+  /// How long the count-up takes when the accuracy is already known.
+  final Duration knownRun;
+
+  Future<void> _saveAnalyzed(String id, double accuracy) =>
+      _history.setAccuracy(id, accuracy, analyzed: true);
+
   final Map<String, ValueNotifier<AnalysisState?>> _states = {};
 
   GameHistoryStore get _history => store ?? GameHistoryStore.instance;
@@ -67,7 +75,7 @@ class HistoryAnalysis {
 
   /// Whether the row for [game] should offer an Analyze button.
   static bool canAnalyze(GameRecord game) {
-    if (game.isLocal || game.accuracy != null) return false;
+    if (game.isLocal || game.analyzed) return false;
     final playerMoves =
         (game.uciMoves.length + (game.playerIsWhite ? 1 : 0)) ~/ 2;
     return playerMoves >= kMinAnalysisMoves;
@@ -78,6 +86,25 @@ class HistoryAnalysis {
   Future<bool> start(GameRecord game) async {
     final notifier = _states.putIfAbsent(game.id, () => ValueNotifier(null));
     if (notifier.value?.status == AnalysisStatus.running) return true;
+
+    // Worked out already when the game ended: count up to it briskly.
+    final known = game.accuracy;
+    if (known != null) {
+      notifier.value = const AnalysisState(AnalysisStatus.running, 0);
+      final steps = (knownRun.inMilliseconds / tick.inMilliseconds).ceil();
+      for (var i = 1; i <= steps; i++) {
+        await Future<void>.delayed(tick);
+        final t = Curves.easeOutCubic.transform(i / steps);
+        notifier.value = AnalysisState(
+          AnalysisStatus.running,
+          (t * 100).floor(),
+        );
+      }
+      await Future<void>.delayed(finishHold);
+      await (save ?? _saveAnalyzed)(game.id, known);
+      notifier.value = null;
+      return true;
+    }
 
     final replay = replayPositions(game.uciMoves);
     final jobs = playerMoveJobs(
@@ -123,7 +150,7 @@ class HistoryAnalysis {
 
     notifier.value = const AnalysisState(AnalysisStatus.running, 100);
     await Future<void>.delayed(finishHold);
-    await (save ?? _history.setAccuracy)(game.id, accuracy);
+    await (save ?? _saveAnalyzed)(game.id, accuracy);
     notifier.value = null;
     return true;
   }

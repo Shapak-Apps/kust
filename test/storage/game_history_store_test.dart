@@ -57,6 +57,13 @@ void main() {
 
       await store.setAccuracy('a', 71.6);
       expect(store.byId('a')!.accuracy, closeTo(71.6, 0.001));
+      // Worked out at the end of the game, but not yet revealed in History.
+      expect(store.byId('a')!.analyzed, isFalse);
+      await store.setAccuracy('a', 71.6, analyzed: true);
+      expect(store.byId('a')!.analyzed, isTrue);
+      // A later update without the flag keeps it.
+      await store.setAccuracy('a', 71.6);
+      expect(store.byId('a')!.analyzed, isTrue);
       // The rest of the game is untouched.
       expect(store.byId('a')!.uciMoves, ['e2e4', 'e7e5']);
 
