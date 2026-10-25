@@ -15,6 +15,7 @@ import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
@@ -27,6 +28,20 @@ const Color kPremoveHighlight = Color(0x80D9534F);
 const Color kHintHighlight = Color(0x552ECC71);
 
 final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
+
+/// The king of the side to move when it is in check.
+Square? _checkedKing(Position position) {
+  if (!position.isCheck) return null;
+  for (final square in Square.values) {
+    final piece = position.board.pieceAt(square);
+    if (piece != null &&
+        piece.role == Role.king &&
+        piece.color == position.turn) {
+      return square;
+    }
+  }
+  return null;
+}
 
 Square _castlingDisplaySquare(Square target) {
   if (target == Square.h1) return Square.g1;
@@ -56,7 +71,8 @@ class _BoardView {
     required this.badgeSquare,
     required this.badgeIndex,
     required this.pendingPromotion,
-    required this.premove,
+    required this.premoves,
+    required this.checkedKing,
   });
 
   factory _BoardView.from(GameState g) {
@@ -91,7 +107,8 @@ class _BoardView {
     }
 
     return _BoardView(
-      position: g.displayPosition,
+      position: g.boardPosition,
+      checkedKing: _checkedKing(g.displayPosition),
       mode: g.mode,
       playerSide: g.playerSide,
       selected: g.displaySelectedSquare,
@@ -113,7 +130,7 @@ class _BoardView {
           !g.isSelfAnalysisActive && g.status == GameStatus.playing
           ? g.pendingPromotion
           : null,
-      premove: g.isSelfAnalysisActive ? null : g.premove,
+      premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
     );
   }
 
@@ -140,8 +157,12 @@ class _BoardView {
   final int? badgeIndex;
   final ({Square from, Square to})? pendingPromotion;
 
-  /// A queued premove, tinted on its two squares.
-  final ({Square from, Square to})? premove;
+  /// Queued premoves, each tinted on its two squares.
+  final List<Premove> premoves;
+
+  /// The king in check on the real board (the board shown may have
+  /// premoves drawn on it).
+  final Square? checkedKing;
 
   @override
   bool operator ==(Object other) {
@@ -160,7 +181,8 @@ class _BoardView {
         badgeSquare == other.badgeSquare &&
         badgeIndex == other.badgeIndex &&
         pendingPromotion == other.pendingPromotion &&
-        premove == other.premove;
+        listEquals(premoves, other.premoves) &&
+        checkedKing == other.checkedKing;
   }
 
   @override
@@ -179,7 +201,8 @@ class _BoardView {
     badgeSquare,
     badgeIndex,
     pendingPromotion,
-    premove,
+    premoves.length,
+    checkedKing,
   );
 }
 
@@ -351,9 +374,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (square == null) return;
     final controller = ref.read(chessControllerProvider.notifier);
     if (!controller.pickUp(square)) return;
+    // Where the queued premoves left the pieces, as the board shows them.
     final piece = ref
         .read(chessControllerProvider)
-        .position
+        .boardPosition
         .board
         .pieceAt(square);
     if (piece == null) return;
@@ -388,7 +412,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       played = ref.read(chessControllerProvider.notifier).dropOn(target);
       // A drop that only queued a premove leaves the piece where it is;
       // the move glides when it is played.
-      if (!played || ref.read(chessControllerProvider).premove != null) {
+      if (!played || ref.read(chessControllerProvider).canPremove) {
         _dropped = null;
       }
     }
@@ -407,19 +431,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     });
     _dragAt.value = null;
     if (!played) _snapController.forward(from: 0);
-  }
-
-  Square? _checkedKingSquare(Position position) {
-    if (!position.isCheck) return null;
-    for (final square in Square.values) {
-      final piece = position.board.pieceAt(square);
-      if (piece != null &&
-          piece.role == Role.king &&
-          piece.color == position.turn) {
-        return square;
-      }
-    }
-    return null;
   }
 
   Widget _buildRotatedPiece(Piece piece, _BoardView view) {
@@ -470,34 +481,37 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
           // The rook slides beside the king: from its corner to the square
           // the king crossed, or back again when undoing.
-          _rookPiece = null;
+          Square? rookFrom;
+          Square? rookTo;
+          Piece? rook;
           if (isForwardCastling) {
             visualTo = _castlingDisplaySquare(move.to);
-            _rookFrom = move.to;
-            _rookTo = _rookCastledSquare(move.to);
-            _rookPiece = next.position.board.pieceAt(_rookTo!);
+            rookFrom = move.to;
+            rookTo = _rookCastledSquare(move.to);
+            rook = next.position.board.pieceAt(rookTo);
           } else if (isReverseCastling) {
             visualFrom = _castlingDisplaySquare(move.from);
-            _rookFrom = _rookCastledSquare(move.from);
-            _rookTo = move.from;
-            _rookPiece = next.position.board.pieceAt(_rookTo!);
+            rookFrom = _rookCastledSquare(move.from);
+            rookTo = move.from;
+            rook = next.position.board.pieceAt(rookTo);
           }
 
-          // A dropped piece is already where it belongs: no glide.
+          // Already shown where it belongs: a dropped piece, or a premove
+          // the board drew made. Those do not glide, and whatever is still
+          // gliding (the bot's piece) carries on undisturbed.
           final dropped = _dropped;
           _dropped = null;
           final wasDropped =
               dropped != null &&
               dropped.from == move.from &&
               (dropped.to == move.to || dropped.to == visualTo);
-
-          _animFrom = visualFrom;
-          _animTo = visualTo;
-          _animPiece = wasDropped
+          final instant = next.lastMoveInstant;
+          final glidePiece = wasDropped || instant
               ? null
               : next.position.board.pieceAt(move.to) ??
                     next.position.board.pieceAt(visualTo) ??
                     previous.position.board.pieceAt(visualFrom);
+          final glideRook = instant ? null : rook;
 
           final distance = math.sqrt(
             math.pow(fileOf(visualTo) - fileOf(visualFrom), 2) +
@@ -506,7 +520,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           final duration = next.wasUndo
               ? _undoDuration
               : glideDuration(distance.toDouble());
-          if (_animPiece != null || _rookPiece != null) {
+          if (glidePiece != null || glideRook != null) {
+            _animFrom = visualFrom;
+            _animTo = visualTo;
+            _animPiece = glidePiece;
+            _rookFrom = rookFrom;
+            _rookTo = rookTo;
+            _rookPiece = glideRook;
             _moveController.duration = duration;
             _moveController.forward(from: 0);
           }
@@ -514,8 +534,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           if (next.capturedPiece != null && next.capturedSquare != null) {
             _capSquare = next.capturedSquare;
             _capPiece = next.capturedPiece;
-            _capAtOnce = wasDropped || next.wasUndo;
-            _captureController.duration = wasDropped
+            _capAtOnce = wasDropped || instant || next.wasUndo;
+            _captureController.duration = wasDropped || instant
                 ? const Duration(milliseconds: 140)
                 : duration;
             _captureController.forward(from: 0);
@@ -545,7 +565,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
-        final checkedKing = _checkedKingSquare(displayPosition);
+        final checkedKing = view.checkedKing;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final colors = [
           for (final rank in ranks)
@@ -935,9 +955,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (checkedKing == square) {
       background = Color.alphaBlend(kCheckSquareHighlight, background);
     }
-    final premove = view.premove;
-    if (premove != null && (premove.from == square || premove.to == square)) {
-      background = Color.alphaBlend(kPremoveHighlight, background);
+    for (final p in view.premoves) {
+      if (p.from == square || p.to == square) {
+        background = Color.alphaBlend(kPremoveHighlight, background);
+        break;
+      }
     }
     if (view.selected == square) {
       background = Color.alphaBlend(kHighlight, background);

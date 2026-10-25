@@ -306,7 +306,9 @@ class ChessEngine {
     required String beforeFen,
     required String playedUci,
     required String afterFen,
-    Duration thinkTime = const Duration(milliseconds: 400),
+    // Long enough for both searches to reach [analysisDepth] on most
+    // phones, so the two scores come from the same depth.
+    Duration thinkTime = const Duration(milliseconds: 700),
     int depth = analysisDepth,
     bool Function()? isStale,
   }) {

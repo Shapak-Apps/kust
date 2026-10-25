@@ -15,6 +15,7 @@ import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
@@ -25,11 +26,12 @@ const String kStartFen =
 
 const Duration kBotMinMoveTime = Duration(milliseconds: 400);
 
-/// How long after the bot's move a queued premove is played.
-const Duration kPremoveDelay = Duration(milliseconds: 120);
-
 const String kEvalBarPrefKey = 'eval_bar_enabled';
 const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
+
+/// How deep, and at most how long, a standout move rating is checked again.
+const int kFeedbackCheckDepth = 16;
+const Duration kFeedbackCheckTime = Duration(milliseconds: 1400);
 
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
@@ -65,7 +67,8 @@ class GameState {
     this.moveFeedbackEnabled = false,
     this.feedbackAnalyzing = false,
     this.pendingPromotion,
-    this.premove,
+    this.premoves = const [],
+    this.lastMoveInstant = false,
     this.engineFailed = false,
     this.ratingChange,
     this.accuracy,
@@ -107,8 +110,27 @@ class GameState {
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
 
-  /// A move queued while the bot thinks, played once it has moved.
-  final ({Square from, Square to})? premove;
+  /// Moves queued while the bot thinks, played one after each of its
+  /// moves, first first.
+  final List<Premove> premoves;
+
+  /// Whether the last move appeared in place without gliding: a premove,
+  /// which the board already showed made.
+  final bool lastMoveInstant;
+
+  ({Board board, int valid}) get _premoveView =>
+      premoveBoard(position.board, playerSide, premoves);
+
+  /// The premoves that still make sense on the board.
+  List<Premove> get livePremoves =>
+      premoves.isEmpty ? premoves : premoves.sublist(0, _premoveView.valid);
+
+  /// The position the board shows: queued premoves are drawn already made,
+  /// the way chess.com shows them.
+  Position get boardPosition {
+    if (premoves.isEmpty || isSelfAnalysisActive) return displayPosition;
+    return position.copyWith(board: _premoveView.board);
+  }
 
   /// Whether the player may queue a premove now: a bot game, the bot to
   /// move. (The setting is checked by the controller.)
@@ -223,8 +245,8 @@ class GameState {
     bool? moveFeedbackEnabled,
     bool? feedbackAnalyzing,
     ({Square from, Square to})? pendingPromotion,
-    ({Square from, Square to})? premove,
-    bool clearPremove = false,
+    List<Premove>? premoves,
+    bool? lastMoveInstant,
     bool? engineFailed,
     int? ratingChange,
     double? accuracy,
@@ -271,7 +293,8 @@ class GameState {
       pendingPromotion: clearSelection
           ? null
           : (pendingPromotion ?? this.pendingPromotion),
-      premove: clearPremove ? null : (premove ?? this.premove),
+      premoves: premoves ?? this.premoves,
+      lastMoveInstant: lastMoveInstant ?? this.lastMoveInstant,
       engineFailed: engineFailed ?? this.engineFailed,
       ratingChange: ratingChange ?? this.ratingChange,
       accuracy: accuracy ?? this.accuracy,
@@ -578,6 +601,7 @@ class ChessController extends Notifier<GameState> {
         SoundService.instance.buzzMedium();
         break;
       case MoveQuality.mistake:
+      case MoveQuality.blunder:
         SoundService.instance.buzz(heavy: true);
         break;
       default:
@@ -694,20 +718,21 @@ class ChessController extends Notifier<GameState> {
         bestCp: a.bestCp,
         playedCp: a.playedCp,
         secondBestCp: a.secondBestCp,
-        isBest: a.bestUci == playedUci || (a.bestCp - a.playedCp).abs() <= 10,
-        rating: ratingForFeedback(botElo: state.bot?.elo),
+        isBest: a.bestUci == playedUci,
       );
 
       var quality = rate(analysis);
-      // A sacrifice that looks right at a shallow depth can be refuted
-      // deeper down. Brilliant is rare, so it gets a longer second look.
-      if (quality == MoveQuality.brilliant) {
+      // The labels that stand out (brilliant, great, mistake, blunder) get a
+      // deeper second look before they are shown: a shallow search can miss
+      // the refutation of a sacrifice, or the idea behind a move that only
+      // looks bad. A wrong "Blunder" is worse than a moment's wait.
+      if (quality.needsCheck) {
         final deeper = await _engine.analyzeMove(
           beforeFen: beforePos.fen,
           playedUci: playedUci,
           afterFen: afterPos.fen,
-          thinkTime: const Duration(milliseconds: 1500),
-          depth: 18,
+          thinkTime: kFeedbackCheckTime,
+          depth: kFeedbackCheckDepth,
           isStale: () => _isDisposed || epoch != _feedbackEpoch,
         );
         if (_isDisposed || epoch != _feedbackEpoch) return;
@@ -967,62 +992,87 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  /// The player's pieces may be picked up for a premove while the bot
-  /// thinks: a tap on a queued premove's piece or anywhere else cancels it.
-  void _selectPremove(Square square) {
-    final piece = state.position.board.pieceAt(square);
-    final mine = piece != null && piece.color == state.playerSide;
+  /// The board as the player sees it, queued premoves made.
+  Board get _premoveBoard => state.boardPosition.board;
 
-    if (state.premove != null) {
-      state = state.copyWith(clearPremove: true, clearSelection: true);
-      if (!mine) return;
-    }
+  /// While the bot thinks: a tap on one of the player's pieces (where the
+  /// queued premoves left them) selects it, a tap on one of its squares
+  /// queues that premove, and a tap anywhere else cancels every premove.
+  void _selectPremove(Square square) {
+    final piece = _premoveBoard.pieceAt(square);
+    final mine = piece != null && piece.color == state.playerSide;
     final selected = state.selectedSquare;
+
     if (selected != null &&
         selected != square &&
+        !mine &&
         state.legalDestinations.contains(square)) {
       _queuePremove(selected, square);
       return;
     }
-    if (selected == square || !mine) {
+    if (selected == square) {
+      state = state.copyWith(clearSelection: true);
+      return;
+    }
+    if (mine) {
+      state = state.copyWith(
+        selectedSquare: square,
+        legalDestinations: _premoveDestinationsFrom(square),
+        hintSquares: const {},
+      );
+      return;
+    }
+    state = state.copyWith(premoves: const [], clearSelection: true);
+  }
+
+  void _queuePremove(Square from, Square to) {
+    final queue = state.livePremoves;
+    if (queue.length >= kMaxPremoves) {
       state = state.copyWith(clearSelection: true);
       return;
     }
     state = state.copyWith(
-      selectedSquare: square,
-      legalDestinations: _premoveDestinationsFrom(square),
-      hintSquares: const {},
+      premoves: [...queue, (from: from, to: to)],
+      clearSelection: true,
     );
-  }
-
-  void _queuePremove(Square from, Square to) {
-    state = state.copyWith(premove: (from: from, to: to), clearSelection: true);
     SoundService.instance.buzz();
   }
 
-  /// Where the piece on [square] could go if it were the player's turn in
-  /// the position on the board: the bot's reply is not known yet.
-  Set<Square> _premoveDestinationsFrom(Square square) =>
-      _displayDestinationsFrom(
-        square,
-        on: state.position.copyWith(turn: state.playerSide, epSquare: null),
-      );
+  /// Where the piece on [square] may be premoved, on the board as the
+  /// queued premoves leave it.
+  Set<Square> _premoveDestinationsFrom(Square square) => premoveDestinations(
+    _premoveBoard,
+    square,
+    state.playerSide,
+    castles: state.position.castles,
+    castleOnRook: AppSettings.instance.castleOnRook.value,
+  );
 
-  /// Plays the queued premove now that the bot has moved, if it is still
-  /// legal; a pawn reaching the last rank becomes a queen.
+  /// Plays the first queued premove now that the bot has moved, if it is
+  /// legal; otherwise every premove is dropped, as on chess.com. The rest
+  /// wait for the bot's next move. A pawn reaching the last rank becomes a
+  /// queen.
   void _playPremove() {
-    final premove = state.premove;
-    if (premove == null) return;
-    state = state.copyWith(clearPremove: true);
-    if (!AppSettings.instance.premoves.value || !state.isPlayerTurn) return;
-    if (!_displayDestinationsFrom(premove.from).contains(premove.to)) {
-      state = state.copyWith(clearSelection: true);
+    final queue = state.livePremoves;
+    if (queue.isEmpty) {
+      if (state.premoves.isNotEmpty) {
+        state = state.copyWith(premoves: const []);
+      }
       return;
     }
+    final next = queue.first;
+    if (!AppSettings.instance.premoves.value ||
+        !state.isPlayerTurn ||
+        !_displayDestinationsFrom(next.from).contains(next.to)) {
+      state = state.copyWith(premoves: const [], clearSelection: true);
+      return;
+    }
+    state = state.copyWith(premoves: queue.sublist(1), clearSelection: true);
     _playPlayerMove(
-      premove.from,
-      premove.to,
-      promotion: _isPromotion(premove.from, premove.to) ? Role.queen : null,
+      next.from,
+      next.to,
+      promotion: _isPromotion(next.from, next.to) ? Role.queen : null,
+      instant: true,
     );
   }
 
@@ -1032,10 +1082,9 @@ class ChessController extends Notifier<GameState> {
   bool pickUp(Square square) {
     if (state.isSelfAnalysisActive) return false;
     if (_premoving) {
-      final piece = state.position.board.pieceAt(square);
+      final piece = _premoveBoard.pieceAt(square);
       if (piece == null || piece.color != state.playerSide) return false;
       state = state.copyWith(
-        clearPremove: true,
         selectedSquare: square,
         legalDestinations: _premoveDestinationsFrom(square),
         hintSquares: const {},
@@ -1084,7 +1133,7 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(
       status: GameStatus.resigned,
       isBotThinking: false,
-      clearPremove: true,
+      premoves: const [],
       endReason: 'You resigned.',
     );
 
@@ -1158,6 +1207,8 @@ class ChessController extends Notifier<GameState> {
       wasUndo: true,
       clearAnalysis: true,
       feedbackAnalyzing: false,
+      premoves: const [],
+      lastMoveInstant: false,
     );
 
     _refreshEvaluation();
@@ -1455,7 +1506,12 @@ class ChessController extends Notifier<GameState> {
     return displaySquares;
   }
 
-  void _playPlayerMove(Square from, Square to, {Role? promotion}) {
+  void _playPlayerMove(
+    Square from,
+    Square to, {
+    Role? promotion,
+    bool instant = false,
+  }) {
     Square target = to;
     final piece = state.position.board.pieceAt(from);
 
@@ -1538,6 +1594,7 @@ class ChessController extends Notifier<GameState> {
       hintSquares: const {},
       status: gameStatus,
       lastMove: move,
+      lastMoveInstant: instant,
       capturedPiece: capturedPiece,
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
@@ -1651,6 +1708,7 @@ class ChessController extends Notifier<GameState> {
       status: gameStatus,
       isBotThinking: false,
       lastMove: normalMove,
+      lastMoveInstant: false,
       capturedPiece: capturedPiece,
       capturedSquare: capturedSquare,
       clearCapture: capturedPiece == null,
@@ -1662,17 +1720,12 @@ class ChessController extends Notifier<GameState> {
     if (state.status != GameStatus.playing) {
       _stopClock();
       _playGameEndSound(newPosition);
-      state = state.copyWith(clearPremove: true);
+      state = state.copyWith(premoves: const []);
     } else {
       _addIncrement(beforeBotMove.turn);
-      if (state.premove != null) {
-        // A beat after the bot's move, so its piece is seen landing first.
-        final afterBot = state.position;
-        Future<void>.delayed(kPremoveDelay, () {
-          if (_isDisposed || !identical(state.position, afterBot)) return;
-          _playPremove();
-        });
-      }
+      // Straight away, as on chess.com: the board shows the premove made
+      // already, so it appears in place while the bot's piece still glides.
+      _playPremove();
     }
 
     _refreshEvaluation();
