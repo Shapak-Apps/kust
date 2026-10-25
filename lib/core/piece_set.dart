@@ -4,8 +4,8 @@
 enum PieceSet {
   classic('Classic', ''),
   shaded('Shaded', 'shaded/'),
-  wood('Boxwood', 'wood/'),
-  carpet('Carpet', 'carpet/');
+  neo('Neo', 'neo/'),
+  modern('Modern', 'modern/');
 
   const PieceSet(this.label, this._folder);
 

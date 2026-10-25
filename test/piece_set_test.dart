@@ -23,11 +23,11 @@ void main() {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
         'Shaded',
-        'Boxwood',
-        'Carpet',
+        'Neo',
+        'Modern',
       ]);
       expect(PieceSet.classic.asset('w', 'K'), 'assets/pieces/wK.svg');
-      expect(PieceSet.wood.asset('b', 'N'), 'assets/pieces/wood/bN.svg');
+      expect(PieceSet.neo.asset('b', 'N'), 'assets/pieces/neo/bN.svg');
     });
 
     test('every piece of every set is bundled and is a square svg', () {
@@ -39,7 +39,14 @@ void main() {
           expect(file.existsSync(), isTrue, reason: asset);
           final text = file.readAsStringSync();
           expect(text, contains('<svg'), reason: asset);
-          expect(text, contains('viewBox="0 0 45 45"'), reason: asset);
+          expect(
+            text,
+            anyOf(
+              contains('viewBox="0 0 45 45"'),
+              contains('viewBox="0 0 100 100"'),
+            ),
+            reason: asset,
+          );
           final folder = asset.substring(0, asset.lastIndexOf('/') + 1);
           expect(pubspec, contains('- $folder\n'), reason: folder);
         }
@@ -90,13 +97,13 @@ void main() {
 
   group('settings', () {
     test('the choice is saved, loaded again and used for pieces', () async {
-      SharedPreferences.setMockInitialValues({'piece_set': 'carpet'});
+      SharedPreferences.setMockInitialValues({'piece_set': 'modern'});
       final s = AppSettings.instance;
       await s.load();
-      expect(s.pieceSet.value, PieceSet.carpet);
+      expect(s.pieceSet.value, PieceSet.modern);
       expect(
         assetForPiece(const Piece(color: Side.black, role: Role.queen)),
-        'assets/pieces/carpet/bQ.svg',
+        'assets/pieces/modern/bQ.svg',
       );
 
       await s.setPieceSet(PieceSet.classic);
@@ -148,11 +155,11 @@ void main() {
           .selected;
       expect(selected(PieceSet.shaded), isTrue);
 
-      await tester.ensureVisible(find.text('Boxwood'));
-      await tester.tap(find.text('Boxwood'));
+      await tester.ensureVisible(find.text('Neo'));
+      await tester.tap(find.text('Neo'));
       await tester.pumpAndSettle();
-      expect(AppSettings.instance.pieceSet.value, PieceSet.wood);
-      expect(selected(PieceSet.wood), isTrue);
+      expect(AppSettings.instance.pieceSet.value, PieceSet.neo);
+      expect(selected(PieceSet.neo), isTrue);
       expect(selected(PieceSet.shaded), isFalse);
     });
 
@@ -181,9 +188,9 @@ void main() {
                   as SvgAssetLoader)
               .assetName;
       expect(firstPiece(), startsWith('assets/pieces/shaded/'));
-      AppSettings.instance.pieceSet.value = PieceSet.carpet;
+      AppSettings.instance.pieceSet.value = PieceSet.modern;
       await tester.pump();
-      expect(firstPiece(), startsWith('assets/pieces/carpet/'));
+      expect(firstPiece(), startsWith('assets/pieces/modern/'));
     });
   });
 }
