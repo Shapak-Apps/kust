@@ -90,6 +90,16 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setCastleOnRook,
           ),
         ),
+        ValueListenableBuilder<bool>(
+          valueListenable: s.premoves,
+          builder: (_, v, _) => KustToggleRow(
+            icon: Icons.fast_forward_rounded,
+            title: 'Premoves',
+            subtitle: 'Queue your next move while the bot thinks',
+            value: v,
+            onChanged: s.setPremoves,
+          ),
+        ),
         const SizedBox(height: 24),
         const KustSectionLabel('Feedback'),
         ValueListenableBuilder<bool>(
