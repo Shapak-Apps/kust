@@ -4,6 +4,7 @@ import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kust/features/achievements/achievement_tracker.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/bot_policy.dart';
@@ -725,6 +726,9 @@ class ChessController extends Notifier<GameState> {
       );
       state = state.copyWith(moves: updated);
       unawaited(_playQualityFeedback(quality));
+      if (quality == MoveQuality.brilliant) {
+        unawaited(AchievementTracker.brilliantMove());
+      }
     } catch (_) {
     } finally {
       if (epoch == _feedbackEpoch) _feedbackPending.remove(moveIndex);
@@ -1203,6 +1207,21 @@ class ChessController extends Notifier<GameState> {
       ),
     );
 
+    if (!isLocal && bot != null) {
+      unawaited(
+        AchievementTracker.gameFinished(
+          won: result == GameRecord.win,
+          byCheckmate: game.status == GameStatus.checkmate,
+          practice: game.practiceMode,
+          playerMoves: game.moves
+              .where((m) => m.side == game.playerSide)
+              .length,
+          totalMoves: (game.moves.length + 1) ~/ 2,
+          botElo: bot.elo,
+          playerRating: PlayerRatingStore.instance.rating - (ratingChange ?? 0),
+        ),
+      );
+    }
     if (!isLocal) unawaited(_computeAccuracy(game, recordId));
   }
 
@@ -1236,6 +1255,7 @@ class ChessController extends Notifier<GameState> {
 
     state = state.copyWith(accuracy: value, accuracyPending: false);
     if (value != null) {
+      unawaited(AchievementTracker.accuracy(value));
       await GameHistoryStore.instance.setAccuracy(recordId, value);
     }
   }

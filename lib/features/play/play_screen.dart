@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:kust/features/achievements/achievements_card.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/game_args.dart';
@@ -174,6 +175,10 @@ class _PlayScreenState extends State<PlayScreen> {
                 const SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  sliver: SliverToBoxAdapter(child: AchievementsCard()),
                 ),
                 const SliverToBoxAdapter(
                   child: Padding(
