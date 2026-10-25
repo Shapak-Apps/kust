@@ -170,7 +170,7 @@ class _GameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final accuracy = game.accuracy;
+    final accuracy = game.analyzed ? game.accuracy : null;
     final change = game.ratingChange;
 
     // A flat row: no card around it. Rows are separated by hairlines.
@@ -272,7 +272,8 @@ class _AnalysisSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final accuracy = game.accuracy;
+    // Shown only once Analyze has been tapped, even if already worked out.
+    final accuracy = game.analyzed ? game.accuracy : null;
 
     Widget slot(Widget child) => SizedBox(
       width: 76,

@@ -18,6 +18,7 @@ GameRecord _game(
   int at,
   String result, {
   double? accuracy,
+  bool analyzed = false,
   bool practice = false,
 }) => GameRecord(
   id: id,
@@ -32,6 +33,7 @@ GameRecord _game(
   botName: 'Karl',
   botElo: 1000,
   accuracy: accuracy,
+  analyzed: analyzed,
   practice: practice,
 );
 
@@ -44,7 +46,9 @@ void main() {
     Hive.init(dir.path);
     box = await Hive.openBox(AppStorage.historyBoxName);
     final store = GameHistoryStore.instance;
-    await store.add(_game('a', 3, GameRecord.win, accuracy: 71.6));
+    await store.add(
+      _game('a', 3, GameRecord.win, accuracy: 71.6, analyzed: true),
+    );
     await store.add(_game('b', 2, GameRecord.loss));
     await store.add(_game('c', 1, GameRecord.draw, practice: true));
   });
@@ -243,6 +247,74 @@ void main() {
     expect(savedAccuracy['long'], closeTo(100, 0.01));
     // Back to idle after saving.
     expect(HistoryAnalysis.instance.stateFor('long').value, isNull);
+  });
+
+  testWidgets('an accuracy worked out at the end of the game is revealed '
+      'by Analyze', (tester) async {
+    const moves = [
+      'e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'g8f6', 'd2d3', 'd7d6', //
+    ];
+    final known = GameRecord(
+      id: 'known',
+      playedAt: 5,
+      isLocal: false,
+      result: GameRecord.win,
+      reason: '',
+      playerIsWhite: true,
+      uciMoves: moves,
+      sanMoves: const [],
+      botName: 'Karl',
+      botElo: 1000,
+      accuracy: 88.2,
+    );
+    await tester.runAsync(() => GameHistoryStore.instance.add(known));
+
+    final saved = HistoryAnalysis.instance;
+    addTearDown(() => HistoryAnalysis.instance = saved);
+    final savedAccuracy = <String, double>{};
+    var engineCalls = 0;
+    HistoryAnalysis.instance = HistoryAnalysis(
+      save: (id, value) async => savedAccuracy[id] = value,
+      analyzer: GameAnalyzer(
+        analyze:
+            ({
+              required beforeFen,
+              required playedUci,
+              required afterFen,
+              required thinkTime,
+              isStale,
+            }) async {
+              engineCalls++;
+              return null;
+            },
+      ),
+      tick: const Duration(milliseconds: 10),
+      finishHold: const Duration(milliseconds: 10),
+      knownRun: const Duration(milliseconds: 200),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: const Scaffold(body: HistoryScreen()),
+      ),
+    );
+    await tester.pump();
+    // Not shown yet: the row offers Analyze instead.
+    expect(find.text('88.2%'), findsNothing);
+    expect(find.byIcon(Icons.insights_rounded), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.insights_rounded));
+    await tester.pump(const Duration(milliseconds: 60));
+    final mid = HistoryAnalysis.instance.stateFor('known').value!;
+    expect(mid.status, AnalysisStatus.running);
+    expect(mid.percent, inExclusiveRange(0, 100));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+    // It counted up to the known value without running the engine again.
+    expect(savedAccuracy['known'], 88.2);
+    expect(engineCalls, 0);
   });
 
   test('box is the one the screen reads', () {
