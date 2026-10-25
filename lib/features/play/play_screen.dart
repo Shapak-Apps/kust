@@ -11,6 +11,7 @@ import 'package:kust/features/play/pick_opponent_modal.dart';
 import 'package:kust/features/play/pick_side_modal.dart';
 import 'package:kust/features/play/pick_time_modal.dart';
 import 'package:kust/features/play/play_mode_modal.dart';
+import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -169,6 +170,10 @@ class _PlayScreenState extends State<PlayScreen> {
                   sliver: SliverToBoxAdapter(
                     child: _HeroCard(onPlay: _showPlayChooser),
                   ),
+                ),
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
                 ),
                 const SliverToBoxAdapter(
                   child: Padding(
