@@ -73,31 +73,37 @@ class _MoveFeedbackBadgeState extends State<MoveFeedbackBadge>
           child: child,
         );
       },
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.45),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+      // Its own layer: each frame only scales it, nothing is drawn again.
+      child: RepaintBoundary(
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.45),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: FadeTransition(
+            opacity: _iconOpacity,
+            child: SvgPicture.asset(
+              widget.feedback.quality.asset,
+              width: iconSize,
+              height: iconSize,
+              fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+              placeholderBuilder: (_) =>
+                  Icon(Icons.star, size: iconSize, color: Colors.white),
             ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: FadeTransition(
-          opacity: _iconOpacity,
-          child: SvgPicture.asset(
-            widget.feedback.quality.asset,
-            width: iconSize,
-            height: iconSize,
-            fit: BoxFit.contain,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-            placeholderBuilder: (_) =>
-                Icon(Icons.star, size: iconSize, color: Colors.white),
           ),
         ),
       ),

@@ -275,18 +275,34 @@ class ChessEngine {
     });
   }
 
+  /// How deep a move is rated at most. Deep enough to rate it right; on a
+  /// fast phone the search ends here, well before its time is up.
+  static const int analysisDepth = 12;
+
+  /// Rates [playedUci] against the best move in [beforeFen].
+  ///
+  /// Both scores come from searches of the same position, from the same
+  /// side's point of view: the best two moves first, then, if the played move
+  /// was not one of them, that move alone (`searchmoves`). The second search
+  /// starts from what the first one already found, so it is quick, and the
+  /// two scores can be compared. [afterFen] is only a fallback.
   Future<MoveAnalysis?> analyzeMove({
     required String beforeFen,
     required String playedUci,
     required String afterFen,
-    Duration thinkTime = const Duration(milliseconds: 350),
+    Duration thinkTime = const Duration(milliseconds: 400),
     bool Function()? isStale,
   }) {
     return _run<MoveAnalysis?>(() async {
       if (isStale != null && isStale()) return null;
       if (!_ready) await start();
       return _atFullStrength<MoveAnalysis?>(() async {
-        final top = await _searchTop(beforeFen, thinkTime, 2);
+        final top = await _searchTop(
+          beforeFen,
+          thinkTime,
+          2,
+          depth: analysisDepth,
+        );
         if (top.isEmpty) return null;
 
         final best = top.first;
@@ -298,9 +314,20 @@ class ChessEngine {
           playedCp = knownPlayedCp;
         } else {
           if (isStale != null && isStale()) return null;
-          final reply = await _searchScored(afterFen, thinkTime);
-          if (reply == null) return null;
-          playedCp = -reply.cp;
+          final only = await _searchTop(
+            beforeFen,
+            thinkTime,
+            1,
+            depth: analysisDepth,
+            searchMove: playedUci,
+          );
+          if (only.isNotEmpty && only.first.uci == playedUci) {
+            playedCp = only.first.cp;
+          } else {
+            final reply = await _searchScored(afterFen, thinkTime);
+            if (reply == null) return null;
+            playedCp = -reply.cp;
+          }
         }
 
         return MoveAnalysis(
@@ -337,16 +364,36 @@ class ChessEngine {
     return lines.isEmpty ? null : lines.first;
   }
 
+  /// The UCI `go` line for a search that stops at [thinkTime] or [depth],
+  /// whichever comes first, limited to [searchMove] when given.
+  @visibleForTesting
+  static String goCommand(
+    Duration thinkTime, {
+    int? depth,
+    String? searchMove,
+  }) => [
+    'go',
+    if (depth != null) 'depth $depth',
+    'movetime ${thinkTime.inMilliseconds}',
+    // searchmoves takes the rest of the line, so it goes last.
+    if (searchMove != null) 'searchmoves $searchMove',
+  ].join(' ');
+
+  /// The best [lines] moves of [fen] with their scores. The search stops at
+  /// [thinkTime] or at [depth], whichever comes first; [searchMove] limits it
+  /// to that one move.
   Future<List<_Scored>> _searchTop(
     String fen,
     Duration thinkTime,
-    int lines,
-  ) async {
+    int lines, {
+    int? depth,
+    String? searchMove,
+  }) async {
     _scoreLines.clear();
     _lastScoreLine = null;
     _send('setoption name MultiPV value $lines');
     _send('position fen $fen');
-    _send('go movetime ${thinkTime.inMilliseconds}');
+    _send(goCommand(thinkTime, depth: depth, searchMove: searchMove));
 
     final line = await _waitForBestMove(thinkTime);
     _send('setoption name MultiPV value 1');
