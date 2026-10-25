@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/foundation.dart'
     show listEquals, setEquals, visibleForTesting;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,8 +12,10 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/board/board_squares_painter.dart';
+import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
 
@@ -114,6 +117,14 @@ class _BoardView {
   final Set<Square> legal;
   final List<Square> moveSquares;
   final Set<Square> hints;
+
+  /// The hinted move as an arrow: the hint holds its squares in order,
+  /// from first.
+  ({Square from, Square to})? get hintArrow {
+    if (hints.length != 2) return null;
+    return (from: hints.first, to: hints.last);
+  }
+
   final bool blocked;
   final bool analysis;
   final bool wasUndo;
@@ -167,9 +178,19 @@ class ChessBoard extends ConsumerStatefulWidget {
   ConsumerState<ChessBoard> createState() => _ChessBoardState();
 }
 
-const Duration _moveDuration = Duration(milliseconds: 220);
+/// How long a piece takes to glide [squares] squares: short hops are
+/// quick, long slides a little longer, so every move feels the same speed.
+Duration glideDuration(double squares) =>
+    Duration(milliseconds: (150 + 28 * squares).clamp(170, 320).round());
+
 const Duration _undoDuration = Duration(milliseconds: 120);
-const Duration _captureDuration = Duration(milliseconds: 160);
+
+/// How long a dropped piece takes to fly back when the move was not legal.
+const Duration _snapBackDuration = Duration(milliseconds: 170);
+
+/// How far above the finger a dragged piece floats, in squares, so the
+/// finger does not hide it.
+const double _dragLift = 0.3;
 
 class _ChessBoardState extends ConsumerState<ChessBoard>
     with TickerProviderStateMixin {
@@ -182,6 +203,32 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   Square? _capSquare;
   Piece? _capPiece;
+
+  /// Whether the captured piece goes at once (the mover was dropped there)
+  /// rather than as the mover arrives.
+  bool _capAtOnce = false;
+
+  /// The rook sliding along with the king while castling.
+  Square? _rookFrom;
+  Square? _rookTo;
+  Piece? _rookPiece;
+
+  /// The piece being dragged, where it came from and where the finger is.
+  Square? _dragFrom;
+  Piece? _dragPiece;
+  final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
+
+  /// The square the dragged piece is over, ringed.
+  Square? _hover;
+
+  /// A move made by dropping: it is already in place, so it does not glide.
+  ({Square from, Square to})? _dropped;
+
+  /// A dropped piece flying back to [_snapSquare] after an illegal drop.
+  late AnimationController _snapController;
+  Square? _snapSquare;
+  Piece? _snapPiece;
+  Offset _snapStart = Offset.zero;
 
   double _squareSize = 0;
   bool _flipped = false;
@@ -203,15 +250,36 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     AppSettings.instance.boardTheme.addListener(_onBoardTheme);
     AppSettings.instance.pieceSet.addListener(_onPieceSet);
 
-    _moveController = AnimationController(vsync: this, duration: _moveDuration);
+    _moveController = AnimationController(
+      vsync: this,
+      duration: glideDuration(1),
+    );
     _captureController = AnimationController(
       vsync: this,
-      duration: _captureDuration,
+      duration: glideDuration(1),
     );
+    _snapController = AnimationController(
+      vsync: this,
+      duration: _snapBackDuration,
+    );
+    _snapController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && _snapPiece != null) {
+        setState(() {
+          _snapPiece = null;
+          _snapSquare = null;
+        });
+      }
+    });
 
     _moveController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && _animPiece != null) {
-        setState(() => _animPiece = null);
+      if (status == AnimationStatus.completed &&
+          (_animPiece != null || _rookPiece != null)) {
+        setState(() {
+          _animPiece = null;
+          _rookPiece = null;
+          _rookFrom = null;
+          _rookTo = null;
+        });
       }
     });
     _captureController.addStatusListener((status) {
@@ -230,6 +298,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     AppSettings.instance.pieceSet.removeListener(_onPieceSet);
     _moveController.dispose();
     _captureController.dispose();
+    _snapController.dispose();
+    _dragAt.dispose();
     super.dispose();
   }
 
@@ -243,15 +313,84 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return Offset(dx, dy);
   }
 
-  void _handleTap(Offset local) {
-    if (_squareSize <= 0) return;
-    final col = (local.dx ~/ _squareSize).clamp(0, 7).toInt();
-    final row = (local.dy ~/ _squareSize).clamp(0, 7).toInt();
+  /// The square at [local] on the board, or null off the board.
+  Square? _squareAtOffset(Offset local) {
+    if (_squareSize <= 0) return null;
+    final col = (local.dx / _squareSize).floor();
+    final row = (local.dy / _squareSize).floor();
+    if (col < 0 || col > 7 || row < 0 || row > 7) return null;
     final file = _flipped ? 7 - col : col;
     final rank = _flipped ? row : 7 - row;
-    ref
-        .read(chessControllerProvider.notifier)
-        .selectSquare(squareAt(file, rank));
+    return squareAt(file, rank);
+  }
+
+  void _handleTap(Offset local) {
+    final square = _squareAtOffset(local);
+    if (square == null) return;
+    ref.read(chessControllerProvider.notifier).selectSquare(square);
+  }
+
+  /// Where the dragged piece's centre is for a finger at [finger].
+  Offset _pieceCentre(Offset finger) =>
+      finger - Offset(0, _squareSize * _dragLift);
+
+  void _onDragStart(DragStartDetails details) {
+    final square = _squareAtOffset(details.localPosition);
+    if (square == null) return;
+    final controller = ref.read(chessControllerProvider.notifier);
+    if (!controller.pickUp(square)) return;
+    final piece = ref
+        .read(chessControllerProvider)
+        .position
+        .board
+        .pieceAt(square);
+    if (piece == null) return;
+    SoundService.instance.buzz();
+    _snapController.stop();
+    setState(() {
+      _dragFrom = square;
+      _dragPiece = piece;
+      _snapPiece = null;
+      _hover = square;
+    });
+    _dragAt.value = details.localPosition;
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    if (_dragFrom == null) return;
+    _dragAt.value = details.localPosition;
+    final over = _squareAtOffset(_pieceCentre(details.localPosition));
+    if (over != _hover) setState(() => _hover = over);
+  }
+
+  void _onDragEnd([DragEndDetails? _]) {
+    final from = _dragFrom;
+    final piece = _dragPiece;
+    final at = _dragAt.value;
+    if (from == null || piece == null || at == null) return;
+    final target = _squareAtOffset(_pieceCentre(at));
+
+    var played = false;
+    if (target != null && target != from) {
+      _dropped = (from: from, to: target);
+      played = ref.read(chessControllerProvider.notifier).dropOn(target);
+      if (!played) _dropped = null;
+    }
+
+    setState(() {
+      _dragFrom = null;
+      _dragPiece = null;
+      _hover = null;
+      if (!played) {
+        // Fly back to where it came from.
+        _snapSquare = from;
+        _snapPiece = piece;
+        _snapStart =
+            _pieceCentre(at) - Offset(_squareSize / 2, _squareSize / 2);
+      }
+    });
+    _dragAt.value = null;
+    if (!played) _snapController.forward(from: 0);
   }
 
   Square? _checkedKingSquare(Position position) {
@@ -313,36 +452,57 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
               _isCornerSquare(move.from) &&
               next.position.board.pieceAt(move.to)?.role == Role.king;
 
+          // The rook slides beside the king: from its corner to the square
+          // the king crossed, or back again when undoing.
+          _rookPiece = null;
           if (isForwardCastling) {
             visualTo = _castlingDisplaySquare(move.to);
+            _rookFrom = move.to;
+            _rookTo = _rookCastledSquare(move.to);
+            _rookPiece = next.position.board.pieceAt(_rookTo!);
           } else if (isReverseCastling) {
             visualFrom = _castlingDisplaySquare(move.from);
+            _rookFrom = _rookCastledSquare(move.from);
+            _rookTo = move.from;
+            _rookPiece = next.position.board.pieceAt(_rookTo!);
           }
+
+          // A dropped piece is already where it belongs: no glide.
+          final dropped = _dropped;
+          _dropped = null;
+          final wasDropped =
+              dropped != null &&
+              dropped.from == move.from &&
+              (dropped.to == move.to || dropped.to == visualTo);
 
           _animFrom = visualFrom;
           _animTo = visualTo;
-          _animPiece =
-              next.position.board.pieceAt(move.to) ??
-              next.position.board.pieceAt(visualTo) ??
-              previous.position.board.pieceAt(visualFrom);
+          _animPiece = wasDropped
+              ? null
+              : next.position.board.pieceAt(move.to) ??
+                    next.position.board.pieceAt(visualTo) ??
+                    previous.position.board.pieceAt(visualFrom);
 
-          if (_animPiece != null) {
-            final duration = next.wasUndo ? _undoDuration : _moveDuration;
-
+          final distance = math.sqrt(
+            math.pow(fileOf(visualTo) - fileOf(visualFrom), 2) +
+                math.pow(rankOf(visualTo) - rankOf(visualFrom), 2),
+          );
+          final duration = next.wasUndo
+              ? _undoDuration
+              : glideDuration(distance.toDouble());
+          if (_animPiece != null || _rookPiece != null) {
             _moveController.duration = duration;
-            _captureController.duration = next.wasUndo
-                ? _undoDuration
-                : _captureDuration;
-            _moveController.reset();
-            _moveController.forward();
+            _moveController.forward(from: 0);
           }
 
           if (next.capturedPiece != null && next.capturedSquare != null) {
             _capSquare = next.capturedSquare;
             _capPiece = next.capturedPiece;
-
-            _captureController.reset();
-            _captureController.forward();
+            _capAtOnce = wasDropped || next.wasUndo;
+            _captureController.duration = wasDropped
+                ? const Duration(milliseconds: 140)
+                : duration;
+            _captureController.forward(from: 0);
           } else {
             _capSquare = null;
             _capPiece = null;
@@ -421,6 +581,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   key: const ValueKey('board_grid'),
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (details) => _handleTap(details.localPosition),
+                  // Pick up the piece where the finger first touched, not
+                  // where the drag was recognised a few pixels later.
+                  dragStartBehavior: DragStartBehavior.down,
+                  onPanStart: _onDragStart,
+                  onPanUpdate: _onDragUpdate,
+                  onPanEnd: _onDragEnd,
+                  onPanCancel: _onDragEnd,
                   child: RepaintBoundary(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -461,14 +628,21 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                           ),
                         ),
                         builder: (context, child) {
-                          final t = Curves.easeIn.transform(
-                            _captureController.value,
-                          );
+                          // Taken as the mover arrives, not before.
+                          final t =
+                              (_capAtOnce
+                                      ? Curves.easeIn
+                                      : const Interval(
+                                          0.55,
+                                          1,
+                                          curve: Curves.easeIn,
+                                        ))
+                                  .transform(_captureController.value);
                           final visible = view.wasUndo ? t : 1.0 - t;
                           return Opacity(
                             opacity: visible.clamp(0.0, 1.0),
                             child: Transform.scale(
-                              scale: 0.7 + 0.3 * visible.clamp(0.0, 1.0),
+                              scale: 0.6 + 0.4 * visible.clamp(0.0, 1.0),
                               child: child,
                             ),
                           );
@@ -514,13 +688,152 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                           // A slight lift mid-flight, none when undoing.
                           final lift = view.wasUndo
                               ? 1.0
-                              : 1.0 + 0.1 * math.sin(math.pi * progress);
+                              : 1.0 + 0.06 * math.sin(math.pi * progress);
 
                           return Align(
                             alignment: Alignment.topLeft,
                             child: Transform.translate(
                               offset: Offset.lerp(from, to, t)!,
                               child: Transform.scale(scale: lift, child: child),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                if (!view.analysis &&
+                    _rookPiece != null &&
+                    _rookFrom != null &&
+                    _rookTo != null)
+                  Positioned.fill(
+                    key: const ValueKey('moving_rook'),
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _moveController,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: _squareSize,
+                            height: _squareSize,
+                            child: Padding(
+                              padding: EdgeInsets.all(_squareSize * 0.02),
+                              child: _buildRotatedPiece(_rookPiece!, view),
+                            ),
+                          ),
+                        ),
+                        builder: (context, child) {
+                          final t = Curves.easeOutCubic.transform(
+                            _moveController.value,
+                          );
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset: Offset.lerp(
+                                _getSquareOffset(_rookFrom!, _squareSize),
+                                _getSquareOffset(_rookTo!, _squareSize),
+                                t,
+                              )!,
+                              child: child,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                if (view.hintArrow != null)
+                  Positioned.fill(
+                    key: const ValueKey('hint_arrow'),
+                    child: MoveArrow(
+                      fromRow: ranks.indexOf(rankOf(view.hintArrow!.from)),
+                      fromCol: files.indexOf(fileOf(view.hintArrow!.from)),
+                      toRow: ranks.indexOf(rankOf(view.hintArrow!.to)),
+                      toCol: files.indexOf(fileOf(view.hintArrow!.to)),
+                    ),
+                  ),
+
+                if (_dragPiece != null && _hover != null)
+                  Positioned(
+                    key: const ValueKey('drag_hover'),
+                    left: _getSquareOffset(_hover!, _squareSize).dx,
+                    top: _getSquareOffset(_hover!, _squareSize).dy,
+                    width: _squareSize,
+                    height: _squareSize,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            width: _squareSize * 0.06,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                if (_dragPiece != null)
+                  Positioned.fill(
+                    key: const ValueKey('dragged_piece'),
+                    child: IgnorePointer(
+                      // Built once; each finger move only shifts its layer.
+                      child: ValueListenableBuilder<Offset?>(
+                        valueListenable: _dragAt,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: _squareSize,
+                            height: _squareSize,
+                            child: _buildRotatedPiece(_dragPiece!, view),
+                          ),
+                        ),
+                        builder: (context, at, child) {
+                          if (at == null) return const SizedBox.shrink();
+                          final centre = _pieceCentre(at);
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset:
+                                  centre -
+                                  Offset(_squareSize / 2, _squareSize / 2),
+                              child: Transform.scale(scale: 1.18, child: child),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+
+                if (_snapPiece != null && _snapSquare != null)
+                  Positioned.fill(
+                    key: const ValueKey('snapping_piece'),
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _snapController,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: _squareSize,
+                            height: _squareSize,
+                            child: Padding(
+                              padding: EdgeInsets.all(_squareSize * 0.02),
+                              child: _buildRotatedPiece(_snapPiece!, view),
+                            ),
+                          ),
+                        ),
+                        builder: (context, child) {
+                          final t = Curves.easeOutCubic.transform(
+                            _snapController.value,
+                          );
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset: Offset.lerp(
+                                _snapStart,
+                                _getSquareOffset(_snapSquare!, _squareSize),
+                                t,
+                              )!,
+                              child: Transform.scale(
+                                scale: 1.18 - 0.18 * t,
+                                child: child,
+                              ),
                             ),
                           );
                         },
@@ -587,6 +900,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     );
   }
 
+  /// Where the rook from [corner] stands once castled: beside the king.
+  Square _rookCastledSquare(Square corner) =>
+      squareAt(fileOf(corner) == 7 ? 5 : 3, rankOf(corner));
+
   /// Whether [square] is shown in the rightmost column.
   bool _onRightEdge(Square square) => fileOf(square) == (_flipped ? 0 : 7);
 
@@ -598,9 +915,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     var background = isLight ? theme.light : theme.dark;
     if (view.moveSquares.contains(square)) {
       background = Color.alphaBlend(kLastMoveHighlight, background);
-    }
-    if (view.hints.contains(square)) {
-      background = Color.alphaBlend(kHintHighlight, background);
     }
     if (checkedKing == square) {
       background = Color.alphaBlend(kCheckSquareHighlight, background);
@@ -634,6 +948,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           !view.analysis) {
         hidePiece = true;
       }
+
+      if (_rookTo == square && _rookPiece != null && !view.analysis) {
+        hidePiece = true;
+      }
+
+      // Lifted by the finger, or flying back after an illegal drop.
+      if (_dragFrom == square || _snapSquare == square) hidePiece = true;
     }
 
     final props = BoardSquareProps(

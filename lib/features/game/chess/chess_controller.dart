@@ -4,6 +4,7 @@ import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/achievements/achievement_tracker.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
@@ -940,6 +941,38 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  /// Picks up the piece on [square] to drag it: selects it and shows where
+  /// it can go, without the tap toggle of [selectSquare]. Returns whether
+  /// there is a piece here the player may move.
+  bool pickUp(Square square) {
+    if (state.isSelfAnalysisActive || !state.isPlayerTurn) return false;
+    final piece = state.position.board.pieceAt(square);
+    if (piece == null) return false;
+    final mine = state.mode == GameMode.local
+        ? piece.color == state.position.turn
+        : piece.color == state.playerSide;
+    if (!mine) return false;
+    if (state.selectedSquare != square) {
+      state = state.copyWith(
+        selectedSquare: square,
+        legalDestinations: _displayDestinationsFrom(square),
+        hintSquares: const {},
+      );
+    }
+    return true;
+  }
+
+  /// Drops the picked-up piece on [square]. Plays the move and returns true
+  /// when it is legal; otherwise leaves the piece selected.
+  bool dropOn(Square square) {
+    final from = state.selectedSquare;
+    if (from == null || !state.legalDestinations.contains(square)) {
+      return false;
+    }
+    _playPlayerMove(from, square);
+    return true;
+  }
+
   void resign() {
     if (state.status != GameStatus.playing) return;
 
@@ -1309,6 +1342,8 @@ class ChessController extends Notifier<GameState> {
 
       if (isCastling) {
         displaySquares.add(_castlingDisplaySquare(dest));
+        // The rook itself is a target too when castling on the rook is on.
+        if (AppSettings.instance.castleOnRook.value) displaySquares.add(dest);
       } else {
         displaySquares.add(dest);
       }
