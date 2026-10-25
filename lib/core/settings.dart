@@ -23,6 +23,10 @@ class AppSettings {
   /// the king lands on.
   final ValueNotifier<bool> castleOnRook = ValueNotifier(false);
 
+  /// Queuing a move while the bot thinks; it is played as soon as the bot
+  /// has moved, if it is still legal.
+  final ValueNotifier<bool> premoves = ValueNotifier(true);
+
   SharedPreferences? _prefs;
 
   Future<void> load() async {
@@ -37,6 +41,7 @@ class AppSettings {
     boardTheme.value = BoardTheme.fromName(prefs.getString('board_theme'));
     pieceSet.value = PieceSet.fromName(prefs.getString('piece_set'));
     castleOnRook.value = prefs.getBool('castle_on_rook') ?? false;
+    premoves.value = prefs.getBool('premoves_enabled') ?? true;
     _apply();
   }
 
@@ -70,6 +75,11 @@ class AppSettings {
   Future<void> setCastleOnRook(bool value) async {
     castleOnRook.value = value;
     await _prefs?.setBool('castle_on_rook', value);
+  }
+
+  Future<void> setPremoves(bool value) async {
+    premoves.value = value;
+    await _prefs?.setBool('premoves_enabled', value);
   }
 
   void _apply() {

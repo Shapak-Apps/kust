@@ -25,6 +25,9 @@ const String kStartFen =
 
 const Duration kBotMinMoveTime = Duration(milliseconds: 400);
 
+/// How long after the bot's move a queued premove is played.
+const Duration kPremoveDelay = Duration(milliseconds: 120);
+
 const String kEvalBarPrefKey = 'eval_bar_enabled';
 const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 
@@ -62,6 +65,7 @@ class GameState {
     this.moveFeedbackEnabled = false,
     this.feedbackAnalyzing = false,
     this.pendingPromotion,
+    this.premove,
     this.engineFailed = false,
     this.ratingChange,
     this.accuracy,
@@ -102,6 +106,17 @@ class GameState {
 
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
+
+  /// A move queued while the bot thinks, played once it has moved.
+  final ({Square from, Square to})? premove;
+
+  /// Whether the player may queue a premove now: a bot game, the bot to
+  /// move. (The setting is checked by the controller.)
+  bool get canPremove =>
+      status == GameStatus.playing &&
+      mode == GameMode.bot &&
+      position.turn != playerSide &&
+      !isSelfAnalysisActive;
 
   /// The engine could not start or stopped responding during a bot game.
   final bool engineFailed;
@@ -208,6 +223,8 @@ class GameState {
     bool? moveFeedbackEnabled,
     bool? feedbackAnalyzing,
     ({Square from, Square to})? pendingPromotion,
+    ({Square from, Square to})? premove,
+    bool clearPremove = false,
     bool? engineFailed,
     int? ratingChange,
     double? accuracy,
@@ -254,6 +271,7 @@ class GameState {
       pendingPromotion: clearSelection
           ? null
           : (pendingPromotion ?? this.pendingPromotion),
+      premove: clearPremove ? null : (premove ?? this.premove),
       engineFailed: engineFailed ?? this.engineFailed,
       ratingChange: ratingChange ?? this.ratingChange,
       accuracy: accuracy ?? this.accuracy,
@@ -891,8 +909,16 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(evaluation: score);
   }
 
+  /// Whether a tap or drag now queues a premove instead of a move.
+  bool get _premoving =>
+      AppSettings.instance.premoves.value && state.canPremove;
+
   void selectSquare(Square square) {
     if (state.isSelfAnalysisActive) return;
+    if (_premoving) {
+      _selectPremove(square);
+      return;
+    }
     if (!state.isPlayerTurn) return;
 
     final piece = state.position.board.pieceAt(square);
@@ -941,11 +967,82 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  /// The player's pieces may be picked up for a premove while the bot
+  /// thinks: a tap on a queued premove's piece or anywhere else cancels it.
+  void _selectPremove(Square square) {
+    final piece = state.position.board.pieceAt(square);
+    final mine = piece != null && piece.color == state.playerSide;
+
+    if (state.premove != null) {
+      state = state.copyWith(clearPremove: true, clearSelection: true);
+      if (!mine) return;
+    }
+    final selected = state.selectedSquare;
+    if (selected != null &&
+        selected != square &&
+        state.legalDestinations.contains(square)) {
+      _queuePremove(selected, square);
+      return;
+    }
+    if (selected == square || !mine) {
+      state = state.copyWith(clearSelection: true);
+      return;
+    }
+    state = state.copyWith(
+      selectedSquare: square,
+      legalDestinations: _premoveDestinationsFrom(square),
+      hintSquares: const {},
+    );
+  }
+
+  void _queuePremove(Square from, Square to) {
+    state = state.copyWith(premove: (from: from, to: to), clearSelection: true);
+    SoundService.instance.buzz();
+  }
+
+  /// Where the piece on [square] could go if it were the player's turn in
+  /// the position on the board: the bot's reply is not known yet.
+  Set<Square> _premoveDestinationsFrom(Square square) =>
+      _displayDestinationsFrom(
+        square,
+        on: state.position.copyWith(turn: state.playerSide, epSquare: null),
+      );
+
+  /// Plays the queued premove now that the bot has moved, if it is still
+  /// legal; a pawn reaching the last rank becomes a queen.
+  void _playPremove() {
+    final premove = state.premove;
+    if (premove == null) return;
+    state = state.copyWith(clearPremove: true);
+    if (!AppSettings.instance.premoves.value || !state.isPlayerTurn) return;
+    if (!_displayDestinationsFrom(premove.from).contains(premove.to)) {
+      state = state.copyWith(clearSelection: true);
+      return;
+    }
+    _playPlayerMove(
+      premove.from,
+      premove.to,
+      promotion: _isPromotion(premove.from, premove.to) ? Role.queen : null,
+    );
+  }
+
   /// Picks up the piece on [square] to drag it: selects it and shows where
   /// it can go, without the tap toggle of [selectSquare]. Returns whether
   /// there is a piece here the player may move.
   bool pickUp(Square square) {
-    if (state.isSelfAnalysisActive || !state.isPlayerTurn) return false;
+    if (state.isSelfAnalysisActive) return false;
+    if (_premoving) {
+      final piece = state.position.board.pieceAt(square);
+      if (piece == null || piece.color != state.playerSide) return false;
+      state = state.copyWith(
+        clearPremove: true,
+        selectedSquare: square,
+        legalDestinations: _premoveDestinationsFrom(square),
+        hintSquares: const {},
+      );
+      return true;
+    }
+    if (!state.isPlayerTurn) return false;
     final piece = state.position.board.pieceAt(square);
     if (piece == null) return false;
     final mine = state.mode == GameMode.local
@@ -969,6 +1066,10 @@ class ChessController extends Notifier<GameState> {
     if (from == null || !state.legalDestinations.contains(square)) {
       return false;
     }
+    if (_premoving) {
+      _queuePremove(from, square);
+      return true;
+    }
     _playPlayerMove(from, square);
     return true;
   }
@@ -983,6 +1084,7 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(
       status: GameStatus.resigned,
       isBotThinking: false,
+      clearPremove: true,
       endReason: 'You resigned.',
     );
 
@@ -1324,11 +1426,12 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(hintSquares: {from, to}, isHintThinking: false);
   }
 
-  Set<Square> _displayDestinationsFrom(Square square) {
-    final piece = state.position.board.pieceAt(square);
+  Set<Square> _displayDestinationsFrom(Square square, {Position? on}) {
+    final position = on ?? state.position;
+    final piece = position.board.pieceAt(square);
     if (piece == null) return {};
 
-    final rawDestinations = state.position.legalMovesOf(square).squares.toSet();
+    final rawDestinations = position.legalMovesOf(square).squares.toSet();
     final displaySquares = <Square>{};
 
     for (final dest in rawDestinations) {
@@ -1559,8 +1662,17 @@ class ChessController extends Notifier<GameState> {
     if (state.status != GameStatus.playing) {
       _stopClock();
       _playGameEndSound(newPosition);
+      state = state.copyWith(clearPremove: true);
     } else {
       _addIncrement(beforeBotMove.turn);
+      if (state.premove != null) {
+        // A beat after the bot's move, so its piece is seen landing first.
+        final afterBot = state.position;
+        Future<void>.delayed(kPremoveDelay, () {
+          if (_isDisposed || !identical(state.position, afterBot)) return;
+          _playPremove();
+        });
+      }
     }
 
     _refreshEvaluation();
