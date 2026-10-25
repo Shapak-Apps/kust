@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+  Paints the textured piece sets and saves them through tools/pieces/serve.py.
+
+  The shapes are the classic pieces (cburnett, CC BY-SA 3.0), flattened into
+  tools/pieces/shapes.json by export_shapes.py. Each body is filled with a
+  light-to-dark gradient, a grain is laid over it, its edges are shaded
+  inwards so it reads as rounded, and the outlines are drawn last.
+
+    graphite  a fine stipple, like a pencil drawing
+    brushed   long streaks, like brushed metal
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Textured pieces</title>
+<style>
+  body { margin: 0; background: #262421; color: #eee; font: 14px sans-serif; }
+  .set { padding: 8px 12px 0; }
+  .row { display: flex; }
+  .sq { width: 96px; height: 96px; }
+  .sq canvas { width: 96px; height: 96px; }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script>
+const SIZE = 384;                  // pixels per piece: sharp on any phone
+const X0 = 2, Y0 = 1.5, SPAN = 41; // the part of the 45 x 45 square kept
+const K = SIZE / SPAN;
+const ROLES = 'RNBQKP';
+
+const SETS = {
+  graphite: {
+    grain: 'stipple', pawn: 'collar', line: '#1c1c1c', lineScale: 0.58,
+    w: { stops: ['#ffffff', '#e6e6e6', '#b2b2b2'], amount: 0.55, edge: 0.32 },
+    b: { stops: ['#8c8c8c', '#5a5a5a', '#2c2c2c'], amount: 0.5, edge: 0.42 },
+  },
+  brushed: {
+    grain: 'brushed', pawn: 'classic', line: '#1c1c1c', lineScale: 0.62,
+    w: { stops: ['#ffffff', '#eaeaea', '#bcbcbc'], amount: 0.6, edge: 0.3 },
+    b: { stops: ['#7e7e7e', '#4c4c4c', '#232323'], amount: 0.65, edge: 0.42 },
+  },
+};
+
+// A small seeded generator, so every run paints the same grain.
+function rng(seed) {
+  return () => {
+    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function canvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+function noise(w, h, rand, spread) {
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  const img = ctx.createImageData(w, h);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 128 + (rand() - 0.5) * spread;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return c;
+}
+
+// The grain, mid-grey on average, to be laid over the body with 'overlay'.
+function grain(kind, rand) {
+  const c = canvas(SIZE, SIZE), ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  if (kind === 'stipple') {
+    // Soft specks a few pixels wide, with a finer grain on top.
+    ctx.drawImage(noise(SIZE / 3, SIZE / 3, rand, 230), 0, 0, SIZE, SIZE);
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(noise(SIZE, SIZE, rand, 200), 0, 0);
+  } else {
+    // Each row stretched sideways into a streak, turned a little off level.
+    ctx.translate(SIZE / 2, SIZE / 2);
+    ctx.rotate(-0.12);
+    ctx.translate(-SIZE * 0.75, -SIZE * 0.75);
+    ctx.drawImage(noise(16, SIZE * 0.75, rand, 255), 0, 0, SIZE * 1.5, SIZE * 1.5);
+    ctx.globalAlpha = 0.45;
+    ctx.drawImage(noise(48, SIZE * 1.5, rand, 200), 0, 0, SIZE * 1.5, SIZE * 1.5);
+  }
+  return c;
+}
+
+// The body paint: the light from the upper left, then the grain.
+function paint(style, side, rand) {
+  const c = canvas(SIZE, SIZE), ctx = c.getContext('2d');
+  const s = style[side];
+  const g = ctx.createLinearGradient(0.2 * SIZE, 0.1 * SIZE, 0.8 * SIZE, 0.95 * SIZE);
+  s.stops.forEach((col, i) => g.addColorStop(i / (s.stops.length - 1), col));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = s.amount;
+  ctx.drawImage(grain(style.grain, rand), 0, 0);
+  return c;
+}
+
+function pathOf(step) {
+  if (step.circle) {
+    const [cx, cy, r] = step.circle;
+    const p = new Path2D();
+    p.arc(cx, cy, r, 0, Math.PI * 2);
+    return p;
+  }
+  return new Path2D(step.d);
+}
+
+function drawPiece(name, steps, style, seed) {
+  const side = name[0];
+  const s = style[side];
+  const c = canvas(SIZE, SIZE), ctx = c.getContext('2d');
+  const body = paint(style, side, rng(seed));
+  const toUser = () => ctx.setTransform(K, 0, 0, K, -X0 * K, -Y0 * K);
+
+  // A soft contact shadow on the square.
+  ctx.save();
+  ctx.filter = `blur(${0.25 * K}px)`;
+  toUser();
+  ctx.beginPath();
+  ctx.ellipse(22.5, 39.4, 13.5, 1.7, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fill();
+  ctx.restore();
+
+  for (const step of steps) {
+    toUser();
+    const path = pathOf(step);
+    const rule = step['fill-rule'] === 'evenodd' ? 'evenodd' : 'nonzero';
+    const fill = step.fill;
+    const isBody = (side === 'w' && fill === '#fff') || (side === 'b' && fill === '#000');
+    if (isBody) {
+      ctx.save();
+      ctx.clip(path, rule);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(body, 0, 0);
+      // Shade the edges inwards: a wide, blurred dark line kept inside.
+      toUser();
+      ctx.filter = `blur(${0.9 * K}px)`;
+      ctx.lineWidth = 3.4;
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = `rgba(0,0,0,${s.edge})`;
+      ctx.stroke(path);
+      ctx.restore();
+    } else if (fill === '#000') {
+      ctx.fillStyle = '#141414';          // eyes and nostrils on white
+      ctx.fill(path, rule);
+    } else if (fill === '#ececec') {
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; // highlights on black
+      ctx.fill(path, rule);
+    }
+    if (step.stroke !== 'none') {
+      toUser();
+      ctx.lineWidth = parseFloat(step['stroke-width']) * style.lineScale;
+      ctx.lineCap = step['stroke-linecap'];
+      ctx.lineJoin = step['stroke-linejoin'];
+      // On grey bodies the classic white detail lines turn dark.
+      ctx.strokeStyle = style.line;
+      ctx.stroke(path);
+    }
+  }
+  return c;
+}
+
+async function main() {
+  const shapes = await (await fetch('shapes.json')).json();
+  const out = document.getElementById('out');
+  let seed = 7;
+  for (const [setName, style] of Object.entries(SETS)) {
+    const title = document.createElement('div');
+    title.className = 'set';
+    title.textContent = setName;
+    out.appendChild(title);
+    for (const side of 'wb') {
+      const row = document.createElement('div');
+      row.className = 'row';
+      out.appendChild(row);
+      [...ROLES].forEach((role, i) => {
+        const name = side + role;
+        const key = role === 'P' && style.pawn === 'collar' ? name + '_collar' : name;
+        const c = drawPiece(name, shapes[key], style, seed++);
+        const sq = document.createElement('div');
+        sq.className = 'sq';
+        sq.style.background = (i + (side === 'b' ? 1 : 0)) % 2 ? '#4b7399' : '#eae9d2';
+        sq.appendChild(c);
+        row.appendChild(sq);
+        if (location.search.includes('save')) {
+          c.toBlob(
+            (blob) => fetch(`/save/${setName}/${name}.webp`, { method: 'POST', body: blob }),
+            'image/webp', 0.92,
+          );
+        }
+      });
+    }
+  }
+  document.title = 'done';
+}
+main();
+</script>
+</body>
+</html>
