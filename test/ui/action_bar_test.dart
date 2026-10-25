@@ -5,7 +5,7 @@ import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 
 void main() {
-  testWidgets('icons over labels, one filled main action, greyed when off', (
+  testWidgets('plain icons over labels, greyed when off, spinner when busy', (
     tester,
   ) async {
     var hinted = 0;
@@ -24,7 +24,6 @@ void main() {
               KustAction(
                 icon: Icons.lightbulb_outline_rounded,
                 label: 'Hint',
-                primary: true,
                 onTap: () => hinted++,
               ),
               KustAction(
@@ -45,12 +44,20 @@ void main() {
     );
     expect(find.text('Retry'), findsOneWidget);
     expect(find.text('Back'), findsOneWidget);
-    // The main action is an icon button; its name is for screen readers.
-    expect(find.text('Hint'), findsNothing);
-    expect(find.bySemanticsLabel('Hint'), findsOneWidget);
+    expect(find.text('Hint'), findsOneWidget);
+    // No box around any of them.
+    expect(
+      find.descendant(
+        of: find.byType(KustActionBar),
+        matching: find.byWidgetPredicate(
+          (w) => w is Container && w.decoration != null,
+        ),
+      ),
+      findsNothing,
+    );
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Hint'));
+    await tester.tap(find.text('Hint'));
     await tester.tap(find.text('Back'));
     await tester.tap(find.bySemanticsLabel('Forward'));
     await tester.pump(const Duration(milliseconds: 300));

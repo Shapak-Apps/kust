@@ -166,10 +166,6 @@ class _PlayScreenState extends State<PlayScreen> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
-                ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverToBoxAdapter(
@@ -192,9 +188,18 @@ class _PlayScreenState extends State<PlayScreen> {
                     child: _HeroCard(onPlay: _showPlayChooser),
                   ),
                 ),
+                // Daily puzzle and achievements, side by side.
                 const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-                  sliver: SliverToBoxAdapter(child: AchievementsCard()),
+                  padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      children: [
+                        Expanded(child: DailyPuzzleCard()),
+                        SizedBox(width: 10),
+                        Expanded(child: AchievementsCard()),
+                      ],
+                    ),
+                  ),
                 ),
                 const SliverToBoxAdapter(
                   child: Padding(

@@ -118,6 +118,7 @@ class GameAnalyzer {
     bool Function()? isStale,
   }) async {
     final scores = <double>[];
+    final chances = <double>[];
     for (var i = 0; i < jobs.length; i++) {
       if (isStale?.call() ?? false) return null;
       final job = jobs[i];
@@ -133,9 +134,10 @@ class GameAnalyzer {
         scores.add(
           moveAccuracy(bestCp: analysis.bestCp, playedCp: analysis.playedCp),
         );
+        chances.add(winPercent(analysis.playedCp));
       }
       onProgress?.call(i + 1, jobs.length);
     }
-    return gameAccuracy(scores);
+    return gameAccuracy(scores, winPercents: chances);
   }
 }

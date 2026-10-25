@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievements.dart';
-import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// Every achievement, earned ones in colour, the rest greyed out.
@@ -16,14 +16,10 @@ class AchievementsScreen extends StatelessWidget {
       backgroundColor: k.bg,
       body: Column(
         children: [
-          KustTopBar(
+          FeltHeader(
             title: 'Achievements',
-            leading: KustIconButton(
-              icon: Icons.arrow_back_rounded,
-              label: 'Back',
-              onTap: () =>
-                  context.canPop() ? context.pop() : context.go('/play'),
-            ),
+            onBack: () =>
+                context.canPop() ? context.pop() : context.go('/play'),
           ),
           Expanded(
             child: ValueListenableBuilder(
