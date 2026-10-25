@@ -604,6 +604,7 @@ class ChessController extends Notifier<GameState> {
         SoundService.instance.buzzMedium();
         break;
       case MoveQuality.mistake:
+      case MoveQuality.miss:
       case MoveQuality.blunder:
         SoundService.instance.buzz(heavy: true);
         break;

@@ -12,6 +12,7 @@ const Color kMoveExcellent = Color(0xFF96BC4B);
 const Color kMoveGood = Color(0xFF95AF8A);
 const Color kMoveInaccuracy = Color(0xFFF7C631);
 const Color kMoveMistake = Color(0xFFFFA459);
+const Color kMoveMiss = Color(0xFFFF7769);
 const Color kMoveBlunder = Color(0xFFFA412D);
 
 const int _kingExchangeValue = 100;
@@ -35,6 +36,7 @@ enum MoveQuality {
   good,
   inaccuracy,
   mistake,
+  miss,
   blunder,
 }
 
@@ -47,6 +49,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.good => 'Good',
     MoveQuality.inaccuracy => 'Inaccuracy',
     MoveQuality.mistake => 'Mistake',
+    MoveQuality.miss => 'Miss',
     MoveQuality.blunder => 'Blunder',
   };
 
@@ -58,6 +61,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.good => 'good',
     MoveQuality.inaccuracy => 'an inaccuracy',
     MoveQuality.mistake => 'a mistake',
+    MoveQuality.miss => 'a miss',
     MoveQuality.blunder => 'a blunder',
   };
 
@@ -69,6 +73,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.good => 'assets/icons/moves/check.svg',
     MoveQuality.inaccuracy => 'assets/icons/moves/inaccuracy.svg',
     MoveQuality.mistake => 'assets/icons/moves/mistake.svg',
+    MoveQuality.miss => 'assets/icons/moves/miss.svg',
     MoveQuality.blunder => 'assets/icons/moves/blunder.svg',
   };
 
@@ -80,6 +85,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.good => kMoveGood,
     MoveQuality.inaccuracy => kMoveInaccuracy,
     MoveQuality.mistake => kMoveMistake,
+    MoveQuality.miss => kMoveMiss,
     MoveQuality.blunder => kMoveBlunder,
   };
 
@@ -94,6 +100,7 @@ extension MoveQualityStyle on MoveQuality {
       this == MoveQuality.brilliant ||
       this == MoveQuality.great ||
       this == MoveQuality.mistake ||
+      this == MoveQuality.miss ||
       this == MoveQuality.blunder;
 }
 
@@ -161,7 +168,15 @@ MoveQuality classifyPlayedMove({
   required bool isBest,
 }) {
   final lost = expectedPointsLost(bestCp: bestCp, playedCp: playedCp);
-  if (!isBest && lost > _bestTolerance) return classifyByLoss(lost);
+  if (!isBest && lost > _bestTolerance) {
+    final quality = classifyByLoss(lost);
+    final costly =
+        quality == MoveQuality.mistake || quality == MoveQuality.blunder;
+    if (costly && isMiss(bestCp: bestCp, playedCp: playedCp)) {
+      return MoveQuality.miss;
+    }
+    return quality;
+  }
   if (isBrilliantSacrifice(
     before: before,
     after: after,
@@ -176,6 +191,13 @@ MoveQuality classifyPlayedMove({
   }
   return MoveQuality.best;
 }
+
+/// A missed chance rather than a plain error: the best move would have left
+/// the player clearly winning, the move played let that go, yet the game
+/// is not lost by it. Typically: not punishing the opponent's mistake.
+bool isMiss({required int bestCp, required int playedCp}) =>
+    expectedPointsFromCp(bestCp) >= 0.75 &&
+    expectedPointsFromCp(playedCp) >= 0.4;
 
 /// The only good move: it keeps the game (at least) balanced while the next
 /// best would lose a good share of it.

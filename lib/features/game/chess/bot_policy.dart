@@ -32,8 +32,11 @@ class BotPolicy {
   int get lines => 5;
 
   /// How deep the engine looks. Shallow searches miss deeper tactics, the
-  /// way weaker players do.
-  int get depth => (1 + elo / 220).round().clamp(3, 18);
+  /// way weaker players do. From 2000 up the bots see as before; below,
+  /// they look noticeably less far ahead (1400: 5 plies, 1000: 4, 600: 2).
+  int get depth => elo >= 2000
+      ? (1 + elo / 220).round().clamp(3, 18)
+      : (elo / 260).round().clamp(2, 10);
 
   /// The longest a search may take; most end at [depth] well before.
   Duration get thinkTime => Duration(
@@ -44,10 +47,10 @@ class BotPolicy {
 
   /// How far below the best a move may be and still be likely: the lower
   /// the rating, the more a weaker move is tolerated.
-  static const List<double> _temperatures = [160, 110, 70, 45, 25, 12, 5];
+  static const List<double> _temperatures = [230, 170, 115, 70, 25, 12, 5];
 
   /// The most a bot will knowingly give up in one move.
-  static const List<double> _maxLosses = [450, 320, 200, 120, 70, 35, 15];
+  static const List<double> _maxLosses = [560, 420, 290, 170, 70, 35, 15];
 
   static double _byElo(List<double> values, int elo) {
     if (elo <= _elos.first) return values.first;
@@ -63,9 +66,9 @@ class BotPolicy {
   double get temperature => _byElo(_temperatures, elo);
   double get maxLoss => _byElo(_maxLosses, elo);
 
-  /// How often a weak bot overlooks something and allows half again the usual
-  /// loss. Zero from 1000 up.
-  double get slipChance => ((1000 - elo) / 600 * 0.10).clamp(0.0, 0.10);
+  /// How often a bot overlooks something and allows half again the usual
+  /// loss: one move in eight at 600, rarely at 1400, never from 1600 up.
+  double get slipChance => ((1600 - elo) / 1000 * 0.125).clamp(0.0, 0.125);
 
   /// Picks one of [candidates] (best first, as the engine lists them).
   String pick(List<CandidateMove> candidates) {

@@ -88,8 +88,45 @@ void main() {
         MoveQuality.brilliant,
         MoveQuality.great,
         MoveQuality.mistake,
+        MoveQuality.miss,
         MoveQuality.blunder,
       ]);
+    });
+  });
+
+  group('miss', () {
+    MoveQuality rate(int best, int played) {
+      final before = Chess.initial;
+      final move = NormalMove.fromUci('e2e4');
+      return classifyPlayedMove(
+        before: before,
+        after: before.play(move),
+        move: move,
+        bestCp: best,
+        playedCp: played,
+        secondBestCp: null,
+        isBest: false,
+      );
+    }
+
+    test('letting a winning chance go, without losing, is a miss', () {
+      // The opponent slipped: +5 was there; the move kept it level.
+      expect(rate(500, 20), MoveQuality.miss);
+      // A smaller chance missed is an ordinary inaccuracy.
+      expect(rate(250, 150), MoveQuality.inaccuracy);
+    });
+
+    test('throwing the game away is still a blunder', () {
+      // From winning to losing is not just a missed chance.
+      expect(rate(500, -300), MoveQuality.blunder);
+      // From level to losing has nothing to miss.
+      expect(rate(0, -350), MoveQuality.blunder);
+    });
+
+    test('a miss is checked again before it is shown, and has its X', () {
+      expect(MoveQuality.miss.needsCheck, isTrue);
+      expect(MoveQuality.miss.asset, 'assets/icons/moves/miss.svg');
+      expect(MoveQuality.miss.label, 'Miss');
     });
   });
 

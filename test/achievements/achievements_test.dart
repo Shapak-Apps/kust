@@ -152,13 +152,13 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1200));
-      expect(find.text('ACHIEVEMENT UNLOCKED'), findsOneWidget);
+      expect(find.text('Achievement unlocked'), findsOneWidget);
       expect(find.text('First move'), findsOneWidget);
       expect(find.byType(AchievementCelebration), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       // A tap closes it and the next one follows.
-      await tester.tap(find.text('Awesome'));
+      await tester.tap(find.text('Continue'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Checkmate!'), findsOneWidget);
