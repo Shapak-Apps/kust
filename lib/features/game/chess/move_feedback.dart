@@ -67,7 +67,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.best => 'assets/icons/moves/best.svg',
     MoveQuality.excellent => 'assets/icons/moves/good.svg',
     MoveQuality.good => 'assets/icons/moves/check.svg',
-    MoveQuality.inaccuracy => 'assets/icons/moves/iA.svg',
+    MoveQuality.inaccuracy => 'assets/icons/moves/inaccuracy.svg',
     MoveQuality.mistake => 'assets/icons/moves/mistake.svg',
     MoveQuality.blunder => 'assets/icons/moves/blunder.svg',
   };

@@ -995,17 +995,19 @@ class ChessController extends Notifier<GameState> {
   /// The board as the player sees it, queued premoves made.
   Board get _premoveBoard => state.boardPosition.board;
 
-  /// While the bot thinks: a tap on one of the player's pieces (where the
-  /// queued premoves left them) selects it, a tap on one of its squares
-  /// queues that premove, and a tap anywhere else cancels every premove.
+  /// While the bot thinks: a tap on one of the selected piece's squares
+  /// queues that premove (captures included, also onto your own piece for
+  /// the recapture), a tap on another of your pieces selects it, and a tap
+  /// anywhere else cancels every premove.
   void _selectPremove(Square square) {
     final piece = _premoveBoard.pieceAt(square);
     final mine = piece != null && piece.color == state.playerSide;
     final selected = state.selectedSquare;
 
+    // A destination is a premove even when one of your own pieces stands
+    // there: that is the premove capture back, once the bot has taken it.
     if (selected != null &&
         selected != square &&
-        !mine &&
         state.legalDestinations.contains(square)) {
       _queuePremove(selected, square);
       return;

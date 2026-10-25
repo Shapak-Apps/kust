@@ -218,6 +218,32 @@ void main() {
     await _finish(tester);
   });
 
+  testWidgets('premove captures by tap: a bot piece, and taking back', (
+    tester,
+  ) async {
+    final (c, engine) = await _game(tester, ['f6e4', 'g8h8']);
+    c.state = c.state.copyWith(
+      position: Chess.fromSetup(
+        Setup.parseFen('6k1/8/5n2/8/4P3/2N5/8/3Q2K1 b - - 0 1'),
+      ),
+      status: GameStatus.playing,
+      engineFailed: true,
+    );
+    await c.retryEngine();
+    await tester.pump();
+    // Tap the knight, then your own pawn on e4: Nxe4 back is queued.
+    c.selectSquare(Square.c3);
+    c.selectSquare(Square.e4);
+    expect(c.state.premoves, [_p(Square.c3, Square.e4)]);
+    // And a capture of a bot piece: Qxd8 is fine to queue too.
+    c.selectSquare(Square.d1);
+    expect(c.state.legalDestinations, contains(Square.d8));
+    await _reply(tester, engine);
+    expect(c.state.moves.map((m) => m.san), ['Nxe4', 'Nxe4']);
+    await _reply(tester, engine);
+    await _finish(tester);
+  });
+
   testWidgets('tapping your own piece picks it; anything else cancels all', (
     tester,
   ) async {
@@ -225,7 +251,7 @@ void main() {
     await _afterE4(tester, c);
     c.selectSquare(Square.g1);
     c.selectSquare(Square.f3);
-    // A tap on one of your pieces selects it rather than queuing onto it.
+    // With nothing selected, a tap on one of your pieces selects it.
     c.selectSquare(Square.d2);
     expect(c.state.selectedSquare, Square.d2);
     expect(c.state.premoves.length, 1);
