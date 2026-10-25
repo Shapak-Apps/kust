@@ -2,8 +2,15 @@ import 'package:dartchess/dartchess.dart';
 
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 
-/// A move queued while the opponent thinks.
-typedef Premove = ({Square from, Square to});
+/// A move queued while the opponent thinks, with the piece a pawn becomes
+/// on the last rank.
+typedef Premove = ({Square from, Square to, Role? promotion});
+
+/// Whether moving the [side] piece from [from] to [to] on [board] takes a
+/// pawn to the last rank, so a piece to promote to must be picked.
+bool premovePromotes(Board board, Square from, Square to, Side side) =>
+    board.pieceAt(from)?.role == Role.pawn &&
+    rankOf(to) == (side == Side.white ? 7 : 0);
 
 /// The most premoves that can be queued at once.
 const int kMaxPremoves = 8;
@@ -106,8 +113,9 @@ bool _isCastling(Board board, Premove p, Side side) {
 }
 
 /// [board] with [p] made as it would look once played: a castling king
-/// takes its rook along, a pawn reaching the last rank becomes a queen, and
-/// whatever stood on the target square is gone.
+/// takes its rook along, a pawn reaching the last rank becomes the piece
+/// picked (a queen if none), and whatever stood on the target square is
+/// gone.
 Board applyPremove(Board board, Premove p, Side side) {
   final piece = board.pieceAt(p.from);
   if (piece == null) return board;
@@ -129,7 +137,7 @@ Board applyPremove(Board board, Premove p, Side side) {
       .removePieceAt(p.from)
       .setPieceAt(
         p.to,
-        promotes ? Piece(color: side, role: Role.queen) : piece,
+        promotes ? Piece(color: side, role: p.promotion ?? Role.queen) : piece,
       );
 }
 

@@ -111,7 +111,8 @@ Future<void> _reply(WidgetTester tester, _FakeEngine engine) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-Premove _p(Square from, Square to) => (from: from, to: to);
+Premove _p(Square from, Square to, [Role? promotion]) =>
+    (from: from, to: to, promotion: promotion);
 
 void main() {
   tearDown(() {

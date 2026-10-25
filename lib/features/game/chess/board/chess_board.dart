@@ -7,6 +7,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
@@ -881,11 +882,19 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   Positioned.fill(
                     key: const ValueKey('promotion'),
                     child: _PromotionPicker(
-                      color: displayPosition.turn,
+                      // The pawn's own colour: for a premove it is not the
+                      // side to move.
+                      color:
+                          displayPosition.board
+                              .pieceAt(view.pendingPromotion!.from)
+                              ?.color ??
+                          displayPosition.turn,
                       rotated:
                           view.mode == GameMode.local &&
                           displayPosition.turn == Side.black,
                       squareSize: _squareSize,
+                      col: files.indexOf(fileOf(view.pendingPromotion!.to)),
+                      row: ranks.indexOf(rankOf(view.pendingPromotion!.to)),
                       onPick: (role) => ref
                           .read(chessControllerProvider.notifier)
                           .completePromotion(role),
@@ -1209,11 +1218,16 @@ String _assetForPiece(Piece piece) {
   return AppSettings.instance.pieceSet.value.asset(color, role);
 }
 
+/// Picks the piece a pawn becomes: a column of the four pieces standing on
+/// the promotion square's file, running from that square into the board,
+/// with a cancel button at its end. Anywhere else cancels too.
 class _PromotionPicker extends StatelessWidget {
   const _PromotionPicker({
     required this.color,
     required this.rotated,
     required this.squareSize,
+    required this.col,
+    required this.row,
     required this.onPick,
     required this.onCancel,
   });
@@ -1221,57 +1235,100 @@ class _PromotionPicker extends StatelessWidget {
   final Side color;
   final bool rotated;
   final double squareSize;
+
+  /// The promotion square as shown, from the top left.
+  final int col;
+  final int row;
   final ValueChanged<Role> onPick;
   final VoidCallback onCancel;
 
   static const List<Role> _roles = [
     Role.queen,
+    Role.knight,
     Role.rook,
     Role.bishop,
-    Role.knight,
   ];
 
   @override
   Widget build(BuildContext context) {
-    final card = Container(
-      padding: EdgeInsets.all(squareSize * 0.15),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(squareSize * 0.3),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 16),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final role in _roles)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onPick(role),
-              child: SizedBox(
-                width: squareSize * 1.1,
-                height: squareSize * 1.1,
-                child: Padding(
-                  padding: EdgeInsets.all(squareSize * 0.05),
-                  child: PieceImage(
-                    _assetForPiece(Piece(color: color, role: role)),
-                  ),
-                ),
-              ),
+    final k = context.k;
+    // From the top row the column runs down; from the bottom row, up.
+    final down = row < 4;
+    // Four pieces and half a square for cancel: from the bottom row the
+    // column ends at that square's lower edge.
+    final top = down ? row * squareSize : (row - 3.5) * squareSize;
+    Widget piece(Role role) {
+      final image = PieceImage(_assetForPiece(Piece(color: color, role: role)));
+      return Semantics(
+        button: true,
+        label: 'Promote to ${role.name}',
+        excludeSemantics: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onPick(role),
+          child: SizedBox.square(
+            dimension: squareSize,
+            child: Padding(
+              padding: EdgeInsets.all(squareSize * 0.04),
+              child: rotated
+                  ? RotatedBox(quarterTurns: 2, child: image)
+                  : image,
             ),
-        ],
+          ),
+        ),
+      );
+    }
+
+    final cancel = Semantics(
+      button: true,
+      label: 'Cancel promotion',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onCancel,
+        child: SizedBox(
+          width: squareSize,
+          height: squareSize * 0.5,
+          child: Icon(
+            Icons.close_rounded,
+            size: squareSize * 0.36,
+            color: Colors.black.withValues(alpha: 0.55),
+          ),
+        ),
       ),
     );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onCancel,
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.45),
-        alignment: Alignment.center,
-        child: rotated ? RotatedBox(quarterTurns: 2, child: card) : card,
+    final pieces = [for (final role in _roles) piece(role)];
+    final column = Container(
+      width: squareSize,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(squareSize * 0.08),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: squareSize * 0.3,
+            offset: Offset(0, squareSize * 0.06),
+          ),
+        ],
       ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: down ? [...pieces, cancel] : [cancel, ...pieces.reversed],
+      ),
+    );
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onCancel,
+            child: ColoredBox(color: k.ink.withValues(alpha: 0.25)),
+          ),
+        ),
+        Positioned(left: col * squareSize, top: top, child: column),
+      ],
     );
   }
 }

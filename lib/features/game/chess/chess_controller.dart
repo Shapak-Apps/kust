@@ -1027,14 +1027,22 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(premoves: const [], clearSelection: true);
   }
 
-  void _queuePremove(Square from, Square to) {
+  void _queuePremove(Square from, Square to, {Role? promotion}) {
     final queue = state.livePremoves;
     if (queue.length >= kMaxPremoves) {
       state = state.copyWith(clearSelection: true);
       return;
     }
+    // A pawn premoved to the last rank waits for the piece to be picked,
+    // like a real promotion.
+    if (promotion == null &&
+        premovePromotes(_premoveBoard, from, to, state.playerSide)) {
+      state = state.copyWith(clearSelection: true);
+      state = state.copyWith(pendingPromotion: (from: from, to: to));
+      return;
+    }
     state = state.copyWith(
-      premoves: [...queue, (from: from, to: to)],
+      premoves: [...queue, (from: from, to: to, promotion: promotion)],
       clearSelection: true,
     );
     SoundService.instance.buzz();
@@ -1052,8 +1060,8 @@ class ChessController extends Notifier<GameState> {
 
   /// Plays the first queued premove now that the bot has moved, if it is
   /// legal; otherwise every premove is dropped, as on chess.com. The rest
-  /// wait for the bot's next move. A pawn reaching the last rank becomes a
-  /// queen.
+  /// wait for the bot's next move. A pawn on the last rank becomes the
+  /// piece picked when it was queued.
   void _playPremove() {
     final queue = state.livePremoves;
     if (queue.isEmpty) {
@@ -1073,7 +1081,9 @@ class ChessController extends Notifier<GameState> {
     _playPlayerMove(
       next.from,
       next.to,
-      promotion: _isPromotion(next.from, next.to) ? Role.queen : null,
+      promotion: _isPromotion(next.from, next.to)
+          ? (next.promotion ?? Role.queen)
+          : null,
       instant: true,
     );
   }
@@ -1276,6 +1286,11 @@ class ChessController extends Notifier<GameState> {
   void completePromotion(Role role) {
     final pending = state.pendingPromotion;
     if (pending == null) return;
+    if (_premoving) {
+      state = state.copyWith(clearSelection: true);
+      _queuePremove(pending.from, pending.to, promotion: role);
+      return;
+    }
     if (state.status != GameStatus.playing) {
       state = state.copyWith(clearSelection: true);
       return;
