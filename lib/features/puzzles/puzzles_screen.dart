@@ -8,6 +8,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/gol.dart';
@@ -274,33 +275,10 @@ class _Frame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'Puzzles',
-                    style: k.display.copyWith(
-                      color: LoomColors.cream,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.6,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Container(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+        const FeltHeader(title: 'Puzzles'),
         Expanded(child: child),
       ],
     );
