@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/core/board_theme.dart';
+import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -51,6 +53,29 @@ class _SettingsSheet extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        const KustSectionLabel('Pieces'),
+        ValueListenableBuilder<BoardTheme>(
+          valueListenable: s.boardTheme,
+          builder: (_, board, _) => ValueListenableBuilder<PieceSet>(
+            valueListenable: s.pieceSet,
+            builder: (_, selected, _) => Row(
+              children: [
+                for (final set in PieceSet.values) ...[
+                  if (set != PieceSet.values.first) const SizedBox(width: 10),
+                  Expanded(
+                    child: PieceSetSwatch(
+                      set: set,
+                      board: board,
+                      selected: set == selected,
+                      onTap: () => s.setPieceSet(set),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 24),
@@ -151,6 +176,84 @@ class BoardThemeSwatch extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               theme.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: k.caption.copyWith(
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                color: selected ? k.ink : k.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A tappable sample of a piece set, a white knight and a black pawn on the
+/// board in use, with the set's name underneath.
+class PieceSetSwatch extends StatelessWidget {
+  const PieceSetSwatch({
+    super.key,
+    required this.set,
+    required this.board,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final PieceSet set;
+  final BoardTheme board;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '${set.label} pieces',
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        haptic: true,
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
+                  border: Border.all(
+                    color: selected ? k.accent : k.line,
+                    width: selected ? 2.5 : 1.5,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(KustSpace.rSmall - 4),
+                  child: Row(
+                    children: [
+                      for (final (color, role, light) in const [
+                        ('w', 'N', true),
+                        ('b', 'P', false),
+                      ])
+                        Expanded(
+                          child: ColoredBox(
+                            color: light ? board.light : board.dark,
+                            child: Center(
+                              child: SvgPicture.asset(set.asset(color, role)),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              set.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.caption.copyWith(

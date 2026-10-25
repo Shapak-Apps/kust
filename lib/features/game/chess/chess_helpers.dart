@@ -1,8 +1,10 @@
 import 'package:dartchess/dartchess.dart';
 
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 
+/// The asset of [piece] in the piece set picked in settings.
 String assetForPiece(Piece piece) {
   final color = piece.color == Side.white ? 'w' : 'b';
 
@@ -15,7 +17,7 @@ String assetForPiece(Piece piece) {
     Role.pawn => 'P',
   };
 
-  return 'assets/pieces/$color$role.svg';
+  return AppSettings.instance.pieceSet.value.asset(color, role);
 }
 
 int pieceValue(Role role) {

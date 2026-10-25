@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
@@ -88,8 +89,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void _showGameStartModal(dynamic playerSide) {
     final isWhite = playerSide.toString().toLowerCase().contains('white');
     final pieceAsset = isWhite
-        ? 'assets/pieces/wK.svg'
-        : 'assets/pieces/bK.svg';
+        ? AppSettings.instance.pieceSet.value.asset('w', 'K')
+        : AppSettings.instance.pieceSet.value.asset('b', 'K');
 
     showDialog(
       context: context,
