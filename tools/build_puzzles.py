@@ -227,7 +227,7 @@ def main():
     parser.add_argument("--db", required=True, help="lichess_db_puzzle.csv or .csv.zst")
     parser.add_argument("--out-dir", default="assets/puzzles")
     parser.add_argument("--levels", default="2,3,4,5", help="e.g. 2,3")
-    parser.add_argument("--per-level", type=int, default=40)
+    parser.add_argument("--per-level", type=int, default=20)
     parser.add_argument("--max-plies", type=int, default=5, help="solver moves x2 - 1")
     parser.add_argument("--min-popularity", type=int, default=90)
     parser.add_argument("--min-plays", type=int, default=1000)

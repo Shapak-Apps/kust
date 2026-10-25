@@ -32,7 +32,7 @@ const List<LoomLevel> kLoomLevels = [
   LoomLevel(GolKind.yomut, 'Ýomut', 'Mate in 2'),
   LoomLevel(GolKind.arsary, 'Arsary', 'Forks'),
   LoomLevel(GolKind.cowdur, 'Çowdur', 'Pins'),
-  LoomLevel(GolKind.salyr, 'Salyr', 'Endgames'),
+  LoomLevel(GolKind.saryk, 'Saryk', 'Endgames'),
 ];
 
 final List<GolKind> _gols = [for (final l in kLoomLevels) l.gol];

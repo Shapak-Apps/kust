@@ -2,7 +2,7 @@
 """Turns tools/guls/flag_guls.json into lib/features/puzzles/gol_charts.dart.
 
 The five guls of the Turkmen flag, one per puzzle level (Teke, Yomut, Arsary,
-Cowdur, Salyr), as charts of knots. Run from the project root:
+Cowdur, Saryk), as charts of knots. Run from the project root:
 
     python3 tools/guls/make_gol_charts.py
 
@@ -19,7 +19,7 @@ SOURCE = ROOT / "tools/guls/flag_guls.json"
 TARGET = ROOT / "lib/features/puzzles/gol_charts.dart"
 
 # Flag order, top to bottom, is the order of the levels, bottom to top.
-KINDS = ["teke", "yomut", "arsary", "cowdur", "salyr"]
+KINDS = ["teke", "yomut", "arsary", "cowdur", "saryk"]
 # A stray piece of the strip's border is yellow or dark, cut off from the gul,
 # touches the edge of the chart and is small next to the gul.
 MAX_STRAY = 150

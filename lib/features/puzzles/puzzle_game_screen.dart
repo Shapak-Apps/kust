@@ -679,7 +679,18 @@ class _ControlButton extends StatelessWidget {
               children: [
                 Icon(icon, size: 24, color: color),
                 const SizedBox(height: 2),
-                Text(label, style: k.caption.copyWith(color: color)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    // The bar has a fixed slot under the board, so its labels
+                    // stop growing a little above the normal size.
+                    textScaler: MediaQuery.textScalerOf(context)
+                        .clamp(maxScaleFactor: 1.15),
+                    style: k.caption.copyWith(color: color),
+                  ),
+                ),
               ],
             ),
           ),
