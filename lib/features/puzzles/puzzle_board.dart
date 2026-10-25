@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kust/widgets/piece_image.dart';
@@ -8,12 +9,14 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/board/board_squares_painter.dart';
+import 'package:kust/features/game/chess/board/chess_board.dart'
+    show glideDuration;
+import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 
 const Color _lastMoveColor = Color(0x66FFBB00);
 const Color _selectedColor = Color(0x99FFBB00);
 const Color _hintFromColor = Color(0x6622C55E);
-const Color _hintToColor = Color(0x9922C55E);
 const Color _targetDotColor = Color(0x33000000);
 
 Square _displayCastleTarget(Square target) {
@@ -92,14 +95,36 @@ class PuzzleBoard extends StatefulWidget {
 }
 
 class _PuzzleBoardState extends State<PuzzleBoard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _slideCtrl = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: glideDuration(1),
   );
   ({Square from, Square to})? _sliding;
   Square? _selected;
   Map<Square, NormalMove> _targets = const {};
+
+  /// Dragging: the piece, its square and where the finger is.
+  Square? _dragFrom;
+  Piece? _dragPiece;
+  final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
+  Square? _hover;
+  double _cell = 0;
+
+  /// A move made by dropping; its glide is skipped, the piece is there.
+  ({Square from, Square to})? _dropped;
+
+  /// After an illegal drop the piece flies back to its square.
+  late final AnimationController _snapCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 170),
+  );
+  Square? _snapSquare;
+  Piece? _snapPiece;
+  Offset _snapStart = Offset.zero;
+
+  /// How far above the finger a dragged piece floats, in squares.
+  static const double _dragLift = 0.3;
 
   void _onBoardTheme() {
     if (mounted) setState(() {});
@@ -114,14 +139,37 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     _slideCtrl.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) setState(() {});
     });
+    _snapCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        setState(() {
+          _snapPiece = null;
+          _snapSquare = null;
+        });
+      }
+    });
   }
 
   @override
   void didUpdateWidget(PuzzleBoard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.slideKey != oldWidget.slideKey) {
-      _sliding = widget.slide;
+      final slide = widget.slide;
+      final dropped = _dropped;
+      _dropped = null;
+      // A piece dropped on its square is already there: no glide.
+      final wasDropped =
+          slide != null &&
+          dropped != null &&
+          slide.from == dropped.from &&
+          slide.to == dropped.to;
+      _sliding = wasDropped ? null : slide;
       if (_sliding != null) {
+        final s = _sliding!;
+        final distance = math.sqrt(
+          math.pow(fileOf(s.to) - fileOf(s.from), 2) +
+              math.pow(rankOf(s.to) - rankOf(s.from), 2),
+        );
+        _slideCtrl.duration = glideDuration(distance.toDouble());
         _slideCtrl.forward(from: 0);
       } else {
         _slideCtrl.value = 1;
@@ -138,6 +186,8 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
     AppSettings.instance.pieceSet.removeListener(_onBoardTheme);
     _slideCtrl.dispose();
+    _snapCtrl.dispose();
+    _dragAt.dispose();
     super.dispose();
   }
 
@@ -161,7 +211,13 @@ class _PuzzleBoardState extends State<PuzzleBoard>
         to: to,
         promotion: promotes ? Role.queen : null,
       );
-      targets[isCastle ? _displayCastleTarget(to) : to] = move;
+      if (isCastle) {
+        targets[_displayCastleTarget(to)] = move;
+        // The rook itself is a target too when castling on the rook is on.
+        if (AppSettings.instance.castleOnRook.value) targets[to] = move;
+      } else {
+        targets[to] = move;
+      }
     }
     return targets;
   }
@@ -197,6 +253,70 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     });
   }
 
+  Offset _pieceCentre(Offset finger) => finger - Offset(0, _cell * _dragLift);
+
+  Square? _squareUnder(Offset local) {
+    if (_cell <= 0) return null;
+    final col = (local.dx / _cell).floor();
+    final row = (local.dy / _cell).floor();
+    if (col < 0 || col > 7 || row < 0 || row > 7) return null;
+    return _squareAt(local, _cell);
+  }
+
+  void _onDragStart(DragStartDetails details) {
+    if (!widget.interactive) return;
+    final square = _squareUnder(details.localPosition);
+    if (square == null) return;
+    final piece = widget.position.board.pieceAt(square);
+    if (piece == null || piece.color != widget.position.turn) return;
+    _snapCtrl.stop();
+    setState(() {
+      _selected = square;
+      _targets = _destinationsFrom(square);
+      _dragFrom = square;
+      _dragPiece = piece;
+      _hover = square;
+      _snapPiece = null;
+    });
+    _dragAt.value = details.localPosition;
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    if (_dragFrom == null) return;
+    _dragAt.value = details.localPosition;
+    final over = _squareUnder(_pieceCentre(details.localPosition));
+    if (over != _hover) setState(() => _hover = over);
+  }
+
+  void _onDragEnd([DragEndDetails? _]) {
+    final from = _dragFrom;
+    final piece = _dragPiece;
+    final at = _dragAt.value;
+    if (from == null || piece == null || at == null) return;
+    final target = _squareUnder(_pieceCentre(at));
+    final move = target == null || target == from ? null : _targets[target];
+    setState(() {
+      _dragFrom = null;
+      _dragPiece = null;
+      _hover = null;
+      if (move != null) {
+        _selected = null;
+        _targets = const {};
+      } else {
+        _snapSquare = from;
+        _snapPiece = piece;
+        _snapStart = _pieceCentre(at) - Offset(_cell / 2, _cell / 2);
+      }
+    });
+    _dragAt.value = null;
+    if (move != null) {
+      _dropped = (from: from, to: target!);
+      widget.onMove(move);
+    } else {
+      _snapCtrl.forward(from: 0);
+    }
+  }
+
   Square _squareAt(Offset local, double cell) {
     final col = math.min(7, math.max(0, (local.dx / cell).floor()));
     final row = math.min(7, math.max(0, (local.dy / cell).floor()));
@@ -211,12 +331,22 @@ class _PuzzleBoardState extends State<PuzzleBoard>
       builder: (context, constraints) {
         final boardSize = constraints.biggest.shortestSide;
         final cell = boardSize / 8;
+        _cell = cell;
+        final hintFrom = widget.hintFrom;
+        final hintTo = widget.hintTo;
 
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapUp: (details) {
             _handleTap(_squareAt(details.localPosition, cell));
           },
+          // Pick up the piece where the finger first touched, not where the
+          // drag was recognised a few pixels later.
+          dragStartBehavior: DragStartBehavior.down,
+          onPanStart: _onDragStart,
+          onPanUpdate: _onDragUpdate,
+          onPanEnd: _onDragEnd,
+          onPanCancel: _onDragEnd,
           child: SizedBox(
             width: boardSize,
             height: boardSize,
@@ -235,6 +365,95 @@ class _PuzzleBoardState extends State<PuzzleBoard>
                 for (var index = 0; index < 64; index++)
                   _buildCell(index, cell),
                 _buildSlidingPiece(cell),
+                if (hintFrom != null && hintTo != null)
+                  Positioned.fill(
+                    child: MoveArrow(
+                      fromRow: _rowOf(hintFrom),
+                      fromCol: _colOf(hintFrom),
+                      toRow: _rowOf(hintTo),
+                      toCol: _colOf(hintTo),
+                    ),
+                  ),
+                if (_dragPiece != null && _hover != null)
+                  Positioned(
+                    left: _colOf(_hover!) * cell,
+                    top: _rowOf(_hover!) * cell,
+                    width: cell,
+                    height: cell,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            width: cell * 0.06,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_dragPiece != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ValueListenableBuilder<Offset?>(
+                        valueListenable: _dragAt,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: cell,
+                            height: cell,
+                            child: PieceImage(assetForPiece(_dragPiece!)),
+                          ),
+                        ),
+                        builder: (context, at, child) {
+                          if (at == null) return const SizedBox.shrink();
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset:
+                                  _pieceCentre(at) - Offset(cell / 2, cell / 2),
+                              child: Transform.scale(scale: 1.18, child: child),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                if (_snapPiece != null && _snapSquare != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedBuilder(
+                        animation: _snapCtrl,
+                        child: RepaintBoundary(
+                          child: SizedBox(
+                            width: cell,
+                            height: cell,
+                            child: Padding(
+                              padding: EdgeInsets.all(cell * 0.02),
+                              child: PieceImage(assetForPiece(_snapPiece!)),
+                            ),
+                          ),
+                        ),
+                        builder: (context, child) {
+                          final t = Curves.easeOutCubic.transform(
+                            _snapCtrl.value,
+                          );
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Transform.translate(
+                              offset: Offset.lerp(
+                                _snapStart,
+                                _cellOrigin(_snapSquare!, cell),
+                                t,
+                              )!,
+                              child: Transform.scale(
+                                scale: 1.18 - 0.18 * t,
+                                child: child,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -266,9 +485,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     if (widget.hintFrom == square) {
       background = Color.alphaBlend(_hintFromColor, background);
     }
-    if (widget.hintTo == square) {
-      background = Color.alphaBlend(_hintToColor, background);
-    }
+    // The hinted move itself is drawn as an arrow.
     if (_selected == square) {
       background = Color.alphaBlend(_selectedColor, background);
     }
@@ -279,7 +496,10 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     final row = index ~/ 8;
     final col = index % 8;
     final square = _squareOf(index);
-    final hideForSlide = _isSliding && _sliding!.to == square;
+    final hideForSlide =
+        (_isSliding && _sliding!.to == square) ||
+        _dragFrom == square ||
+        _snapSquare == square;
     final piece = hideForSlide ? null : widget.position.board.pieceAt(square);
     final isLight = (fileOf(square) + rankOf(square)).isOdd;
     final isTarget = _targets.containsKey(square);
@@ -322,6 +542,11 @@ class _PuzzleBoardState extends State<PuzzleBoard>
       ),
     );
   }
+
+  int _colOf(Square square) =>
+      widget.flipped ? 7 - fileOf(square) : fileOf(square);
+  int _rowOf(Square square) =>
+      widget.flipped ? rankOf(square) : 7 - rankOf(square);
 
   Offset _cellOrigin(Square square, double cell) {
     final file = fileOf(square);

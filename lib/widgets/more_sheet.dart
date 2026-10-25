@@ -79,6 +79,18 @@ class _SettingsSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
+        const KustSectionLabel('Moves'),
+        ValueListenableBuilder<bool>(
+          valueListenable: s.castleOnRook,
+          builder: (_, v, _) => KustToggleRow(
+            icon: Icons.swap_horiz_rounded,
+            title: 'Castle on the rook',
+            subtitle: 'Tap the king, then its rook, to castle',
+            value: v,
+            onChanged: s.setCastleOnRook,
+          ),
+        ),
+        const SizedBox(height: 24),
         const KustSectionLabel('Feedback'),
         ValueListenableBuilder<bool>(
           valueListenable: s.sound,

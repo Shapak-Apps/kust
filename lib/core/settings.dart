@@ -19,6 +19,10 @@ class AppSettings {
 
   final ValueNotifier<PieceSet> pieceSet = ValueNotifier(PieceSet.defaultSet);
 
+  /// Castling by tapping (or dropping on) the rook, as well as the square
+  /// the king lands on.
+  final ValueNotifier<bool> castleOnRook = ValueNotifier(false);
+
   SharedPreferences? _prefs;
 
   Future<void> load() async {
@@ -32,6 +36,7 @@ class AppSettings {
     haptics.value = prefs.getBool('haptics_enabled') ?? true;
     boardTheme.value = BoardTheme.fromName(prefs.getString('board_theme'));
     pieceSet.value = PieceSet.fromName(prefs.getString('piece_set'));
+    castleOnRook.value = prefs.getBool('castle_on_rook') ?? false;
     _apply();
   }
 
@@ -60,6 +65,11 @@ class AppSettings {
   Future<void> setPieceSet(PieceSet set) async {
     pieceSet.value = set;
     await _prefs?.setString('piece_set', set.name);
+  }
+
+  Future<void> setCastleOnRook(bool value) async {
+    castleOnRook.value = value;
+    await _prefs?.setBool('castle_on_rook', value);
   }
 
   void _apply() {
