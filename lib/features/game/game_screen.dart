@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
@@ -111,7 +111,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SvgPicture.asset(pieceAsset, width: 64, height: 64),
+                PieceImage(pieceAsset, width: 64, height: 64),
                 const SizedBox(height: 16),
                 const Text(
                   'Game Start',
@@ -788,7 +788,7 @@ class _PlayerBar extends ConsumerWidget {
                     for (final piece in captured)
                       Padding(
                         padding: const EdgeInsets.only(right: 1),
-                        child: SvgPicture.asset(
+                        child: PieceImage(
                           assetForPiece(piece),
                           width: 16,
                           height: 16,

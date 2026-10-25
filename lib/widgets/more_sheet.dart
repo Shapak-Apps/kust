@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
@@ -242,7 +242,7 @@ class PieceSetSwatch extends StatelessWidget {
                           child: ColoredBox(
                             color: light ? board.light : board.dark,
                             child: Center(
-                              child: SvgPicture.asset(set.asset(color, role)),
+                              child: PieceImage(set.asset(color, role)),
                             ),
                           ),
                         ),

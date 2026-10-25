@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/play/practice_mode_checkbox.dart';
@@ -74,7 +74,7 @@ class _PickSideModalState extends State<PickSideModal> {
         KustOption(
           title: 'White',
           subtitle: 'You move first',
-          leading: SvgPicture.asset(
+          leading: PieceImage(
             AppSettings.instance.pieceSet.value.asset('w', 'K'),
             width: 36,
             height: 36,
@@ -86,7 +86,7 @@ class _PickSideModalState extends State<PickSideModal> {
         KustOption(
           title: 'Black',
           subtitle: '${bot.name} moves first',
-          leading: SvgPicture.asset(
+          leading: PieceImage(
             AppSettings.instance.pieceSet.value.asset('b', 'K'),
             width: 36,
             height: 36,

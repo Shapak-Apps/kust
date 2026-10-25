@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/core/settings.dart';
@@ -17,6 +18,14 @@ Future<void> precacheGameSvgs() async {
 }
 
 Future<void> _cache(String path) async {
+  if (!path.endsWith('.svg')) {
+    // Decode the image once so the first board shows it without a blank
+    // frame; the image cache keeps it.
+    AssetImage(path)
+        .resolve(ImageConfiguration.empty)
+        .addListener(ImageStreamListener((_, _) {}, onError: (_, _) {}));
+    return;
+  }
   try {
     final loader = SvgAssetLoader(path);
     await svg.cache.putIfAbsent(

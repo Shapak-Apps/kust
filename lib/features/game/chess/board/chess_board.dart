@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart'
     show listEquals, setEquals, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
@@ -262,7 +262,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   }
 
   Widget _buildRotatedPiece(Piece piece, _BoardView view) {
-    final Widget svg = SvgPicture.asset(_assetForPiece(piece));
+    final Widget svg = PieceImage(_assetForPiece(piece));
 
     if (view.mode == GameMode.local && view.position.turn == Side.black) {
       return RotatedBox(quarterTurns: 2, child: svg);
@@ -699,7 +699,7 @@ class BoardSquareCell extends StatelessWidget {
 
     Widget? pieceWidget;
     if (piece != null) {
-      final svg = SvgPicture.asset(_assetForPiece(piece));
+      final svg = PieceImage(_assetForPiece(piece));
       pieceWidget = Padding(
         padding: EdgeInsets.all(size * 0.02),
         child: props.rotatePiece
@@ -833,7 +833,7 @@ class _PromotionPicker extends StatelessWidget {
                 height: squareSize * 1.1,
                 child: Padding(
                   padding: EdgeInsets.all(squareSize * 0.05),
-                  child: SvgPicture.asset(
+                  child: PieceImage(
                     _assetForPiece(Piece(color: color, role: role)),
                   ),
                 ),
