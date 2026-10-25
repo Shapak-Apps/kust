@@ -71,7 +71,11 @@ class _BoardView {
       }
       if (lastPlayerIndex != null) {
         final record = g.moves[lastPlayerIndex];
-        if (record.feedback != null) {
+        final landed = _castlingDisplaySquare(record.move.to);
+        // Once the piece is taken the rating no longer belongs to the square.
+        final stillThere =
+            g.displayPosition.board.pieceAt(landed)?.color == record.side;
+        if (record.feedback != null && stillThere) {
           feedback = record.feedback;
           square = _castlingDisplaySquare(record.move.to);
           index = lastPlayerIndex;
@@ -382,9 +386,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             height: side,
             child: Stack(
               children: [
+                // Every child of this stack is keyed: pieces in flight come
+                // and go above the grid, and without keys the layers after
+                // them would be rebuilt, replaying the feedback animations.
+
                 // Square colours in one pass on whole pixels; the squares
                 // above are transparent and only hold pieces and markers.
                 Positioned.fill(
+                  key: const ValueKey('board_colours'),
                   child: RepaintBoundary(
                     child: CustomPaint(
                       painter: BoardSquaresPainter(
@@ -397,6 +406,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
                 if (badgeFeedback != null && badgeSquare != null)
                   Positioned.fill(
+                    key: const ValueKey('feedback_glow'),
                     child: IgnorePointer(
                       child: FeedbackGlow(
                         key: ValueKey('glow_${view.badgeIndex}'),
@@ -408,6 +418,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   ),
 
                 GestureDetector(
+                  key: const ValueKey('board_grid'),
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (details) => _handleTap(details.localPosition),
                   child: RepaintBoundary(
@@ -433,6 +444,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
                 if (!view.analysis && _capPiece != null && _capSquare != null)
                   Positioned(
+                    key: const ValueKey('captured_piece'),
                     left: _getSquareOffset(_capSquare!, _squareSize).dx,
                     top: _getSquareOffset(_capSquare!, _squareSize).dy,
                     width: _squareSize,
@@ -470,6 +482,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     _animFrom != null &&
                     _animTo != null)
                   Positioned.fill(
+                    key: const ValueKey('moving_piece'),
                     child: IgnorePointer(
                       // The piece is built once and lives on its own layer,
                       // so every frame only moves that layer: no widget
@@ -517,6 +530,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
                 if (view.pendingPromotion != null)
                   Positioned.fill(
+                    key: const ValueKey('promotion'),
                     child: _PromotionPicker(
                       color: displayPosition.turn,
                       rotated:
@@ -534,6 +548,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
                 if (view.badgeFeedback != null && view.badgeSquare != null)
                   Positioned(
+                    key: const ValueKey('feedback_badge'),
                     left: _getSquareOffset(view.badgeSquare!, _squareSize).dx,
                     top: _getSquareOffset(view.badgeSquare!, _squareSize).dy,
                     width: _squareSize,
@@ -543,7 +558,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                         clipBehavior: Clip.none,
                         children: [
                           Positioned(
-                            right: -_squareSize * 0.22,
+                            // On the rightmost column the badge would run off
+                            // the screen, so it sits on the left corner there.
+                            right: _onRightEdge(view.badgeSquare!)
+                                ? null
+                                : -_squareSize * 0.22,
+                            left: _onRightEdge(view.badgeSquare!)
+                                ? -_squareSize * 0.22
+                                : null,
                             top: -_squareSize * 0.22,
                             child: MoveFeedbackBadge(
                               feedback: view.badgeFeedback!,
@@ -564,6 +586,9 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       },
     );
   }
+
+  /// Whether [square] is shown in the rightmost column.
+  bool _onRightEdge(Square square) => fileOf(square) == (_flipped ? 0 : 7);
 
   /// The colour of [square]: its own, with any highlight on top.
   Color _squareColor(Square square, _BoardView view, Square? checkedKing) {
