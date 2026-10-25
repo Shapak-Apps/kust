@@ -23,11 +23,11 @@ void main() {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
         'Shaded',
-        'Neo',
+        'Boxwood',
         'Carpet',
       ]);
       expect(PieceSet.classic.asset('w', 'K'), 'assets/pieces/wK.svg');
-      expect(PieceSet.neo.asset('b', 'N'), 'assets/pieces/neo/bN.svg');
+      expect(PieceSet.wood.asset('b', 'N'), 'assets/pieces/wood/bN.svg');
     });
 
     test('every piece of every set is bundled and is a square svg', () {
@@ -39,14 +39,7 @@ void main() {
           expect(file.existsSync(), isTrue, reason: asset);
           final text = file.readAsStringSync();
           expect(text, contains('<svg'), reason: asset);
-          expect(
-            text,
-            anyOf(
-              contains('viewBox="0 0 45 45"'),
-              contains('viewBox="0 0 100 100"'),
-            ),
-            reason: asset,
-          );
+          expect(text, contains('viewBox="0 0 45 45"'), reason: asset);
           final folder = asset.substring(0, asset.lastIndexOf('/') + 1);
           expect(pubspec, contains('- $folder\n'), reason: folder);
         }
@@ -153,14 +146,14 @@ void main() {
             find.byWidgetPredicate((w) => w is PieceSetSwatch && w.set == set),
           )
           .selected;
-      expect(selected(PieceSet.neo), isTrue);
-
-      await tester.ensureVisible(find.text('Shaded'));
-      await tester.tap(find.text('Shaded'));
-      await tester.pumpAndSettle();
-      expect(AppSettings.instance.pieceSet.value, PieceSet.shaded);
       expect(selected(PieceSet.shaded), isTrue);
-      expect(selected(PieceSet.neo), isFalse);
+
+      await tester.ensureVisible(find.text('Boxwood'));
+      await tester.tap(find.text('Boxwood'));
+      await tester.pumpAndSettle();
+      expect(AppSettings.instance.pieceSet.value, PieceSet.wood);
+      expect(selected(PieceSet.wood), isTrue);
+      expect(selected(PieceSet.shaded), isFalse);
     });
 
     testWidgets('a board on screen redraws with the new set', (tester) async {
@@ -187,7 +180,7 @@ void main() {
                       .bytesLoader
                   as SvgAssetLoader)
               .assetName;
-      expect(firstPiece(), startsWith('assets/pieces/neo/'));
+      expect(firstPiece(), startsWith('assets/pieces/shaded/'));
       AppSettings.instance.pieceSet.value = PieceSet.carpet;
       await tester.pump();
       expect(firstPiece(), startsWith('assets/pieces/carpet/'));

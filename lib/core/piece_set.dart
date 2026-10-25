@@ -1,10 +1,10 @@
 /// The piece designs the board can be drawn with. Picked in settings and
-/// used by every board in the app. The new sets are drawn by
+/// used by every board in the app. The shaded sets are drawn by
 /// `tools/pieces/make_pieces.py`.
 enum PieceSet {
   classic('Classic', ''),
   shaded('Shaded', 'shaded/'),
-  neo('Neo', 'neo/'),
+  wood('Boxwood', 'wood/'),
   carpet('Carpet', 'carpet/');
 
   const PieceSet(this.label, this._folder);
@@ -13,7 +13,7 @@ enum PieceSet {
   final String _folder;
 
   /// The pieces in use when nothing is saved.
-  static const PieceSet defaultSet = PieceSet.neo;
+  static const PieceSet defaultSet = PieceSet.shaded;
 
   /// The set saved under [name], or the default for an unknown name.
   static PieceSet fromName(String? name) => PieceSet.values.firstWhere(
