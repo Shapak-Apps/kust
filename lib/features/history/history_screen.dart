@@ -7,8 +7,8 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
-import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
 
 String describeResult(GameRecord game) {
@@ -66,11 +66,7 @@ class HistoryScreen extends StatelessWidget {
       color: k.bg,
       child: Column(
         children: [
-          const KustTopBar(
-            large: true,
-            title: 'History',
-            subtitle: 'Your past games',
-          ),
+          const FeltHeader(title: 'History'),
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: GameHistoryStore.instance.listenable(),
