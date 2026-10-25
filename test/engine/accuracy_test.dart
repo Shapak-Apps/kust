@@ -35,8 +35,30 @@ void main() {
     }
   });
 
-  test('gameAccuracy averages and handles an empty game', () {
-    expect(gameAccuracy([100, 80, 60]), closeTo(80, 0.0001));
-    expect(gameAccuracy(const []), isNull);
+  test('a steady game scores what each move scored; empty is null', () {
+    expect(gameAccuracy([80, 80, 80]), closeTo(80, 0.0001));
+    expect(gameAccuracy([]), isNull);
+  });
+
+  test('a few awful moves drag a game down, unlike a plain average', () {
+    // 20 fine moves and 3 blunders: a plain average would say 84.
+    final moves = [...List.filled(20, 95.0), 10.0, 10.0, 10.0];
+    final plain = moves.reduce((a, b) => a + b) / moves.length;
+    expect(plain, greaterThan(80));
+    expect(gameAccuracy(moves)!, lessThan(68));
+  });
+
+  test('a lost game played badly does not look accurate', () {
+    // Blunders early lose the game; after that every move costs little
+    // winning chance and scores high on its own.
+    final moves = [
+      90.0, 85.0, 20.0, 15.0, // the game goes
+      ...List.filled(12, 97.0), // hopeless moves cost nothing more
+    ];
+    final chances = [55.0, 50.0, 20.0, 5.0, ...List.filled(12, 2.0)];
+    final plain = moves.reduce((a, b) => a + b) / moves.length;
+    final game = gameAccuracy(moves, winPercents: chances)!;
+    expect(plain, greaterThan(80));
+    expect(game, lessThan(70));
   });
 }

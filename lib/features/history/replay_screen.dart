@@ -306,7 +306,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 KustAction(
                   icon: Icons.chevron_right_rounded,
                   label: 'Forward',
-                  primary: true,
                   onTap: _ply < _last ? () => _go(_ply + 1) : null,
                 ),
                 KustAction(

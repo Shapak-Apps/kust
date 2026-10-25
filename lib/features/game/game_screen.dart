@@ -356,21 +356,23 @@ class _GameScreenState extends ConsumerState<GameScreen>
               },
             ),
             trailing: [
-              KustIconButton(
-                icon: Icons.ios_share_rounded,
-                label: 'Export game',
-                onTap: () {
-                  final g = ref.read(chessControllerProvider);
-                  showExportSheet(
-                    context,
-                    position: g.displayPosition,
-                    flipped:
-                        g.mode == GameMode.bot && g.playerSide == Side.black,
-                    pgn: livePgn(g),
-                    highlight: g.displayMoveSquares,
-                  );
-                },
-              ),
+              // Only a finished game can be exported.
+              if (status != GameStatus.playing)
+                KustIconButton(
+                  icon: Icons.ios_share_rounded,
+                  label: 'Export game',
+                  onTap: () {
+                    final g = ref.read(chessControllerProvider);
+                    showExportSheet(
+                      context,
+                      position: g.displayPosition,
+                      flipped:
+                          g.mode == GameMode.bot && g.playerSide == Side.black,
+                      pgn: livePgn(g),
+                      highlight: g.displayMoveSquares,
+                    );
+                  },
+                ),
               if (status == GameStatus.playing)
                 KustIconButton(
                   icon: Icons.flag_outlined,
@@ -668,7 +670,6 @@ class _ControlsBar extends ConsumerWidget {
             KustAction(
               icon: Icons.lightbulb_outline_rounded,
               label: 'Hint',
-              primary: true,
               busy: s.hintThinking,
               onTap: s.hintEnabled ? controller.requestHint : null,
             ),

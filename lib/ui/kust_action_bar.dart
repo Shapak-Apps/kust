@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:kust/ui/bold_icon.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -9,7 +10,6 @@ class KustAction {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.primary = false,
     this.busy = false,
   });
 
@@ -19,15 +19,12 @@ class KustAction {
   /// Null greys the button out.
   final VoidCallback? onTap;
 
-  /// The main action: a filled button standing out in the middle.
-  final bool primary;
-
   /// Shows a spinner instead of the icon, e.g. while a hint is worked out.
   final bool busy;
 }
 
-/// The row of actions under a board: each an icon over a short label,
-/// spread evenly across, with at most one filled main action.
+/// The row of actions under a board: each a bold icon over a short label,
+/// spread evenly across, with nothing around them.
 class KustActionBar extends StatelessWidget {
   const KustActionBar({super.key, required this.actions});
 
@@ -58,59 +55,35 @@ class _Item extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final enabled = action.onTap != null && !action.busy;
-    final colour = action.primary
-        ? k.accentInk
-        : enabled
-        ? k.ink
-        : k.muted.withValues(alpha: 0.5);
+    final colour = enabled ? k.ink : k.muted.withValues(alpha: 0.45);
 
     final Widget icon = action.busy
         ? SizedBox.square(
-            dimension: 22,
-            child: CircularProgressIndicator(strokeWidth: 2.5, color: colour),
+            dimension: 26,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: CircularProgressIndicator(strokeWidth: 2.8, color: k.ink),
+            ),
           )
-        : Icon(action.icon, size: action.primary ? 28 : 26, color: colour);
+        : BoldIcon(action.icon, size: 30, color: colour);
 
-    final Widget body;
-    if (action.primary) {
-      body = Center(
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
-          opacity: enabled || action.busy ? 1 : 0.45,
-          child: Container(
-            width: 64,
-            height: 52,
-            decoration: BoxDecoration(
-              color: k.accent,
-              borderRadius: BorderRadius.circular(KustSpace.rSmall + 4),
-            ),
-            alignment: Alignment.center,
-            child: icon,
-          ),
+    final body = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        icon,
+        const SizedBox(height: 4),
+        Text(
+          action.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          // The bar has a fixed height, so labels stop growing a little
+          // above the normal size.
+          textScaler: MediaQuery.textScalerOf(context)
+              .clamp(maxScaleFactor: 1.15),
+          style: k.caption.copyWith(color: colour, fontWeight: FontWeight.w800),
         ),
-      );
-    } else {
-      body = Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icon,
-          const SizedBox(height: 4),
-          Text(
-            action.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            // The bar has a fixed height, so labels stop growing a little
-            // above the normal size.
-            textScaler: MediaQuery.textScalerOf(context)
-                .clamp(maxScaleFactor: 1.15),
-            style: k.caption.copyWith(
-              color: colour,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      );
-    }
+      ],
+    );
 
     return Semantics(
       button: true,

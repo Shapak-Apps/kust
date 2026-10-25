@@ -676,7 +676,6 @@ class _ControlBar extends StatelessWidget {
           KustAction(
             icon: Icons.lightbulb_outline_rounded,
             label: 'Hint',
-            primary: true,
             onTap: canHint ? onHint : null,
           ),
           KustAction(
