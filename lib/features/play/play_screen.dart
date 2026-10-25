@@ -166,15 +166,31 @@ class _PlayScreenState extends State<PlayScreen> {
           Expanded(
             child: CustomScrollView(
               slivers: [
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.asset(
+                          'assets/images/banner.png',
+                          fit: BoxFit.cover,
+                          cacheWidth: 900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverToBoxAdapter(
                     child: _HeroCard(onPlay: _showPlayChooser),
                   ),
-                ),
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
                 ),
                 const SliverPadding(
                   padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -195,25 +211,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 ),
                 _botGrid(kTkmBots),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      24,
-                      20,
-                      24 + KustNavBar.clearance(context),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Image.asset(
-                          'assets/images/banner.png',
-                          fit: BoxFit.cover,
-                          cacheWidth: 900,
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: SizedBox(height: 24 + KustNavBar.clearance(context)),
                 ),
               ],
             ),
