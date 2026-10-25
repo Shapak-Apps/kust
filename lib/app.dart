@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:kust/features/achievements/achievement_toast.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/theme.dart';
 
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
               value: isDark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: child!,
+              child: AchievementToastHost(child: child!),
             );
           },
         );
