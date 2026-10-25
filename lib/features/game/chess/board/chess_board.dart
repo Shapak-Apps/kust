@@ -21,6 +21,9 @@ import 'package:kust/features/game/move_feedback_badge.dart';
 
 const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
+
+/// The two squares of a queued premove.
+const Color kPremoveHighlight = Color(0x80D9534F);
 const Color kHintHighlight = Color(0x552ECC71);
 
 final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
@@ -53,6 +56,7 @@ class _BoardView {
     required this.badgeSquare,
     required this.badgeIndex,
     required this.pendingPromotion,
+    required this.premove,
   });
 
   factory _BoardView.from(GameState g) {
@@ -94,8 +98,10 @@ class _BoardView {
       legal: g.displayLegalDestinations,
       moveSquares: g.displayMoveSquares,
       hints: g.displayHintSquares,
+      // While the bot thinks the board stays open for premoves.
       blocked:
-          g.isBotThinking ||
+          (g.isBotThinking &&
+              !(AppSettings.instance.premoves.value && g.canPremove)) ||
           g.status != GameStatus.playing ||
           g.isSelfAnalysisActive,
       analysis: g.isSelfAnalysisActive,
@@ -107,6 +113,7 @@ class _BoardView {
           !g.isSelfAnalysisActive && g.status == GameStatus.playing
           ? g.pendingPromotion
           : null,
+      premove: g.isSelfAnalysisActive ? null : g.premove,
     );
   }
 
@@ -133,6 +140,9 @@ class _BoardView {
   final int? badgeIndex;
   final ({Square from, Square to})? pendingPromotion;
 
+  /// A queued premove, tinted on its two squares.
+  final ({Square from, Square to})? premove;
+
   @override
   bool operator ==(Object other) {
     return other is _BoardView &&
@@ -149,7 +159,8 @@ class _BoardView {
         identical(badgeFeedback, other.badgeFeedback) &&
         badgeSquare == other.badgeSquare &&
         badgeIndex == other.badgeIndex &&
-        pendingPromotion == other.pendingPromotion;
+        pendingPromotion == other.pendingPromotion &&
+        premove == other.premove;
   }
 
   @override
@@ -168,6 +179,7 @@ class _BoardView {
     badgeSquare,
     badgeIndex,
     pendingPromotion,
+    premove,
   );
 }
 
@@ -374,7 +386,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (target != null && target != from) {
       _dropped = (from: from, to: target);
       played = ref.read(chessControllerProvider.notifier).dropOn(target);
-      if (!played) _dropped = null;
+      // A drop that only queued a premove leaves the piece where it is;
+      // the move glides when it is played.
+      if (!played || ref.read(chessControllerProvider).premove != null) {
+        _dropped = null;
+      }
     }
 
     setState(() {
@@ -918,6 +934,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     }
     if (checkedKing == square) {
       background = Color.alphaBlend(kCheckSquareHighlight, background);
+    }
+    final premove = view.premove;
+    if (premove != null && (premove.from == square || premove.to == square)) {
+      background = Color.alphaBlend(kPremoveHighlight, background);
     }
     if (view.selected == square) {
       background = Color.alphaBlend(kHighlight, background);
