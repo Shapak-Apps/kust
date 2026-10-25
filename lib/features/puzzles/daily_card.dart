@@ -5,8 +5,7 @@ import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
-import 'package:kust/ui/kust_controls.dart';
-import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/kust_tile.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// Every puzzle level, loaded once for the daily pick. A level that cannot
@@ -37,13 +36,14 @@ class _DailyPuzzleCardState extends State<DailyPuzzleCard> {
       future: _levels,
       builder: (context, snapshot) {
         final levels = snapshot.data;
-        if (levels == null) return const SizedBox.shrink();
+        // Keeps its place in the row while the puzzles load.
+        if (levels == null) return const SizedBox(height: KustTile.height);
         return ValueListenableBuilder(
           valueListenable: DailyStore.instance.listenable(),
           builder: (context, _, _) {
             final now = DateTime.now();
             final daily = dailyPuzzle(levels, now);
-            if (daily == null) return const SizedBox.shrink();
+            if (daily == null) return const SizedBox(height: KustTile.height);
             final streak = DailyStore.instance.load();
             return DailyTile(
               subtitle:
@@ -81,49 +81,21 @@ class DailyTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final days = streak == 1 ? '1 day' : '$streak days';
-    return Semantics(
-      button: true,
-      label:
+    return KustTile(
+      icon: solved ? Icons.check_rounded : Icons.today_rounded,
+      title: 'Daily puzzle',
+      subtitle: solved ? 'Solved today' : subtitle,
+      onTap: onTap,
+      semanticsLabel:
           'Daily puzzle, ${solved ? 'solved' : subtitle}'
           '${streak > 0 ? ', streak $days' : ''}',
-      excludeSemantics: true,
-      child: Pressable(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
-          decoration: BoxDecoration(
-            color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
-            border: Border.all(color: k.line),
-          ),
-          child: Row(
-            children: [
-              KustIconTile(solved ? Icons.check_rounded : Icons.today_rounded),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily puzzle',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.body.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    Text(
-                      solved ? 'Solved today' : subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.caption,
-                    ),
-                  ],
-                ),
-              ),
-              if (streak > 0) ...[
-                const SizedBox(width: 8),
-                Icon(
+      badge: streak > 0
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
                   Icons.local_fire_department_rounded,
-                  size: 20,
+                  size: 18,
                   color: LoomColors.rust,
                 ),
                 const SizedBox(width: 2),
@@ -134,12 +106,9 @@ class DailyTile extends StatelessWidget {
                     color: k.ink,
                   ),
                 ),
-              ] else
-                Icon(Icons.chevron_right_rounded, color: k.muted),
-            ],
-          ),
-        ),
-      ),
+              ],
+            )
+          : null,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:kust/ui/bold_icon.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -107,7 +108,11 @@ class KustTopBar extends StatelessWidget {
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: ColoredBox(
         color: k.bg,
-        child: SafeArea(bottom: false, child: content),
+        child: SafeArea(
+          bottom: false,
+          // Top bar buttons are plain icons.
+          child: _InTopBar(child: content),
+        ),
       ),
     );
   }
@@ -122,6 +127,7 @@ class KustIconButton extends StatelessWidget {
     this.label,
     this.filled = false,
     this.size = 40,
+    this.plain,
   });
 
   final IconData icon;
@@ -130,10 +136,35 @@ class KustIconButton extends StatelessWidget {
   final bool filled;
   final double size;
 
+  /// Just the icon, larger and bolder, with no circle around it. Defaults to
+  /// on inside a [KustTopBar] and off elsewhere.
+  final bool? plain;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     final enabled = onTap != null;
+    if (plain ?? _InTopBar.of(context)) {
+      return Semantics(
+        button: true,
+        label: label,
+        enabled: enabled,
+        child: Pressable(
+          onTap: onTap,
+          scale: 0.88,
+          child: SizedBox.square(
+            dimension: 44,
+            child: Center(
+              child: BoldIcon(
+                icon,
+                size: 27,
+                color: enabled ? k.ink : k.muted.withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Semantics(
       button: true,
       label: label,
@@ -162,4 +193,15 @@ class KustIconButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Marks a [KustTopBar]'s contents so its [KustIconButton]s draw plain.
+class _InTopBar extends InheritedWidget {
+  const _InTopBar({required super.child});
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_InTopBar>() != null;
+
+  @override
+  bool updateShouldNotify(_InTopBar oldWidget) => false;
 }

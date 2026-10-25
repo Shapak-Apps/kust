@@ -19,9 +19,9 @@ import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
 import 'package:kust/features/puzzles/puzzles_screen.dart' show kLoomLevels;
 import 'package:kust/features/puzzles/woven_dialog.dart';
+import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
-import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
 
@@ -659,104 +659,36 @@ class _ControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rLarge),
-          border: Border.all(color: k.line),
-        ),
-        child: Row(
-          children: [
-            _ControlButton(
-              icon: Icons.lightbulb_outline_rounded,
-              label: 'Hint',
-              enabled: canHint,
-              onTap: onHint,
-            ),
-            _ControlButton(
-              icon: Icons.visibility_outlined,
-              label: 'Solution',
-              enabled: canReveal,
-              onTap: onReveal,
-            ),
-            _ControlButton(
-              icon: Icons.refresh_rounded,
-              label: 'Retry',
-              enabled: canReveal,
-              onTap: onRetry,
-            ),
-            _ControlButton(
-              icon: Icons.chevron_left_rounded,
-              label: 'Back',
-              enabled: canBack,
-              onTap: onBack,
-            ),
-            _ControlButton(
-              icon: Icons.chevron_right_rounded,
-              label: 'Forward',
-              enabled: canForward,
-              onTap: onForward,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ControlButton extends StatelessWidget {
-  const _ControlButton({
-    required this.icon,
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final color = enabled ? k.ink : k.muted.withValues(alpha: 0.5);
-    return Expanded(
-      child: Semantics(
-        button: true,
-        enabled: enabled,
-        label: label,
-        excludeSemantics: true,
-        child: Pressable(
-          onTap: enabled ? onTap : null,
-          scale: 0.92,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 24, color: color),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    // The bar has a fixed slot under the board, so its labels
-                    // stop growing a little above the normal size.
-                    textScaler: MediaQuery.textScalerOf(context)
-                        .clamp(maxScaleFactor: 1.15),
-                    style: k.caption.copyWith(color: color),
-                  ),
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      child: KustActionBar(
+        actions: [
+          KustAction(
+            icon: Icons.refresh_rounded,
+            label: 'Retry',
+            onTap: canReveal ? onRetry : null,
           ),
-        ),
+          KustAction(
+            icon: Icons.visibility_outlined,
+            label: 'Solution',
+            onTap: canReveal ? onReveal : null,
+          ),
+          KustAction(
+            icon: Icons.lightbulb_outline_rounded,
+            label: 'Hint',
+            onTap: canHint ? onHint : null,
+          ),
+          KustAction(
+            icon: Icons.chevron_left_rounded,
+            label: 'Back',
+            onTap: canBack ? onBack : null,
+          ),
+          KustAction(
+            icon: Icons.chevron_right_rounded,
+            label: 'Forward',
+            onTap: canForward ? onForward : null,
+          ),
+        ],
       ),
     );
   }
