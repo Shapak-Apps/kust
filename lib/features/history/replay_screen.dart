@@ -75,12 +75,16 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   /// Rating each move, with its best alternative, as in a game.
   bool _feedbackOn = true;
+
+  /// Drawing the engine's choice as an arrow when another move was played.
+  bool _showBestOn = true;
   final Map<int, _Review> _reviews = {};
   final Set<int> _reviewing = {};
 
   int get _last => _replay.positions.length - 1;
 
   static const String _feedbackPref = 'replay_feedback';
+  static const String _showBestPref = 'replay_show_best';
 
   bool get _canRate => widget.analyzer != null || ChessEngine.isSupported;
 
@@ -89,7 +93,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
     super.initState();
     SharedPreferences.getInstance().then((prefs) {
       if (!mounted) return;
-      setState(() => _feedbackOn = prefs.getBool(_feedbackPref) ?? true);
+      setState(() {
+        _feedbackOn = prefs.getBool(_feedbackPref) ?? true;
+        _showBestOn = prefs.getBool(_showBestPref) ?? true;
+      });
     });
   }
 
@@ -98,6 +105,12 @@ class _ReplayScreenState extends State<ReplayScreen> {
     _reviewCurrent();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_feedbackPref, on);
+  }
+
+  Future<void> _setShowBest(bool on) async {
+    setState(() => _showBestOn = on);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_showBestPref, on);
   }
 
   /// Rates the move that led to the position on the board.
@@ -115,7 +128,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
         beforeFen: before.fen,
         playedUci: playedUci,
         afterFen: after.fen,
-        thinkTime: const Duration(milliseconds: 700),
+        thinkTime: const Duration(milliseconds: 400),
         isStale: () => !mounted,
       );
       if (!mounted || analysis == null) return;
@@ -131,23 +144,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
       final best = analysis.bestUci;
       final bestFrom = Square.parse(best.substring(0, 2));
       final bestTo = Square.parse(best.substring(2, 4));
-      String? bestSan;
-      if (bestFrom != null && bestTo != null) {
-        final bestMove = NormalMove(
-          from: bestFrom,
-          to: bestTo,
-          promotion: best.length > 4 ? Role.queen : null,
-        );
-        if (before.isLegal(bestMove)) {
-          bestSan = before.makeSan(bestMove).$2;
-        }
-      }
       setState(() {
         _reviews[ply] = _Review(
           quality: quality,
           bestFrom: bestFrom,
           bestTo: bestTo,
-          bestSan: bestSan,
         );
       });
     } catch (_) {
@@ -289,12 +290,25 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 icon: Icons.insights_rounded,
                 title: 'Move feedback',
                 subtitle: _canRate
-                    ? 'Rates each move and shows the best one'
+                    ? 'Rates each move as you step through'
                     : 'Not available on this device',
                 value: _feedbackOn && _canRate,
                 onChanged: (v) {
                   if (!_canRate) return;
                   _setFeedback(v);
+                  setSheet(() {});
+                },
+              ),
+              KustToggleRow(
+                icon: Icons.north_east_rounded,
+                title: 'Show best',
+                subtitle: _canRate
+                    ? 'An arrow to the best move when another was played'
+                    : 'Not available on this device',
+                value: _feedbackOn && _showBestOn && _canRate,
+                onChanged: (v) {
+                  if (!_canRate || !_feedbackOn) return;
+                  _setShowBest(v);
                   setSheet(() {});
                 },
               ),
@@ -378,6 +392,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
     final review = _feedbackOn && _ply > 0 ? _reviews[_ply] : null;
     // The best move is drawn only when another move was played.
     final showBest =
+        _showBestOn &&
         review != null &&
         !review.isBest &&
         review.bestFrom != null &&
@@ -395,17 +410,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
             selected: _ply,
             onTap: _go,
           ),
-          if (review != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Text(
-                review.describe(game.sanMoves[_ply - 1]),
-                style: k.caption.copyWith(
-                  color: review.quality.color,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
           if (_evalOn)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -509,23 +513,14 @@ class _Review {
     required this.quality,
     required this.bestFrom,
     required this.bestTo,
-    required this.bestSan,
   });
 
   final MoveQuality quality;
   final Square? bestFrom;
   final Square? bestTo;
-  final String? bestSan;
 
   bool get isBest =>
       quality == MoveQuality.best ||
       quality == MoveQuality.brilliant ||
       quality == MoveQuality.great;
-
-  /// 'Nf3 was a mistake · d4 was best', or 'e4 · best move'.
-  String describe(String playedSan) => MoveFeedback(
-    quality: quality,
-    bestSan: bestSan ?? '',
-    playedSan: playedSan,
-  ).bannerText;
 }
