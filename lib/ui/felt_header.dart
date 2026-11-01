@@ -51,12 +51,15 @@ class FeltHeader extends StatelessWidget {
                         child: Pressable(
                           onTap: onBack,
                           scale: 0.88,
-                          child: const SizedBox.square(
-                            dimension: 44,
+                          // No taller than the title, so every felt header
+                          // is the same height with or without it.
+                          child: const SizedBox(
+                            width: 36,
+                            height: 30,
                             child: Center(
                               child: BoldIcon(
                                 Icons.arrow_back_rounded,
-                                size: 28,
+                                size: 26,
                                 color: LoomColors.cream,
                               ),
                             ),

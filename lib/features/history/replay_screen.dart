@@ -2,9 +2,13 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/game_analyzer.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/move_sounds.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
@@ -35,6 +39,7 @@ class ReplayScreen extends StatefulWidget {
     required this.gameId,
     this.record,
     this.evaluator,
+    this.analyzer,
     this.playSound,
   });
 
@@ -45,6 +50,9 @@ class ReplayScreen extends StatefulWidget {
 
   /// Overrides the chess engine for the evaluation bar (for tests).
   final ReplayEvaluator? evaluator;
+
+  /// Overrides the chess engine for move ratings (for tests).
+  final MoveAnalyzer? analyzer;
 
   /// Overrides sound playback (for tests).
   final void Function(String file)? playSound;
@@ -65,11 +73,118 @@ class _ReplayScreenState extends State<ReplayScreen> {
   bool _evalFailed = false;
   final Map<int, EvalScore> _evals = {};
 
+  /// Rating each move, with its best alternative, as in a game.
+  bool _feedbackOn = true;
+  final Map<int, _Review> _reviews = {};
+  final Set<int> _reviewing = {};
+
   int get _last => _replay.positions.length - 1;
 
+  static const String _feedbackPref = 'replay_feedback';
+
+  bool get _canRate => widget.analyzer != null || ChessEngine.isSupported;
+
   @override
-  void dispose() {
-    super.dispose();
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      if (!mounted) return;
+      setState(() => _feedbackOn = prefs.getBool(_feedbackPref) ?? true);
+    });
+  }
+
+  Future<void> _setFeedback(bool on) async {
+    setState(() => _feedbackOn = on);
+    _reviewCurrent();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_feedbackPref, on);
+  }
+
+  /// Rates the move that led to the position on the board.
+  Future<void> _reviewCurrent() async {
+    final ply = _ply;
+    if (!_feedbackOn || !_canRate || ply == 0) return;
+    if (_reviews.containsKey(ply) || !_reviewing.add(ply)) return;
+    final before = _replay.positions[ply - 1];
+    final move = _replay.moves[ply]!;
+    final after = _replay.positions[ply];
+    final playedUci = engineUci(move, before);
+    try {
+      final analyze = widget.analyzer ?? _engineAnalyze;
+      final analysis = await analyze(
+        beforeFen: before.fen,
+        playedUci: playedUci,
+        afterFen: after.fen,
+        thinkTime: const Duration(milliseconds: 700),
+        isStale: () => !mounted,
+      );
+      if (!mounted || analysis == null) return;
+      final quality = classifyPlayedMove(
+        before: before,
+        after: after,
+        move: move,
+        bestCp: analysis.bestCp,
+        playedCp: analysis.playedCp,
+        secondBestCp: analysis.secondBestCp,
+        isBest: analysis.bestUci == playedUci,
+      );
+      final best = analysis.bestUci;
+      final bestFrom = Square.parse(best.substring(0, 2));
+      final bestTo = Square.parse(best.substring(2, 4));
+      String? bestSan;
+      if (bestFrom != null && bestTo != null) {
+        final bestMove = NormalMove(
+          from: bestFrom,
+          to: bestTo,
+          promotion: best.length > 4 ? Role.queen : null,
+        );
+        if (before.isLegal(bestMove)) {
+          bestSan = before.makeSan(bestMove).$2;
+        }
+      }
+      setState(() {
+        _reviews[ply] = _Review(
+          quality: quality,
+          bestFrom: bestFrom,
+          bestTo: bestTo,
+          bestSan: bestSan,
+        );
+      });
+    } catch (_) {
+      // No rating for this move; the replay carries on without it.
+    } finally {
+      _reviewing.remove(ply);
+    }
+  }
+
+  static Future<MoveAnalysis?> _engineAnalyze({
+    required String beforeFen,
+    required String playedUci,
+    required String afterFen,
+    required Duration thinkTime,
+    bool Function()? isStale,
+  }) => ChessEngine.instance.analyzeMove(
+    beforeFen: beforeFen,
+    playedUci: playedUci,
+    afterFen: afterFen,
+    thinkTime: thinkTime,
+    isStale: isStale,
+  );
+
+  /// Where the piece of the move at [ply] ended up: the king's square for
+  /// castling, which is stored as the king taking its rook.
+  Square _landing(int ply) {
+    final move = _replay.moves[ply]!;
+    final before = _replay.positions[ply - 1];
+    final piece = before.board.pieceAt(move.from);
+    final target = before.board.pieceAt(move.to);
+    if (piece?.role == Role.king && target?.color == piece?.color) {
+      return Square.fromCoords(
+        File(fileOf(move.to) > fileOf(move.from) ? 6 : 2),
+        Rank(rankOf(move.to)),
+      );
+    }
+    return move.to;
   }
 
   /// Jumps to [ply]. A single step glides the piece (backwards when going
@@ -86,6 +201,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
     });
     _playStepSound(from, target);
     _evaluateCurrent();
+    _reviewCurrent();
   }
 
   /// Sound for a single step; jumps over several moves stay silent.
@@ -169,6 +285,19 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   setSheet(() {});
                 },
               ),
+              KustToggleRow(
+                icon: Icons.insights_rounded,
+                title: 'Move feedback',
+                subtitle: _canRate
+                    ? 'Rates each move and shows the best one'
+                    : 'Not available on this device',
+                value: _feedbackOn && _canRate,
+                onChanged: (v) {
+                  if (!_canRate) return;
+                  _setFeedback(v);
+                  setSheet(() {});
+                },
+              ),
               const SizedBox(height: 16),
               KustButton(
                 label: 'Copy PGN',
@@ -246,6 +375,13 @@ class _ReplayScreenState extends State<ReplayScreen> {
     final k = context.k;
     final position = _replay.positions[_ply];
     final score = _evals[_ply];
+    final review = _feedbackOn && _ply > 0 ? _reviews[_ply] : null;
+    // The best move is drawn only when another move was played.
+    final showBest =
+        review != null &&
+        !review.isBest &&
+        review.bestFrom != null &&
+        review.bestTo != null;
 
     return SafeArea(
       top: false,
@@ -259,6 +395,17 @@ class _ReplayScreenState extends State<ReplayScreen> {
             selected: _ply,
             onTap: _go,
           ),
+          if (review != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Text(
+                review.describe(game.sanMoves[_ply - 1]),
+                style: k.caption.copyWith(
+                  color: review.quality.color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
           if (_evalOn)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -285,6 +432,12 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   lastMove: _replay.moves[_ply],
                   slide: _slide,
                   slideKey: _slideKey,
+                  badge: review == null
+                      ? null
+                      : (square: _landing(_ply), quality: review.quality),
+                  arrow: showBest
+                      ? (from: review.bestFrom!, to: review.bestTo!)
+                      : null,
                 ),
               ),
             ),
@@ -348,4 +501,31 @@ class _MissingGame extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The rating of one replayed move and the engine's choice instead.
+class _Review {
+  const _Review({
+    required this.quality,
+    required this.bestFrom,
+    required this.bestTo,
+    required this.bestSan,
+  });
+
+  final MoveQuality quality;
+  final Square? bestFrom;
+  final Square? bestTo;
+  final String? bestSan;
+
+  bool get isBest =>
+      quality == MoveQuality.best ||
+      quality == MoveQuality.brilliant ||
+      quality == MoveQuality.great;
+
+  /// 'Nf3 was a mistake · d4 was best', or 'e4 · best move'.
+  String describe(String playedSan) => MoveFeedback(
+    quality: quality,
+    bestSan: bestSan ?? '',
+    playedSan: playedSan,
+  ).bannerText;
 }
