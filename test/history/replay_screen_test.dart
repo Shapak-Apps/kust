@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/game_analyzer.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/move_feedback_badge.dart';
+import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/replay_screen.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
@@ -27,12 +31,14 @@ Widget _app({
   ReplayEvaluator? evaluator,
   GameRecord record = _game,
   void Function(String)? playSound,
+  MoveAnalyzer? analyzer,
 }) => MaterialApp(
   theme: appTheme,
   home: ReplayScreen(
     gameId: 'g',
     record: record,
     evaluator: evaluator,
+    analyzer: analyzer,
     playSound: playSound ?? (_) {},
   ),
 );
@@ -47,6 +53,72 @@ Future<void> _openSettings(WidgetTester tester) async {
 
 void main() {
   _layoutTests();
+  testWidgets('each move is rated, with the best move as an arrow', (
+    tester,
+  ) async {
+    // 1.e4 is the engine's choice; 1...e5 is not (d5 was best, by a lot).
+    Future<MoveAnalysis?> analyzer({
+      required String beforeFen,
+      required String playedUci,
+      required String afterFen,
+      required Duration thinkTime,
+      bool Function()? isStale,
+    }) async => playedUci == 'e2e4'
+        ? const MoveAnalysis(bestUci: 'e2e4', bestCp: 30, playedCp: 30)
+        : const MoveAnalysis(bestUci: 'd7d5', bestCp: 0, playedCp: -260);
+
+    await tester.pumpWidget(_app(analyzer: analyzer));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('e4 · best move'), findsOneWidget);
+    expect(find.byType(MoveFeedbackBadge), findsOneWidget);
+    expect(find.byType(MoveArrow), findsNothing); // e4 was best
+
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('e5 was a blunder · d5 was best'),
+      findsOneWidget,
+    );
+    final arrow = tester.widget<MoveArrow>(find.byType(MoveArrow));
+    // d7 to d5, white at the bottom.
+    expect(
+      (arrow.fromRow, arrow.fromCol, arrow.toRow, arrow.toCol),
+      (1, 3, 3, 3),
+    );
+    final badge = tester.widget<MoveFeedbackBadge>(
+      find.byType(MoveFeedbackBadge),
+    );
+    expect(badge.feedback.quality, MoveQuality.blunder);
+  });
+
+  testWidgets('move feedback can be switched off in the settings', (
+    tester,
+  ) async {
+    Future<MoveAnalysis?> analyzer({
+      required String beforeFen,
+      required String playedUci,
+      required String afterFen,
+      required Duration thinkTime,
+      bool Function()? isStale,
+    }) async => const MoveAnalysis(bestUci: 'd2d4', bestCp: 40, playedCp: 30);
+
+    await tester.pumpWidget(_app(analyzer: analyzer));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    expect(find.byType(MoveFeedbackBadge), findsOneWidget);
+
+    await _openSettings(tester);
+    await tester.tap(find.byType(KustSwitch).last); // move feedback
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.byType(MoveFeedbackBadge), findsNothing);
+    expect(find.byType(MoveArrow), findsNothing);
+  });
+
   testWidgets('steps through the game and the strip jumps to a move', (
     tester,
   ) async {
@@ -227,7 +299,7 @@ void main() {
     expect(find.byType(EvaluationBar), findsNothing);
 
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch));
+    await tester.tap(find.byType(KustSwitch).first); // evaluation bar
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(200, 20)); // close the sheet
     await tester.pumpAndSettle();
@@ -252,7 +324,7 @@ void main() {
       _app(evaluator: (_) async => throw StateError('x')),
     );
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch));
+    await tester.tap(find.byType(KustSwitch).first); // evaluation bar
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(200, 20));
     await tester.pumpAndSettle();

@@ -13,6 +13,8 @@ import 'package:kust/features/game/chess/board/chess_board.dart'
     show glideDuration;
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/move_feedback_badge.dart';
 
 const Color _lastMoveColor = Color(0x66FFBB00);
 const Color _selectedColor = Color(0x99FFBB00);
@@ -74,6 +76,8 @@ class PuzzleBoard extends StatefulWidget {
     this.hintTo,
     this.slide,
     this.slideKey = 0,
+    this.arrow,
+    this.badge,
   });
 
   final Position position;
@@ -89,6 +93,12 @@ class PuzzleBoard extends StatefulWidget {
   /// can pass the reversed squares.
   final ({Square from, Square to})? slide;
   final int slideKey;
+
+  /// An arrow to draw, e.g. the best move in a replay.
+  final ({Square from, Square to})? arrow;
+
+  /// A move rating to pin on a square's corner, as in a game.
+  final ({Square square, MoveQuality quality})? badge;
 
   @override
   State<PuzzleBoard> createState() => _PuzzleBoardState();
@@ -365,6 +375,49 @@ class _PuzzleBoardState extends State<PuzzleBoard>
                 for (var index = 0; index < 64; index++)
                   _buildCell(index, cell),
                 _buildSlidingPiece(cell),
+                if (widget.arrow != null)
+                  Positioned.fill(
+                    child: MoveArrow(
+                      fromRow: _rowOf(widget.arrow!.from),
+                      fromCol: _colOf(widget.arrow!.from),
+                      toRow: _rowOf(widget.arrow!.to),
+                      toCol: _colOf(widget.arrow!.to),
+                    ),
+                  ),
+                if (widget.badge != null)
+                  Positioned(
+                    left: _colOf(widget.badge!.square) * cell,
+                    top: _rowOf(widget.badge!.square) * cell,
+                    width: cell,
+                    height: cell,
+                    child: IgnorePointer(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned(
+                            // On the right-hand file it goes on the left
+                            // corner, so it stays on screen.
+                            right: _colOf(widget.badge!.square) == 7
+                                ? null
+                                : -cell * 0.22,
+                            left: _colOf(widget.badge!.square) == 7
+                                ? -cell * 0.22
+                                : null,
+                            top: -cell * 0.22,
+                            child: MoveFeedbackBadge(
+                              key: ValueKey(widget.badge),
+                              feedback: MoveFeedback(
+                                quality: widget.badge!.quality,
+                                bestSan: '',
+                                playedSan: '',
+                              ),
+                              size: cell * 0.52,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (hintFrom != null && hintTo != null)
                   Positioned.fill(
                     child: MoveArrow(

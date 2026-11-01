@@ -645,6 +645,8 @@ class _ControlsBar extends ConsumerWidget {
           hintThinking: g.isHintThinking,
           practice: g.practiceMode,
           analysisActive: g.isSelfAnalysisActive,
+          canPause: g.canPause,
+          paused: g.paused,
         ),
       ),
     );
@@ -665,6 +667,12 @@ class _ControlsBar extends ConsumerWidget {
               icon: Icons.undo_rounded,
               label: 'Take back',
               onTap: s.canUndo ? controller.undoLastMove : null,
+            ),
+          if (s.canPause)
+            KustAction(
+              icon: s.paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+              label: s.paused ? 'Resume' : 'Pause',
+              onTap: s.paused ? controller.resumeClock : controller.pauseClock,
             ),
           if (!isLocal && practiceMode)
             KustAction(
