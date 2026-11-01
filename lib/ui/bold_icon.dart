@@ -17,7 +17,8 @@ class BoldIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = size * 0.022;
+    // Just a hint heavier: a stronger shift reads as smudged.
+    final d = size * 0.009;
     return Icon(
       icon,
       size: size,
