@@ -71,16 +71,12 @@ void main() {
     await tester.pump();
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     await tester.pumpAndSettle();
-    expect(find.text('e4 · best move'), findsOneWidget);
+    expect(find.textContaining('best'), findsNothing); // no banner text
     expect(find.byType(MoveFeedbackBadge), findsOneWidget);
     expect(find.byType(MoveArrow), findsNothing); // e4 was best
 
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     await tester.pumpAndSettle();
-    expect(
-      find.textContaining('e5 was a blunder · d5 was best'),
-      findsOneWidget,
-    );
     final arrow = tester.widget<MoveArrow>(find.byType(MoveArrow));
     // d7 to d5, white at the bottom.
     expect(
@@ -111,12 +107,36 @@ void main() {
     expect(find.byType(MoveFeedbackBadge), findsOneWidget);
 
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch).last); // move feedback
+    await tester.tap(find.byType(KustSwitch).at(1)); // move feedback
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(find.byType(MoveFeedbackBadge), findsNothing);
     expect(find.byType(MoveArrow), findsNothing);
+  });
+
+  testWidgets('the best move arrow can be switched off', (tester) async {
+    Future<MoveAnalysis?> analyzer({
+      required String beforeFen,
+      required String playedUci,
+      required String afterFen,
+      required Duration thinkTime,
+      bool Function()? isStale,
+    }) async => const MoveAnalysis(bestUci: 'd2d4', bestCp: 40, playedCp: -200);
+
+    await tester.pumpWidget(_app(analyzer: analyzer));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    expect(find.byType(MoveArrow), findsOneWidget);
+
+    await _openSettings(tester);
+    await tester.tap(find.byType(KustSwitch).last); // show best
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+    expect(find.byType(MoveArrow), findsNothing);
+    expect(find.byType(MoveFeedbackBadge), findsOneWidget);
   });
 
   testWidgets('steps through the game and the strip jumps to a move', (
