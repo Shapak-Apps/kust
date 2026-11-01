@@ -68,6 +68,7 @@ class GameState {
     this.feedbackAnalyzing = false,
     this.pendingPromotion,
     this.premoves = const [],
+    this.paused = false,
     this.lastMoveInstant = false,
     this.engineFailed = false,
     this.ratingChange,
@@ -109,6 +110,16 @@ class GameState {
 
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
+
+  /// Whether the clocks of a timed pass-and-play game are stopped; the
+  /// board waits until the game is resumed.
+  final bool paused;
+
+  /// Whether the clocks can be paused now: a timed local game in progress.
+  bool get canPause =>
+      mode == GameMode.local &&
+      timeControl != null &&
+      status == GameStatus.playing;
 
   /// Moves queued while the bot thinks, played one after each of its
   /// moves, first first.
@@ -247,6 +258,7 @@ class GameState {
     ({Square from, Square to})? pendingPromotion,
     List<Premove>? premoves,
     bool? lastMoveInstant,
+    bool? paused,
     bool? engineFailed,
     int? ratingChange,
     double? accuracy,
@@ -294,6 +306,7 @@ class GameState {
           ? null
           : (pendingPromotion ?? this.pendingPromotion),
       premoves: premoves ?? this.premoves,
+      paused: paused ?? this.paused,
       lastMoveInstant: lastMoveInstant ?? this.lastMoveInstant,
       engineFailed: engineFailed ?? this.engineFailed,
       ratingChange: ratingChange ?? this.ratingChange,
@@ -355,17 +368,20 @@ class ChessController extends Notifier<GameState> {
 
   bool get _timed => state.timeControl != null;
 
+  /// Moves can be stepped through while playing and once the game is over
+  /// (to look back at it), but not while the bot is thinking.
+  bool get _canReview =>
+      state.status != GameStatus.loading && !state.isBotThinking;
+
   bool get canAnalysisMoveBack {
-    if (state.status != GameStatus.playing) return false;
-    if (state.isBotThinking) return false;
+    if (!_canReview) return false;
     if (state.moves.isEmpty) return false;
 
     return state.analysisCursor > 0;
   }
 
   bool get canAnalysisMoveNext {
-    if (state.status != GameStatus.playing) return false;
-    if (state.isBotThinking) return false;
+    if (!_canReview) return false;
     if (state.moves.isEmpty) return false;
     if (state.analysisIndex == null) return false;
 
@@ -384,6 +400,27 @@ class ChessController extends Notifier<GameState> {
     _whiteClock = timeControl.base;
     _blackClock = timeControl.base;
     _lastTick = DateTime.now();
+    _clockTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => _onClockTick(),
+    );
+  }
+
+  /// Stops both clocks of a timed local game, e.g. for a break.
+  void pauseClock() {
+    if (!state.canPause || state.paused) return;
+    if (!_chargeElapsed()) return;
+    _stopClock();
+    state = state.copyWith(paused: true, clearSelection: true);
+  }
+
+  /// Starts the clocks again where they stopped.
+  void resumeClock() {
+    if (!state.paused) return;
+    state = state.copyWith(paused: false);
+    if (state.status != GameStatus.playing || !_timed) return;
+    _lastTick = DateTime.now();
+    _clockTimer?.cancel();
     _clockTimer = Timer.periodic(
       const Duration(milliseconds: 100),
       (_) => _onClockTick(),
@@ -944,7 +981,7 @@ class ChessController extends Notifier<GameState> {
       AppSettings.instance.premoves.value && state.canPremove;
 
   void selectSquare(Square square) {
-    if (state.isSelfAnalysisActive) return;
+    if (state.isSelfAnalysisActive || state.paused) return;
     if (_premoving) {
       _selectPremove(square);
       return;
@@ -1097,7 +1134,7 @@ class ChessController extends Notifier<GameState> {
   /// it can go, without the tap toggle of [selectSquare]. Returns whether
   /// there is a piece here the player may move.
   bool pickUp(Square square) {
-    if (state.isSelfAnalysisActive) return false;
+    if (state.isSelfAnalysisActive || state.paused) return false;
     if (_premoving) {
       final piece = _premoveBoard.pieceAt(square);
       if (piece == null || piece.color != state.playerSide) return false;

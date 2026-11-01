@@ -74,6 +74,7 @@ class _BoardView {
     required this.pendingPromotion,
     required this.premoves,
     required this.checkedKing,
+    required this.paused,
   });
 
   factory _BoardView.from(GameState g) {
@@ -132,6 +133,7 @@ class _BoardView {
           ? g.pendingPromotion
           : null,
       premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
+      paused: g.paused,
     );
   }
 
@@ -165,6 +167,9 @@ class _BoardView {
   /// premoves drawn on it).
   final Square? checkedKing;
 
+  /// A timed local game on a break: the board is covered.
+  final bool paused;
+
   @override
   bool operator ==(Object other) {
     return other is _BoardView &&
@@ -183,7 +188,8 @@ class _BoardView {
         badgeIndex == other.badgeIndex &&
         pendingPromotion == other.pendingPromotion &&
         listEquals(premoves, other.premoves) &&
-        checkedKing == other.checkedKing;
+        checkedKing == other.checkedKing &&
+        paused == other.paused;
   }
 
   @override
@@ -204,6 +210,7 @@ class _BoardView {
     pendingPromotion,
     premoves.length,
     checkedKing,
+    paused,
   );
 }
 
@@ -878,6 +885,16 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
+                if (view.paused)
+                  Positioned.fill(
+                    key: const ValueKey('paused'),
+                    child: _PausedCover(
+                      onResume: ref
+                          .read(chessControllerProvider.notifier)
+                          .resumeClock,
+                    ),
+                  ),
+
                 if (view.pendingPromotion != null)
                   Positioned.fill(
                     key: const ValueKey('promotion'),
@@ -1329,6 +1346,45 @@ class _PromotionPicker extends StatelessWidget {
         ),
         Positioned(left: col * squareSize, top: top, child: column),
       ],
+    );
+  }
+}
+
+/// Covers the board while a timed local game is paused; a tap resumes it.
+class _PausedCover extends StatelessWidget {
+  const _PausedCover({required this.onResume});
+
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Semantics(
+      button: true,
+      label: 'Paused. Tap to resume',
+      excludeSemantics: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onResume,
+        child: ColoredBox(
+          color: k.bg.withValues(alpha: 0.88),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.play_circle_fill_rounded, size: 64, color: k.accent),
+                const SizedBox(height: 10),
+                Text(
+                  'Paused',
+                  style: k.title.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text('Tap to resume', style: k.caption),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
