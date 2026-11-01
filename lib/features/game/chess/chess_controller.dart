@@ -31,7 +31,7 @@ const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 
 /// How deep, and at most how long, a standout move rating is checked again.
 const int kFeedbackCheckDepth = 16;
-const Duration kFeedbackCheckTime = Duration(milliseconds: 1400);
+const Duration kFeedbackCheckTime = Duration(milliseconds: 800);
 
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
