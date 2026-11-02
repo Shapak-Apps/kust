@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
@@ -78,6 +78,8 @@ class ChessEngine {
   ChessEngine._();
 
   static final ChessEngine instance = ChessEngine._();
+
+  AppLifecycleListener? _lifecycle;
 
   static const int _mateCp = 100000;
   static final RegExp _scoreRe = RegExp(r'score (cp|mate) (-?\d+)');
@@ -168,7 +170,10 @@ class ChessEngine {
     _send('uci');
     await _waitForLine((line) => line == 'uciok');
 
-    _send('setoption name Threads value 2');
+    // One thread: the bots search to a fixed depth, and the evaluation,
+    // feedback and hints are short searches, so a second thread buys little
+    // strength for twice the CPU, and the CPU is what heats the phone.
+    _send('setoption name Threads value 1');
     _send('setoption name Hash value 32');
     _send('setoption name Move Overhead value 50');
     _send('setoption name EvalFile value $bigPath');
@@ -178,6 +183,8 @@ class ChessEngine {
 
     _ready = true;
     readyNotifier.value = true;
+    // Nothing searches while the app is in the background.
+    _lifecycle ??= AppLifecycleListener(onHide: stopThinking);
   }
 
   void _onLine(String line) {

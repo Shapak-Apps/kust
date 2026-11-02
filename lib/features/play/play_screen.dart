@@ -34,6 +34,16 @@ class PlayScreen extends StatefulWidget {
 }
 
 class _PlayScreenState extends State<PlayScreen> {
+  /// Whether the list has moved under the top bar. Only then is there
+  /// anything to blur, so the bar stays solid (and cheap) at the top.
+  final ValueNotifier<bool> _scrolled = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _scrolled.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -154,87 +164,96 @@ class _PlayScreenState extends State<PlayScreen> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: CustomScrollView(
-              slivers: [
-                // Room for the see-through top bar laid over the list.
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height:
-                        MediaQuery.paddingOf(context).top +
-                        KustTopBar.barHeight,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.depth == 0) _scrolled.value = n.metrics.pixels > 0;
+                return false;
+              },
+              child: CustomScrollView(
+                slivers: [
+                  // Room for the see-through top bar laid over the list.
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height:
+                          MediaQuery.paddingOf(context).top +
+                          KustTopBar.barHeight,
+                    ),
                   ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Image.asset(
-                          'assets/images/banner.png',
-                          fit: BoxFit.cover,
-                          cacheWidth: 900,
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: Image.asset(
+                            'assets/images/banner.png',
+                            fit: BoxFit.cover,
+                            cacheWidth: 900,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: _HeroCard(name: name, onPlay: _showPlayChooser),
-                  ),
-                ),
-                // Daily puzzle and achievements, side by side.
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        Expanded(child: DailyPuzzleCard()),
-                        SizedBox(width: 10),
-                        Expanded(child: AchievementsCard()),
-                      ],
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: _HeroCard(name: name, onPlay: _showPlayChooser),
                     ),
                   ),
-                ),
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: KustSectionLabel('Challenge a bot'),
+                  // Daily puzzle and achievements, side by side.
+                  const SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        children: [
+                          Expanded(child: DailyPuzzleCard()),
+                          SizedBox(width: 10),
+                          Expanded(child: AchievementsCard()),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                _botGrid(kInternationalBots),
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: KustSectionLabel('New students from Turkmenistan'),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: KustSectionLabel('Challenge a bot'),
+                    ),
                   ),
-                ),
-                _botGrid(kTkmBots),
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 24 + KustNavBar.clearance(context)),
-                ),
-              ],
+                  _botGrid(kInternationalBots),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: KustSectionLabel('New students from Turkmenistan'),
+                    ),
+                  ),
+                  _botGrid(kTkmBots),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: 24 + KustNavBar.clearance(context)),
+                  ),
+                ],
+              ),
             ),
           ),
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: KustTopBar(
-              translucent: true,
-              title: 'Küşt',
-              brand: const KustLogo(height: 22),
-              leading: PlayerAvatar(name: name),
-              trailing: [
-                KustIconButton(
-                  icon: Icons.tune_rounded,
-                  label: 'Settings',
-                  onTap: () => showSettingsSheet(context),
-                ),
-              ],
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _scrolled,
+              builder: (context, scrolled, _) => KustTopBar(
+                translucent: scrolled,
+                title: 'Küşt',
+                brand: const KustLogo(height: 22),
+                leading: PlayerAvatar(name: name),
+                trailing: [
+                  KustIconButton(
+                    icon: Icons.tune_rounded,
+                    label: 'Settings',
+                    onTap: () => showSettingsSheet(context),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

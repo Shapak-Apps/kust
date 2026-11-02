@@ -137,12 +137,16 @@ class KustTopBar extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: translucent
-          ? ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: ColoredBox(
-                  color: k.bg.withValues(alpha: 0.72),
-                  child: bar,
+          // Its own layer, and a blur light enough to redo every frame of a
+          // scroll on a mid-range phone.
+          ? RepaintBoundary(
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: ColoredBox(
+                    color: k.bg.withValues(alpha: 0.8),
+                    child: bar,
+                  ),
                 ),
               ),
             )
