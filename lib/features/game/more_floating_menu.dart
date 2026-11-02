@@ -40,6 +40,14 @@ class MoreFloatingMenu extends ConsumerWidget {
             value: game.moveFeedbackEnabled,
             onChanged: controller.setMoveFeedbackEnabled,
           ),
+        if (game.practiceMode)
+          KustToggleRow(
+            icon: Icons.north_east_rounded,
+            title: 'Show best',
+            subtitle: 'An arrow to the better move after yours',
+            value: game.showBestEnabled,
+            onChanged: controller.setShowBestEnabled,
+          ),
       ],
     );
   }

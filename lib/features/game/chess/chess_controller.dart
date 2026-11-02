@@ -28,6 +28,7 @@ const Duration kBotMinMoveTime = Duration(milliseconds: 400);
 
 const String kEvalBarPrefKey = 'eval_bar_enabled';
 const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
+const String kShowBestPrefKey = 'show_best_enabled';
 
 /// How deep, and at most how long, a standout move rating is checked again.
 const int kFeedbackCheckDepth = 16;
@@ -65,6 +66,7 @@ class GameState {
     this.evaluation,
     this.analysisIndex,
     this.moveFeedbackEnabled = false,
+    this.showBestEnabled = true,
     this.feedbackAnalyzing = false,
     this.pendingPromotion,
     this.premoves = const [],
@@ -107,6 +109,10 @@ class GameState {
   final int? analysisIndex;
 
   final bool moveFeedbackEnabled;
+
+  /// In a practice game, an arrow to the better move after one of yours
+  /// that was not the best.
+  final bool showBestEnabled;
 
   final bool feedbackAnalyzing;
   final ({Square from, Square to})? pendingPromotion;
@@ -262,6 +268,7 @@ class GameState {
     int? analysisIndex,
     bool clearAnalysis = false,
     bool? moveFeedbackEnabled,
+    bool? showBestEnabled,
     bool? feedbackAnalyzing,
     ({Square from, Square to})? pendingPromotion,
     List<Premove>? premoves,
@@ -309,6 +316,7 @@ class GameState {
           ? null
           : (analysisIndex ?? this.analysisIndex),
       moveFeedbackEnabled: moveFeedbackEnabled ?? this.moveFeedbackEnabled,
+      showBestEnabled: showBestEnabled ?? this.showBestEnabled,
       feedbackAnalyzing: feedbackAnalyzing ?? this.feedbackAnalyzing,
       pendingPromotion: clearSelection
           ? null
@@ -708,6 +716,14 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  Future<void> setShowBestEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(kShowBestPrefKey, enabled);
+    if (_isDisposed) return;
+    state = state.copyWith(showBestEnabled: enabled);
+    if (enabled) _analyzeLastPlayerMove();
+  }
+
   bool _isPlayerMove(MoveRecord played) {
     if (state.mode == GameMode.local) return true;
     return played.side == state.playerSide;
@@ -748,7 +764,11 @@ class ChessController extends Notifier<GameState> {
 
   Future<void> _analyzeMoveAt(int moveIndex) async {
     if (_isDisposed) return;
-    if (!state.practiceMode || !state.moveFeedbackEnabled) return;
+    // The rating and the best move come from one search, for either.
+    if (!state.practiceMode ||
+        (!state.moveFeedbackEnabled && !state.showBestEnabled)) {
+      return;
+    }
     if (moveIndex < 0 || moveIndex >= state.moves.length) return;
     if (moveIndex >= state.history.length) return;
 
@@ -833,9 +853,12 @@ class ChessController extends Notifier<GameState> {
       updated[moveIndex] = updated[moveIndex].copyWith(
         feedback: feedback,
         bestSan: bestSan,
+        bestMove: bestMove,
       );
       state = state.copyWith(moves: updated);
-      unawaited(_playQualityFeedback(quality));
+      if (state.moveFeedbackEnabled) {
+        unawaited(_playQualityFeedback(quality));
+      }
       // Celebrated when the game ends, not over the board mid-game.
       if (quality == MoveQuality.brilliant) _brilliantThisGame = true;
     } catch (_) {
@@ -865,12 +888,15 @@ class ChessController extends Notifier<GameState> {
     final prefs = await SharedPreferences.getInstance();
     final enabled = prefs.getBool(kEvalBarPrefKey) ?? false;
     final feedback = prefs.getBool(kMoveFeedbackPrefKey) ?? false;
+    final showBest = prefs.getBool(kShowBestPrefKey) ?? true;
     if (_isDisposed) return;
     if (enabled != state.evaluationEnabled ||
-        feedback != state.moveFeedbackEnabled) {
+        feedback != state.moveFeedbackEnabled ||
+        showBest != state.showBestEnabled) {
       state = state.copyWith(
         evaluationEnabled: enabled,
         moveFeedbackEnabled: feedback,
+        showBestEnabled: showBest,
       );
     }
     if (enabled) _refreshEvaluation();
@@ -907,6 +933,7 @@ class ChessController extends Notifier<GameState> {
       practiceMode: practiceMode,
       evaluationEnabled: state.evaluationEnabled,
       moveFeedbackEnabled: state.moveFeedbackEnabled,
+      showBestEnabled: state.showBestEnabled,
       status: GameStatus.playing,
     );
 
@@ -953,6 +980,7 @@ class ChessController extends Notifier<GameState> {
       practiceMode: true,
       evaluationEnabled: state.evaluationEnabled,
       moveFeedbackEnabled: state.moveFeedbackEnabled,
+      showBestEnabled: state.showBestEnabled,
     );
 
     _rebuildRepetitions(const <Position>[], state.position);

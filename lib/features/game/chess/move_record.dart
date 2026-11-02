@@ -10,6 +10,7 @@ class MoveRecord {
     this.capturedPiece,
     this.feedback,
     this.bestSan,
+    this.bestMove,
   });
 
   final Side side;
@@ -19,7 +20,14 @@ class MoveRecord {
   final MoveFeedback? feedback;
   final String? bestSan;
 
-  MoveRecord copyWith({MoveFeedback? feedback, String? bestSan}) {
+  /// The engine's choice instead, for the Show best arrow.
+  final NormalMove? bestMove;
+
+  MoveRecord copyWith({
+    MoveFeedback? feedback,
+    String? bestSan,
+    NormalMove? bestMove,
+  }) {
     return MoveRecord(
       side: side,
       san: san,
@@ -27,6 +35,7 @@ class MoveRecord {
       capturedPiece: capturedPiece,
       feedback: feedback ?? this.feedback,
       bestSan: bestSan ?? this.bestSan,
+      bestMove: bestMove ?? this.bestMove,
     );
   }
 }

@@ -12,6 +12,7 @@ import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
+import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/theme.dart';
 
@@ -158,6 +159,41 @@ void main() {
       tester.getRect(find.byType(MoveFeedbackBadge)).right,
       greaterThan(e4Right),
     );
+    await _finish(tester);
+  });
+
+  testWidgets('Show best draws an arrow to the better move, on its own', (
+    tester,
+  ) async {
+    final controller = await _board(tester);
+    final staged = _staged(controller.state, ['a2a3']);
+    final played = staged.moves.single;
+    controller.state = staged.copyWith(
+      moveFeedbackEnabled: false,
+      showBestEnabled: true,
+      moves: [
+        played.copyWith(
+          feedback: const MoveFeedback(
+            quality: MoveQuality.inaccuracy,
+            bestSan: 'e4',
+            playedSan: 'a3',
+          ),
+          bestMove: NormalMove.fromUci('e2e4'),
+        ),
+      ],
+    );
+    await tester.pump();
+    final arrow = tester.widget<MoveArrow>(find.byType(MoveArrow));
+    expect(
+      (arrow.fromRow, arrow.fromCol, arrow.toRow, arrow.toCol),
+      (6, 4, 4, 4),
+    );
+    // Feedback is off, so there is no badge, only the arrow.
+    expect(find.byType(MoveFeedbackBadge), findsNothing);
+
+    controller.state = controller.state.copyWith(showBestEnabled: false);
+    await tester.pump();
+    expect(find.byType(MoveArrow), findsNothing);
     await _finish(tester);
   });
 }
