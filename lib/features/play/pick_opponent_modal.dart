@@ -39,6 +39,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   Widget _grid(List<Bot> bots) {
     return GridView(
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,

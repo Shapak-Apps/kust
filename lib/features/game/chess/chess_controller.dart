@@ -999,7 +999,15 @@ class ChessController extends Notifier<GameState> {
     final piece = state.position.board.pieceAt(square);
 
     if (state.selectedSquare == null) {
-      if (piece == null) return;
+      if (piece == null) {
+        // Premoves waiting from earlier turns go with a tap on an empty
+        // square, as when they were queued.
+        if (state.premoves.isNotEmpty &&
+            _premoveBoard.pieceAt(square) == null) {
+          state = state.copyWith(premoves: const []);
+        }
+        return;
+      }
       if (state.mode != GameMode.local && piece.color != state.playerSide) {
         return;
       }
@@ -1038,7 +1046,14 @@ class ChessController extends Notifier<GameState> {
         hintSquares: const {},
       );
     } else {
-      state = state.copyWith(clearSelection: true);
+      // Premoves waiting from earlier turns go with a tap on an empty
+      // square, as when they were queued.
+      final emptyTap =
+          state.premoves.isNotEmpty && _premoveBoard.pieceAt(square) == null;
+      state = state.copyWith(
+        clearSelection: true,
+        premoves: emptyTap ? const [] : null,
+      );
     }
   }
 
@@ -1109,7 +1124,7 @@ class ChessController extends Notifier<GameState> {
   );
 
   /// Plays the first queued premove now that the bot has moved, if it is
-  /// legal; otherwise every premove is dropped, as on chess.com. The rest
+  /// legal; otherwise they all wait for the next bot move. The rest
   /// wait for the bot's next move. A pawn on the last rank becomes the
   /// piece picked when it was queued.
   void _playPremove() {
@@ -1121,10 +1136,15 @@ class ChessController extends Notifier<GameState> {
       return;
     }
     final next = queue.first;
-    if (!AppSettings.instance.premoves.value ||
-        !state.isPlayerTurn ||
-        !_displayDestinationsFrom(next.from).contains(next.to)) {
+    if (!AppSettings.instance.premoves.value) {
       state = state.copyWith(premoves: const [], clearSelection: true);
+      return;
+    }
+    // Not legal yet (the piece to take has not arrived, say): the premoves
+    // wait for a later turn. Your clock runs while they wait; a tap on an
+    // empty square clears them.
+    if (!state.isPlayerTurn ||
+        !_displayDestinationsFrom(next.from).contains(next.to)) {
       return;
     }
     state = state.copyWith(premoves: queue.sublist(1), clearSelection: true);
@@ -1728,7 +1748,12 @@ class ChessController extends Notifier<GameState> {
         depth: policy.depth,
         thinkTime: policy.thinkTime,
       );
-      uci = candidates.isEmpty ? '(none)' : policy.pick(candidates);
+      uci = candidates.isEmpty
+          ? '(none)'
+          : policy.pick(
+              candidates,
+              phase: phaseOf(state.position.fen, state.moves.length),
+            );
     } catch (_) {
       if (!_isDisposed && requestId == _moveRequestId) {
         state = state.copyWith(isBotThinking: false, engineFailed: true);
