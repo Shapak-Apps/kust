@@ -9,16 +9,20 @@ class BoldIcon extends StatelessWidget {
     super.key,
     required this.size,
     required this.color,
+    this.weight = 0.009,
   });
 
   final IconData icon;
   final double size;
   final Color color;
 
+  /// How far each copy is shifted, as a share of [size]: the extra weight.
+  final double weight;
+
   @override
   Widget build(BuildContext context) {
     // Just a hint heavier: a stronger shift reads as smudged.
-    final d = size * 0.009;
+    final d = size * weight;
     return Icon(
       icon,
       size: size,
