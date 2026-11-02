@@ -62,13 +62,19 @@ class _AchievementToastHostState extends State<AchievementToastHost> {
       children: [
         widget.child,
         if (shown != null)
+          // The host sits above the app's pages, outside any Material, so
+          // the celebration brings its own: without it text falls back to
+          // the debug style (yellow underlines, a plain font).
           Positioned.fill(
-            child: AchievementCelebration(
-              key: ValueKey(_shownKey),
-              achievement: shown,
-              earned: _store.unlocked().length,
-              total: kAchievements.length,
-              onDone: _next,
+            child: Material(
+              type: MaterialType.transparency,
+              child: AchievementCelebration(
+                key: ValueKey(_shownKey),
+                achievement: shown,
+                earned: _store.unlocked().length,
+                total: kAchievements.length,
+                onDone: _next,
+              ),
             ),
           ),
       ],
