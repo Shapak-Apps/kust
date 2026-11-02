@@ -25,6 +25,7 @@ import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
@@ -390,10 +391,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
         body: Column(
           children: [
             KustTopBar(
+              // The players' names and ratings sit by the board already.
               title: widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
-              subtitle: widget.isLocal
-                  ? null
-                  : '${widget.bot!.elo} Elo${widget.practiceMode ? ' · Practice' : ''}',
+              brand: const KustLogo(height: 22),
               leading: KustIconButton(
                 icon: Icons.arrow_back_rounded,
                 label: 'Leave game',
