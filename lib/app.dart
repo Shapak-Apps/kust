@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
           routerConfig: router,
           theme: appTheme,
           darkTheme: appDarkTheme,
-          themeMode: mode,
+          themeMode: AppSettings.forceDark ? ThemeMode.dark : mode,
           scrollBehavior: const _KustScrollBehavior(),
           builder: (context, child) {
             final isDark = Theme.of(context).brightness == Brightness.dark;

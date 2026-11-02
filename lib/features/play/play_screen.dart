@@ -15,6 +15,7 @@ import 'package:kust/features/play/play_mode_modal.dart';
 import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
@@ -152,9 +153,8 @@ class _PlayScreenState extends State<PlayScreen> {
       child: Column(
         children: [
           KustTopBar(
-            large: true,
-            title: 'Play',
-            subtitle: 'Hello, $name',
+            title: 'Küşt',
+            brand: const KustLogo(height: 22),
             trailing: [
               KustIconButton(
                 icon: Icons.tune_rounded,
@@ -185,7 +185,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverToBoxAdapter(
-                    child: _HeroCard(onPlay: _showPlayChooser),
+                    child: _HeroCard(name: name, onPlay: _showPlayChooser),
                   ),
                 ),
                 // Daily puzzle and achievements, side by side.
@@ -246,7 +246,10 @@ class _PlayScreenState extends State<PlayScreen> {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.onPlay});
+  const _HeroCard({required this.name, required this.onPlay});
+
+  /// The player's name, for the greeting.
+  final String name;
 
   final VoidCallback onPlay;
 
@@ -264,6 +267,14 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Hello, $name',
+            style: k.caption.copyWith(
+              color: k.accentInk.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
           Text(
             'Ready for a game?',
             style: k.title.copyWith(color: k.accentInk),

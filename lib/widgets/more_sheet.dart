@@ -23,20 +23,23 @@ class _SettingsSheet extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const KustSheetHeader(title: 'Settings'),
-        const KustSectionLabel('Appearance'),
-        ValueListenableBuilder<ThemeMode>(
-          valueListenable: s.themeMode,
-          builder: (_, mode, _) => KustSegmented<ThemeMode>(
-            value: mode,
-            options: const {
-              ThemeMode.system: 'Auto',
-              ThemeMode.light: 'Light',
-              ThemeMode.dark: 'Dark',
-            },
-            onChanged: s.setThemeMode,
+        // Hidden while the app is dark only (see AppSettings.forceDark).
+        if (!AppSettings.forceDark) ...[
+          const KustSectionLabel('Appearance'),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: s.themeMode,
+            builder: (_, mode, _) => KustSegmented<ThemeMode>(
+              value: mode,
+              options: const {
+                ThemeMode.system: 'Auto',
+                ThemeMode.light: 'Light',
+                ThemeMode.dark: 'Dark',
+              },
+              onChanged: s.setThemeMode,
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 24),
+        ],
         const KustSectionLabel('Board'),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
