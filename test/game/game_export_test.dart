@@ -11,7 +11,7 @@ import 'package:kust/features/play/bots.dart';
 GameState _game({
   GameStatus status = GameStatus.playing,
   Side player = Side.white,
-  String? endReason,
+  Side? flagFell,
 }) {
   Position p = Chess.initial;
   final moves = <MoveRecord>[];
@@ -27,7 +27,7 @@ GameState _game({
     playerSide: player,
     moves: moves,
     status: status,
-    endReason: endReason,
+    flagFell: flagFell,
   );
 }
 
@@ -50,7 +50,7 @@ void main() {
     );
     expect(
       gameResultToken(
-        _game(status: GameStatus.timeout, endReason: 'You won on time.'),
+        _game(status: GameStatus.timeout, flagFell: Side.black),
       ),
       '1-0',
     );

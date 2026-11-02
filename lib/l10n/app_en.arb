@@ -1,0 +1,697 @@
+{
+  "@@locale": "en",
+  "navPlay": "Play",
+  "navPuzzles": "Puzzles",
+  "navHistory": "History",
+  "settings": "Settings",
+  "achievements": "Achievements",
+  "cont": "Continue",
+  "back": "Back",
+  "forward": "Forward",
+  "start": "Start",
+  "end": "End",
+  "retry": "Retry",
+  "tryAgain": "Try again",
+  "delete": "Delete",
+  "keep": "Keep",
+  "close": "Close",
+  "options": "Options",
+  "youName": "You",
+  "whiteName": "White",
+  "blackName": "Black",
+  "random": "Random",
+  "play": "Play",
+  "eloValue": "{elo} Elo",
+  "@eloValue": {
+    "placeholders": {
+      "elo": {
+        "type": "int"
+      }
+    }
+  },
+  "passAndPlay": "Pass & Play",
+  "vsBot": "vs {name}",
+  "@vsBot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameStartTitle": "Game start",
+  "whiteMovesFirst": "White moves first",
+  "youPlayAsWhite": "You play as White",
+  "youPlayAsBlack": "You play as Black",
+  "engineUnavailable": "Engine unavailable",
+  "engineCouldNotStart": "The chess engine could not start. Try again, or play on this device with a friend.",
+  "botsNotSupported": "Playing against bots is not supported on this device.",
+  "playLocallyInstead": "Play locally instead",
+  "abortTitle": "Abort this game?",
+  "abortSubtitle": "The game will end without a result.",
+  "abort": "Abort",
+  "keepPlaying": "Keep playing",
+  "resignTitle": "Resign this game?",
+  "resignSubtitle": "The game will end and count as a loss.",
+  "resign": "Resign",
+  "leaveGame": "Leave game",
+  "exportGame": "Export game",
+  "showResult": "Show result",
+  "resultCheckmate": "Checkmate",
+  "resultDraw": "Draw",
+  "resultTimeOut": "Time out",
+  "resultGameOver": "Game over",
+  "wonTheGame": "{name} won the game.",
+  "@wonTheGame": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gameDrawn": "The game ended in a draw.",
+  "gameEndedOnTime": "The game ended on time.",
+  "youResigned": "You resigned.",
+  "endCheckmateWon": "{name} won by checkmate.",
+  "@endCheckmateWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endStalemate": "Game drawn by stalemate.",
+  "endFiftyMove": "Game drawn by 50-move rule.",
+  "endInsufficient": "Game drawn due to insufficient material.",
+  "endRepetition": "Game drawn by threefold repetition.",
+  "endTimeWon": "{name} won on time.",
+  "@endTimeWon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endTimeNoMate": "Time ran out, but the other side cannot checkmate.",
+  "lobby": "Lobby",
+  "rematch": "Rematch",
+  "ratingChange": "Rating {rating} ({change})",
+  "@ratingChange": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "accuracyValue": "Accuracy {value}%",
+  "@accuracyValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "analyzingYourMoves": "Analyzing your moves…",
+  "thinking": "thinking",
+  "invite1": "Inviting {name} to the game…",
+  "@invite1": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invite2": "{name} is taking a seat…",
+  "@invite2": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invite3": "Setting up the board…",
+  "invite4": "{name} is getting ready…",
+  "@invite4": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "takeBack": "Take back",
+  "pause": "Pause",
+  "resume": "Resume",
+  "hint": "Hint",
+  "analyzingMove": "Analyzing {san}…",
+  "@analyzingMove": {
+    "placeholders": {
+      "san": {
+        "type": "String"
+      }
+    }
+  },
+  "pausedTitle": "Paused",
+  "tapToResume": "Tap to resume",
+  "pausedSemantics": "Paused. Tap to resume",
+  "promoteTo": "Promote to {piece}",
+  "@promoteTo": {
+    "placeholders": {
+      "piece": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelPromotion": "Cancel promotion",
+  "pieceQueen": "queen",
+  "pieceRook": "rook",
+  "pieceBishop": "bishop",
+  "pieceKnight": "knight",
+  "noMovesYet": "No moves yet",
+  "dismiss": "Dismiss",
+  "gameOptions": "Game options",
+  "evalBar": "Evaluation bar",
+  "evalBarSub": "Shows who is better",
+  "moveFeedback": "Move feedback",
+  "moveFeedbackSub": "Rates each move you play",
+  "showBest": "Show best",
+  "showBestSub": "An arrow to the better move after yours",
+  "boardImage": "Board image",
+  "boardImageSub": "Share the position as a PNG",
+  "copyFen": "Copy FEN",
+  "copyFenSub": "This position, for any chess app",
+  "copyPgn": "Copy PGN",
+  "copyPgnSub": "Every move of the game",
+  "sharePgn": "Share PGN",
+  "sharePgnSub": "Send the game to another app",
+  "fenCopied": "FEN copied",
+  "pgnCopied": "PGN copied",
+  "qBrilliant": "Brilliant",
+  "qGreat": "Great",
+  "qBest": "Best move",
+  "qExcellent": "Excellent",
+  "qGood": "Good",
+  "qInaccuracy": "Inaccuracy",
+  "qMistake": "Mistake",
+  "qMiss": "Miss",
+  "qBlunder": "Blunder",
+  "bannerBrilliant": "{played} · brilliant move",
+  "@bannerBrilliant": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerGreat": "{played} · great move",
+  "@bannerGreat": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerBest": "{played} · best move",
+  "@bannerBest": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerExcellent": "{played} was excellent · {best} was best",
+  "@bannerExcellent": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerGood": "{played} was good · {best} was best",
+  "@bannerGood": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerInaccuracy": "{played} was an inaccuracy · {best} was best",
+  "@bannerInaccuracy": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerMistake": "{played} was a mistake · {best} was best",
+  "@bannerMistake": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerMiss": "{played} was a miss · {best} was best",
+  "@bannerMiss": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerBlunder": "{played} was a blunder · {best} was best",
+  "@bannerBlunder": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      },
+      "best": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeTitle": "Welcome to Küşt",
+  "welcomeSub": "Play bots, solve puzzles and get better one move at a time.",
+  "letsPlay": "Let’s play",
+  "challengeBot": "Challenge a bot",
+  "newStudents": "New students from Turkmenistan",
+  "helloName": "Hello, {name}",
+  "@helloName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "readyForGame": "Ready for a game?",
+  "ratingBots": "Rating {rating} · Bots beaten {beaten} of {total}",
+  "@ratingBots": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "beaten": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playAGame": "Play a game",
+  "pickOpponent": "Pick opponent",
+  "eloShows": "Elo shows how strong they play",
+  "playAs": "Play as",
+  "selectOpponent": "Select an opponent",
+  "playBot": "Play {name}",
+  "@playBot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youMoveFirst": "You move first",
+  "botMovesFirst": "{name} moves first",
+  "@botMovesFirst": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "letFateDecide": "Let fate decide",
+  "blitz": "Blitz",
+  "rapid": "Rapid",
+  "minutesShort": "{n} min",
+  "@minutesShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeControl": "Time control",
+  "timeControlSub": "How long does each player get?",
+  "noClock": "No clock",
+  "noClockSub": "Untimed casual game",
+  "startGame": "Start game",
+  "newGame": "New game",
+  "playWithBots": "Play with bots",
+  "playWithBotsSub": "Challenge one of our bots",
+  "playLocally": "Play locally",
+  "playLocallySub": "Pass & play on this device",
+  "practiceMode": "Practice mode",
+  "practiceModeSub": "Allows undo, hints and move feedback",
+  "practiceTag": "Practice",
+  "appearance": "Appearance",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "boardSection": "Board",
+  "piecesSection": "Pieces",
+  "movesSection": "Moves",
+  "castleOnRook": "Castle on the rook",
+  "castleOnRookSub": "Tap the king, then its rook, to castle",
+  "premoves": "Premoves",
+  "premovesSub": "Queue your next move while the bot thinks",
+  "feedbackSection": "Feedback",
+  "soundEffects": "Sound effects",
+  "haptics": "Haptics",
+  "boardThemeSemantics": "{theme} board",
+  "@boardThemeSemantics": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      }
+    }
+  },
+  "pieceSetSemantics": "{set} pieces",
+  "@pieceSetSemantics": {
+    "placeholders": {
+      "set": {
+        "type": "String"
+      }
+    }
+  },
+  "boardBrown": "Brown",
+  "boardGreen": "Green",
+  "boardDarkBlue": "Dark Blue",
+  "boardWood": "Wood",
+  "pieceClassic": "Classic",
+  "pieceShaded": "Shaded",
+  "pieceGraphite": "Graphite",
+  "pieceBrushed": "Brushed",
+  "histNoGames": "No games yet",
+  "histNoGamesSub": "Finished games show up here so you can replay them.",
+  "deleteGameTitle": "Delete this game?",
+  "deleteGameSub": "It will be removed from your history.",
+  "resultWhiteWon": "White won",
+  "resultBlackWon": "Black won",
+  "resultWin": "Win",
+  "resultLoss": "Loss",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "monthsShort": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+  "dateShort": "{month} {day}",
+  "@dateShort": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "semGamePassPlay": "Pass and play",
+  "semGameVsBot": "Game against {name}",
+  "@semGameVsBot": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "semAccuracy": "accuracy {value} percent",
+  "@semAccuracy": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "analysisUnavailable": "Analysis is not available on this device right now",
+  "retryAnalysis": "Retry analysis",
+  "analyzeGame": "Analyze this game",
+  "gameTitle": "Game",
+  "replaySettings": "Replay settings",
+  "evalBarReplaySub": "Shows who is better at each move",
+  "moveFeedbackReplaySub": "Rates each move as you step through",
+  "showBestReplaySub": "An arrow to the best move when another was played",
+  "notAvailableHere": "Not available on this device",
+  "evalUnavailable": "Evaluation is unavailable right now",
+  "gameNotFound": "This game could not be found.",
+  "backToHistory": "Back to history",
+  "puzzleN": "Puzzle {n}",
+  "@puzzleN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "allPuzzles": "All puzzles",
+  "puzzleCouldNotLoad": "Could not load this puzzle",
+  "puzzlesCouldNotLoad": "Could not load puzzles",
+  "noPuzzlesAvailable": "No puzzles are available yet",
+  "noPuzzlesYet": "No puzzles yet. Check back soon.",
+  "puzzleSolved": "Puzzle solved!",
+  "solutionShown": "Solution shown",
+  "notThatOne": "Not that one",
+  "whiteToMove": "White to move",
+  "blackToMove": "Black to move",
+  "backToPuzzles": "Back to puzzles",
+  "solution": "Solution",
+  "nextPuzzle": "Next puzzle",
+  "nextLevel": "Next level",
+  "themeMateIn": "Mate in {n}",
+  "@themeMateIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "themeFork": "Fork",
+  "themePin": "Pin",
+  "themeEndgame": "Endgame",
+  "themeWinMaterial": "Win material",
+  "loomMate1": "Mate in 1",
+  "loomMate2": "Mate in 2",
+  "loomForks": "Forks",
+  "loomPins": "Pins",
+  "loomEndgames": "Endgames",
+  "puzzlesAllWoven": "All puzzles woven!",
+  "puzzlesNext": "Next: {theme}",
+  "@puzzlesNext": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      }
+    }
+  },
+  "puzzlesMoreSoon": "More are coming soon.",
+  "reviewPuzzles": "Review puzzles",
+  "continueTheme": "Continue · {theme}",
+  "@continueTheme": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      }
+    }
+  },
+  "statRating": "RATING",
+  "statKnots": "KNOTS",
+  "statBest": "BEST",
+  "puzzlesSolvedOf": "{theme} · {solved} of {total} solved",
+  "@puzzlesSolvedOf": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      },
+      "solved": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "loomProgress": "{theme}, {done} of {total} knots woven",
+  "@loomProgress": {
+    "placeholders": {
+      "theme": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "levelWoven": "Woven ✓",
+  "levelKnots": "{done} of {total} knots",
+  "@levelKnots": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "levelNotStarted": "Not started",
+  "levelComingSoon": "Coming soon",
+  "golWovenSem": "{tribe} göl, woven",
+  "@golWovenSem": {
+    "placeholders": {
+      "tribe": {
+        "type": "String"
+      }
+    }
+  },
+  "golWoven": "{tribe} göl woven",
+  "@golWoven": {
+    "placeholders": {
+      "tribe": {
+        "type": "String"
+      }
+    }
+  },
+  "golWholeCarpet": "{knots} of {knots} knots. The whole carpet is done.",
+  "@golWholeCarpet": {
+    "placeholders": {
+      "knots": {
+        "type": "int"
+      }
+    }
+  },
+  "golNext": "{knots} of {knots} knots. The {next} göl is next.",
+  "@golNext": {
+    "placeholders": {
+      "knots": {
+        "type": "int"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "dailyPuzzle": "Daily puzzle",
+  "solvedToday": "Solved today",
+  "dailySolved": "solved",
+  "dailyStreakSem": "streak {days}",
+  "@dailyStreakSem": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "coachMateIn1": "One move ends the game. Can you see it?\nFind the move that mates right now.\nThe king has no way out. Close the door!",
+  "coachMateIn2": "Can you force mate in two moves?\nStart with a check or a strong threat.\nTwo moves to mate. Which one comes first?",
+  "coachMateIn3": "Mate in three. Think forcing moves.\nChecks first, then see where the king goes.",
+  "coachFork": "Find a move that attacks two pieces at once.\nCan you spot a fork?\nOne piece, two targets. Where does it land?",
+  "coachPin": "A piece cannot move. Can you use that?\nLook for a pinned piece and pile on.\nWhat is stuck in front of its king?",
+  "coachEndgame": "Few pieces, big ideas. Take your time.\nIn the endgame your king is a fighter.\nCareful moves win this one.",
+  "coachGeneric": "Look for checks, captures and threats first.\nWhat is hanging? Take your time.\nThe best move is usually forcing.",
+  "coachWrong": "Close, but not quite. Try another move.\nNot this one. Think about checks and captures.\nHmm, look again. You can do this!\nThat lets them off. What else is there?",
+  "coachCorrect": "Nice work! On to the next one.\nYou saw it. Well played!\nSharp eyes. That was clean.\nAnother knot woven. Keep going!",
+  "coachRetry": "Study it, then try it yourself.\nNow you know. Hit Retry!\nWatch how the pieces work together.",
+  "coachDaily": "Never skip puzzle day!\nLook for checks, captures and threats first.\nOne puzzle a day keeps the blunders away.\nTake your time: the best move is usually forcing.",
+  "achEarnedOf": "{earned} of {total} earned",
+  "@achEarnedOf": {
+    "placeholders": {
+      "earned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achUnlocked": "Achievement unlocked",
+  "achEarned": "earned",
+  "achNotEarned": "not earned yet",
+  "ach_first_game_t": "First move",
+  "ach_first_game_d": "Finish a game against a bot",
+  "ach_first_win_t": "First victory",
+  "ach_first_win_d": "Win a game against a bot",
+  "ach_checkmate_t": "Checkmate!",
+  "ach_checkmate_d": "Win a game by checkmate",
+  "ach_quick_mate_t": "Lightning",
+  "ach_quick_mate_d": "Checkmate a bot in 20 moves or less",
+  "ach_giant_slayer_t": "Giant slayer",
+  "ach_giant_slayer_d": "Beat a bot rated 300 or more above you",
+  "ach_three_bots_t": "Rising star",
+  "ach_three_bots_d": "Beat 3 different bots",
+  "ach_all_bots_t": "Champion",
+  "ach_all_bots_d": "Beat every bot",
+  "ach_marathon_t": "Marathon",
+  "ach_marathon_d": "Play a game of 60 moves or more",
+  "ach_accurate_t": "Sharpshooter",
+  "ach_accurate_d": "Play a game with 90% accuracy",
+  "ach_brilliant_t": "Brilliant!",
+  "ach_brilliant_d": "Play a brilliant move",
+  "ach_first_puzzle_t": "Puzzler",
+  "ach_first_puzzle_d": "Solve your first puzzle",
+  "ach_puzzles_25_t": "Knot by knot",
+  "ach_puzzles_25_d": "Solve 25 puzzles",
+  "ach_first_gol_t": "First göl",
+  "ach_first_gol_d": "Weave a whole göl",
+  "ach_whole_carpet_t": "Master weaver",
+  "ach_whole_carpet_d": "Weave all five göls",
+  "ach_streak_3_t": "On a roll",
+  "ach_streak_3_d": "Solve the daily puzzle 3 days in a row",
+  "ach_streak_7_t": "Week of fire",
+  "ach_streak_7_d": "Solve the daily puzzle 7 days in a row",
+  "onbGetStarted": "Get started",
+  "onbStartPlaying": "Start playing",
+  "onbSkip": "Skip for now",
+  "onbTitle": "Chess that helps you improve",
+  "onbIntro": "Play bots at your level, train with puzzles and replay your games to learn from them.",
+  "onbPlayBots": "Play bots",
+  "onbPlayBotsSub": "From 400 to 2000 Elo, or pass the phone to a friend",
+  "onbSolve": "Solve puzzles",
+  "onbSolveSub": "Short tactics with hints and a rating",
+  "onbReview": "Review your games",
+  "onbReviewSub": "Every finished game is saved for replay",
+  "onbNoAccount": "No account needed. Your games and progress stay on this device.",
+  "onbHowStrong": "How strong are you?",
+  "onbHowStrongSub": "This sets your starting rating. It adjusts as you play, so don’t overthink it.",
+  "lvlBeginner": "Beginner",
+  "lvlBeginnerD": "I’m just getting started with chess.",
+  "lvlIntermediate": "Intermediate",
+  "lvlIntermediateD": "I know the basics and play regularly.",
+  "lvlAdvanced": "Advanced",
+  "lvlAdvancedD": "I understand strategy and complex positions.",
+  "lvlCompetitive": "Competitive",
+  "lvlCompetitiveD": "I play seriously and may compete in tournaments.",
+  "onbAllSet": "You’re all set",
+  "onbStartingRating": "Your starting rating is {rating}.\nYour first game is one tap away.",
+  "@onbStartingRating": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievement_toast.dart';
 import 'package:kust/core/settings.dart';
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
 
 /// Bouncy scrolling everywhere, no Android glow.
@@ -39,7 +40,11 @@ class MyApp extends StatelessWidget {
           darkTheme: appDarkTheme,
           themeMode: AppSettings.forceDark ? ThemeMode.dark : mode,
           scrollBehavior: const _KustScrollBehavior(),
+          supportedLocales: kSupportedLocales,
+          localizationsDelegates: kLocalizationDelegates,
+          localeListResolutionCallback: resolveAppLocale,
           builder: (context, child) {
+            AppText.sync(AppL10n.of(context));
             final isDark = Theme.of(context).brightness == Brightness.dark;
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: isDark

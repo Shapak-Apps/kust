@@ -20,6 +20,7 @@ import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
@@ -1353,7 +1354,7 @@ class _PromotionPicker extends StatelessWidget {
       final image = PieceImage(_assetForPiece(Piece(color: color, role: role)));
       return Semantics(
         button: true,
-        label: 'Promote to ${role.name}',
+        label: context.t.promoteTo(_pieceName(context, role)),
         excludeSemantics: true,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -1373,7 +1374,7 @@ class _PromotionPicker extends StatelessWidget {
 
     final cancel = Semantics(
       button: true,
-      label: 'Cancel promotion',
+      label: context.t.cancelPromotion,
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -1436,7 +1437,7 @@ class _PausedCover extends StatelessWidget {
     final k = context.k;
     return Semantics(
       button: true,
-      label: 'Paused. Tap to resume',
+      label: context.t.pausedSemantics,
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -1450,11 +1451,11 @@ class _PausedCover extends StatelessWidget {
                 Icon(Icons.play_circle_fill_rounded, size: 64, color: k.accent),
                 const SizedBox(height: 10),
                 Text(
-                  'Paused',
+                  context.t.pausedTitle,
                   style: k.title.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
-                Text('Tap to resume', style: k.caption),
+                Text(context.t.tapToResume, style: k.caption),
               ],
             ),
           ),
@@ -1462,4 +1463,16 @@ class _PausedCover extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The name of a promotion piece for a screen reader.
+String _pieceName(BuildContext context, Role role) {
+  final t = context.t;
+  return switch (role) {
+    Role.queen => t.pieceQueen,
+    Role.rook => t.pieceRook,
+    Role.bishop => t.pieceBishop,
+    Role.knight => t.pieceKnight,
+    _ => role.name,
+  };
 }

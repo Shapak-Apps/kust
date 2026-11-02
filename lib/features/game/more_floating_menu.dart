@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// In-game options. Kept under its old name; now a Kust sheet.
 class MoreFloatingMenu extends ConsumerWidget {
@@ -24,27 +25,27 @@ class MoreFloatingMenu extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(title: 'Game options'),
+        KustSheetHeader(title: context.t.gameOptions),
         KustToggleRow(
           icon: Icons.align_horizontal_left_rounded,
-          title: 'Evaluation bar',
-          subtitle: 'Shows who is better',
+          title: context.t.evalBar,
+          subtitle: context.t.evalBarSub,
           value: game.evaluationEnabled,
           onChanged: controller.setEvaluationEnabled,
         ),
         if (game.practiceMode)
           KustToggleRow(
             icon: Icons.insights_rounded,
-            title: 'Move feedback',
-            subtitle: 'Rates each move you play',
+            title: context.t.moveFeedback,
+            subtitle: context.t.moveFeedbackSub,
             value: game.moveFeedbackEnabled,
             onChanged: controller.setMoveFeedbackEnabled,
           ),
         if (game.practiceMode)
           KustToggleRow(
             icon: Icons.north_east_rounded,
-            title: 'Show best',
-            subtitle: 'An arrow to the better move after yours',
+            title: context.t.showBest,
+            subtitle: context.t.showBestSub,
             value: game.showBestEnabled,
             onChanged: controller.setShowBestEnabled,
           ),

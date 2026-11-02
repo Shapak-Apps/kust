@@ -13,6 +13,7 @@ import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// The PGN of a game in progress or just finished, with `*` as the result
 /// while it is still going.
@@ -60,12 +61,8 @@ String gameResultToken(GameState g) {
     case GameStatus.resigned:
       winner = g.playerSide.opposite;
     case GameStatus.timeout:
-      final text = g.endReason ?? '';
-      if (g.mode == GameMode.local) {
-        winner = text.startsWith('White') ? Side.white : Side.black;
-      } else {
-        winner = text.startsWith('You') ? g.playerSide : g.playerSide.opposite;
-      }
+      winner = g.flagFell?.opposite;
+      if (winner == null) return '*';
     case GameStatus.loading:
     case GameStatus.playing:
       return '*';
@@ -211,10 +208,10 @@ Future<void> showExportSheet(
     builder: (sheetContext) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(title: 'Export game'),
+        KustSheetHeader(title: sheetContext.t.exportGame),
         KustOption(
-          title: 'Board image',
-          subtitle: 'Share the position as a PNG',
+          title: sheetContext.t.boardImage,
+          subtitle: sheetContext.t.boardImageSub,
           leading: const KustIconTile(Icons.image_outlined),
           onTap: () async {
             Navigator.pop(sheetContext);
@@ -234,22 +231,23 @@ Future<void> showExportSheet(
         ),
         const SizedBox(height: 8),
         KustOption(
-          title: 'Copy FEN',
-          subtitle: 'This position, for any chess app',
+          title: sheetContext.t.copyFen,
+          subtitle: sheetContext.t.copyFenSub,
           leading: const KustIconTile(Icons.grid_on_rounded),
-          onTap: () => _copy(sheetContext, position.fen, 'FEN copied'),
+          onTap: () =>
+              _copy(sheetContext, position.fen, sheetContext.t.fenCopied),
         ),
         const SizedBox(height: 8),
         KustOption(
-          title: 'Copy PGN',
-          subtitle: 'Every move of the game',
+          title: sheetContext.t.copyPgn,
+          subtitle: sheetContext.t.copyPgnSub,
           leading: const KustIconTile(Icons.notes_rounded),
-          onTap: () => _copy(sheetContext, pgn, 'PGN copied'),
+          onTap: () => _copy(sheetContext, pgn, sheetContext.t.pgnCopied),
         ),
         const SizedBox(height: 8),
         KustOption(
-          title: 'Share PGN',
-          subtitle: 'Send the game to another app',
+          title: sheetContext.t.sharePgn,
+          subtitle: sheetContext.t.sharePgnSub,
           leading: const KustIconTile(Icons.ios_share_rounded),
           onTap: () {
             Navigator.pop(sheetContext);
