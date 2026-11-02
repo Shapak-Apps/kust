@@ -63,8 +63,9 @@ class _FakeEngine implements ChessEngine {
 
 Future<(ChessController, _FakeEngine)> _game(
   WidgetTester tester,
-  List<String> replies,
-) async {
+  List<String> replies, {
+  Side side = Side.white,
+}) async {
   SharedPreferences.setMockInitialValues({});
   SoundService.instance.soundEnabled = false;
   addTearDown(() => SoundService.instance.soundEnabled = true);
@@ -86,7 +87,7 @@ Future<(ChessController, _FakeEngine)> _game(
     ),
   );
   final c = container.read(chessControllerProvider.notifier);
-  await c.startGame(kInternationalBots.first, playerSide: Side.white);
+  await c.startGame(kInternationalBots.first, playerSide: side);
   await tester.pump();
   return (c, engine);
 }
@@ -174,7 +175,7 @@ void main() {
     await _finish(tester);
   });
 
-  testWidgets('if the bot makes a premove illegal, every premove goes', (
+  testWidgets('a premove not legal yet waits; an empty tap clears it', (
     tester,
   ) async {
     final (c, engine) = await _game(tester, ['e7e5', 'a7a6']);
@@ -186,9 +187,13 @@ void main() {
     expect(c.state.premoves.length, 2);
 
     await _reply(tester, engine); // ...e5 blocks the pawn
-    expect(c.state.premoves, isEmpty);
+    expect(c.state.premoves.length, 2); // still waiting
     expect(c.state.moves.length, 2);
     expect(c.state.position.turn, Side.white);
+
+    // A tap on an empty square clears them.
+    c.selectSquare(Square.h5);
+    expect(c.state.premoves, isEmpty);
     await _finish(tester);
   });
 
@@ -401,5 +406,51 @@ void main() {
       final taken = start.board.removePieceAt(Square.g1);
       expect(premoveBoard(taken, Side.white, queue).valid, 0);
     });
+  });
+
+  testWidgets('a pawn push then a pawn capture, both premoved', (tester) async {
+    final (c, engine) = await _game(tester, ['a7a6', 'd7d6', 'h7h6']);
+    await _afterE4(tester, c);
+
+    c.selectSquare(Square.e4);
+    c.selectSquare(Square.e5);
+    // From where the first premove leaves it, the pawn may take on d6.
+    c.selectSquare(Square.e5);
+    expect(c.state.legalDestinations, contains(Square.d6));
+    c.selectSquare(Square.d6);
+    expect(c.state.premoves, [
+      _p(Square.e4, Square.e5),
+      _p(Square.e5, Square.d6),
+    ]);
+
+    await _reply(tester, engine); // ...a6, then e5
+    await _reply(tester, engine); // ...d6, then exd6
+    expect(c.state.moves.map((m) => m.san), ['e4', 'a6', 'e5', 'd6', 'exd6']);
+    await _reply(tester, engine);
+    await _finish(tester);
+  });
+
+  testWidgets('as black, d5-d4 then dxc3 by dragging', (tester) async {
+    final (c, engine) = await _game(tester, [
+      'e2e4', 'a2a3', 'b1c3', 'h2h3', 'g2g3', //
+    ], side: Side.black);
+    await _reply(tester, engine); // 1.e4
+    c.selectSquare(Square.d7);
+    c.selectSquare(Square.d5);
+    await tester.pump();
+    expect(c.state.isBotThinking, isTrue);
+    expect(c.pickUp(Square.d5), isTrue);
+    expect(c.dropOn(Square.d4), isTrue);
+    expect(c.pickUp(Square.d4), isTrue);
+    expect(c.state.legalDestinations, contains(Square.c3));
+    expect(c.dropOn(Square.c3), isTrue);
+    expect(c.state.premoves.length, 2);
+    await _reply(tester, engine); // 2.a3 d4
+    await _reply(tester, engine); // 3.Nc3 dxc3
+    expect(c.state.moves.map((m) => m.san).toList(), [
+      'e4', 'd5', 'a3', 'd4', 'Nc3', 'dxc3', //
+    ]);
+    await _reply(tester, engine);
+    await _finish(tester);
   });
 }

@@ -182,10 +182,34 @@ class _GameScreenState extends ConsumerState<GameScreen>
     ).whenComplete(() => _engineSheetOpen = false);
   }
 
-  /// Calls off a game nobody has really played yet and leaves.
+  /// Asks, then calls off a game nobody has really played yet and leaves.
   void _abort() {
-    ref.read(chessControllerProvider.notifier).abort();
-    context.go('/play');
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const KustSheetHeader(
+            title: 'Abort this game?',
+            subtitle: 'The game will end without a result.',
+          ),
+          KustButton(
+            label: 'Abort',
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              ref.read(chessControllerProvider.notifier).abort();
+              context.go('/play');
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: 'Keep playing',
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheetContext).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   void _confirmResign() {
