@@ -23,6 +23,13 @@ class KustAction {
   final bool busy;
 }
 
+/// Icons whose weight sits off their middle, by code point, moved down so
+/// they look centred beside the others: the bulb's round head is up top and
+/// its base thin, so centred by its box it looks high.
+final Map<int, double> _opticalDrop = {
+  Icons.lightbulb_outline_rounded.codePoint: 2,
+};
+
 /// The row of actions under a board: each a bold icon over a short label,
 /// spread evenly across, with nothing around them.
 class KustActionBar extends StatelessWidget {
@@ -58,14 +65,18 @@ class _Item extends StatelessWidget {
     final colour = enabled ? k.ink : k.muted.withValues(alpha: 0.45);
 
     final Widget icon = action.busy
+        // As tall as an icon, so the label does not move while it spins.
         ? SizedBox.square(
-            dimension: 26,
+            dimension: 30,
             child: Padding(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(4),
               child: CircularProgressIndicator(strokeWidth: 2.8, color: k.ink),
             ),
           )
-        : BoldIcon(action.icon, size: 30, color: colour);
+        : Transform.translate(
+            offset: Offset(0, _opticalDrop[action.icon.codePoint] ?? 0),
+            child: BoldIcon(action.icon, size: 30, color: colour),
+          );
 
     final body = Column(
       mainAxisAlignment: MainAxisAlignment.center,
