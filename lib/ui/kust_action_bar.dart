@@ -40,13 +40,28 @@ class KustActionBar extends StatelessWidget {
   /// The bar's height, for screens that keep a fixed slot for it.
   static const double height = 72;
 
+  static const double _maxItemWidth = 88;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: height,
+      // Centred as a group: each action takes an even share, but no more
+      // than [_maxItemWidth], so two or three sit together in the middle
+      // instead of being flung to the edges.
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          for (final action in actions) Expanded(child: _Item(action: action)),
+          for (final action in actions)
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: _maxItemWidth),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _Item(action: action),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -62,7 +77,10 @@ class _Item extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final enabled = action.onTap != null && !action.busy;
-    final colour = enabled ? k.ink : k.muted.withValues(alpha: 0.45);
+    // A touch softer than the text white.
+    final colour = enabled
+        ? k.ink.withValues(alpha: 0.95)
+        : k.muted.withValues(alpha: 0.45);
 
     final Widget icon = action.busy
         // As tall as an icon, so the label does not move while it spins.
@@ -75,7 +93,12 @@ class _Item extends StatelessWidget {
           )
         : Transform.translate(
             offset: Offset(0, _opticalDrop[action.icon.codePoint] ?? 0),
-            child: BoldIcon(action.icon, size: 30, color: colour),
+            child: BoldIcon(
+              action.icon,
+              size: 30,
+              color: colour,
+              weight: 0.005,
+            ),
           );
 
     final body = Column(
