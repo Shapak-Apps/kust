@@ -153,6 +153,15 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 1200));
       expect(find.text('Achievement unlocked'), findsOneWidget);
+      // Drawn above the pages, it still has a Material for its text
+      // (without one the text gets the yellow-underlined debug style).
+      expect(
+        find.ancestor(
+          of: find.text('Achievement unlocked'),
+          matching: find.byType(Material),
+        ),
+        findsWidgets,
+      );
       expect(find.text('First move'), findsOneWidget);
       expect(find.byType(AchievementCelebration), findsOneWidget);
       expect(tester.takeException(), isNull);
