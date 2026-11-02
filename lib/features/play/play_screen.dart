@@ -19,6 +19,7 @@ import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
 
@@ -155,6 +156,7 @@ class _PlayScreenState extends State<PlayScreen> {
           KustTopBar(
             title: 'Küşt',
             brand: const KustLogo(height: 22),
+            leading: PlayerAvatar(name: name),
             trailing: [
               KustIconButton(
                 icon: Icons.tune_rounded,
