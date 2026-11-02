@@ -451,6 +451,53 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     return svg;
   }
 
+  /// Stepping one move back or forward through the game glides the piece
+  /// as when it was played: forward along the move, back along it reversed.
+  void _glideReviewStep(GameState previous, GameState next) {
+    if (previous.moves.length != next.moves.length) return;
+    final from = previous.analysisCursor, to = next.analysisCursor;
+    if ((from - to).abs() != 1) return;
+    final forward = to > from;
+    final move = next.moves[forward ? from : to].move;
+    final shown = next.displayPosition.board;
+
+    var start = move.from, end = move.to;
+    Square? rookFrom, rookTo;
+    final castling =
+        (move.from == Square.e1 || move.from == Square.e8) &&
+        _isCornerSquare(move.to) &&
+        (forward
+                    ? shown.pieceAt(_castlingDisplaySquare(move.to))
+                    : shown.pieceAt(move.from))
+                ?.role ==
+            Role.king;
+    if (castling) {
+      end = _castlingDisplaySquare(move.to);
+      rookFrom = move.to;
+      rookTo = _rookCastledSquare(move.to);
+    }
+    if (!forward) {
+      (start, end) = (end, start);
+      (rookFrom, rookTo) = (rookTo, rookFrom);
+    }
+    final piece = shown.pieceAt(end);
+    if (piece == null) return;
+    final distance = math.sqrt(
+      math.pow(fileOf(end) - fileOf(start), 2) +
+          math.pow(rankOf(end) - rankOf(start), 2),
+    );
+    _animFrom = start;
+    _animTo = end;
+    _animPiece = piece;
+    _rookFrom = rookFrom;
+    _rookTo = rookTo;
+    _rookPiece = rookTo == null ? null : shown.pieceAt(rookTo);
+    _capSquare = null;
+    _capPiece = null;
+    _moveController.duration = glideDuration(distance.toDouble());
+    _moveController.forward(from: 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final view = ref.watch(chessControllerProvider.select(_BoardView.from));
@@ -463,7 +510,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
 
-      if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) return;
+      if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) {
+        _glideReviewStep(previous, next);
+        return;
+      }
 
       if (!identical(previous.position, next.position)) {
         final move = next.lastMove;
