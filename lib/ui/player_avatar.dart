@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:kust/ui/tokens.dart';
 
-/// The player's picture in a circle. With no photo yet it shows a ghost: a
+/// The player's picture in a square with softened corners. With no photo yet it shows a ghost: a
 /// muted silhouette on a soft disc, never an empty space.
 class PlayerAvatar extends StatelessWidget {
   const PlayerAvatar({super.key, this.photo, this.size = 36, this.name});
@@ -25,7 +25,7 @@ class PlayerAvatar extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(3),
           color: k.surfaceAlt,
           border: Border.all(color: k.line),
           image: photo == null
@@ -38,10 +38,10 @@ class PlayerAvatar extends StatelessWidget {
             // The ghost: head and shoulders, set low so the shoulders meet
             // the rim, as on a default profile picture.
             : Align(
-                alignment: const Alignment(0, 1.9),
+                alignment: const Alignment(0, 1.6),
                 child: Icon(
                   Icons.person_rounded,
-                  size: size * 0.98,
+                  size: size * 0.98 - 5,
                   color: k.muted.withValues(alpha: 0.55),
                 ),
               ),
