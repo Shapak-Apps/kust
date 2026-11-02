@@ -30,9 +30,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: AppSettings.instance.themeMode,
-      builder: (context, mode, _) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        AppSettings.instance.themeMode,
+        AppSettings.instance.language,
+      ]),
+      builder: (context, _) {
+        final mode = AppSettings.instance.themeMode.value;
+        final language = AppSettings.instance.language.value;
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           routerConfig: router,
@@ -40,6 +45,8 @@ class MyApp extends StatelessWidget {
           darkTheme: appDarkTheme,
           themeMode: AppSettings.forceDark ? ThemeMode.dark : mode,
           scrollBehavior: const _KustScrollBehavior(),
+          // A language picked in settings wins; otherwise the phone's.
+          locale: language == null ? null : Locale(language),
           supportedLocales: kSupportedLocales,
           localizationsDelegates: kLocalizationDelegates,
           localeListResolutionCallback: resolveAppLocale,

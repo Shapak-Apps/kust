@@ -322,5 +322,8 @@
   "onbStartingRating": "Başlangyç reýtingiňiz {rating}.\nIlkinji oýnuňyz bir basyş uzaklykda.",
   "streakDays": "{count, plural, =1{1 gün} other{{count} gün}}",
   "yourAvatar": "Siziň suratyňyz",
-  "avatarOf": "{name}, siziň suratyňyz"
+  "avatarOf": "{name}, siziň suratyňyz",
+  "language": "Dil",
+  "languageAuto": "Telefonyň dili (awtomatik)",
+  "languageHint": "Programmanyň dilini saýlaň"
 }

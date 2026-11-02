@@ -3,11 +3,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/widgets/more_sheet.dart';
 
 Map<String, dynamic> _arb(String lang) =>
     jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
@@ -147,4 +150,48 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('the language picker in settings changes the language', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await AppSettings.instance.load();
+    addTearDown(() => AppSettings.instance.setLanguage(null));
+    tester.view.physicalSize = const Size(400 * 3, 900 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ListenableBuilder(
+        listenable: AppSettings.instance.language,
+        builder: (context, _) {
+          final code = AppSettings.instance.language.value;
+          return MaterialApp(
+            theme: appTheme,
+            locale: code == null ? const Locale('en') : Locale(code),
+            supportedLocales: kSupportedLocales,
+            localizationsDelegates: kLocalizationDelegates,
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showSettingsSheet(context),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('LANGUAGE'), findsOneWidget);
+    await tester.tap(find.text('Automatic (phone language)').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Русский'));
+    await tester.pumpAndSettle();
+    expect(AppSettings.instance.language.value, 'ru');
+    expect(find.text('ЯЗЫК'), findsOneWidget); // the sheet follows at once
+    expect(tester.takeException(), isNull);
+  });
 }

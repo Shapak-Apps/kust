@@ -2036,6 +2036,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{name}, your avatar'**
   String avatarOf(String name);
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @languageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic (phone language)'**
+  String get languageAuto;
+
+  /// No description provided for @languageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the language of the app'**
+  String get languageHint;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

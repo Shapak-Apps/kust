@@ -1106,4 +1106,13 @@ class AppL10nTk extends AppL10n {
   String avatarOf(String name) {
     return '$name, siziň suratyňyz';
   }
+
+  @override
+  String get language => 'Dil';
+
+  @override
+  String get languageAuto => 'Telefonyň dili (awtomatik)';
+
+  @override
+  String get languageHint => 'Programmanyň dilini saýlaň';
 }

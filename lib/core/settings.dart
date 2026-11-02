@@ -32,6 +32,10 @@ class AppSettings {
   /// has moved, if it is still legal.
   final ValueNotifier<bool> premoves = ValueNotifier(true);
 
+  /// The language picked in settings: `en`, `ru` or `tk`, or null to follow
+  /// the phone.
+  final ValueNotifier<String?> language = ValueNotifier(null);
+
   SharedPreferences? _prefs;
 
   Future<void> load() async {
@@ -41,6 +45,8 @@ class AppSettings {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
+    final lang = prefs.getString('language');
+    language.value = const {'en', 'ru', 'tk'}.contains(lang) ? lang : null;
     sound.value = prefs.getBool('sound_enabled') ?? true;
     haptics.value = prefs.getBool('haptics_enabled') ?? true;
     boardTheme.value = BoardTheme.fromName(prefs.getString('board_theme'));
@@ -53,6 +59,15 @@ class AppSettings {
   Future<void> setThemeMode(ThemeMode mode) async {
     themeMode.value = mode;
     await _prefs?.setString('theme_mode', mode.name);
+  }
+
+  Future<void> setLanguage(String? code) async {
+    language.value = code;
+    if (code == null) {
+      await _prefs?.remove('language');
+    } else {
+      await _prefs?.setString('language', code);
+    }
   }
 
   Future<void> setSound(bool value) async {

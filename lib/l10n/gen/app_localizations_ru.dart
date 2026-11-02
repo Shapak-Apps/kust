@@ -1105,4 +1105,13 @@ class AppL10nRu extends AppL10n {
   String avatarOf(String name) {
     return '$name, ваш аватар';
   }
+
+  @override
+  String get language => 'Язык';
+
+  @override
+  String get languageAuto => 'Как на телефоне';
+
+  @override
+  String get languageHint => 'Выберите язык приложения';
 }

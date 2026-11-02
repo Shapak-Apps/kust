@@ -322,5 +322,8 @@
   "onbStartingRating": "Ваш начальный рейтинг — {rating}.\nПервая партия уже в одном касании.",
   "streakDays": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}",
   "yourAvatar": "Ваш аватар",
-  "avatarOf": "{name}, ваш аватар"
+  "avatarOf": "{name}, ваш аватар",
+  "language": "Язык",
+  "languageAuto": "Как на телефоне",
+  "languageHint": "Выберите язык приложения"
 }

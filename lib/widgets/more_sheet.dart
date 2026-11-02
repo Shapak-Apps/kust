@@ -24,6 +24,9 @@ class _SettingsSheet extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         KustSheetHeader(title: context.t.settings),
+        KustSectionLabel(context.t.language),
+        const _LanguagePicker(),
+        const SizedBox(height: 24),
         // Hidden while the app is dark only (see AppSettings.forceDark).
         if (!AppSettings.forceDark) ...[
           KustSectionLabel(context.t.appearance),
@@ -288,6 +291,60 @@ class PieceSetSwatch extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The languages to pick from, each in its own language.
+const List<(String?, String)> _languages = [
+  ('en', 'English'),
+  ('ru', 'Русский'),
+  ('tk', 'Türkmençe'),
+];
+
+/// A row showing the language in use; tapping it opens the list to pick
+/// from: the phone's language, or one of the app's.
+class _LanguagePicker extends StatelessWidget {
+  const _LanguagePicker();
+
+  static String _name(BuildContext context, String? code) => code == null
+      ? context.t.languageAuto
+      : _languages.firstWhere((l) => l.$1 == code).$2;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder<String?>(
+      valueListenable: AppSettings.instance.language,
+      builder: (context, code, _) => KustOption(
+        leading: const KustIconTile(Icons.translate_rounded),
+        title: _name(context, code),
+        subtitle: context.t.languageHint,
+        trailing: Icon(Icons.unfold_more_rounded, color: k.muted),
+        onTap: () => showKustSheet<void>(
+          context,
+          builder: (sheetContext) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              KustSheetHeader(title: sheetContext.t.language),
+              for (final option in [
+                (null, sheetContext.t.languageAuto),
+                ..._languages,
+              ]) ...[
+                KustOption(
+                  title: option.$2,
+                  selected: AppSettings.instance.language.value == option.$1,
+                  onTap: () {
+                    AppSettings.instance.setLanguage(option.$1);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ],
+          ),
         ),
       ),
     );
