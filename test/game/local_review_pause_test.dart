@@ -144,4 +144,33 @@ void main() {
     expect(c.state.paused, isFalse);
     await _finish(tester);
   });
+
+  testWidgets('a local game can be aborted until black has moved', (
+    tester,
+  ) async {
+    final c = await _local(tester);
+    expect(c.state.canAbort, isTrue);
+    c.selectSquare(Square.e2);
+    c.selectSquare(Square.e4);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(c.state.canAbort, isTrue); // black has not moved yet
+    c.selectSquare(Square.e7);
+    c.selectSquare(Square.e5);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(c.state.canAbort, isFalse);
+    await _finish(tester);
+  });
+
+  testWidgets('stepping back through a game plays a glide', (tester) async {
+    final c = await _local(tester);
+    c.selectSquare(Square.e2);
+    c.selectSquare(Square.e4);
+    await tester.pump(const Duration(milliseconds: 400));
+    c.analysisMoveBack();
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(tester.hasRunningAnimations, isTrue);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(c.state.displayPosition.board.pieceAt(Square.e2), isNotNull);
+    await _finish(tester);
+  });
 }

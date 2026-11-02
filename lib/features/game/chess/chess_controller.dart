@@ -182,6 +182,14 @@ class GameState {
     return true;
   }
 
+  /// Whether the game can be called off without a result: before the
+  /// player has made a move (in pass and play, before black has).
+  bool get canAbort {
+    if (status != GameStatus.playing) return false;
+    if (mode == GameMode.local) return moves.length < 2;
+    return !moves.any((m) => m.side == playerSide);
+  }
+
   bool get isSelfAnalysisActive {
     final index = analysisIndex;
     if (index == null) return false;
@@ -1194,6 +1202,15 @@ class ChessController extends Notifier<GameState> {
     SoundService.instance.playJingle('game-end.wav');
   }
 
+  /// Calls the game off before it has really started: nothing is recorded.
+  void abort() {
+    if (!state.canAbort) return;
+    _moveRequestId++;
+    _engine.stopThinking();
+    _stopClock();
+    state = state.copyWith(isBotThinking: false, premoves: const []);
+  }
+
   void undoLastMove() {
     if (!state.canUndo) return;
 
@@ -1264,6 +1281,7 @@ class ChessController extends Notifier<GameState> {
       premoves: const [],
       lastMoveInstant: false,
     );
+    _playSound(capturedPiece != null ? 'capture.wav' : 'move.wav');
 
     _refreshEvaluation();
   }
@@ -1274,17 +1292,28 @@ class ChessController extends Notifier<GameState> {
     final newIndex = state.analysisCursor - 1;
     if (newIndex < 0) return;
 
+    final undone = state.moves[newIndex];
     state = state.copyWith(
       clearSelection: true,
       hintSquares: const <Square>{},
       analysisIndex: newIndex,
     );
+    _playSound(undone.capturedPiece != null ? 'capture.wav' : 'move.wav');
   }
 
   void analysisMoveNext() {
     if (!canAnalysisMoveNext) return;
 
     final newIndex = state.analysisCursor + 1;
+    final replayed = state.moves[newIndex - 1];
+    _playMoveSound(
+      replayed.move,
+      state.history[newIndex - 1],
+      newIndex < state.history.length
+          ? state.history[newIndex]
+          : state.position,
+      false,
+    );
 
     if (newIndex >= state.moves.length) {
       state = state.copyWith(
