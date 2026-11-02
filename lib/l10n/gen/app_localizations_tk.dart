@@ -1111,8 +1111,5 @@ class AppL10nTk extends AppL10n {
   String get language => 'Dil';
 
   @override
-  String get languageAuto => 'Telefonyň dili (awtomatik)';
-
-  @override
-  String get languageHint => 'Programmanyň dilini saýlaň';
+  String get languageAuto => 'Ulgam';
 }

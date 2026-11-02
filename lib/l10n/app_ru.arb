@@ -324,6 +324,5 @@
   "yourAvatar": "Ваш аватар",
   "avatarOf": "{name}, ваш аватар",
   "language": "Язык",
-  "languageAuto": "Как на телефоне",
-  "languageHint": "Выберите язык приложения"
+  "languageAuto": "Система"
 }

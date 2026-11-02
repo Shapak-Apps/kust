@@ -303,5 +303,4 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `yourAvatar` | Your avatar | Siziň suratyňyz |
 | `avatarOf` | {name}, your avatar | {name}, siziň suratyňyz |
 | `language` | Language | Dil |
-| `languageAuto` | Automatic (phone language) | Telefonyň dili (awtomatik) |
-| `languageHint` | Choose the language of the app | Programmanyň dilini saýlaň |
+| `languageAuto` | System | Ulgam |

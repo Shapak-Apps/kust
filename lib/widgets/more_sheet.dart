@@ -24,9 +24,6 @@ class _SettingsSheet extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         KustSheetHeader(title: context.t.settings),
-        KustSectionLabel(context.t.language),
-        const _LanguagePicker(),
-        const SizedBox(height: 24),
         // Hidden while the app is dark only (see AppSettings.forceDark).
         if (!AppSettings.forceDark) ...[
           KustSectionLabel(context.t.appearance),
@@ -127,6 +124,7 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setHaptics,
           ),
         ),
+        const _LanguagePicker(),
       ],
     );
   }
@@ -304,8 +302,8 @@ const List<(String?, String)> _languages = [
   ('tk', 'Türkmençe'),
 ];
 
-/// A row showing the language in use; tapping it opens the list to pick
-/// from: the phone's language, or one of the app's.
+/// A plain row showing the language in use; tapping it opens the list to
+/// pick from.
 class _LanguagePicker extends StatelessWidget {
   const _LanguagePicker();
 
@@ -318,11 +316,7 @@ class _LanguagePicker extends StatelessWidget {
     final k = context.k;
     return ValueListenableBuilder<String?>(
       valueListenable: AppSettings.instance.language,
-      builder: (context, code, _) => KustOption(
-        leading: const KustIconTile(Icons.translate_rounded),
-        title: _name(context, code),
-        subtitle: context.t.languageHint,
-        trailing: Icon(Icons.unfold_more_rounded, color: k.muted),
+      builder: (context, code, _) => Pressable(
         onTap: () => showKustSheet<void>(
           context,
           builder: (sheetContext) => Column(
@@ -332,17 +326,52 @@ class _LanguagePicker extends StatelessWidget {
               for (final option in [
                 (null, sheetContext.t.languageAuto),
                 ..._languages,
-              ]) ...[
-                KustOption(
-                  title: option.$2,
-                  selected: AppSettings.instance.language.value == option.$1,
+              ])
+                Pressable(
                   onTap: () {
                     AppSettings.instance.setLanguage(option.$1);
                     Navigator.of(sheetContext).pop();
                   },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            option.$2,
+                            style: sheetContext.k.body.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (AppSettings.instance.language.value == option.$1)
+                          Icon(
+                            Icons.check_rounded,
+                            size: 22,
+                            color: sheetContext.k.accent,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-              ],
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Icon(Icons.translate_rounded, size: 22, color: k.muted),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  context.t.language,
+                  style: k.body.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(_name(context, code), style: k.caption),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, size: 20, color: k.muted),
             ],
           ),
         ),

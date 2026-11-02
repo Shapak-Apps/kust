@@ -1105,8 +1105,5 @@ class AppL10nEn extends AppL10n {
   String get language => 'Language';
 
   @override
-  String get languageAuto => 'Automatic (phone language)';
-
-  @override
-  String get languageHint => 'Choose the language of the app';
+  String get languageAuto => 'System';
 }

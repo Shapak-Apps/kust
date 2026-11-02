@@ -324,6 +324,5 @@
   "yourAvatar": "Siziň suratyňyz",
   "avatarOf": "{name}, siziň suratyňyz",
   "language": "Dil",
-  "languageAuto": "Telefonyň dili (awtomatik)",
-  "languageHint": "Programmanyň dilini saýlaň"
+  "languageAuto": "Ulgam"
 }

@@ -185,13 +185,13 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('LANGUAGE'), findsOneWidget);
-    await tester.tap(find.text('Automatic (phone language)').first);
+    expect(find.text('Language'), findsOneWidget);
+    await tester.tap(find.text('Language'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Русский'));
     await tester.pumpAndSettle();
     expect(AppSettings.instance.language.value, 'ru');
-    expect(find.text('ЯЗЫК'), findsOneWidget); // the sheet follows at once
+    expect(find.text('Язык'), findsOneWidget); // the sheet follows at once
     expect(tester.takeException(), isNull);
   });
 }

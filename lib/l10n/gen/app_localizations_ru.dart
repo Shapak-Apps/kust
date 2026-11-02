@@ -1110,8 +1110,5 @@ class AppL10nRu extends AppL10n {
   String get language => 'Язык';
 
   @override
-  String get languageAuto => 'Как на телефоне';
-
-  @override
-  String get languageHint => 'Выберите язык приложения';
+  String get languageAuto => 'Система';
 }

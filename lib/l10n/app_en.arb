@@ -704,6 +704,5 @@
     }
   },
   "language": "Language",
-  "languageAuto": "Automatic (phone language)",
-  "languageHint": "Choose the language of the app"
+  "languageAuto": "System"
 }
