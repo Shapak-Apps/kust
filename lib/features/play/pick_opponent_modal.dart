@@ -9,6 +9,7 @@ import 'package:kust/features/play/practice_mode_checkbox.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 export 'package:kust/features/play/bots.dart';
 
@@ -72,22 +73,22 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(
-          title: 'Pick opponent',
-          subtitle: 'Elo shows how strong they play',
+        KustSheetHeader(
+          title: context.t.pickOpponent,
+          subtitle: context.t.eloShows,
         ),
         _grid(kInternationalBots),
         const SizedBox(height: 24),
-        const KustSectionLabel('New students from Turkmenistan'),
+        KustSectionLabel(context.t.newStudents),
         _grid(kTkmBots),
         const SizedBox(height: 24),
-        const KustSectionLabel('Play as'),
+        KustSectionLabel(context.t.playAs),
         KustSegmented<Side?>(
           value: _side,
-          options: const {
-            Side.white: 'White',
-            Side.black: 'Black',
-            null: 'Random',
+          options: {
+            Side.white: context.t.whiteName,
+            Side.black: context.t.blackName,
+            null: context.t.random,
           },
           onChanged: (v) => setState(() => _side = v),
         ),
@@ -98,7 +99,9 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
         ),
         const SizedBox(height: 16),
         KustButton(
-          label: bot == null ? 'Select an opponent' : 'Play ${bot.name}',
+          label: bot == null
+              ? context.t.selectOpponent
+              : context.t.playBot(bot.name),
           onTap: bot == null ? null : _play,
         ),
       ],

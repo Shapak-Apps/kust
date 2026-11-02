@@ -4,6 +4,7 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Shows the göl of a level that has just been woven, knot row by knot row
 /// from the bottom, the way the carpet itself is made.
@@ -17,7 +18,7 @@ Future<void> showWovenDialog(
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Close',
+    barrierLabel: context.t.close,
     barrierColor: Colors.black.withValues(alpha: 0.55),
     transitionDuration: const Duration(milliseconds: 260),
     transitionBuilder: (context, animation, _, child) => FadeTransition(
@@ -105,7 +106,7 @@ class _WovenCardState extends State<WovenCard>
           mainAxisSize: MainAxisSize.min,
           children: [
             Semantics(
-              label: '${widget.tribe} göl, woven',
+              label: context.t.golWovenSem(widget.tribe),
               child: AspectRatio(
                 aspectRatio: 1.25,
                 child: DecoratedBox(
@@ -130,22 +131,20 @@ class _WovenCardState extends State<WovenCard>
             ),
             const SizedBox(height: 20),
             Text(
-              '${widget.tribe} göl woven',
+              context.t.golWoven(widget.tribe),
               textAlign: TextAlign.center,
               style: k.title,
             ),
             const SizedBox(height: 6),
             Text(
               next == null
-                  ? '${widget.knots} of ${widget.knots} knots. '
-                        'The whole carpet is done.'
-                  : '${widget.knots} of ${widget.knots} knots. '
-                        'The $next göl is next.',
+                  ? context.t.golWholeCarpet(widget.knots)
+                  : context.t.golNext(widget.knots, next),
               textAlign: TextAlign.center,
               style: k.caption,
             ),
             const SizedBox(height: 20),
-            KustButton(label: 'Continue', onTap: widget.onContinue),
+            KustButton(label: context.t.cont, onTap: widget.onContinue),
           ],
         ),
       ),

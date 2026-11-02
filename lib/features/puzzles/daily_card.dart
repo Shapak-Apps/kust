@@ -7,6 +7,7 @@ import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
 import 'package:kust/ui/kust_tile.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Every puzzle level, loaded once for the daily pick. A level that cannot
 /// be read counts as empty.
@@ -47,7 +48,7 @@ class _DailyPuzzleCardState extends State<DailyPuzzleCard> {
             final streak = DailyStore.instance.load();
             return DailyTile(
               subtitle:
-                  '${puzzleThemeLabel(daily.puzzle.theme)} · ${daily.puzzle.rating}',
+                  '${puzzleThemeLabel(daily.puzzle.theme, context.t)} · ${daily.puzzle.rating}',
               solved: streak.doneOn(now),
               streak: streak.on(now),
               onTap: () =>
@@ -80,15 +81,15 @@ class DailyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final days = streak == 1 ? '1 day' : '$streak days';
+    final days = context.t.streakDays(streak);
     return KustTile(
       icon: solved ? Icons.check_rounded : Icons.today_rounded,
-      title: 'Daily puzzle',
-      subtitle: solved ? 'Solved today' : subtitle,
+      title: context.t.dailyPuzzle,
+      subtitle: solved ? context.t.solvedToday : subtitle,
       onTap: onTap,
       semanticsLabel:
-          'Daily puzzle, ${solved ? 'solved' : subtitle}'
-          '${streak > 0 ? ', streak $days' : ''}',
+          '${context.t.dailyPuzzle}, ${solved ? context.t.dailySolved : subtitle}'
+          '${streak > 0 ? ', ${context.t.dailyStreakSem(days)}' : ''}',
       badge: streak > 0
           ? Row(
               mainAxisSize: MainAxisSize.min,

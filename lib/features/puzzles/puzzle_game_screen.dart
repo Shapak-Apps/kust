@@ -24,9 +24,14 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
+
+/// Error markers for the puzzle screen; shown as text in the language in use.
+const String _errLoad = 'load';
+const String _errEmpty = 'empty';
 
 class PuzzleGameScreen extends StatefulWidget {
   const PuzzleGameScreen({
@@ -93,16 +98,16 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final PuzzleLevel level;
     try {
       level = await PuzzleRepository.instance.loadLevel(widget.level);
-    } on PuzzleDataException catch (e) {
-      if (mounted) setState(() => _error = e.message);
+    } on PuzzleDataException {
+      if (mounted) setState(() => _error = _errLoad);
       return;
     } catch (_) {
-      if (mounted) setState(() => _error = 'Could not load this puzzle');
+      if (mounted) setState(() => _error = _errLoad);
       return;
     }
     if (!mounted) return;
     if (level.puzzles.isEmpty) {
-      setState(() => _error = 'No puzzles are available yet');
+      setState(() => _error = _errEmpty);
       return;
     }
 
@@ -369,10 +374,11 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   String get _statusText {
-    if (_solved) return 'Puzzle solved!';
-    if (_revealed) return 'Solution shown';
-    if (_mistakeFlash) return 'Not that one';
-    return _position.turn == Side.white ? 'White to move' : 'Black to move';
+    final t = context.t;
+    if (_solved) return t.puzzleSolved;
+    if (_revealed) return t.solutionShown;
+    if (_mistakeFlash) return t.notThatOne;
+    return _position.turn == Side.white ? t.whiteToMove : t.blackToMove;
   }
 
   CoachMood get _coachMood => _solved
@@ -392,6 +398,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       mood: _coachMood,
       theme: puzzle.theme,
       seed: coachSeed(puzzle.id) + (_session?.mistakes ?? 0),
+      t: context.t,
     );
   }
 
@@ -417,10 +424,12 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
     final error = _error;
     if (error != null) {
       return _MessageState(
-        message: error,
-        actionLabel: 'Try again',
+        message: error == _errEmpty
+            ? context.t.noPuzzlesAvailable
+            : context.t.puzzleCouldNotLoad,
+        actionLabel: context.t.tryAgain,
         onAction: _load,
-        secondaryLabel: 'Back to puzzles',
+        secondaryLabel: context.t.backToPuzzles,
         onSecondary: () => _exit(context),
       );
     }
@@ -547,17 +556,21 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       body: Column(
         children: [
           KustTopBar(
-            title: 'Puzzle ${_session == null ? '' : _index + 1}',
-            subtitle: _puzzle == null ? null : puzzleThemeLabel(_puzzle!.theme),
+            title: _session == null
+                ? context.t.navPuzzles
+                : context.t.puzzleN(_index + 1),
+            subtitle: _puzzle == null
+                ? null
+                : puzzleThemeLabel(_puzzle!.theme, context.t),
             leading: KustIconButton(
               icon: Icons.arrow_back_rounded,
-              label: 'Back',
+              label: context.t.back,
               onTap: () => _exit(context),
             ),
             trailing: [
               KustIconButton(
                 icon: Icons.tune_rounded,
-                label: 'Settings',
+                label: context.t.settings,
                 onTap: () => showSettingsSheet(context),
               ),
             ],
@@ -665,27 +678,27 @@ class _ControlBar extends StatelessWidget {
         actions: [
           KustAction(
             icon: Icons.refresh_rounded,
-            label: 'Retry',
+            label: context.t.retry,
             onTap: canReveal ? onRetry : null,
           ),
           KustAction(
             icon: Icons.visibility_outlined,
-            label: 'Solution',
+            label: context.t.solution,
             onTap: canReveal ? onReveal : null,
           ),
           KustAction(
             icon: Icons.lightbulb_outline_rounded,
-            label: 'Hint',
+            label: context.t.hint,
             onTap: canHint ? onHint : null,
           ),
           KustAction(
             icon: Icons.chevron_left_rounded,
-            label: 'Back',
+            label: context.t.back,
             onTap: canBack ? onBack : null,
           ),
           KustAction(
             icon: Icons.chevron_right_rounded,
-            label: 'Forward',
+            label: context.t.forward,
             onTap: canForward ? onForward : null,
           ),
         ],
@@ -719,7 +732,7 @@ class _FinishedBar extends StatelessWidget {
         children: [
           KustIconButton(
             icon: Icons.refresh_rounded,
-            label: 'Retry',
+            label: context.t.retry,
             size: 52,
             onTap: busy ? null : onRetry,
           ),
@@ -727,10 +740,10 @@ class _FinishedBar extends StatelessWidget {
           Expanded(
             child: KustButton(
               label: hasNext
-                  ? 'Next puzzle'
+                  ? context.t.nextPuzzle
                   : nextLevel
-                  ? 'Next level'
-                  : 'Back to puzzles',
+                  ? context.t.nextLevel
+                  : context.t.backToPuzzles,
               onTap: busy ? null : onNext,
             ),
           ),

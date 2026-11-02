@@ -9,6 +9,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 const int _stepCount = 3;
 
@@ -64,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: _step > 0
                         ? KustIconButton(
                             icon: Icons.arrow_back_rounded,
-                            label: 'Back',
+                            label: context.t.back,
                             onTap: () => _goTo(_step - 1),
                           )
                         : null,
@@ -117,9 +118,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   KustButton(
                     label: switch (_step) {
-                      0 => 'Get started',
-                      1 => 'Continue',
-                      _ => 'Start playing',
+                      0 => context.t.onbGetStarted,
+                      1 => context.t.cont,
+                      _ => context.t.onbStartPlaying,
                     },
                     onTap: switch (_step) {
                       0 => () => _goTo(1),
@@ -138,7 +139,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
-                          'Skip for now',
+                          context.t.onbSkip,
                           style: k.body.copyWith(
                             color: k.muted,
                             fontWeight: FontWeight.w700,
@@ -198,41 +199,31 @@ class _WelcomeStep extends StatelessWidget {
         children: [
           const KustLogo(height: 26),
           const SizedBox(height: 32),
-          Text('Chess that helps you improve', style: k.display),
+          Text(context.t.onbTitle, style: k.display),
           const SizedBox(height: 12),
-          Text(
-            'Play bots at your level, train with puzzles and replay your '
-            'games to learn from them.',
-            style: k.body.copyWith(color: k.muted),
-          ),
+          Text(context.t.onbIntro, style: k.body.copyWith(color: k.muted)),
           const SizedBox(height: 28),
-          const _Feature(
+          _Feature(
             icon: Icons.smart_toy_outlined,
-            title: 'Play bots',
-            subtitle: 'From 400 to 2000 Elo, or pass the phone to a friend',
+            title: context.t.onbPlayBots,
+            subtitle: context.t.onbPlayBotsSub,
           ),
-          const _Feature(
+          _Feature(
             icon: Icons.extension_outlined,
-            title: 'Solve puzzles',
-            subtitle: 'Short tactics with hints and a rating',
+            title: context.t.onbSolve,
+            subtitle: context.t.onbSolveSub,
           ),
-          const _Feature(
+          _Feature(
             icon: Icons.history_rounded,
-            title: 'Review your games',
-            subtitle: 'Every finished game is saved for replay',
+            title: context.t.onbReview,
+            subtitle: context.t.onbReviewSub,
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(Icons.lock_outline_rounded, size: 16, color: k.muted),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'No account needed. Your games and progress stay on this '
-                  'device.',
-                  style: k.caption,
-                ),
-              ),
+              Expanded(child: Text(context.t.onbNoAccount, style: k.caption)),
             ],
           ),
         ],
@@ -293,11 +284,10 @@ class _LevelStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('How strong are you?', style: k.display),
+          Text(context.t.onbHowStrong, style: k.display),
           const SizedBox(height: 12),
           Text(
-            'This sets your starting rating. It adjusts as you play, so '
-            'don’t overthink it.',
+            context.t.onbHowStrongSub,
             style: k.body.copyWith(color: k.muted),
           ),
           const SizedBox(height: 24),
@@ -305,8 +295,8 @@ class _LevelStep extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: KustOption(
-                title: level.title,
-                subtitle: level.description,
+                title: level.titleIn(context.t),
+                subtitle: level.descriptionIn(context.t),
                 subtitleLines: 2,
                 leading: KustIconTile(level.icon),
                 selected: selected == level,
@@ -344,10 +334,10 @@ class _ReadyStep extends StatelessWidget {
               child: Icon(Icons.check_rounded, size: 44, color: k.accentInk),
             ),
             const SizedBox(height: 28),
-            Text('You’re all set', style: k.display),
+            Text(context.t.onbAllSet, style: k.display),
             const SizedBox(height: 12),
             Text(
-              'Your starting rating is $rating.\nYour first game is one tap away.',
+              context.t.onbStartingRating(rating),
               textAlign: TextAlign.center,
               style: k.body.copyWith(color: k.muted),
             ),

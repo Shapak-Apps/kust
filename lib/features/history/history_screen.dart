@@ -10,19 +10,23 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
-String describeResult(GameRecord game) {
+/// The result of a game as a short phrase, in the language in use (or in
+/// [t] when given).
+String describeResult(GameRecord game, [AppL10n? t]) {
+  t ??= AppText.now;
   if (game.isLocal) {
     return switch (game.result) {
-      GameRecord.whiteWon => 'White won',
-      GameRecord.blackWon => 'Black won',
-      _ => 'Draw',
+      GameRecord.whiteWon => t.resultWhiteWon,
+      GameRecord.blackWon => t.resultBlackWon,
+      _ => t.resultDraw,
     };
   }
   return switch (game.result) {
-    GameRecord.win => 'Win',
-    GameRecord.loss => 'Loss',
-    _ => 'Draw',
+    GameRecord.win => t.resultWin,
+    GameRecord.loss => t.resultLoss,
+    _ => t.resultDraw,
   };
 }
 
@@ -37,23 +41,11 @@ String formatGameDate(DateTime date) {
   final today = DateTime(now.year, now.month, now.day);
   final day = DateTime(date.year, date.month, date.day);
   final diff = today.difference(day).inDays;
-  if (diff == 0) return 'Today';
-  if (diff == 1) return 'Yesterday';
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${months[date.month - 1]} ${date.day}';
+  final t = AppText.now;
+  if (diff == 0) return t.today;
+  if (diff == 1) return t.yesterday;
+  final months = t.monthsShort.split(',');
+  return t.dateShort(months[date.month - 1], date.day);
 }
 
 class HistoryScreen extends StatelessWidget {
@@ -66,7 +58,7 @@ class HistoryScreen extends StatelessWidget {
       color: k.bg,
       child: Column(
         children: [
-          const FeltHeader(title: 'History'),
+          FeltHeader(title: context.t.navHistory),
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: GameHistoryStore.instance.listenable(),
@@ -110,16 +102,16 @@ class _EmptyHistory extends StatelessWidget {
           children: [
             Icon(Icons.history_rounded, size: 40, color: k.muted),
             const SizedBox(height: 12),
-            Text('No games yet', style: k.title),
+            Text(context.t.histNoGames, style: k.title),
             const SizedBox(height: 4),
             Text(
-              'Finished games show up here so you can replay them.',
+              context.t.histNoGamesSub,
               textAlign: TextAlign.center,
               style: k.body.copyWith(color: k.muted),
             ),
             const SizedBox(height: 20),
             KustButton(
-              label: 'Play a game',
+              label: context.t.playAGame,
               expand: false,
               onTap: () => context.go('/play'),
             ),
@@ -141,12 +133,12 @@ class _GameTile extends StatelessWidget {
       builder: (sheetContext) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const KustSheetHeader(
-            title: 'Delete this game?',
-            subtitle: 'It will be removed from your history.',
+          KustSheetHeader(
+            title: sheetContext.t.deleteGameTitle,
+            subtitle: sheetContext.t.deleteGameSub,
           ),
           KustButton(
-            label: 'Delete',
+            label: sheetContext.t.delete,
             onTap: () {
               Navigator.of(sheetContext).pop();
               GameHistoryStore.instance.delete(game.id);
@@ -154,7 +146,7 @@ class _GameTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           KustButton(
-            label: 'Keep',
+            label: sheetContext.t.keep,
             style: KustButtonStyle.outline,
             onTap: () => Navigator.of(sheetContext).pop(),
           ),
@@ -173,9 +165,9 @@ class _GameTile extends StatelessWidget {
     return Semantics(
       button: true,
       label:
-          '${game.isLocal ? 'Pass and play' : 'Game against ${game.botName}'}, '
-          '${describeResult(game)}'
-          '${accuracy == null ? '' : ', accuracy ${accuracy.toStringAsFixed(1)} percent'}',
+          '${game.isLocal ? context.t.semGamePassPlay : context.t.semGameVsBot(game.botName ?? '')}, '
+          '${describeResult(game, context.t)}'
+          '${accuracy == null ? '' : ', ${context.t.semAccuracy(accuracy.toStringAsFixed(1))}'}',
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -205,7 +197,7 @@ class _GameTile extends StatelessWidget {
                         Flexible(
                           child: Text(
                             game.isLocal
-                                ? 'Pass & Play'
+                                ? context.t.passAndPlay
                                 : game.botName ?? 'Bot',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -222,7 +214,7 @@ class _GameTile extends StatelessWidget {
                     ),
                     Text(
                       '${formatGameDate(game.date)}'
-                      '${game.practice ? ' · Practice' : ''}'
+                      '${game.practice ? ' · ${context.t.practiceTag}' : ''}'
                       '${change == null ? '' : ' · ${change > 0 ? '+' : ''}$change'}',
                       style: k.caption,
                     ),
@@ -258,11 +250,7 @@ class _AnalysisSlot extends StatelessWidget {
     if (ok || !context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Analysis is not available on this device right now'),
-        ),
-      );
+      ..showSnackBar(SnackBar(content: Text(context.t.analysisUnavailable)));
   }
 
   @override
@@ -306,7 +294,7 @@ class _AnalysisSlot extends StatelessWidget {
           // Just the icon, no circle around it; the hit area stays generous.
           Semantics(
             button: true,
-            label: failed ? 'Retry analysis' : 'Analyze this game',
+            label: failed ? context.t.retryAnalysis : context.t.analyzeGame,
             excludeSemantics: true,
             child: Pressable(
               onTap: () => _start(context),

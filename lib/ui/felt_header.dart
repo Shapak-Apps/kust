@@ -5,6 +5,7 @@ import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/ui/bold_icon.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// The green felt title bar of the Puzzles and History tabs: a large cream
 /// title on the carpet's felt green, with a faint line under it.
@@ -46,7 +47,7 @@ class FeltHeader extends StatelessWidget {
                     if (onBack != null) ...[
                       Semantics(
                         button: true,
-                        label: 'Back',
+                        label: context.t.back,
                         excludeSemantics: true,
                         child: Pressable(
                           onTap: onBack,

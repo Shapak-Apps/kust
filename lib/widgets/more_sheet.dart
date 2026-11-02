@@ -8,6 +8,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 Future<void> showSettingsSheet(BuildContext context) {
   return showKustSheet<void>(context, builder: (_) => const _SettingsSheet());
@@ -22,25 +23,25 @@ class _SettingsSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(title: 'Settings'),
+        KustSheetHeader(title: context.t.settings),
         // Hidden while the app is dark only (see AppSettings.forceDark).
         if (!AppSettings.forceDark) ...[
-          const KustSectionLabel('Appearance'),
+          KustSectionLabel(context.t.appearance),
           ValueListenableBuilder<ThemeMode>(
             valueListenable: s.themeMode,
             builder: (_, mode, _) => KustSegmented<ThemeMode>(
               value: mode,
-              options: const {
-                ThemeMode.system: 'Auto',
-                ThemeMode.light: 'Light',
-                ThemeMode.dark: 'Dark',
+              options: {
+                ThemeMode.system: context.t.themeAuto,
+                ThemeMode.light: context.t.themeLight,
+                ThemeMode.dark: context.t.themeDark,
               },
               onChanged: s.setThemeMode,
             ),
           ),
           const SizedBox(height: 24),
         ],
-        const KustSectionLabel('Board'),
+        KustSectionLabel(context.t.boardSection),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
           builder: (_, selected, _) => Row(
@@ -59,7 +60,7 @@ class _SettingsSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Pieces'),
+        KustSectionLabel(context.t.piecesSection),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
           builder: (_, board, _) => ValueListenableBuilder<PieceSet>(
@@ -82,13 +83,13 @@ class _SettingsSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Moves'),
+        KustSectionLabel(context.t.movesSection),
         ValueListenableBuilder<bool>(
           valueListenable: s.castleOnRook,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.swap_horiz_rounded,
-            title: 'Castle on the rook',
-            subtitle: 'Tap the king, then its rook, to castle',
+            title: context.t.castleOnRook,
+            subtitle: context.t.castleOnRookSub,
             value: v,
             onChanged: s.setCastleOnRook,
           ),
@@ -97,19 +98,19 @@ class _SettingsSheet extends StatelessWidget {
           valueListenable: s.premoves,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.fast_forward_rounded,
-            title: 'Premoves',
-            subtitle: 'Queue your next move while the bot thinks',
+            title: context.t.premoves,
+            subtitle: context.t.premovesSub,
             value: v,
             onChanged: s.setPremoves,
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Feedback'),
+        KustSectionLabel(context.t.feedbackSection),
         ValueListenableBuilder<bool>(
           valueListenable: s.sound,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.volume_up_rounded,
-            title: 'Sound effects',
+            title: context.t.soundEffects,
             value: v,
             onChanged: s.setSound,
           ),
@@ -118,7 +119,7 @@ class _SettingsSheet extends StatelessWidget {
           valueListenable: s.haptics,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.vibration_rounded,
-            title: 'Haptics',
+            title: context.t.haptics,
             value: v,
             onChanged: s.setHaptics,
           ),
@@ -147,7 +148,7 @@ class BoardThemeSwatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${theme.label} board',
+      label: context.t.boardThemeSemantics(theme.labelIn(context.t)),
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
@@ -200,7 +201,7 @@ class BoardThemeSwatch extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              theme.label,
+              theme.labelIn(context.t),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.caption.copyWith(
@@ -237,7 +238,7 @@ class PieceSetSwatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${set.label} pieces',
+      label: context.t.pieceSetSemantics(set.labelIn(context.t)),
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
@@ -278,7 +279,7 @@ class PieceSetSwatch extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              set.label,
+              set.labelIn(context.t),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.caption.copyWith(

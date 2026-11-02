@@ -24,6 +24,7 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 export 'package:kust/features/history/replay_positions.dart';
 
@@ -262,7 +263,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('PGN copied')));
+      ..showSnackBar(SnackBar(content: Text(context.t.pgnCopied)));
   }
 
   void _openSettings(GameRecord game) {
@@ -275,13 +276,13 @@ class _ReplayScreenState extends State<ReplayScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const KustSheetHeader(title: 'Replay settings'),
+              KustSheetHeader(title: context.t.replaySettings),
               KustToggleRow(
                 icon: Icons.align_horizontal_left_rounded,
-                title: 'Evaluation bar',
+                title: context.t.evalBar,
                 subtitle: canEvaluate
-                    ? 'Shows who is better at each move'
-                    : 'Not available on this device',
+                    ? context.t.evalBarReplaySub
+                    : context.t.notAvailableHere,
                 value: _evalOn && canEvaluate,
                 onChanged: (v) {
                   if (!canEvaluate) return;
@@ -291,10 +292,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
               KustToggleRow(
                 icon: Icons.insights_rounded,
-                title: 'Move feedback',
+                title: context.t.moveFeedback,
                 subtitle: _canRate
-                    ? 'Rates each move as you step through'
-                    : 'Not available on this device',
+                    ? context.t.moveFeedbackReplaySub
+                    : context.t.notAvailableHere,
                 value: _feedbackOn && _canRate,
                 onChanged: (v) {
                   if (!_canRate) return;
@@ -304,10 +305,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
               KustToggleRow(
                 icon: Icons.north_east_rounded,
-                title: 'Show best',
+                title: context.t.showBest,
                 subtitle: _canRate
-                    ? 'An arrow to the best move when another was played'
-                    : 'Not available on this device',
+                    ? context.t.showBestReplaySub
+                    : context.t.notAvailableHere,
                 value: _showBestOn && _canRate,
                 onChanged: (v) {
                   if (!_canRate) return;
@@ -317,7 +318,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
               const SizedBox(height: 16),
               KustButton(
-                label: 'Copy PGN',
+                label: context.t.copyPgn,
                 icon: Icons.copy_rounded,
                 style: KustButtonStyle.secondary,
                 onTap: game.sanMoves.isEmpty
@@ -345,16 +346,16 @@ class _ReplayScreenState extends State<ReplayScreen> {
         children: [
           KustTopBar(
             title: game == null
-                ? 'Game'
+                ? context.t.gameTitle
                 : game.isLocal
-                ? 'Pass & Play'
-                : 'vs ${game.botName ?? 'Bot'}',
+                ? context.t.passAndPlay
+                : context.t.vsBot(game.botName ?? 'Bot'),
             subtitle: game == null
                 ? null
-                : '${describeResult(game)} · ${formatGameDate(game.date)}',
+                : '${describeResult(game, context.t)} · ${formatGameDate(game.date)}',
             leading: KustIconButton(
               icon: Icons.arrow_back_rounded,
-              label: 'Back',
+              label: context.t.back,
               onTap: () =>
                   context.canPop() ? context.pop() : context.go('/history'),
             ),
@@ -362,7 +363,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
               if (game != null)
                 KustIconButton(
                   icon: Icons.ios_share_rounded,
-                  label: 'Export game',
+                  label: context.t.exportGame,
                   onTap: () => showExportSheet(
                     context,
                     position: _replay.positions[_ply],
@@ -373,7 +374,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
               if (game != null)
                 KustIconButton(
                   icon: Icons.tune_rounded,
-                  label: 'Replay settings',
+                  label: context.t.replaySettings,
                   onTap: () => _openSettings(game),
                 ),
             ],
@@ -417,10 +418,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: _evalFailed
-                  ? Text(
-                      'Evaluation is unavailable right now',
-                      style: k.caption,
-                    )
+                  ? Text(context.t.evalUnavailable, style: k.caption)
                   : EvaluationBar(
                       score: score,
                       whiteOnLeft: game.isLocal || game.playerIsWhite,
@@ -455,22 +453,22 @@ class _ReplayScreenState extends State<ReplayScreen> {
               actions: [
                 KustAction(
                   icon: Icons.first_page_rounded,
-                  label: 'Start',
+                  label: context.t.start,
                   onTap: _ply > 0 ? () => _go(0) : null,
                 ),
                 KustAction(
                   icon: Icons.chevron_left_rounded,
-                  label: 'Back',
+                  label: context.t.back,
                   onTap: _ply > 0 ? () => _go(_ply - 1) : null,
                 ),
                 KustAction(
                   icon: Icons.chevron_right_rounded,
-                  label: 'Forward',
+                  label: context.t.forward,
                   onTap: _ply < _last ? () => _go(_ply + 1) : null,
                 ),
                 KustAction(
                   icon: Icons.last_page_rounded,
-                  label: 'End',
+                  label: context.t.end,
                   onTap: _ply < _last ? () => _go(_last) : null,
                 ),
               ],
@@ -496,10 +494,10 @@ class _MissingGame extends StatelessWidget {
           children: [
             Icon(Icons.error_outline_rounded, size: 40, color: k.muted),
             const SizedBox(height: 12),
-            Text('This game could not be found.', style: k.body),
+            Text(context.t.gameNotFound, style: k.body),
             const SizedBox(height: 20),
             KustButton(
-              label: 'Back to history',
+              label: context.t.backToHistory,
               expand: false,
               onTap: () => context.go('/history'),
             ),

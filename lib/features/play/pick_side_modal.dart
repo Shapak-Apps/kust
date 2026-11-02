@@ -11,6 +11,7 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 class PickSideModal extends StatefulWidget {
   const PickSideModal({super.key, required this.bot, required this.onPlay});
@@ -63,17 +64,17 @@ class _PickSideModalState extends State<PickSideModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(bot.name, style: k.title),
-                  Text('${bot.elo} Elo', style: k.caption),
+                  Text(context.t.eloValue(bot.elo), style: k.caption),
                 ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Play as'),
+        KustSectionLabel(context.t.playAs),
         KustOption(
-          title: 'White',
-          subtitle: 'You move first',
+          title: context.t.whiteName,
+          subtitle: context.t.youMoveFirst,
           leading: PieceImage(
             AppSettings.instance.pieceSet.value.asset('w', 'K'),
             width: 36,
@@ -84,8 +85,8 @@ class _PickSideModalState extends State<PickSideModal> {
         ),
         const SizedBox(height: 8),
         KustOption(
-          title: 'Black',
-          subtitle: '${bot.name} moves first',
+          title: context.t.blackName,
+          subtitle: context.t.botMovesFirst(bot.name),
           leading: PieceImage(
             AppSettings.instance.pieceSet.value.asset('b', 'K'),
             width: 36,
@@ -96,8 +97,8 @@ class _PickSideModalState extends State<PickSideModal> {
         ),
         const SizedBox(height: 8),
         KustOption(
-          title: 'Random',
-          subtitle: 'Let fate decide',
+          title: context.t.random,
+          subtitle: context.t.letFateDecide,
           leading: const KustIconTile(Icons.shuffle_rounded),
           selected: _side == null,
           onTap: () => setState(() => _side = null),
@@ -109,7 +110,7 @@ class _PickSideModalState extends State<PickSideModal> {
         ),
         const SizedBox(height: 16),
         KustButton(
-          label: 'Play',
+          label: context.t.play,
           onTap: () {
             final side =
                 _side ?? (Random().nextBool() ? Side.white : Side.black);

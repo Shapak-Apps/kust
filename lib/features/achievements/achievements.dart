@@ -3,16 +3,59 @@ import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// One achievement: what it is called, how it is earned and its icon.
 @immutable
 class Achievement {
   const Achievement(this.id, this.title, this.description, this.icon);
 
+  /// The English title and description; shown through [titleIn] and
+  /// [descriptionIn], which use the language in use.
   final String id;
   final String title;
   final String description;
   final IconData icon;
+
+  String titleIn(AppL10n t) => switch (id) {
+    'first_game' => t.ach_first_game_t,
+    'first_win' => t.ach_first_win_t,
+    'checkmate' => t.ach_checkmate_t,
+    'quick_mate' => t.ach_quick_mate_t,
+    'giant_slayer' => t.ach_giant_slayer_t,
+    'three_bots' => t.ach_three_bots_t,
+    'all_bots' => t.ach_all_bots_t,
+    'marathon' => t.ach_marathon_t,
+    'accurate' => t.ach_accurate_t,
+    'brilliant' => t.ach_brilliant_t,
+    'first_puzzle' => t.ach_first_puzzle_t,
+    'puzzles_25' => t.ach_puzzles_25_t,
+    'first_gol' => t.ach_first_gol_t,
+    'whole_carpet' => t.ach_whole_carpet_t,
+    'streak_3' => t.ach_streak_3_t,
+    'streak_7' => t.ach_streak_7_t,
+    _ => title,
+  };
+
+  String descriptionIn(AppL10n t) => switch (id) {
+    'first_game' => t.ach_first_game_d,
+    'first_win' => t.ach_first_win_d,
+    'checkmate' => t.ach_checkmate_d,
+    'quick_mate' => t.ach_quick_mate_d,
+    'giant_slayer' => t.ach_giant_slayer_d,
+    'three_bots' => t.ach_three_bots_d,
+    'all_bots' => t.ach_all_bots_d,
+    'marathon' => t.ach_marathon_d,
+    'accurate' => t.ach_accurate_d,
+    'brilliant' => t.ach_brilliant_d,
+    'first_puzzle' => t.ach_first_puzzle_d,
+    'puzzles_25' => t.ach_puzzles_25_d,
+    'first_gol' => t.ach_first_gol_d,
+    'whole_carpet' => t.ach_whole_carpet_d,
+    'streak_3' => t.ach_streak_3_d,
+    'streak_7' => t.ach_streak_7_d,
+    _ => description,
+  };
 }
 
 /// Every achievement, in the order the list shows them.

@@ -16,6 +16,7 @@ import 'package:kust/features/puzzles/loom.dart';
 import 'package:kust/features/puzzles/loom_progress.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_theme.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// One level of the carpet: the tribal göl it weaves and its puzzle theme.
 class LoomLevel {
@@ -23,7 +24,17 @@ class LoomLevel {
 
   final GolKind gol;
   final String tribe;
+
+  /// The English name of the theme; see [themeIn].
   final String theme;
+
+  String themeIn(AppL10n t) => switch (gol) {
+    GolKind.teke => t.loomMate1,
+    GolKind.yomut => t.loomMate2,
+    GolKind.arsary => t.loomForks,
+    GolKind.cowdur => t.loomPins,
+    GolKind.saryk => t.loomEndgames,
+  };
 }
 
 /// The five göls of the carpet, bottom to top, one per puzzle level
@@ -103,10 +114,12 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             KustSheetHeader(
-              title: 'All puzzles',
-              subtitle:
-                  '${kLoomLevels[levelIndex].theme} · '
-                  '${level.puzzles.where((p) => progress.isSolved(p.id)).length} of ${level.puzzles.length} solved',
+              title: sheetContext.t.allPuzzles,
+              subtitle: sheetContext.t.puzzlesSolvedOf(
+                kLoomLevels[levelIndex].themeIn(sheetContext.t),
+                level.puzzles.where((p) => progress.isSolved(p.id)).length,
+                level.puzzles.length,
+              ),
             ),
             for (var index = 0; index < level.puzzles.length; index++)
               Padding(
@@ -114,9 +127,9 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                 child: Opacity(
                   opacity: index > current ? 0.5 : 1,
                   child: KustOption(
-                    title: 'Puzzle ${index + 1}',
+                    title: sheetContext.t.puzzleN(index + 1),
                     subtitle:
-                        '${puzzleThemeLabel(level.puzzles[index].theme)} · ${level.puzzles[index].rating}',
+                        '${puzzleThemeLabel(level.puzzles[index].theme, sheetContext.t)} · ${level.puzzles[index].rating}',
                     leading: KustIconTile(
                       progress.isSolved(level.puzzles[index].id)
                           ? Icons.check_rounded
@@ -170,8 +183,8 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
               return _Frame(
                 child: _StateMessage(
                   icon: Icons.cloud_off_rounded,
-                  message: 'Could not load puzzles',
-                  actionLabel: 'Try again',
+                  message: context.t.puzzlesCouldNotLoad,
+                  actionLabel: context.t.tryAgain,
                   onAction: () => setState(() {
                     _levelsFuture = _loadLevels();
                   }),
@@ -179,10 +192,10 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
               );
             }
             if (levels.every((l) => l == null || l.puzzles.isEmpty)) {
-              return const _Frame(
+              return _Frame(
                 child: _StateMessage(
                   icon: Icons.extension_off_rounded,
-                  message: 'No puzzles yet. Check back soon.',
+                  message: context.t.noPuzzlesYet,
                 ),
               );
             }
@@ -240,11 +253,13 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
                   child: IgnorePointer(
                     child: CoachBubble(
                       title: loom.allDone
-                          ? 'All puzzles woven!'
-                          : 'Next: ${puzzleThemeLabel(next.theme)}',
+                          ? context.t.puzzlesAllWoven
+                          : context.t.puzzlesNext(
+                              puzzleThemeLabel(next.theme, context.t),
+                            ),
                       tip: loom.allDone
-                          ? 'More are coming soon.'
-                          : CoachBubble.tipOfTheDay(),
+                          ? context.t.puzzlesMoreSoon
+                          : CoachBubble.tipOfTheDay(context.t),
                     ),
                   ),
                 ),
@@ -256,8 +271,10 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             done: loom.done,
             total: loom.total,
             action: loom.allDone
-                ? 'Review puzzles'
-                : 'Continue · ${puzzleThemeLabel(next.theme)}',
+                ? context.t.reviewPuzzles
+                : context.t.continueTheme(
+                    puzzleThemeLabel(next.theme, context.t),
+                  ),
             onAction: loom.allDone ? list : play,
             onList: list,
           ),
@@ -278,7 +295,7 @@ class _Frame extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const FeltHeader(title: 'Puzzles'),
+        FeltHeader(title: context.t.navPuzzles),
         Expanded(child: child),
       ],
     );
@@ -351,9 +368,11 @@ class _Carpet extends StatelessWidget {
                 height: LoomMetrics.slot,
                 child: Semantics(
                   button: true,
-                  label:
-                      '${kLoomLevels[loom.current].theme}, '
-                      '${onLoom.done} of ${onLoom.total} knots woven',
+                  label: context.t.loomProgress(
+                    kLoomLevels[loom.current].themeIn(context.t),
+                    onLoom.done,
+                    onLoom.total,
+                  ),
                   excludeSemantics: true,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -399,7 +418,7 @@ class _Carpet extends StatelessWidget {
               : CrossAxisAlignment.start,
           children: [
             Text(
-              level.theme,
+              level.themeIn(context.t),
               textAlign: align,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -411,7 +430,7 @@ class _Carpet extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              progress.status,
+              progress.statusIn(context.t),
               textAlign: align,
               style: k.caption.copyWith(
                 fontSize: 12,
@@ -470,15 +489,18 @@ class _Panel extends StatelessWidget {
             children: [
               Expanded(
                 child: _Stat(
-                  label: 'RATING',
+                  label: context.t.statRating,
                   value: '${progress.rating}',
                   big: true,
                 ),
               ),
               Expanded(
-                child: _Stat(label: 'KNOTS', value: '$done / $total'),
+                child: _Stat(
+                  label: context.t.statKnots,
+                  value: '$done / $total',
+                ),
               ),
-              _Stat(label: 'BEST', value: '${progress.highest}'),
+              _Stat(label: context.t.statBest, value: '${progress.highest}'),
             ],
           ),
           const SizedBox(height: 16),
@@ -486,7 +508,7 @@ class _Panel extends StatelessWidget {
             children: [
               KustIconButton(
                 icon: Icons.format_list_bulleted_rounded,
-                label: 'All puzzles',
+                label: context.t.allPuzzles,
                 size: 52,
                 onTap: onList,
               ),

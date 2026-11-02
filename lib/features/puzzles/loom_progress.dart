@@ -1,5 +1,6 @@
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Where one level of the carpet stands.
 enum LevelState {
@@ -30,11 +31,13 @@ class LevelProgress {
   final int total;
 
   /// The text shown under the level's name on the map.
-  String get status => switch (state) {
-    LevelState.woven => 'Woven ✓',
-    LevelState.onLoom => '$done of $total knots',
-    LevelState.waiting => 'Not started',
-    LevelState.comingSoon => 'Coming soon',
+  String get status => statusIn(AppText.now);
+
+  String statusIn(AppL10n t) => switch (state) {
+    LevelState.woven => t.levelWoven,
+    LevelState.onLoom => t.levelKnots(done, total),
+    LevelState.waiting => t.levelNotStarted,
+    LevelState.comingSoon => t.levelComingSoon,
   };
 }
 

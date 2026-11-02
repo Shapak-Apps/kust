@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// The colours the chess board can be drawn in. Picked in settings and used
 /// by every board in the app.
@@ -12,7 +13,16 @@ enum BoardTheme {
 
   const BoardTheme(this.label, this.light, this.dark, {this.grain = false});
 
+  /// The English name, also used as the saved value's label.
   final String label;
+
+  /// The name in the language in use.
+  String labelIn(AppL10n t) => switch (this) {
+    BoardTheme.brown => t.boardBrown,
+    BoardTheme.green => t.boardGreen,
+    BoardTheme.blue => t.boardDarkBlue,
+    BoardTheme.wood => t.boardWood,
+  };
   final Color light;
   final Color dark;
 
