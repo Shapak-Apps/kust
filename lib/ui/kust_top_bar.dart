@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -19,7 +21,12 @@ class KustTopBar extends StatelessWidget {
     this.trailing = const [],
     this.large = false,
     this.brand,
+    this.translucent = false,
   });
+
+  /// The height of a centred bar with one line of content, under the
+  /// status bar: for screens whose content scrolls beneath it.
+  static const double barHeight = 54;
 
   final String title;
   final String? subtitle;
@@ -29,6 +36,10 @@ class KustTopBar extends StatelessWidget {
 
   /// Shown in place of the centred title, such as the logo.
   final Widget? brand;
+
+  /// See-through: whatever scrolls under the bar shows blurred, as on
+  /// chess.com. The screen lays its content out under the bar.
+  final bool translucent;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +69,7 @@ class KustTopBar extends StatelessWidget {
       );
     } else {
       content = Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 5, 16, 5),
         // At least 44 high, and taller when big text needs the room.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44),
@@ -118,16 +129,24 @@ class KustTopBar extends StatelessWidget {
       );
     }
 
+    final bar = SafeArea(
+      bottom: false,
+      // Top bar buttons are plain icons.
+      child: _InTopBar(child: content),
+    );
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      child: ColoredBox(
-        color: k.bg,
-        child: SafeArea(
-          bottom: false,
-          // Top bar buttons are plain icons.
-          child: _InTopBar(child: content),
-        ),
-      ),
+      child: translucent
+          ? ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                child: ColoredBox(
+                  color: k.bg.withValues(alpha: 0.72),
+                  child: bar,
+                ),
+              ),
+            )
+          : ColoredBox(color: k.bg, child: bar),
     );
   }
 }

@@ -151,23 +151,19 @@ class _PlayScreenState extends State<PlayScreen> {
 
     return ColoredBox(
       color: k.bg,
-      child: Column(
+      child: Stack(
         children: [
-          KustTopBar(
-            title: 'Küşt',
-            brand: const KustLogo(height: 22),
-            leading: PlayerAvatar(name: name),
-            trailing: [
-              KustIconButton(
-                icon: Icons.tune_rounded,
-                label: 'Settings',
-                onTap: () => showSettingsSheet(context),
-              ),
-            ],
-          ),
-          Expanded(
+          Positioned.fill(
             child: CustomScrollView(
               slivers: [
+                // Room for the see-through top bar laid over the list.
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height:
+                        MediaQuery.paddingOf(context).top +
+                        KustTopBar.barHeight,
+                  ),
+                ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverToBoxAdapter(
@@ -219,6 +215,24 @@ class _PlayScreenState extends State<PlayScreen> {
                 _botGrid(kTkmBots),
                 SliverToBoxAdapter(
                   child: SizedBox(height: 24 + KustNavBar.clearance(context)),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: KustTopBar(
+              translucent: true,
+              title: 'Küşt',
+              brand: const KustLogo(height: 22),
+              leading: PlayerAvatar(name: name),
+              trailing: [
+                KustIconButton(
+                  icon: Icons.tune_rounded,
+                  label: 'Settings',
+                  onTap: () => showSettingsSheet(context),
                 ),
               ],
             ),
