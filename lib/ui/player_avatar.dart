@@ -35,10 +35,9 @@ class PlayerAvatar extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: photo != null
             ? null
-            // The ghost: head and shoulders, set low so the shoulders meet
-            // the rim, as on a default profile picture.
+            // The ghost: a muted silhouette in the middle.
             : Align(
-                alignment: const Alignment(0, 1.6),
+                alignment: Alignment.center,
                 child: Icon(
                   Icons.person_rounded,
                   size: size * 0.98 - 5,
