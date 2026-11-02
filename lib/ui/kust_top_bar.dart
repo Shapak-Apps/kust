@@ -18,6 +18,7 @@ class KustTopBar extends StatelessWidget {
     this.leading,
     this.trailing = const [],
     this.large = false,
+    this.brand,
   });
 
   final String title;
@@ -25,6 +26,9 @@ class KustTopBar extends StatelessWidget {
   final Widget? leading;
   final List<Widget> trailing;
   final bool large;
+
+  /// Shown in place of the centred title, such as the logo.
+  final Widget? brand;
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +76,24 @@ class KustTopBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.body.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    if (subtitle != null)
-                      Text(subtitle!, maxLines: 1, style: k.caption),
+                    if (brand != null)
+                      Semantics(header: true, label: title, child: brand)
+                    else
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.body.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    if (subtitle != null) ...[
+                      if (brand != null) const SizedBox(height: 10),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption,
+                      ),
+                    ],
                   ],
                 ),
               ),

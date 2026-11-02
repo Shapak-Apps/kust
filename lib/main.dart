@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
@@ -23,6 +24,8 @@ bool get _shouldWarmUpEngine => !kDebugMode;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Portrait only: the layouts are made for an upright phone.
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
   await AppStorage.init();
   await AppSettings.instance.load();

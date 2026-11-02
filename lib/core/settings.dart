@@ -10,6 +10,11 @@ class AppSettings {
   AppSettings._();
   static final AppSettings instance = AppSettings._();
 
+  /// The app is dark only for now, like chess.com. The light theme and the
+  /// Appearance setting stay in the code: set this to false to bring them
+  /// back.
+  static const bool forceDark = true;
+
   final ValueNotifier<ThemeMode> themeMode = ValueNotifier(ThemeMode.system);
   final ValueNotifier<bool> sound = ValueNotifier(true);
   final ValueNotifier<bool> haptics = ValueNotifier(true);
