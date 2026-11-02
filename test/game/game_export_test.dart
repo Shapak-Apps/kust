@@ -49,9 +49,7 @@ void main() {
       '1-0',
     );
     expect(
-      gameResultToken(
-        _game(status: GameStatus.timeout, flagFell: Side.black),
-      ),
+      gameResultToken(_game(status: GameStatus.timeout, flagFell: Side.black)),
       '1-0',
     );
   });

@@ -693,5 +693,14 @@
         "type": "int"
       }
     }
+  },
+  "yourAvatar": "Your avatar",
+  "avatarOf": "{name}, your avatar",
+  "@avatarOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

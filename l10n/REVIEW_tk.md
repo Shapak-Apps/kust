@@ -300,3 +300,5 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `lvlCompetitiveD` | I play seriously and may compete in tournaments. | Men çynlakaý oýnaýaryn we ýaryşlara gatnaşyp bilerin. |
 | `onbAllSet` | You’re all set | Hemme zat taýýar |
 | `onbStartingRating` | Your starting rating is {rating}. ⏎ Your first game is one tap away. | Başlangyç reýtingiňiz {rating}. ⏎ Ilkinji oýnuňyz bir basyş uzaklykda. |
+| `yourAvatar` | Your avatar | Siziň suratyňyz |
+| `avatarOf` | {name}, your avatar | {name}, siziň suratyňyz |

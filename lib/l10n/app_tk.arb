@@ -320,5 +320,7 @@
   "lvlCompetitiveD": "Men çynlakaý oýnaýaryn we ýaryşlara gatnaşyp bilerin.",
   "onbAllSet": "Hemme zat taýýar",
   "onbStartingRating": "Başlangyç reýtingiňiz {rating}.\nIlkinji oýnuňyz bir basyş uzaklykda.",
-  "streakDays": "{count, plural, =1{1 gün} other{{count} gün}}"
+  "streakDays": "{count, plural, =1{1 gün} other{{count} gün}}",
+  "yourAvatar": "Siziň suratyňyz",
+  "avatarOf": "{name}, siziň suratyňyz"
 }

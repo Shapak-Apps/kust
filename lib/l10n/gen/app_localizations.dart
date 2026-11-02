@@ -2024,6 +2024,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 day} other{{count} days}}'**
   String streakDays(int count);
+
+  /// No description provided for @yourAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Your avatar'**
+  String get yourAvatar;
+
+  /// No description provided for @avatarOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, your avatar'**
+  String avatarOf(String name);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

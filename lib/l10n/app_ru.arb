@@ -320,5 +320,7 @@
   "lvlCompetitiveD": "Я играю всерьёз и могу участвовать в турнирах.",
   "onbAllSet": "Всё готово",
   "onbStartingRating": "Ваш начальный рейтинг — {rating}.\nПервая партия уже в одном касании.",
-  "streakDays": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}"
+  "streakDays": "{count, plural, one{{count} день} few{{count} дня} many{{count} дней} other{{count} дня}}",
+  "yourAvatar": "Ваш аватар",
+  "avatarOf": "{name}, ваш аватар"
 }

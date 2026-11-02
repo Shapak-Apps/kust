@@ -1098,4 +1098,12 @@ class AppL10nTk extends AppL10n {
     );
     return '$_temp0';
   }
+
+  @override
+  String get yourAvatar => 'Siziň suratyňyz';
+
+  @override
+  String avatarOf(String name) {
+    return '$name, siziň suratyňyz';
+  }
 }

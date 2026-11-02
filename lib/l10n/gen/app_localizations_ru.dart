@@ -1097,4 +1097,12 @@ class AppL10nRu extends AppL10n {
     );
     return '$_temp0';
   }
+
+  @override
+  String get yourAvatar => 'Ваш аватар';
+
+  @override
+  String avatarOf(String name) {
+    return '$name, ваш аватар';
+  }
 }
