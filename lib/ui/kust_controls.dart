@@ -14,6 +14,7 @@ class KustOption extends StatelessWidget {
     this.selected = false,
     this.onTap,
     this.trailing,
+    this.subtitleLines,
   });
 
   final String title;
@@ -22,6 +23,10 @@ class KustOption extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
   final Widget? trailing;
+
+  /// Keeps room for this many subtitle lines even when the text needs
+  /// fewer, so options in a list come out the same height.
+  final int? subtitleLines;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +61,28 @@ class KustOption extends StatelessWidget {
                       title,
                       style: k.body.copyWith(fontWeight: FontWeight.w700),
                     ),
-                    if (subtitle != null) Text(subtitle!, style: k.caption),
+                    if (subtitle != null)
+                      if (subtitleLines case final lines?)
+                        Stack(
+                          children: [
+                            // Invisible lines that hold the height.
+                            Opacity(
+                              opacity: 0,
+                              child: Text(
+                                '${'\n' * (lines - 1)} ',
+                                style: k.caption,
+                              ),
+                            ),
+                            Text(
+                              subtitle!,
+                              maxLines: lines,
+                              overflow: TextOverflow.ellipsis,
+                              style: k.caption,
+                            ),
+                          ],
+                        )
+                      else
+                        Text(subtitle!, style: k.caption),
                   ],
                 ),
               ),

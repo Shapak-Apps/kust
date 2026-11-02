@@ -75,15 +75,17 @@ class _BoardView {
     required this.premoves,
     required this.checkedKing,
     required this.paused,
+    required this.bestArrow,
   });
 
   factory _BoardView.from(GameState g) {
     MoveFeedback? feedback;
     Square? square;
     int? index;
+    ({Square from, Square to})? bestArrow;
 
     if (g.practiceMode &&
-        g.moveFeedbackEnabled &&
+        (g.moveFeedbackEnabled || g.showBestEnabled) &&
         !g.isSelfAnalysisActive &&
         g.moves.isNotEmpty) {
       int? lastPlayerIndex;
@@ -100,7 +102,21 @@ class _BoardView {
         // Once the piece is taken the rating no longer belongs to the square.
         final stillThere =
             g.displayPosition.board.pieceAt(landed)?.color == record.side;
-        if (record.feedback != null && stillThere) {
+        // Show best: when the engine preferred another move, an arrow to
+        // it, until the player makes the next one.
+        final rated = record.feedback;
+        final best = record.bestMove;
+        if (g.showBestEnabled &&
+            rated != null &&
+            best != null &&
+            !const {
+              MoveQuality.brilliant,
+              MoveQuality.great,
+              MoveQuality.best,
+            }.contains(rated.quality)) {
+          bestArrow = (from: best.from, to: _castlingDisplaySquare(best.to));
+        }
+        if (g.moveFeedbackEnabled && record.feedback != null && stillThere) {
           feedback = record.feedback;
           square = _castlingDisplaySquare(record.move.to);
           index = lastPlayerIndex;
@@ -134,6 +150,7 @@ class _BoardView {
           : null,
       premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
       paused: g.paused,
+      bestArrow: bestArrow,
     );
   }
 
@@ -151,6 +168,12 @@ class _BoardView {
     if (hints.length != 2) return null;
     return (from: hints.first, to: hints.last);
   }
+
+  /// The better move than the player's last one (Show best).
+  final ({Square from, Square to})? bestArrow;
+
+  /// The arrow drawn on the board: a hint asked for wins over Show best.
+  ({Square from, Square to})? get arrow => hintArrow ?? bestArrow;
 
   final bool blocked;
   final bool analysis;
@@ -189,7 +212,8 @@ class _BoardView {
         pendingPromotion == other.pendingPromotion &&
         listEquals(premoves, other.premoves) &&
         checkedKing == other.checkedKing &&
-        paused == other.paused;
+        paused == other.paused &&
+        bestArrow == other.bestArrow;
   }
 
   @override
@@ -211,6 +235,7 @@ class _BoardView {
     premoves.length,
     checkedKing,
     paused,
+    bestArrow,
   );
 }
 
@@ -835,14 +860,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
-                if (view.hintArrow != null)
+                if (view.arrow case final arrow?)
                   Positioned.fill(
                     key: const ValueKey('hint_arrow'),
                     child: MoveArrow(
-                      fromRow: ranks.indexOf(rankOf(view.hintArrow!.from)),
-                      fromCol: files.indexOf(fileOf(view.hintArrow!.from)),
-                      toRow: ranks.indexOf(rankOf(view.hintArrow!.to)),
-                      toCol: files.indexOf(fileOf(view.hintArrow!.to)),
+                      fromRow: ranks.indexOf(rankOf(arrow.from)),
+                      fromCol: files.indexOf(fileOf(arrow.from)),
+                      toRow: ranks.indexOf(rankOf(arrow.to)),
+                      toCol: files.indexOf(fileOf(arrow.to)),
                     ),
                   ),
 

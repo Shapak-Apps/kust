@@ -109,6 +109,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   Future<void> _setShowBest(bool on) async {
     setState(() => _showBestOn = on);
+    _reviewCurrent();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_showBestPref, on);
   }
@@ -116,7 +117,9 @@ class _ReplayScreenState extends State<ReplayScreen> {
   /// Rates the move that led to the position on the board.
   Future<void> _reviewCurrent() async {
     final ply = _ply;
-    if (!_feedbackOn || !_canRate || ply == 0) return;
+    // The review gives both the rating and the best move, so either
+    // setting needs it.
+    if ((!_feedbackOn && !_showBestOn) || !_canRate || ply == 0) return;
     if (_reviews.containsKey(ply) || !_reviewing.add(ply)) return;
     final before = _replay.positions[ply - 1];
     final move = _replay.moves[ply]!;
@@ -305,9 +308,9 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 subtitle: _canRate
                     ? 'An arrow to the best move when another was played'
                     : 'Not available on this device',
-                value: _feedbackOn && _showBestOn && _canRate,
+                value: _showBestOn && _canRate,
                 onChanged: (v) {
-                  if (!_canRate || !_feedbackOn) return;
+                  if (!_canRate) return;
                   _setShowBest(v);
                   setSheet(() {});
                 },
@@ -389,7 +392,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
     final k = context.k;
     final position = _replay.positions[_ply];
     final score = _evals[_ply];
-    final review = _feedbackOn && _ply > 0 ? _reviews[_ply] : null;
+    final review = _ply > 0 ? _reviews[_ply] : null;
     // The best move is drawn only when another move was played.
     final showBest =
         _showBestOn &&
@@ -436,7 +439,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   lastMove: _replay.moves[_ply],
                   slide: _slide,
                   slideKey: _slideKey,
-                  badge: review == null
+                  badge: review == null || !_feedbackOn
                       ? null
                       : (square: _landing(_ply), quality: review.quality),
                   arrow: showBest

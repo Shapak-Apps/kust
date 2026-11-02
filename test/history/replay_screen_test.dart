@@ -112,7 +112,8 @@ void main() {
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(find.byType(MoveFeedbackBadge), findsNothing);
-    expect(find.byType(MoveArrow), findsNothing);
+    // Show best is its own setting: the arrow stays.
+    expect(find.byType(MoveArrow), findsOneWidget);
   });
 
   testWidgets('the best move arrow can be switched off', (tester) async {

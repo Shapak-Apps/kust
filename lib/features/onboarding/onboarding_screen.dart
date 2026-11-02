@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -7,6 +6,7 @@ import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/onboarding/onboarding_level.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -196,7 +196,7 @@ class _WelcomeStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SvgPicture.asset('assets/images/header.svg', height: 44),
+          const KustLogo(height: 26),
           const SizedBox(height: 32),
           Text('Chess that helps you improve', style: k.display),
           const SizedBox(height: 12),
@@ -307,6 +307,7 @@ class _LevelStep extends StatelessWidget {
               child: KustOption(
                 title: level.title,
                 subtitle: level.description,
+                subtitleLines: 2,
                 leading: KustIconTile(level.icon),
                 selected: selected == level,
                 onTap: () => onSelected(level),
