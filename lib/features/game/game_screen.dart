@@ -182,6 +182,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     ).whenComplete(() => _engineSheetOpen = false);
   }
 
+  /// Calls off a game nobody has really played yet and leaves.
+  void _abort() {
+    ref.read(chessControllerProvider.notifier).abort();
+    context.go('/play');
+  }
+
   void _confirmResign() {
     showKustSheet<void>(
       context,
@@ -319,6 +325,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           practice: g.practiceMode,
           eval: g.evaluationEnabled,
           feedback: g.moveFeedbackEnabled,
+          canAbort: g.canAbort,
         ),
       ),
     );
@@ -348,7 +355,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
               icon: Icons.arrow_back_rounded,
               label: 'Leave game',
               onTap: () {
-                if (status == GameStatus.playing) {
+                if (ref.read(chessControllerProvider).canAbort) {
+                  _abort();
+                } else if (status == GameStatus.playing) {
                   _confirmResign();
                 } else {
                   context.go('/play');
@@ -373,7 +382,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     );
                   },
                 ),
-              if (status == GameStatus.playing)
+              if (screen.canAbort)
+                KustIconButton(
+                  icon: Icons.close_rounded,
+                  label: 'Abort',
+                  onTap: _abort,
+                )
+              else if (status == GameStatus.playing)
                 KustIconButton(
                   icon: Icons.flag_outlined,
                   label: 'Resign',
