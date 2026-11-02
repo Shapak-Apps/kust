@@ -377,7 +377,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = game.botId == null ? null : 'assets/bots/${_asset(game)}.png';
+    final path = game.botId == null ? null : 'assets/bots/${_asset(game)}.webp';
     // Avatars here are square: no corner rounding.
     if (path == null) {
       return const KustIconTile(Icons.people_outline_rounded, radius: 0);
