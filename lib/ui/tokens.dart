@@ -35,11 +35,11 @@ class KustTokens extends ThemeExtension<KustTokens> {
 
   static const dark = KustTokens(
     bg: Color(0xFF1C1A18),
-    surface: Color(0xFF262421),
-    surfaceAlt: Color(0xFF312E2B),
+    surface: Color(0xFF221F1C),
+    surfaceAlt: Color(0xFF2A2724),
     ink: Color(0xFFF2F0EA),
     muted: Color(0xFF8E8C86),
-    line: Color(0xFF3A3633),
+    line: Color(0xFF2E2B28),
     accent: gold,
     accentInk: Color(0xFF17181A),
     success: Color(0xFF3CB77C),
