@@ -25,11 +25,15 @@ class EngineUnavailableException implements Exception {
 }
 
 class EvalScore {
-  const EvalScore({this.cp, this.mate});
+  const EvalScore({this.cp, this.mate, this.result});
 
   final int? cp;
 
   final int? mate;
+
+  /// The result once the game is over by checkmate, `1-0` or `0-1`, shown
+  /// in place of a score.
+  final String? result;
 
   double get whiteShare {
     if (mate != null) return mate! > 0 ? 1.0 : 0.0;
@@ -38,6 +42,7 @@ class EvalScore {
   }
 
   String get label {
+    if (result != null) return result!;
     if (mate != null) {
       final n = mate!.abs();
       return mate! > 0 ? '+M$n' : '-M$n';

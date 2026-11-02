@@ -328,6 +328,9 @@ class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
+
+  /// Counts hint requests, so a stale hint knows whether a newer one runs.
+  int _hintRequestId = 0;
   bool _isDisposed = false;
   int _feedbackEpoch = 0;
 
@@ -507,6 +510,20 @@ class ChessController extends Notifier<GameState> {
   void _flagFell(Side fellSide) {
     if (_isDisposed) return;
     _stopClock();
+
+    // FIDE 6.9: if the other side cannot mate by any series of moves (a
+    // lone king, say), running out of time is a draw.
+    if (state.position.hasInsufficientMaterial(fellSide.opposite)) {
+      state = state.copyWith(
+        status: GameStatus.draw,
+        isBotThinking: false,
+        clearSelection: true,
+        premoves: const [],
+        endReason: 'Time ran out, but the other side cannot checkmate.',
+      );
+      SoundService.instance.playJingle('game-draw.wav');
+      return;
+    }
 
     final String winner;
     if (state.mode == GameMode.local) {
@@ -967,6 +984,19 @@ class ChessController extends Notifier<GameState> {
 
     final id = ++_evalRequestId;
     final fen = state.position.fen;
+
+    // A mated side has no move to search (the engine says "mate 0"): the
+    // bar goes all the way to the side that gave mate.
+    if (state.position.isCheckmate) {
+      final whiteWon = state.position.turn == Side.black;
+      state = state.copyWith(
+        evaluation: EvalScore(
+          mate: whiteWon ? 1 : -1,
+          result: whiteWon ? '1-0' : '0-1',
+        ),
+      );
+      return;
+    }
 
     final EvalScore? score;
     try {
@@ -1567,6 +1597,7 @@ class ChessController extends Notifier<GameState> {
     if (state.mode == GameMode.local) return;
 
     final requestId = ++_moveRequestId;
+    final hintId = ++_hintRequestId;
     state = state.copyWith(isHintThinking: true);
 
     final String uci;
@@ -1579,7 +1610,15 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    if (_isDisposed || requestId != _moveRequestId) return;
+    if (_isDisposed) return;
+    if (requestId != _moveRequestId) {
+      // A move or take back came first: the hint is out of date. Free the
+      // button, unless a newer hint is already on its way.
+      if (hintId == _hintRequestId && state.isHintThinking) {
+        state = state.copyWith(isHintThinking: false);
+      }
+      return;
+    }
 
     if (uci == '(none)') {
       state = state.copyWith(isHintThinking: false);

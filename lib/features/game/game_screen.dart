@@ -182,6 +182,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
     ).whenComplete(() => _engineSheetOpen = false);
   }
 
+  /// Leaving: abort before the game has started, offer to resign while it
+  /// goes on, and back to Play once it is over.
+  void _leave() {
+    final g = ref.read(chessControllerProvider);
+    if (g.canAbort) {
+      _abort();
+    } else if (g.status == GameStatus.playing) {
+      _confirmResign();
+    } else {
+      context.go('/play');
+    }
+  }
+
   /// Asks, then calls off a game nobody has really played yet and leaves.
   void _abort() {
     showKustSheet<void>(
@@ -366,152 +379,156 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final bottomSide = widget.isLocal ? Side.white : widget.playerSide;
 
     final k = context.k;
-    return Scaffold(
-      backgroundColor: k.bg,
-      body: Column(
-        children: [
-          KustTopBar(
-            title: widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
-            subtitle: widget.isLocal
-                ? null
-                : '${widget.bot!.elo} Elo${widget.practiceMode ? ' · Practice' : ''}',
-            leading: KustIconButton(
-              icon: Icons.arrow_back_rounded,
-              label: 'Leave game',
-              onTap: () {
-                if (ref.read(chessControllerProvider).canAbort) {
-                  _abort();
-                } else if (status == GameStatus.playing) {
-                  _confirmResign();
-                } else {
-                  context.go('/play');
-                }
-              },
+    // Android Back does what the arrow in the top bar does.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _leave();
+      },
+      child: Scaffold(
+        backgroundColor: k.bg,
+        body: Column(
+          children: [
+            KustTopBar(
+              title: widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
+              subtitle: widget.isLocal
+                  ? null
+                  : '${widget.bot!.elo} Elo${widget.practiceMode ? ' · Practice' : ''}',
+              leading: KustIconButton(
+                icon: Icons.arrow_back_rounded,
+                label: 'Leave game',
+                onTap: _leave,
+              ),
+              trailing: [
+                // Only a finished game can be exported.
+                if (status != GameStatus.playing)
+                  KustIconButton(
+                    icon: Icons.ios_share_rounded,
+                    label: 'Export game',
+                    onTap: () {
+                      final g = ref.read(chessControllerProvider);
+                      showExportSheet(
+                        context,
+                        position: g.displayPosition,
+                        flipped:
+                            g.mode == GameMode.bot &&
+                            g.playerSide == Side.black,
+                        pgn: livePgn(g),
+                        highlight: g.displayMoveSquares,
+                      );
+                    },
+                  ),
+                if (screen.canAbort)
+                  KustIconButton(
+                    icon: Icons.close_rounded,
+                    label: 'Abort',
+                    onTap: _abort,
+                  )
+                else if (status == GameStatus.playing)
+                  KustIconButton(
+                    icon: Icons.flag_outlined,
+                    label: 'Resign',
+                    onTap: _confirmResign,
+                  ),
+                if (isFinished && !_hasDismissedResultDialog)
+                  KustIconButton(
+                    icon: Icons.emoji_events_outlined,
+                    label: 'Show result',
+                    onTap: () => _showEndDialogForState(
+                      ref.read(chessControllerProvider),
+                    ),
+                  ),
+              ],
             ),
-            trailing: [
-              // Only a finished game can be exported.
-              if (status != GameStatus.playing)
-                KustIconButton(
-                  icon: Icons.ios_share_rounded,
-                  label: 'Export game',
-                  onTap: () {
-                    final g = ref.read(chessControllerProvider);
-                    showExportSheet(
-                      context,
-                      position: g.displayPosition,
-                      flipped:
-                          g.mode == GameMode.bot && g.playerSide == Side.black,
-                      pgn: livePgn(g),
-                      highlight: g.displayMoveSquares,
-                    );
-                  },
-                ),
-              if (screen.canAbort)
-                KustIconButton(
-                  icon: Icons.close_rounded,
-                  label: 'Abort',
-                  onTap: _abort,
-                )
-              else if (status == GameStatus.playing)
-                KustIconButton(
-                  icon: Icons.flag_outlined,
-                  label: 'Resign',
-                  onTap: _confirmResign,
-                ),
-              if (isFinished && !_hasDismissedResultDialog)
-                KustIconButton(
-                  icon: Icons.emoji_events_outlined,
-                  label: 'Show result',
-                  onTap: () =>
-                      _showEndDialogForState(ref.read(chessControllerProvider)),
-                ),
-            ],
-          ),
-          const _EngineSetupBanner(),
-          Expanded(
-            child: SafeArea(
-              top: false,
-              child: Column(
-                children: [
-                  if (screen.eval && (widget.isLocal || widget.practiceMode))
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: _EvalBarSlot(
-                        whiteOnLeft: bottomSide == Side.white,
+            const _EngineSetupBanner(),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    if (screen.eval && (widget.isLocal || widget.practiceMode))
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: _EvalBarSlot(
+                          whiteOnLeft: bottomSide == Side.white,
+                        ),
                       ),
-                    ),
-                  const _HistorySlot(),
-                  if (screen.practice && screen.feedback)
-                    const SizedBox(
-                      height: 24,
-                      child: Stack(children: [_FeedbackSlot()]),
-                    ),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final availableHeight =
-                            constraints.maxHeight - (2 * kPlayerBarHeight) - 16;
-                        final maxSide = math.min(
-                          constraints.maxWidth,
-                          availableHeight,
-                        );
-                        final side = math.max(
-                          0.0,
-                          math.min(maxSide, kBoardMaxWidth),
-                        );
+                    const _HistorySlot(),
+                    if (screen.practice && screen.feedback)
+                      const SizedBox(
+                        height: 24,
+                        child: Stack(children: [_FeedbackSlot()]),
+                      ),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final availableHeight =
+                              constraints.maxHeight -
+                              (2 * kPlayerBarHeight) -
+                              16;
+                          final maxSide = math.min(
+                            constraints.maxWidth,
+                            availableHeight,
+                          );
+                          final side = math.max(
+                            0.0,
+                            math.min(maxSide, kBoardMaxWidth),
+                          );
 
-                        return Align(
-                          alignment: Alignment.center,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: SizedBox(
-                              width: side,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _PlayerBar(
-                                    side: topSide,
-                                    name: widget.isLocal
-                                        ? 'Black'
-                                        : widget.bot!.name,
-                                    subtitle: widget.isLocal
-                                        ? null
-                                        : '${widget.bot!.elo} Elo',
-                                    avatarPath: widget.isLocal
-                                        ? null
-                                        : widget.bot!.imagePath,
-                                    thinkingText: 'thinking',
-                                  ),
-                                  SizedBox(
-                                    width: side,
-                                    height: side,
-                                    child: status == GameStatus.loading
-                                        ? const Center(
-                                            child: CircularProgressIndicator(),
-                                          )
-                                        : const ChessBoard(),
-                                  ),
-                                  _PlayerBar(
-                                    side: bottomSide,
-                                    name: widget.isLocal ? 'White' : 'You',
-                                  ),
-                                ],
+                          return Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: SizedBox(
+                                width: side,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _PlayerBar(
+                                      side: topSide,
+                                      name: widget.isLocal
+                                          ? 'Black'
+                                          : widget.bot!.name,
+                                      subtitle: widget.isLocal
+                                          ? null
+                                          : '${widget.bot!.elo} Elo',
+                                      avatarPath: widget.isLocal
+                                          ? null
+                                          : widget.bot!.imagePath,
+                                      thinkingText: 'thinking',
+                                    ),
+                                    SizedBox(
+                                      width: side,
+                                      height: side,
+                                      child: status == GameStatus.loading
+                                          ? const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            )
+                                          : const ChessBoard(),
+                                    ),
+                                    _PlayerBar(
+                                      side: bottomSide,
+                                      name: widget.isLocal ? 'White' : 'You',
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  _ControlsBar(
-                    isLocal: widget.isLocal,
-                    practiceMode: widget.practiceMode,
-                  ),
-                ],
+                    _ControlsBar(
+                      isLocal: widget.isLocal,
+                      practiceMode: widget.practiceMode,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
