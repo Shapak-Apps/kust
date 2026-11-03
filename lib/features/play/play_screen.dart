@@ -22,6 +22,7 @@ import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Kept for the puzzle screens that still reference it.
 const Color kAccentColor = KustTokens.gold;
@@ -74,15 +75,15 @@ class _PlayScreenState extends State<PlayScreen> {
               child: Icon(Icons.auto_awesome_rounded, color: k.accentInk),
             ),
             const SizedBox(height: 20),
-            Text('Welcome to Küşt', style: k.display),
+            Text(sheetContext.t.welcomeTitle, style: k.display),
             const SizedBox(height: 8),
             Text(
-              'Play bots, solve puzzles and get better one move at a time.',
+              sheetContext.t.welcomeSub,
               style: k.body.copyWith(color: k.muted),
             ),
             const SizedBox(height: 24),
             KustButton(
-              label: 'Let’s play',
+              label: sheetContext.t.letsPlay,
               onTap: () => Navigator.of(sheetContext).pop(),
             ),
           ],
@@ -214,17 +215,17 @@ class _PlayScreenState extends State<PlayScreen> {
                       ),
                     ),
                   ),
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      child: KustSectionLabel('Challenge a bot'),
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: KustSectionLabel(context.t.challengeBot),
                     ),
                   ),
                   _botGrid(kInternationalBots),
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      child: KustSectionLabel('New students from Turkmenistan'),
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: KustSectionLabel(context.t.newStudents),
                     ),
                   ),
                   _botGrid(kTkmBots),
@@ -249,7 +250,7 @@ class _PlayScreenState extends State<PlayScreen> {
                 trailing: [
                   KustIconButton(
                     icon: Icons.tune_rounded,
-                    label: 'Settings',
+                    label: context.t.settings,
                     onTap: () => showSettingsSheet(context),
                   ),
                 ],
@@ -303,7 +304,7 @@ class _HeroCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hello, $name',
+            context.t.helloName(name),
             style: k.caption.copyWith(
               color: k.accentInk.withValues(alpha: 0.7),
               fontWeight: FontWeight.w700,
@@ -311,7 +312,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            'Ready for a game?',
+            context.t.readyForGame,
             style: k.title.copyWith(color: k.accentInk),
           ),
           const SizedBox(height: 4),
@@ -320,8 +321,11 @@ class _HeroCard extends StatelessWidget {
             builder: (context, _, _) => ValueListenableBuilder(
               valueListenable: PlayerRatingStore.instance.listenable(),
               builder: (context, _, _) => Text(
-                'Rating ${PlayerRatingStore.instance.rating} · '
-                'Bots beaten ${AppStorage.instance.beatenBotIds.length} of $total',
+                context.t.ratingBots(
+                  PlayerRatingStore.instance.rating,
+                  AppStorage.instance.beatenBotIds.length,
+                  total,
+                ),
                 style: k.body.copyWith(
                   color: k.accentInk.withValues(alpha: 0.7),
                 ),
@@ -345,7 +349,7 @@ class _HeroCard extends StatelessWidget {
                   Icon(Icons.play_arrow_rounded, color: k.accent),
                   const SizedBox(width: 6),
                   Text(
-                    'Play a game',
+                    context.t.playAGame,
                     style: k.body.copyWith(
                       color: k.accent,
                       fontWeight: FontWeight.w800,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievement_toast.dart';
 import 'package:kust/core/settings.dart';
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
 
 /// Bouncy scrolling everywhere, no Android glow.
@@ -29,9 +30,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: AppSettings.instance.themeMode,
-      builder: (context, mode, _) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        AppSettings.instance.themeMode,
+        AppSettings.instance.language,
+      ]),
+      builder: (context, _) {
+        final mode = AppSettings.instance.themeMode.value;
+        final language = AppSettings.instance.language.value;
         return MaterialApp.router(
           debugShowCheckedModeBanner: false,
           routerConfig: router,
@@ -39,7 +45,13 @@ class MyApp extends StatelessWidget {
           darkTheme: appDarkTheme,
           themeMode: AppSettings.forceDark ? ThemeMode.dark : mode,
           scrollBehavior: const _KustScrollBehavior(),
+          // A language picked in settings wins; otherwise the phone's.
+          locale: language == null ? null : Locale(language),
+          supportedLocales: kSupportedLocales,
+          localizationsDelegates: kLocalizationDelegates,
+          localeListResolutionCallback: resolveAppLocale,
           builder: (context, child) {
+            AppText.sync(AppL10n.of(context));
             final isDark = Theme.of(context).brightness == Brightness.dark;
             return AnnotatedRegion<SystemUiOverlayStyle>(
               value: isDark

@@ -1,3 +1,5 @@
+import 'package:kust/l10n/app_locale.dart';
+
 /// The piece designs the board can be drawn with. Picked in settings and
 /// used by every board in the app. Shaded is drawn by
 /// `tools/pieces/make_pieces.py`; Graphite and Brushed are painted by
@@ -12,6 +14,14 @@ enum PieceSet {
   const PieceSet(this.label, this._folder, {this.textured = false});
 
   final String label;
+
+  /// The name in the language in use.
+  String labelIn(AppL10n t) => switch (this) {
+    PieceSet.classic => t.pieceClassic,
+    PieceSet.shaded => t.pieceShaded,
+    PieceSet.graphite => t.pieceGraphite,
+    PieceSet.brushed => t.pieceBrushed,
+  };
   final String _folder;
 
   /// Whether the pieces are images rather than vectors.

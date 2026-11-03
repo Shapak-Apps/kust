@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Shows Kust's centered modal: a flat card in the middle of the screen over
 /// a dimmed page. Use it for moments that deserve full attention, such as a
@@ -29,7 +30,7 @@ class _KustDialogRoute<T> extends PopupRoute<T> {
   bool get barrierDismissible => dismissible;
 
   @override
-  String? get barrierLabel => 'Dismiss';
+  String? get barrierLabel => AppText.now.dismiss;
 
   @override
   Duration get transitionDuration => const Duration(milliseconds: 240);

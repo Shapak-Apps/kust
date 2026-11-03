@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Shows Kust's own bottom sheet: flat surface, grabber, drag to dismiss.
 /// Built on a plain [PopupRoute] so nothing from Material's modal sheet leaks
@@ -31,7 +32,7 @@ class _KustSheetRoute<T> extends PopupRoute<T> {
   bool get barrierDismissible => dismissible;
 
   @override
-  String? get barrierLabel => 'Dismiss';
+  String? get barrierLabel => AppText.now.dismiss;
 
   @override
   Duration get transitionDuration => const Duration(milliseconds: 300);

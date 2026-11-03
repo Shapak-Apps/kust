@@ -4,6 +4,7 @@ import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Compact bot card used on the home screen and in the opponent picker.
 class BotCard extends StatelessWidget {
@@ -24,7 +25,7 @@ class BotCard extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${bot.name}, ${bot.elo} Elo',
+      label: '${bot.name}, ${context.t.eloValue(bot.elo)}',
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,

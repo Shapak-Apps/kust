@@ -1,12 +1,16 @@
+import 'package:kust/l10n/app_locale.dart';
+
 /// The name shown for a puzzle's theme tag, e.g. `mateIn2` becomes "Mate in 2".
-String puzzleThemeLabel(String theme) {
+String puzzleThemeLabel(String theme, [AppL10n? t]) {
+  t ??= AppText.now;
   if (theme.startsWith('mateIn')) {
-    return 'Mate in ${theme.substring('mateIn'.length)}';
+    final n = int.tryParse(theme.substring('mateIn'.length));
+    if (n != null) return t.themeMateIn(n);
   }
   return switch (theme) {
-    'fork' => 'Fork',
-    'pin' => 'Pin',
-    'endgame' => 'Endgame',
-    _ => 'Win material',
+    'fork' => t.themeFork,
+    'pin' => t.themePin,
+    'endgame' => t.themeEndgame,
+    _ => t.themeWinMaterial,
   };
 }

@@ -34,6 +34,16 @@ const String kShowBestPrefKey = 'show_best_enabled';
 const int kFeedbackCheckDepth = 16;
 const Duration kFeedbackCheckTime = Duration(milliseconds: 800);
 
+/// Why a game ended in a draw, or on time without a winner.
+enum EndReason {
+  stalemate,
+  fiftyMove,
+  insufficientMaterial,
+  repetition,
+  drawn,
+  timeNoMate,
+}
+
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
 enum GameMode { bot, local }
@@ -58,6 +68,7 @@ class GameState {
     this.capturedSquare,
     this.wasUndo = false,
     this.endReason,
+    this.flagFell,
     this.timeControl,
     this.whiteTimeLeft = Duration.zero,
     this.blackTimeLeft = Duration.zero,
@@ -96,7 +107,12 @@ class GameState {
   final Piece? capturedPiece;
   final Square? capturedSquare;
   final bool wasUndo;
-  final String? endReason;
+
+  /// Why a drawn or timed-out game ended, for the message shown.
+  final EndReason? endReason;
+
+  /// The side whose clock ran out, when the game ended on time.
+  final Side? flagFell;
 
   final TimeControl? timeControl;
   final Duration whiteTimeLeft;
@@ -255,7 +271,8 @@ class GameState {
     Piece? capturedPiece,
     Square? capturedSquare,
     bool? wasUndo,
-    String? endReason,
+    EndReason? endReason,
+    Side? flagFell,
     bool clearLastMove = false,
     bool clearCapture = false,
     TimeControl? timeControl,
@@ -306,6 +323,7 @@ class GameState {
           : (capturedSquare ?? this.capturedSquare),
       wasUndo: wasUndo ?? this.wasUndo,
       endReason: endReason ?? this.endReason,
+      flagFell: flagFell ?? this.flagFell,
       timeControl: timeControl ?? this.timeControl,
       whiteTimeLeft: whiteTimeLeft ?? this.whiteTimeLeft,
       blackTimeLeft: blackTimeLeft ?? this.blackTimeLeft,
@@ -527,24 +545,17 @@ class ChessController extends Notifier<GameState> {
         isBotThinking: false,
         clearSelection: true,
         premoves: const [],
-        endReason: 'Time ran out, but the other side cannot checkmate.',
+        endReason: EndReason.timeNoMate,
       );
       SoundService.instance.playJingle('game-draw.wav');
       return;
-    }
-
-    final String winner;
-    if (state.mode == GameMode.local) {
-      winner = fellSide == Side.white ? 'Black' : 'White';
-    } else {
-      winner = fellSide == state.playerSide ? state.bot!.name : 'You';
     }
 
     state = state.copyWith(
       status: GameStatus.timeout,
       isBotThinking: false,
       clearSelection: true,
-      endReason: '$winner won on time.',
+      flagFell: fellSide,
     );
 
     if (state.mode == GameMode.local || fellSide == state.playerSide) {
@@ -1274,7 +1285,6 @@ class ChessController extends Notifier<GameState> {
       status: GameStatus.resigned,
       isBotThinking: false,
       premoves: const [],
-      endReason: 'You resigned.',
     );
 
     SoundService.instance.playJingle('game-end.wav');
@@ -1498,14 +1508,7 @@ class ChessController extends Notifier<GameState> {
         case GameStatus.checkmate:
           winner = game.position.turn == Side.white ? 'black' : 'white';
         case GameStatus.timeout:
-          final text = game.endReason ?? '';
-          if (isLocal) {
-            winner = text.startsWith('White') ? 'white' : 'black';
-          } else {
-            winner = text.startsWith('You')
-                ? game.playerSide.name
-                : (game.playerSide == Side.white ? 'black' : 'white');
-          }
+          winner = game.flagFell?.opposite.name;
         case GameStatus.resigned:
           winner = game.playerSide == Side.white ? 'black' : 'white';
         default:
@@ -1544,7 +1547,7 @@ class ChessController extends Notifier<GameState> {
         playedAt: DateTime.now().millisecondsSinceEpoch,
         isLocal: isLocal,
         result: result,
-        reason: game.endReason ?? '',
+        reason: game.endReason?.name ?? '',
         playerIsWhite: game.playerSide == Side.white,
         uciMoves: [for (final m in game.moves) m.move.uci],
         sanMoves: [for (final m in game.moves) m.san],
@@ -1982,36 +1985,17 @@ class ChessController extends Notifier<GameState> {
     return GameStatus.playing;
   }
 
-  String? _getEndReason(Position position, int repetitions, GameStatus status) {
-    if (status == GameStatus.checkmate) {
-      if (state.mode == GameMode.local) {
-        final winner = position.turn == Side.white ? 'Black' : 'White';
-        return '$winner won by checkmate.';
-      }
-
-      final winner = position.turn == state.playerSide
-          ? state.bot!.name
-          : 'You';
-      return '$winner won by checkmate.';
-    }
-
-    if (status == GameStatus.draw) {
-      if (position.isStalemate) {
-        return 'Game drawn by stalemate.';
-      }
-      if (position.halfmoves >= 100) {
-        return 'Game drawn by 50-move rule.';
-      }
-      if (position.isInsufficientMaterial) {
-        return 'Game drawn due to insufficient material.';
-      }
-      if (repetitions >= 3) {
-        return 'Game drawn by threefold repetition.';
-      }
-      return 'The game ended in a draw.';
-    }
-
-    return null;
+  EndReason? _getEndReason(
+    Position position,
+    int repetitions,
+    GameStatus status,
+  ) {
+    if (status != GameStatus.draw) return null;
+    if (position.isStalemate) return EndReason.stalemate;
+    if (position.halfmoves >= 100) return EndReason.fiftyMove;
+    if (position.isInsufficientMaterial) return EndReason.insufficientMaterial;
+    if (repetitions >= 3) return EndReason.repetition;
+    return EndReason.drawn;
   }
 }
 

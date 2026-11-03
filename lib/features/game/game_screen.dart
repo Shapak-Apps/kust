@@ -21,7 +21,9 @@ import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/features/game/end_text.dart';
 import 'package:kust/features/game/game_export.dart';
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -116,15 +118,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
               children: [
                 PieceImage(pieceAsset, width: 64, height: 64),
                 const SizedBox(height: 16),
-                const Text(
-                  'Game Start',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  dialogContext.t.gameStartTitle,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   widget.isLocal
-                      ? 'White moves first'
-                      : 'You play as ${isWhite ? "White" : "Black"}',
+                      ? dialogContext.t.whiteMovesFirst
+                      : (isWhite
+                            ? dialogContext.t.youPlayAsWhite
+                            : dialogContext.t.youPlayAsBlack),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -146,15 +153,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           KustSheetHeader(
-            title: 'Engine unavailable',
+            title: sheetContext.t.engineUnavailable,
             subtitle: ChessEngine.isSupported
-                ? 'The chess engine could not start. Try again, or play '
-                      'on this device with a friend.'
-                : 'Playing against bots is not supported on this device.',
+                ? sheetContext.t.engineCouldNotStart
+                : sheetContext.t.botsNotSupported,
           ),
           if (ChessEngine.isSupported) ...[
             KustButton(
-              label: 'Try again',
+              label: sheetContext.t.tryAgain,
               icon: Icons.refresh_rounded,
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -164,7 +170,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             const SizedBox(height: 8),
           ],
           KustButton(
-            label: 'Play locally instead',
+            label: sheetContext.t.playLocallyInstead,
             style: KustButtonStyle.outline,
             onTap: () {
               Navigator.of(sheetContext).pop();
@@ -203,12 +209,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (sheetContext) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const KustSheetHeader(
-            title: 'Abort this game?',
-            subtitle: 'The game will end without a result.',
+          KustSheetHeader(
+            title: sheetContext.t.abortTitle,
+            subtitle: sheetContext.t.abortSubtitle,
           ),
           KustButton(
-            label: 'Abort',
+            label: sheetContext.t.abort,
             onTap: () {
               Navigator.of(sheetContext).pop();
               ref.read(chessControllerProvider.notifier).abort();
@@ -217,7 +223,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ),
           const SizedBox(height: 8),
           KustButton(
-            label: 'Keep playing',
+            label: sheetContext.t.keepPlaying,
             style: KustButtonStyle.outline,
             onTap: () => Navigator.of(sheetContext).pop(),
           ),
@@ -232,12 +238,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
       builder: (sheetContext) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const KustSheetHeader(
-            title: 'Resign this game?',
-            subtitle: 'The game will end and count as a loss.',
+          KustSheetHeader(
+            title: sheetContext.t.resignTitle,
+            subtitle: sheetContext.t.resignSubtitle,
           ),
           KustButton(
-            label: 'Resign',
+            label: sheetContext.t.resign,
             onTap: () {
               Navigator.of(sheetContext).pop();
               ref.read(chessControllerProvider.notifier).resign();
@@ -245,7 +251,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ),
           const SizedBox(height: 8),
           KustButton(
-            label: 'Keep playing',
+            label: sheetContext.t.keepPlaying,
             style: KustButtonStyle.outline,
             onTap: () => Navigator.of(sheetContext).pop(),
           ),
@@ -287,37 +293,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
     });
   }
 
-  String _winnerLabel(GameState state) {
-    if (widget.isLocal) {
-      return state.position.turn == Side.white ? 'Black' : 'White';
-    }
-    return state.position.turn == state.playerSide ? widget.bot!.name : 'You';
+  /// The title and message of the dialog for a game that has ended, or null
+  /// while it goes on.
+  (String, String)? _endDialogTexts(GameState state) {
+    final t = context.t;
+    return switch (state.status) {
+      GameStatus.checkmate => (
+        t.resultCheckmate,
+        t.wonTheGame(sideName(t, state, state.position.turn.opposite)),
+      ),
+      GameStatus.draw => (t.resultDraw, endMessage(t, state)),
+      GameStatus.timeout => (t.resultTimeOut, endMessage(t, state)),
+      GameStatus.resigned => (t.resultGameOver, t.youResigned),
+      GameStatus.playing || GameStatus.loading => null,
+    };
   }
 
   void _showEndDialogForState(GameState state) {
-    switch (state.status) {
-      case GameStatus.checkmate:
-        _showResultDialog('Checkmate', '${_winnerLabel(state)} won the game.');
-        break;
-      case GameStatus.draw:
-        _showResultDialog(
-          'Draw',
-          state.endReason ?? 'The game ended in a draw.',
-        );
-        break;
-      case GameStatus.timeout:
-        _showResultDialog(
-          'Time out',
-          state.endReason ?? 'The game ended on time.',
-        );
-        break;
-      case GameStatus.resigned:
-        _showResultDialog('Game over', 'You resigned.');
-        break;
-      case GameStatus.playing:
-      case GameStatus.loading:
-        break;
-    }
+    final texts = _endDialogTexts(state);
+    if (texts != null) _showResultDialog(texts.$1, texts.$2);
   }
 
   @override
@@ -334,22 +328,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
           _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
-          _showResultDialog('Checkmate', '${_winnerLabel(next)} won the game.');
-          break;
         case GameStatus.draw:
-          _showResultDialog(
-            'Draw',
-            next.endReason ?? 'The game ended in a draw.',
-          );
-          break;
         case GameStatus.timeout:
-          _showResultDialog(
-            'Time out',
-            next.endReason ?? 'The game ended on time.',
-          );
-          break;
         case GameStatus.resigned:
-          _showResultDialog('Game over', 'You resigned.');
+          _showEndDialogForState(next);
           break;
         case GameStatus.loading:
           break;
@@ -392,11 +374,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
           children: [
             KustTopBar(
               // The players' names and ratings sit by the board already.
-              title: widget.isLocal ? 'Pass & Play' : 'vs ${widget.bot!.name}',
+              title: widget.isLocal
+                  ? context.t.passAndPlay
+                  : context.t.vsBot(widget.bot!.name),
               brand: const KustLogo(height: 22),
               leading: KustIconButton(
                 icon: Icons.arrow_back_rounded,
-                label: 'Leave game',
+                label: context.t.leaveGame,
                 onTap: _leave,
               ),
               trailing: [
@@ -404,7 +388,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 if (status != GameStatus.playing)
                   KustIconButton(
                     icon: Icons.ios_share_rounded,
-                    label: 'Export game',
+                    label: context.t.exportGame,
                     onTap: () {
                       final g = ref.read(chessControllerProvider);
                       showExportSheet(
@@ -421,19 +405,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 if (screen.canAbort)
                   KustIconButton(
                     icon: Icons.close_rounded,
-                    label: 'Abort',
+                    label: context.t.abort,
                     onTap: _abort,
                   )
                 else if (status == GameStatus.playing)
                   KustIconButton(
                     icon: Icons.flag_outlined,
-                    label: 'Resign',
+                    label: context.t.resign,
                     onTap: _confirmResign,
                   ),
                 if (isFinished && !_hasDismissedResultDialog)
                   KustIconButton(
                     icon: Icons.emoji_events_outlined,
-                    label: 'Show result',
+                    label: context.t.showResult,
                     onTap: () => _showEndDialogForState(
                       ref.read(chessControllerProvider),
                     ),
@@ -487,15 +471,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                     _PlayerBar(
                                       side: topSide,
                                       name: widget.isLocal
-                                          ? 'Black'
+                                          ? context.t.blackName
                                           : widget.bot!.name,
                                       subtitle: widget.isLocal
                                           ? null
-                                          : '${widget.bot!.elo} Elo',
+                                          : context.t.eloValue(widget.bot!.elo),
                                       avatarPath: widget.isLocal
                                           ? null
                                           : widget.bot!.imagePath,
-                                      thinkingText: 'thinking',
+                                      thinkingText: context.t.thinking,
                                     ),
                                     SizedBox(
                                       width: side,
@@ -509,7 +493,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                     ),
                                     _PlayerBar(
                                       side: bottomSide,
-                                      name: widget.isLocal ? 'White' : 'You',
+                                      name: widget.isLocal
+                                          ? context.t.whiteName
+                                          : context.t.youName,
                                     ),
                                   ],
                                 ),
@@ -601,11 +587,12 @@ class _WaitingLineState extends State<_WaitingLine> {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
+    final t = context.t;
     final lines = [
-      'Inviting ${widget.name} to the game…',
-      '${widget.name} is taking a seat…',
-      'Setting up the board…',
-      '${widget.name} is getting ready…',
+      t.invite1(widget.name),
+      t.invite2(widget.name),
+      t.invite3,
+      t.invite4(widget.name),
     ];
     final text = lines[_index % lines.length];
 
@@ -715,36 +702,36 @@ class _ControlsBar extends ConsumerWidget {
           if (isLocal || practiceMode)
             KustAction(
               icon: Icons.tune_rounded,
-              label: 'Options',
+              label: context.t.options,
               onTap: () => MoreFloatingMenu.show(context),
             ),
           if (isLocal || practiceMode)
             KustAction(
               icon: Icons.undo_rounded,
-              label: 'Take back',
+              label: context.t.takeBack,
               onTap: s.canUndo ? controller.undoLastMove : null,
             ),
           if (s.canPause)
             KustAction(
               icon: s.paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-              label: s.paused ? 'Resume' : 'Pause',
+              label: s.paused ? context.t.resume : context.t.pause,
               onTap: s.paused ? controller.resumeClock : controller.pauseClock,
             ),
           if (!isLocal && practiceMode)
             KustAction(
               icon: Icons.lightbulb_outline_rounded,
-              label: 'Hint',
+              label: context.t.hint,
               busy: s.hintThinking,
               onTap: s.hintEnabled ? controller.requestHint : null,
             ),
           KustAction(
             icon: Icons.chevron_left_rounded,
-            label: 'Back',
+            label: context.t.back,
             onTap: s.cursor > 0 ? controller.analysisMoveBack : null,
           ),
           KustAction(
             icon: Icons.chevron_right_rounded,
-            label: 'Forward',
+            label: context.t.forward,
             onTap: s.analysisActive ? controller.analysisMoveNext : null,
           ),
         ],
@@ -996,9 +983,9 @@ class _MoveFeedbackLine extends StatelessWidget {
 
     String? text;
     if (feedback != null) {
-      text = feedback.bannerText;
+      text = feedback.banner(context.t);
     } else if (analyzing) {
-      text = 'Analyzing ${moves.last.san}…';
+      text = context.t.analyzingMove(moves.last.san);
     } else {
       return const SizedBox.shrink();
     }

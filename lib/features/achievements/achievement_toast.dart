@@ -7,6 +7,7 @@ import 'package:kust/features/achievements/achievements.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Celebrates each achievement as it unlocks, over any screen: the screen
 /// dims, a gold medal pops in with turning rays behind it, confetti bursts
@@ -191,18 +192,18 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
           ),
           const SizedBox(height: 18),
           Text(
-            'Achievement unlocked',
+            context.t.achUnlocked,
             style: k.caption.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
           Text(
-            a.title,
+            a.titleIn(context.t),
             textAlign: TextAlign.center,
             style: k.title.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(
-            a.description,
+            a.descriptionIn(context.t),
             textAlign: TextAlign.center,
             style: k.body.copyWith(color: k.muted),
           ),
@@ -227,7 +228,7 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${widget.earned} of ${widget.total} earned',
+                    context.t.achEarnedOf(widget.earned, widget.total),
                     style: k.caption.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -237,7 +238,7 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
           const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
-            child: KustButton(label: 'Continue', onTap: _close),
+            child: KustButton(label: context.t.cont, onTap: _close),
           ),
         ],
       ),
@@ -250,7 +251,8 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
         onTap: _close,
         child: Semantics(
           liveRegion: true,
-          label: 'Achievement unlocked: ${a.title}. ${a.description}',
+          label:
+              '${context.t.achUnlocked}: ${a.titleIn(context.t)}. ${a.descriptionIn(context.t)}',
           excludeSemantics: true,
           child: Stack(
             fit: StackFit.expand,
