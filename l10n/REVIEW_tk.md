@@ -130,7 +130,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `playWithBotsSub` | Challenge one of our bots | Botlarymyzyň biri bilen güýç synanyşyň |
 | `playLocally` | Play locally | Şu enjamda oýnaň |
 | `playLocallySub` | Pass & play on this device | Bir enjamda iki oýunçy |
-| `practiceModeSub` | Allows undo, hints and move feedback | Göçümi yza almaga, kömege we göçüm bahasyna rugsat berýär |
+| `practiceModeSub` | Allows undo, hints and move feedback | Göçümi yza almaga, kömege we göçüm bahasyny görkezmäge rugsat berýär |
 | `practiceTag` | Practice | Türgenleşik |
 | `appearance` | Appearance | Daşky görnüş |
 | `themeAuto` | Auto | Awto |
@@ -139,7 +139,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `boardSection` | Board | Tagta |
 | `piecesSection` | Pieces | Daşlar |
 | `movesSection` | Moves | Göçümler |
-| `castleOnRook` | Castle on the rook | Rokirowkany gala bilen ediň |
+| `castleOnRook` | Castle on the rook | Rokirowkany gala basyp ediň |
 | `castleOnRookSub` | Tap the king, then its rook, to castle | Rokirowka etmek üçin şa, soňra onuň galasyna basyň |
 | `premovesSub` | Queue your next move while the bot thinks | Bot pikirlenýärkä indiki göçümiňizi nobata goýuň |
 | `feedbackSection` | Feedback | Seslenme |

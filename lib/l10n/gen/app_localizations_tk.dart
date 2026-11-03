@@ -514,7 +514,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get practiceModeSub =>
-      'Göçümi yza almaga, kömege we göçüm bahasyna rugsat berýär';
+      'Göçümi yza almaga, kömege we göçüm bahasyny görkezmäge rugsat berýär';
 
   @override
   String get practiceTag => 'Türgenleşik';
@@ -541,7 +541,7 @@ class AppL10nTk extends AppL10n {
   String get movesSection => 'Göçümler';
 
   @override
-  String get castleOnRook => 'Rokirowkany gala bilen ediň';
+  String get castleOnRook => 'Rokirowkany gala basyp ediň';
 
   @override
   String get castleOnRookSub =>
