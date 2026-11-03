@@ -271,7 +271,7 @@ class AppL10nTk extends AppL10n {
   String get pieceQueen => 'wezir';
 
   @override
-  String get pieceRook => 'rok';
+  String get pieceRook => 'gala';
 
   @override
   String get pieceBishop => 'pil';
@@ -541,10 +541,11 @@ class AppL10nTk extends AppL10n {
   String get movesSection => 'Göçümler';
 
   @override
-  String get castleOnRook => 'Roky rok bilen ediň';
+  String get castleOnRook => 'Rokirowkany gala bilen ediň';
 
   @override
-  String get castleOnRookSub => 'Roky etmek üçin şa, soňra onuň rokuna basyň';
+  String get castleOnRookSub =>
+      'Rokirowka etmek üçin şa, soňra onuň galasyna basyň';
 
   @override
   String get premoves => 'Öň göçümler';

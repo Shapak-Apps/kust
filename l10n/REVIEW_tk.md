@@ -69,7 +69,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `promoteTo` | Promote to {piece} | {piece} bolup öwrül |
 | `cancelPromotion` | Cancel promotion | Öwrülişigi ýatyr |
 | `pieceQueen` | queen | wezir |
-| `pieceRook` | rook | rok |
+| `pieceRook` | rook | gala |
 | `pieceBishop` | bishop | pil |
 | `pieceKnight` | knight | at |
 | `noMovesYet` | No moves yet | Heniz göçüm ýok |
@@ -139,8 +139,8 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `boardSection` | Board | Tagta |
 | `piecesSection` | Pieces | Daşlar |
 | `movesSection` | Moves | Göçümler |
-| `castleOnRook` | Castle on the rook | Roky rok bilen ediň |
-| `castleOnRookSub` | Tap the king, then its rook, to castle | Roky etmek üçin şa, soňra onuň rokuna basyň |
+| `castleOnRook` | Castle on the rook | Rokirowkany gala bilen ediň |
+| `castleOnRookSub` | Tap the king, then its rook, to castle | Rokirowka etmek üçin şa, soňra onuň galasyna basyň |
 | `premovesSub` | Queue your next move while the bot thinks | Bot pikirlenýärkä indiki göçümiňizi nobata goýuň |
 | `feedbackSection` | Feedback | Seslenme |
 | `soundEffects` | Sound effects | Ses effektleri |
