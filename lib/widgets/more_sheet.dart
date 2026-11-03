@@ -357,22 +357,43 @@ class _LanguagePicker extends StatelessWidget {
             ],
           ),
         ),
+        // Laid out like the switch rows above: the same padding, a row as
+        // tall as theirs (the switch is 28 high), the same icon and text
+        // sizes.
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              Icon(Icons.translate_rounded, size: 22, color: k.muted),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  context.t.language,
-                  style: k.body.copyWith(fontWeight: FontWeight.w700),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 28),
+            child: Row(
+              children: [
+                // The globe glyph fills its box more than the others, so it
+                // is drawn a little smaller to look the same size.
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Center(
+                    child: Icon(
+                      Icons.translate_rounded,
+                      size: 19,
+                      color: k.muted,
+                    ),
+                  ),
                 ),
-              ),
-              Text(_name(context, code), style: k.caption),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right_rounded, size: 20, color: k.muted),
-            ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    context.t.language,
+                    style: k.body.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Text(
+                  _name(context, code),
+                  style: k.body.copyWith(color: k.muted),
+                ),
+                const SizedBox(width: 2),
+                Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
+              ],
+            ),
           ),
         ),
       ),
