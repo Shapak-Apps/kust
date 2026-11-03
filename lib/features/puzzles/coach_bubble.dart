@@ -4,6 +4,7 @@ import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// The puzzle coach: a bot's face with a speech bubble beside it. Used on the
 /// puzzle map and on the puzzle screen, so the same face greets you in both.
@@ -40,14 +41,10 @@ class CoachBubble extends StatelessWidget {
   /// The coach of the day; the same for every screen.
   static Bot get bot => kInternationalBots[_day % kInternationalBots.length];
 
-  static const List<String> _tips = [
-    'Never skip puzzle day!',
-    'Look for checks, captures and threats first.',
-    'One puzzle a day keeps the blunders away.',
-    'Take your time: the best move is usually forcing.',
-  ];
-
-  static String tipOfTheDay() => _tips[_day % _tips.length];
+  static String tipOfTheDay([AppL10n? t]) {
+    final tips = (t ?? AppText.now).coachDaily.split('\n');
+    return tips[_day % tips.length];
+  }
 
   @override
   Widget build(BuildContext context) {

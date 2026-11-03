@@ -1,3 +1,5 @@
+import 'package:kust/l10n/app_locale.dart';
+
 class TimeControl {
   const TimeControl({required this.baseMinutes, this.incrementSeconds = 0});
 
@@ -7,9 +9,11 @@ class TimeControl {
   Duration get base => Duration(minutes: baseMinutes);
   Duration get increment => Duration(seconds: incrementSeconds);
 
-  String get label => incrementSeconds > 0
+  String get label => labelIn(AppText.now);
+
+  String labelIn(AppL10n t) => incrementSeconds > 0
       ? '$baseMinutes+$incrementSeconds'
-      : '$baseMinutes min';
+      : t.minutesShort(baseMinutes);
 
   static Duration display(Duration d) {
     if (d <= Duration.zero) return Duration.zero;

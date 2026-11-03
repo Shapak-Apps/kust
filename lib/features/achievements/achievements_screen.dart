@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/features/achievements/achievements.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Every achievement, earned ones in colour, the rest greyed out.
 class AchievementsScreen extends StatelessWidget {
@@ -17,7 +18,7 @@ class AchievementsScreen extends StatelessWidget {
       body: Column(
         children: [
           FeltHeader(
-            title: 'Achievements',
+            title: context.t.achievements,
             onBack: () =>
                 context.canPop() ? context.pop() : context.go('/play'),
           ),
@@ -30,7 +31,10 @@ class AchievementsScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
                   children: [
                     Text(
-                      '${unlocked.length} of ${kAchievements.length} earned',
+                      context.t.achEarnedOf(
+                        unlocked.length,
+                        kAchievements.length,
+                      ),
                       style: k.caption.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 12),
@@ -67,8 +71,8 @@ class AchievementTile extends StatelessWidget {
     final k = context.k;
     return Semantics(
       label:
-          '${achievement.title}, ${achievement.description}, '
-          '${earned ? 'earned' : 'not earned yet'}',
+          '${achievement.titleIn(context.t)}, ${achievement.descriptionIn(context.t)}, '
+          '${earned ? context.t.achEarned : context.t.achNotEarned}',
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -98,13 +102,13 @@ class AchievementTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    achievement.title,
+                    achievement.titleIn(context.t),
                     style: k.body.copyWith(
                       fontWeight: FontWeight.w800,
                       color: earned ? k.ink : k.muted,
                     ),
                   ),
-                  Text(achievement.description, style: k.caption),
+                  Text(achievement.descriptionIn(context.t), style: k.caption),
                 ],
               ),
             ),

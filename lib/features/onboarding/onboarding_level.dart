@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Self-assessed experience. It seeds the player's starting rating so the
 /// first games are not wildly mismatched.
@@ -38,9 +39,24 @@ enum OnboardingLevel {
     required this.startingRating,
   });
 
+  /// The English title and description; see [titleIn] and [descriptionIn].
   final String title;
   final String description;
   final IconData icon;
+
+  String titleIn(AppL10n t) => switch (this) {
+    OnboardingLevel.beginner => t.lvlBeginner,
+    OnboardingLevel.intermediate => t.lvlIntermediate,
+    OnboardingLevel.advanced => t.lvlAdvanced,
+    OnboardingLevel.competitive => t.lvlCompetitive,
+  };
+
+  String descriptionIn(AppL10n t) => switch (this) {
+    OnboardingLevel.beginner => t.lvlBeginnerD,
+    OnboardingLevel.intermediate => t.lvlIntermediateD,
+    OnboardingLevel.advanced => t.lvlAdvancedD,
+    OnboardingLevel.competitive => t.lvlCompetitiveD,
+  };
   final int startingRating;
 }
 

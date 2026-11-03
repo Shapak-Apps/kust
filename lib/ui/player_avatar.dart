@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// The player's picture in a square with softened corners. With no photo yet it shows a ghost: a
@@ -19,7 +20,7 @@ class PlayerAvatar extends StatelessWidget {
     final k = context.k;
     final photo = this.photo;
     return Semantics(
-      label: name == null ? 'Your avatar' : '$name, your avatar',
+      label: name == null ? context.t.yourAvatar : context.t.avatarOf(name!),
       image: true,
       child: Container(
         width: size,

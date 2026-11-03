@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
 import 'package:dartchess/dartchess.dart';
 
 import 'package:kust/features/game/chess/accuracy.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 const Color kMoveBrilliant = Color(0xFF1BADA6);
 const Color kMoveGreat = Color(0xFF5C8BB0);
@@ -41,28 +43,19 @@ enum MoveQuality {
 }
 
 extension MoveQualityStyle on MoveQuality {
-  String get label => switch (this) {
-    MoveQuality.brilliant => 'Brilliant',
-    MoveQuality.great => 'Great',
-    MoveQuality.best => 'Best move',
-    MoveQuality.excellent => 'Excellent',
-    MoveQuality.good => 'Good',
-    MoveQuality.inaccuracy => 'Inaccuracy',
-    MoveQuality.mistake => 'Mistake',
-    MoveQuality.miss => 'Miss',
-    MoveQuality.blunder => 'Blunder',
-  };
+  /// The name of the rating, in the language in use.
+  String get label => labelIn(AppText.now);
 
-  String get shortLabel => switch (this) {
-    MoveQuality.brilliant => 'brilliant',
-    MoveQuality.great => 'great',
-    MoveQuality.best => 'best',
-    MoveQuality.excellent => 'excellent',
-    MoveQuality.good => 'good',
-    MoveQuality.inaccuracy => 'an inaccuracy',
-    MoveQuality.mistake => 'a mistake',
-    MoveQuality.miss => 'a miss',
-    MoveQuality.blunder => 'a blunder',
+  String labelIn(AppL10n t) => switch (this) {
+    MoveQuality.brilliant => t.qBrilliant,
+    MoveQuality.great => t.qGreat,
+    MoveQuality.best => t.qBest,
+    MoveQuality.excellent => t.qExcellent,
+    MoveQuality.good => t.qGood,
+    MoveQuality.inaccuracy => t.qInaccuracy,
+    MoveQuality.mistake => t.qMistake,
+    MoveQuality.miss => t.qMiss,
+    MoveQuality.blunder => t.qBlunder,
   };
 
   String get asset => switch (this) {
@@ -122,10 +115,20 @@ class MoveFeedback {
       quality == MoveQuality.brilliant ||
       quality == MoveQuality.great;
 
-  String get bannerText {
-    if (isBest) return '$playedSan · ${quality.shortLabel} move';
-    return '$playedSan was ${quality.shortLabel} · $bestSan was best';
-  }
+  /// 'e4 · best move', or 'a3 was a mistake · e4 was best'.
+  String banner(AppL10n t) => switch (quality) {
+    MoveQuality.brilliant => t.bannerBrilliant(playedSan),
+    MoveQuality.great => t.bannerGreat(playedSan),
+    MoveQuality.best => t.bannerBest(playedSan),
+    MoveQuality.excellent => t.bannerExcellent(playedSan, bestSan),
+    MoveQuality.good => t.bannerGood(playedSan, bestSan),
+    MoveQuality.inaccuracy => t.bannerInaccuracy(playedSan, bestSan),
+    MoveQuality.mistake => t.bannerMistake(playedSan, bestSan),
+    MoveQuality.miss => t.bannerMiss(playedSan, bestSan),
+    MoveQuality.blunder => t.bannerBlunder(playedSan, bestSan),
+  };
+
+  String get bannerText => banner(AppText.now);
 }
 
 /// The share of the game a score is worth to the side it belongs to, 0..1:

@@ -5,6 +5,7 @@ import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Everything inside the centered "game over" modal: title, reason, rating,
 /// accuracy and two buttons side by side. All of it is centered.
@@ -44,7 +45,7 @@ class GameResultContent extends StatelessWidget {
           children: [
             Expanded(
               child: KustButton(
-                label: 'Lobby',
+                label: context.t.lobby,
                 style: KustButtonStyle.outline,
                 height: 48,
                 onTap: onLobby,
@@ -52,7 +53,11 @@ class GameResultContent extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: KustButton(label: 'Rematch', height: 48, onTap: onRematch),
+              child: KustButton(
+                label: context.t.rematch,
+                height: 48,
+                onTap: onRematch,
+              ),
             ),
           ],
         ),
@@ -77,7 +82,7 @@ class ResultRatingLine extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
-        'Rating $now ($sign$change)',
+        context.t.ratingChange(now, '$sign$change'),
         textAlign: TextAlign.center,
         style: k.body.copyWith(
           fontWeight: FontWeight.w800,
@@ -116,7 +121,7 @@ class ResultAccuracyLine extends ConsumerWidget {
           Icon(Icons.track_changes_rounded, size: 18, color: k.muted),
           const SizedBox(width: 8),
           Text(
-            'Accuracy ${data.accuracy!.toStringAsFixed(1)}%',
+            context.t.accuracyValue(data.accuracy!.toStringAsFixed(1)),
             style: k.body.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
@@ -132,7 +137,7 @@ class ResultAccuracyLine extends ConsumerWidget {
             child: CircularProgressIndicator(strokeWidth: 2, color: k.accent),
           ),
           const SizedBox(width: 10),
-          Text('Analyzing your moves…', style: k.caption),
+          Text(context.t.analyzingYourMoves, style: k.caption),
         ],
       );
     } else {

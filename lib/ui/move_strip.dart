@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Label for the move at [index] (0 is White's first move): White's moves
 /// carry their move number, Black's do not.
@@ -20,7 +21,7 @@ class MoveStrip extends StatefulWidget {
     required this.labels,
     required this.selected,
     this.onTap,
-    this.emptyText = 'No moves yet',
+    this.emptyText,
   });
 
   /// One label per move, see [moveLabel].
@@ -33,7 +34,8 @@ class MoveStrip extends StatefulWidget {
   /// Called with the ply of a tapped move. Moves are not tappable when null.
   final ValueChanged<int>? onTap;
 
-  final String emptyText;
+  /// Shown when there are no moves; "No moves yet" when not given.
+  final String? emptyText;
 
   static const double height = 36;
 
@@ -110,7 +112,12 @@ class _MoveStripState extends State<MoveStrip> {
       return SizedBox(
         width: double.infinity,
         height: MoveStrip.height,
-        child: Center(child: Text(widget.emptyText, style: k.caption)),
+        child: Center(
+          child: Text(
+            widget.emptyText ?? context.t.noMovesYet,
+            style: k.caption,
+          ),
+        ),
       );
     }
 

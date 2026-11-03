@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 class PracticeModeCheckbox extends StatelessWidget {
   const PracticeModeCheckbox({
@@ -16,8 +17,8 @@ class PracticeModeCheckbox extends StatelessWidget {
   Widget build(BuildContext context) {
     return KustToggleRow(
       icon: Icons.school_outlined,
-      title: 'Practice mode',
-      subtitle: 'Allows undo, hints and move feedback',
+      title: context.t.practiceMode,
+      subtitle: context.t.practiceModeSub,
       value: value,
       onChanged: onChanged,
     );

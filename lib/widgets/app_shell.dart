@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
@@ -51,21 +52,21 @@ class _AppShellState extends State<AppShell> {
             bottom: 0,
             child: KustNavBar(
               selectedIndex: selected,
-              items: const [
+              items: [
                 KustNavItem(
                   Icons.sports_esports_outlined,
                   Icons.sports_esports_rounded,
-                  'Play',
+                  context.t.navPlay,
                 ),
                 KustNavItem(
                   Icons.extension_outlined,
                   Icons.extension_rounded,
-                  'Puzzles',
+                  context.t.navPuzzles,
                 ),
                 KustNavItem(
                   Icons.history_rounded,
                   Icons.history_rounded,
-                  'History',
+                  context.t.navHistory,
                 ),
               ],
               onSelected: _select,

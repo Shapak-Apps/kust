@@ -8,6 +8,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 Future<void> showSettingsSheet(BuildContext context) {
   return showKustSheet<void>(context, builder: (_) => const _SettingsSheet());
@@ -22,25 +23,25 @@ class _SettingsSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(title: 'Settings'),
+        KustSheetHeader(title: context.t.settings),
         // Hidden while the app is dark only (see AppSettings.forceDark).
         if (!AppSettings.forceDark) ...[
-          const KustSectionLabel('Appearance'),
+          KustSectionLabel(context.t.appearance),
           ValueListenableBuilder<ThemeMode>(
             valueListenable: s.themeMode,
             builder: (_, mode, _) => KustSegmented<ThemeMode>(
               value: mode,
-              options: const {
-                ThemeMode.system: 'Auto',
-                ThemeMode.light: 'Light',
-                ThemeMode.dark: 'Dark',
+              options: {
+                ThemeMode.system: context.t.themeAuto,
+                ThemeMode.light: context.t.themeLight,
+                ThemeMode.dark: context.t.themeDark,
               },
               onChanged: s.setThemeMode,
             ),
           ),
           const SizedBox(height: 24),
         ],
-        const KustSectionLabel('Board'),
+        KustSectionLabel(context.t.boardSection),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
           builder: (_, selected, _) => Row(
@@ -59,7 +60,7 @@ class _SettingsSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Pieces'),
+        KustSectionLabel(context.t.piecesSection),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
           builder: (_, board, _) => ValueListenableBuilder<PieceSet>(
@@ -82,13 +83,13 @@ class _SettingsSheet extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Moves'),
+        KustSectionLabel(context.t.movesSection),
         ValueListenableBuilder<bool>(
           valueListenable: s.castleOnRook,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.swap_horiz_rounded,
-            title: 'Castle on the rook',
-            subtitle: 'Tap the king, then its rook, to castle',
+            title: context.t.castleOnRook,
+            subtitle: context.t.castleOnRookSub,
             value: v,
             onChanged: s.setCastleOnRook,
           ),
@@ -97,19 +98,19 @@ class _SettingsSheet extends StatelessWidget {
           valueListenable: s.premoves,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.fast_forward_rounded,
-            title: 'Premoves',
-            subtitle: 'Queue your next move while the bot thinks',
+            title: context.t.premoves,
+            subtitle: context.t.premovesSub,
             value: v,
             onChanged: s.setPremoves,
           ),
         ),
         const SizedBox(height: 24),
-        const KustSectionLabel('Feedback'),
+        KustSectionLabel(context.t.feedbackSection),
         ValueListenableBuilder<bool>(
           valueListenable: s.sound,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.volume_up_rounded,
-            title: 'Sound effects',
+            title: context.t.soundEffects,
             value: v,
             onChanged: s.setSound,
           ),
@@ -118,11 +119,12 @@ class _SettingsSheet extends StatelessWidget {
           valueListenable: s.haptics,
           builder: (_, v, _) => KustToggleRow(
             icon: Icons.vibration_rounded,
-            title: 'Haptics',
+            title: context.t.haptics,
             value: v,
             onChanged: s.setHaptics,
           ),
         ),
+        const _LanguagePicker(),
       ],
     );
   }
@@ -147,7 +149,7 @@ class BoardThemeSwatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${theme.label} board',
+      label: context.t.boardThemeSemantics(theme.labelIn(context.t)),
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
@@ -200,7 +202,7 @@ class BoardThemeSwatch extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              theme.label,
+              theme.labelIn(context.t),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.caption.copyWith(
@@ -237,7 +239,7 @@ class PieceSetSwatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${set.label} pieces',
+      label: context.t.pieceSetSemantics(set.labelIn(context.t)),
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
@@ -278,7 +280,7 @@ class PieceSetSwatch extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              set.label,
+              set.labelIn(context.t),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.caption.copyWith(
@@ -287,6 +289,112 @@ class PieceSetSwatch extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The languages to pick from, each in its own language.
+const List<(String?, String)> _languages = [
+  ('en', 'English'),
+  ('ru', 'Русский'),
+  ('tk', 'Türkmençe'),
+];
+
+/// A plain row showing the language in use; tapping it opens the list to
+/// pick from.
+class _LanguagePicker extends StatelessWidget {
+  const _LanguagePicker();
+
+  static String _name(BuildContext context, String? code) => code == null
+      ? context.t.languageAuto
+      : _languages.firstWhere((l) => l.$1 == code).$2;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder<String?>(
+      valueListenable: AppSettings.instance.language,
+      builder: (context, code, _) => Pressable(
+        onTap: () => showKustSheet<void>(
+          context,
+          builder: (sheetContext) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              KustSheetHeader(title: sheetContext.t.language),
+              for (final option in [
+                (null, sheetContext.t.languageAuto),
+                ..._languages,
+              ])
+                Pressable(
+                  onTap: () {
+                    AppSettings.instance.setLanguage(option.$1);
+                    Navigator.of(sheetContext).pop();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            option.$2,
+                            style: sheetContext.k.body.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (AppSettings.instance.language.value == option.$1)
+                          Icon(
+                            Icons.check_rounded,
+                            size: 22,
+                            color: sheetContext.k.accent,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        // Laid out like the switch rows above: the same padding, a row as
+        // tall as theirs (the switch is 28 high), the same icon and text
+        // sizes.
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 28),
+            child: Row(
+              children: [
+                // The globe glyph fills its box more than the others, so it
+                // is drawn a little smaller to look the same size.
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: Center(
+                    child: Icon(
+                      Icons.translate_rounded,
+                      size: 19,
+                      color: k.muted,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    context.t.language,
+                    style: k.body.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Text(
+                  _name(context, code),
+                  style: k.body.copyWith(color: k.muted),
+                ),
+                const SizedBox(width: 2),
+                Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
+              ],
+            ),
+          ),
         ),
       ),
     );

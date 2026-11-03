@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 class PlayModeModal extends StatelessWidget {
   const PlayModeModal({super.key, required this.onBots, required this.onLocal});
@@ -29,11 +30,11 @@ class PlayModeModal extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const KustSheetHeader(title: 'New game'),
+        KustSheetHeader(title: context.t.newGame),
         KustOption(
           leading: const KustIconTile(Icons.smart_toy_outlined),
-          title: 'Play with bots',
-          subtitle: 'Challenge one of our bots',
+          title: context.t.playWithBots,
+          subtitle: context.t.playWithBotsSub,
           trailing: chevron(),
           onTap: () {
             Navigator.of(context).pop();
@@ -43,8 +44,8 @@ class PlayModeModal extends StatelessWidget {
         const SizedBox(height: 8),
         KustOption(
           leading: const KustIconTile(Icons.people_outline_rounded),
-          title: 'Play locally',
-          subtitle: 'Pass & play on this device',
+          title: context.t.playLocally,
+          subtitle: context.t.playLocallySub,
           trailing: chevron(),
           onTap: () {
             Navigator.of(context).pop();
