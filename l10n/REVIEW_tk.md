@@ -18,7 +18,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `youName` | You | Siz |
 | `whiteName` | White | Ak |
 | `blackName` | Black | Gara |
-| `random` | Random | Tötänleýin |
+| `random` | Random | Tapawudy ýok |
 | `play` | Play | Oýna |
 | `eloValue` | {elo} Elo | {elo} Elo |
 | `passAndPlay` | Pass & Play | Iki oýunçy |
@@ -32,7 +32,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `botsNotSupported` | Playing against bots is not supported on this device. | Botlar bilen oýnamak bu enjamda goldanylmaýar. |
 | `playLocallyInstead` | Play locally instead | Şu enjamda oýnaň |
 | `abortSubtitle` | The game will end without a result. | Oýun netijesiz gutarar. |
-| `resignTitle` | Resign this game? | Bu oýny boynuňyza alýarsyňyzmy? |
+| `resignTitle` | Resign this game? | Bu oýny boýnuňyza alýarsyňyzmy? |
 | `resignSubtitle` | The game will end and count as a loss. | Oýun gutarar we ýeňiliş hasaplanar. |
 | `leaveGame` | Leave game | Oýundan çyk |
 | `exportGame` | Export game | Oýny eksport et |
@@ -42,7 +42,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `wonTheGame` | {name} won the game. | {name} ýeňdi. |
 | `gameDrawn` | The game ended in a draw. | Oýun deňe deň gutardy. |
 | `gameEndedOnTime` | The game ended on time. | Oýun wagt boýunça gutardy. |
-| `youResigned` | You resigned. | Siz boynuňyza aldyňyz. |
+| `youResigned` | You resigned. | Siz boýnuňyza aldyňyz. |
 | `endCheckmateWon` | {name} won by checkmate. | {name} şahmat bilen ýeňdi. |
 | `endStalemate` | Game drawn by stalemate. | Pat sebäpli deňe deň. |
 | `endFiftyMove` | Game drawn by 50-move rule. | 50 göçüm düzgüni boýunça deňe deň. |
@@ -51,7 +51,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `endTimeWon` | {name} won on time. | {name} wagt boýunça ýeňdi. |
 | `endTimeNoMate` | Time ran out, but the other side cannot checkmate. | Wagt gutardy, emma garşydaş şahmat edip bilmeýär. |
 | `lobby` | Lobby | Baş sahypa |
-| `rematch` | Rematch | Gaýtadan oýna |
+| `rematch` | Rematch | Ýene oýna |
 | `ratingChange` | Rating {rating} ({change}) | Reýting {rating} ({change}) |
 | `accuracyValue` | Accuracy {value}% | Takyklyk {value}% |
 | `analyzingYourMoves` | Analyzing your moves… | Göçümleriňiz seljerilýär… |
@@ -304,3 +304,5 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `avatarOf` | {name}, your avatar | {name}, siziň suratyňyz |
 | `language` | Language | Dil |
 | `languageAuto` | System | Ulgam |
+| `youWonGame` | You won the game. | Siz ýeňdiňiz. |
+| `youWonOnTime` | You won on time. | Siz wagt boýunça ýeňdiňiz. |

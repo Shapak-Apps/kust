@@ -1106,4 +1106,10 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get languageAuto => 'System';
+
+  @override
+  String get youWonGame => 'You won the game.';
+
+  @override
+  String get youWonOnTime => 'You won on time.';
 }

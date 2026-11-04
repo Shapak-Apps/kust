@@ -67,7 +67,7 @@ class AppL10nTk extends AppL10n {
   String get blackName => 'Gara';
 
   @override
-  String get random => 'Tötänleýin';
+  String get random => 'Tapawudy ýok';
 
   @override
   String get play => 'Oýna';
@@ -124,13 +124,13 @@ class AppL10nTk extends AppL10n {
   String get keepPlaying => 'Oýny dowam et';
 
   @override
-  String get resignTitle => 'Bu oýny boynuňyza alýarsyňyzmy?';
+  String get resignTitle => 'Bu oýny boýnuňyza alýarsyňyzmy?';
 
   @override
   String get resignSubtitle => 'Oýun gutarar we ýeňiliş hasaplanar.';
 
   @override
-  String get resign => 'Boynuna al';
+  String get resign => 'Boýnuňa al';
 
   @override
   String get leaveGame => 'Oýundan çyk';
@@ -165,7 +165,7 @@ class AppL10nTk extends AppL10n {
   String get gameEndedOnTime => 'Oýun wagt boýunça gutardy.';
 
   @override
-  String get youResigned => 'Siz boynuňyza aldyňyz.';
+  String get youResigned => 'Siz boýnuňyza aldyňyz.';
 
   @override
   String endCheckmateWon(String name) {
@@ -197,7 +197,7 @@ class AppL10nTk extends AppL10n {
   String get lobby => 'Baş sahypa';
 
   @override
-  String get rematch => 'Gaýtadan oýna';
+  String get rematch => 'Ýene oýna';
 
   @override
   String ratingChange(int rating, String change) {
@@ -1113,4 +1113,10 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get languageAuto => 'Ulgam';
+
+  @override
+  String get youWonGame => 'Siz ýeňdiňiz.';
+
+  @override
+  String get youWonOnTime => 'Siz wagt boýunça ýeňdiňiz.';
 }

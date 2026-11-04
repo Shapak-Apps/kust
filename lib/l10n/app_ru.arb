@@ -324,5 +324,7 @@
   "yourAvatar": "Ваш аватар",
   "avatarOf": "{name}, ваш аватар",
   "language": "Язык",
-  "languageAuto": "Система"
+  "languageAuto": "Система",
+  "youWonGame": "Вы победили.",
+  "youWonOnTime": "Вы победили по времени."
 }

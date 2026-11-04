@@ -704,5 +704,7 @@
     }
   },
   "language": "Language",
-  "languageAuto": "System"
+  "languageAuto": "System",
+  "youWonGame": "You won the game.",
+  "youWonOnTime": "You won on time."
 }
