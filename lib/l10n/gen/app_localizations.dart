@@ -2048,6 +2048,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'System'**
   String get languageAuto;
+
+  /// No description provided for @youWonGame.
+  ///
+  /// In en, this message translates to:
+  /// **'You won the game.'**
+  String get youWonGame;
+
+  /// No description provided for @youWonOnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You won on time.'**
+  String get youWonOnTime;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

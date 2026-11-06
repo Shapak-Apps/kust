@@ -1111,4 +1111,10 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get languageAuto => 'Система';
+
+  @override
+  String get youWonGame => 'Вы победили.';
+
+  @override
+  String get youWonOnTime => 'Вы победили по времени.';
 }

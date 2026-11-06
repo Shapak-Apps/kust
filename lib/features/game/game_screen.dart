@@ -300,7 +300,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return switch (state.status) {
       GameStatus.checkmate => (
         t.resultCheckmate,
-        t.wonTheGame(sideName(t, state, state.position.turn.opposite)),
+        wonGameMessage(t, state, state.position.turn.opposite),
       ),
       GameStatus.draw => (t.resultDraw, endMessage(t, state)),
       GameStatus.timeout => (t.resultTimeOut, endMessage(t, state)),
