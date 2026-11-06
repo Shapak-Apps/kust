@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// The Küşt wordmark: the letters in the text colour, the two dots over
-/// the ü in gold.
+/// the ü and the tail under the ş in gold.
 ///
 /// [height] is the height of the capitals. The cedilla of the ş hangs
 /// below them, so the mark is laid out by its capitals: the hook spills
