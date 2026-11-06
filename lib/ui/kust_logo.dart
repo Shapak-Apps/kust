@@ -39,9 +39,11 @@ class KustLogo extends StatelessWidget {
           alignment: Alignment.topCenter,
           maxHeight: box,
           child: Stack(
+            // The gold goes first, so the tail of the ş sits behind the letter
+            // and the S stays whole on top of it.
             children: [
-              layer('assets/images/wordmark_letters.svg', context.k.ink),
               layer('assets/images/wordmark_dots.svg', KustTokens.gold),
+              layer('assets/images/wordmark_letters.svg', context.k.ink),
             ],
           ),
         ),
