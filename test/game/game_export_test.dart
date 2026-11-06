@@ -28,6 +28,7 @@ GameState _game({
     moves: moves,
     status: status,
     flagFell: flagFell,
+    resignedSide: status == GameStatus.resigned ? player : null,
   );
 }
 
