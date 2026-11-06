@@ -14,6 +14,7 @@ import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/theme.dart';
 
@@ -100,6 +101,36 @@ void main() {
     // Back at the end: the final position again.
     expect(c.state.displayPosition.fen, p.fen);
     await _finish(tester);
+  });
+
+  testWidgets('resigning in pass and play gives the win to the other side', (
+    tester,
+  ) async {
+    for (final fromWhite in [true, false]) {
+      final c = await _local(tester);
+      Position pos = Chess.initial;
+      final history = <Position>[];
+      final moves = <MoveRecord>[];
+      for (final uci in fromWhite ? <String>[] : ['e2e4']) {
+        final m = NormalMove.fromUci(uci);
+        moves.add(MoveRecord(side: pos.turn, san: uci, move: m));
+        history.add(pos);
+        pos = pos.play(m);
+      }
+      await tester.runAsync(() async {
+        c.state = c.state.copyWith(
+          position: pos,
+          history: history,
+          moves: moves,
+        );
+        c.resign();
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      });
+      final loser = fromWhite ? Side.white : Side.black;
+      expect(c.state.resignedSide, loser);
+      expect(gameResultToken(c.state), fromWhite ? '0-1' : '1-0');
+      await _finish(tester);
+    }
   });
 
   testWidgets('a timed local game pauses and resumes its clocks', (

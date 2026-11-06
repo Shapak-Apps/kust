@@ -70,6 +70,7 @@ class GameState {
     this.wasUndo = false,
     this.endReason,
     this.flagFell,
+    this.resignedSide,
     this.timeControl,
     this.whiteTimeLeft = Duration.zero,
     this.blackTimeLeft = Duration.zero,
@@ -123,6 +124,9 @@ class GameState {
 
   /// The side whose clock ran out, when the game ended on time.
   final Side? flagFell;
+
+  /// Who gave up, once the game ended by resigning.
+  final Side? resignedSide;
 
   final TimeControl? timeControl;
   final Duration whiteTimeLeft;
@@ -284,6 +288,7 @@ class GameState {
     bool? wasUndo,
     EndReason? endReason,
     Side? flagFell,
+    Side? resignedSide,
     bool clearLastMove = false,
     bool clearCapture = false,
     TimeControl? timeControl,
@@ -336,6 +341,7 @@ class GameState {
       wasUndo: wasUndo ?? this.wasUndo,
       endReason: endReason ?? this.endReason,
       flagFell: flagFell ?? this.flagFell,
+      resignedSide: resignedSide ?? this.resignedSide,
       timeControl: timeControl ?? this.timeControl,
       whiteTimeLeft: whiteTimeLeft ?? this.whiteTimeLeft,
       blackTimeLeft: blackTimeLeft ?? this.blackTimeLeft,
@@ -1347,6 +1353,9 @@ class ChessController extends Notifier<GameState> {
 
     state = state.copyWith(
       status: GameStatus.resigned,
+      resignedSide: state.mode == GameMode.local
+          ? state.position.turn
+          : state.playerSide,
       isBotThinking: false,
       premoves: const [],
     );
@@ -1576,7 +1585,7 @@ class ChessController extends Notifier<GameState> {
         case GameStatus.timeout:
           winner = game.flagFell?.opposite.name;
         case GameStatus.resigned:
-          winner = game.playerSide == Side.white ? 'black' : 'white';
+          winner = game.resignedSide?.opposite.name;
         default:
           winner = null;
       }

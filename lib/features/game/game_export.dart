@@ -59,7 +59,8 @@ String gameResultToken(GameState g) {
     case GameStatus.draw:
       return '1/2-1/2';
     case GameStatus.resigned:
-      winner = g.playerSide.opposite;
+      winner = g.resignedSide?.opposite;
+      if (winner == null) return '*';
     case GameStatus.timeout:
       winner = g.flagFell?.opposite;
       if (winner == null) return '*';
