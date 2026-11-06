@@ -310,7 +310,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
       ),
       GameStatus.draw => (t.resultDraw, endMessage(t, state)),
       GameStatus.timeout => (t.resultTimeOut, endMessage(t, state)),
-      GameStatus.resigned => (t.resultGameOver, t.youResigned),
+      GameStatus.resigned => (
+        t.resultGameOver,
+        state.mode == GameMode.local && state.resignedSide != null
+            ? wonGameMessage(t, state, state.resignedSide!.opposite)
+            : t.youResigned,
+      ),
       GameStatus.playing || GameStatus.loading => null,
     };
   }
