@@ -2,102 +2,47 @@
 
 ![Küşt - Improve, Learn moreover Practice your chess](https://raw.githubusercontent.com/Shapak-Apps/kust/main/assets/images/banner.png)
 
-Küşt is an open-source chess application built with Flutter and Dart. It uses `dartchess` for chess rules and position handling, and Stockfish as the engine for bot gameplay and position evaluation.
+Küşt means chess in Turkmen. It is an open-source chess app for Android and iOS, built with Flutter, that tries to teach you something every game instead of just beating you.
 
-The core idea: chess analysis should help you improve, not just tell you a move was bad. Post-game analysis with move classification and explanations is on the roadmap — right now Küşt is focused on being a genuinely good place to play.
+It is also a case study: one author's ideas and system design, built with AI. The author decides what the app should be and how its parts fit together. The AI writes the code, the tests and, occasionally, a confident mistake that the author catches. Every change goes through an issue, a branch and a pull request. We are as surprised as you are that it works.
 
-## Features
+## What it does
 
-### Play Against Bots
+- **Bots with a personality.** Nine opponents from 400 to 2000 Elo. They run on Stockfish, weakened like a person would be: clean openings, shaky middlegames, calm endgames, and no blunders from 1000 up.
+- **Pass and play.** One phone, two people, optional clocks, pause and abort. No engine, no excuses.
+- **Move feedback.** Practice mode rates every move from brilliant to blunder, shows accuracy, hints, undo, and a live arrow to the best move.
+- **Puzzles woven into a carpet.** Five levels of twenty, one traditional Turkmen göl per level, plus a daily puzzle with a streak and a coach.
+- **History and replay.** Every game is saved. Step through it with evaluation and best-move arrows, run an analysis, export it as PNG, FEN or PGN.
+- **The small things.** Drag and drop, premoves, castling on the rook, four piece sets, sounds and haptics, achievements, a rating that moves.
+- **Three languages.** English, Russian and Turkmen. The app follows the phone, and a Turkish phone gets Turkmen.
+- **Dark, portrait, offline.** No account, no server. Your games stay on your phone.
 
-Play complete games against Stockfish-powered bots at adjustable difficulty levels. Bot strength is mapped from an Elo rating to a Stockfish skill level (and UCI Elo where supported), so you can pick an opponent that suits where you are as a player.
+## How it is built
 
-`dartchess` maintains the chess position and validates moves. Stockfish handles engine calculation for the bot's responses.
+| Part | Job |
+| --- | --- |
+| dartchess | Owns the game: position, legal moves, FEN and PGN |
+| Stockfish | Plays the bots, gives hints, evaluates and rates moves |
+| Riverpod, go_router | State and navigation |
+| Hive, shared_preferences | Ratings, puzzle progress, history, settings |
 
-### Local Pass-and-Play
+The rule that keeps it sane: Stockfish never decides what is legal. `dartchess` owns the game, and the engine only sees FEN strings. Bots search at full strength, then a policy picks a move the way a player of that rating would. Game results are stored as data, not as sentences, which is how three languages fit in one app.
 
-No engine, no wifi excuse. Play a full game locally on one device with a friend, no Stockfish dependency required.
+Stockfish runs on Android and iOS. Anywhere else, or if the engine fails, Küşt offers pass and play instead of freezing.
 
-### Time Controls
+## Run it
 
-Pick from preset time controls (blitz, rapid, with or without increment) before starting a game, with a live clock for both sides during play.
-
-### Move Undo and Hints
-
-During a game you can undo your last move or request a hint. Hints run Stockfish at full strength on a short time budget and highlight the suggested origin and destination squares. Undo steps back both the player move and the preceding bot move so the position stays consistent.
-
-### Practice Mode
-
-Toggle practice mode to play more freely while still getting the full board and engine experience — good for exploring lines without it counting against your rating.
-
-### Rating System
-
-Küşt tracks your own Elo-style rating locally (it starts at 1200, or at the value for the experience level you pick during onboarding) and updates it after rated games against bots. Practice-mode and pass-and-play games do not affect it. The change is shown in the post-game result.
-
-### Game History and Replay
-
-Every finished game is saved locally, newest first, with the opponent, result and moves. Open one from the History tab to step through it move by move. Long-press a game to delete it.
-
-### Evaluation Bar
-
-An optional live evaluation bar shows how the position is trending as the game progresses.
-
-## Architecture
-
-The application is built around three components.
-
-### dartchess
-
-Handles chess logic: board position, legal move generation, rule enforcement, FEN and PGN parsing, and position representation. Chess rules are kept entirely separate from the UI and engine layers.
-
-### Stockfish
-
-Used for two purposes:
-
-- calculating moves for the bot opponent during gameplay
-- powering hints and the live evaluation bar
-
-Stockfish does not enforce chess rules. `dartchess` owns the game state and legal move validation. Stockfish only sees FEN strings.
-
-Stockfish currently runs on Android and iOS. On any other platform, or if the engine fails to start or stops responding, Küşt tells you and offers pass-and-play instead of freezing.
-
-The engine's two NNUE network files (about 110MB) ship inside the app, so bots work offline from the first launch. They are **not committed to git**. Run `python3 tools/pack_nnue.py` once after cloning (and before release builds): it downloads the networks from `data.stockfishchess.org`, verifies their names against their hash, and packs them into gzip pieces in `assets/engine/`, which is git-ignored. On first launch the app unpacks the pieces into its support directory (a few seconds, with a progress bar), checks them again, and reuses them afterwards. Without the packed files the app still builds, and bot games offer pass-and-play instead.
-
-## Tech Stack
-
-| Technology         | Purpose                                           |
-| ------------------ | ------------------------------------------------- |
-| Dart               | Application language and core logic               |
-| Flutter            | UI and cross-platform application shell           |
-| dartchess          | Chess rules, legal moves, FEN/PGN, position state |
-| Stockfish          | Bot gameplay, hints, and live evaluation          |
-| Riverpod           | State management                                  |
-| go_router          | Declarative navigation                            |
-| audioplayers       | Move and game event sounds                        |
-| shared_preferences | Onboarding state and settings persistence         |
-| Hive               | Local ratings, puzzle progress and game history   |
-| flutter_svg        | SVG asset rendering                               |
-
-## Getting Started
-
-### Requirements
-
-- Flutter SDK
-- Dart SDK compatible with the Flutter version
-- Git
-- An Android or iOS device or emulator to play against bots (other platforms run pass-and-play only)
-
-### Clone and Run
+You need the Flutter SDK, Git, and an Android or iOS device or emulator.
 
 ```bash
 git clone https://github.com/Shapak-Apps/kust.git
 cd kust
-python3 tools/pack_nnue.py   # one-time: fetches and packs the engine
+python3 tools/pack_nnue.py   # one time: downloads and packs the engine networks
 flutter pub get
 flutter run
 ```
 
-### Release builds
+The two NNUE networks (about 110 MB) ship inside the app so bots work offline, but they are not committed to git. `tools/pack_nnue.py` fetches them from `data.stockfishchess.org`, checks their hashes and packs them into `assets/engine/`, which is git-ignored. Without them the app still builds and offers pass and play.
 
 Release builds are signed with `android/key.properties`, which is not committed:
 
@@ -108,60 +53,38 @@ keyAlias=upload
 keyPassword=...
 ```
 
-Without that file a release build falls back to the debug key so `flutter run --release` still works locally. Never publish such a build. The Android and iOS application ID is `com.shapakapps.kust`.
+Without that file a release build falls back to the debug key. Never publish such a build.
 
-## Roadmap (will be updated soon)
+```bash
+flutter build apk --release --split-per-abi
+```
 
-- [x] Play against Stockfish bots
-- [x] Adjustable bot difficulty
-- [x] Move undo
-- [x] Hints during play
-- [x] Local pass-and-play mode
-- [x] Time controls
-- [x] Local Elo-style rating tracking
-- [x] Live evaluation bar
-- [x] Puzzles (level 1)
-- [x] Game history with replay
-- [x] Local game storage
+## Translations
+
+Texts live in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_tk.arb`. Turkmen strings that need a native speaker's eye are listed in `l10n/REVIEW_tk.md`.
+
+## Roadmap
+
+Done: bots, pass and play, clocks, hints, undo, premoves, ratings, evaluation bar, five puzzle levels, daily puzzle, achievements, history and replay, analysis, move feedback, export, three languages.
+
+Next:
+- [ ] Online play with accounts and friends
 - [ ] More puzzle levels and themes
-- [ ] FEN and PGN support
-- [ ] Post-game analysis
-- [ ] Inaccuracy, mistake, and blunder detection
-- [ ] Missed opportunity detection
+- [ ] Opening and endgame insights
 - [ ] Explanations for critical moves
-- [ ] Personal mistake pattern detection
-- [ ] Opening performance analysis
-- [ ] Tactical training based on previous mistakes
-- [ ] Endgame analysis
-- [ ] Progress tracking
-- [ ] Import games for analysis
-- [ ] Export games as PGN
+- [ ] Training built from your own mistakes
 
 ## Contributing
 
-Küşt is open source and contributions are welcome.
-
-Fork the repository, create a branch, make your changes, and open a pull request.
-
-Before submitting, format and test:
+Fork, branch, change, open a pull request. Format and test first:
 
 ```bash
 dart format .
 flutter test
 ```
 
-Chess software has many edge cases. Changes involving chess logic should include tests where possible. Critical cases include check, checkmate, castling, en passant, promotion, FEN and PGN parsing, engine evaluation, and move classification.
+Chess has more edge cases than it looks. Changes to chess logic should come with tests: check, checkmate, castling, en passant, promotion, repetition, the fifty-move rule.
 
 ## License
 
-Küşt is licensed under the [GNU General Public License v3.0](LICENSE). It uses [Stockfish](https://stockfishchess.org/) and [dartchess](https://pub.dev/packages/dartchess), both GPL-3.0.
-
-## Acknowledgements
-
-Küşt builds on:
-
-- [dartchess](https://pub.dev/packages/dartchess)
-- [Stockfish](https://stockfishchess.org/)
-- [Flutter](https://flutter.dev/)
-
-Follow the licensing and attribution requirements for each dependency.
+GNU General Public License v3.0, see [LICENSE](LICENSE). Küşt uses [Stockfish](https://stockfishchess.org/) and [dartchess](https://pub.dev/packages/dartchess), both GPL-3.0, and [Flutter](https://flutter.dev/). Follow the licence and attribution terms of each.
