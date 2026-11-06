@@ -636,7 +636,7 @@ abstract class AppL10n {
   /// No description provided for @showBestSub.
   ///
   /// In en, this message translates to:
-  /// **'An arrow to the better move after yours'**
+  /// **'Shows an arrow to the best move for you to play now'**
   String get showBestSub;
 
   /// No description provided for @boardImage.
@@ -1484,12 +1484,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Review puzzles'**
   String get reviewPuzzles;
-
-  /// No description provided for @continueTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue · {theme}'**
-  String continueTheme(String theme);
 
   /// No description provided for @statRating.
   ///

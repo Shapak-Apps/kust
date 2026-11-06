@@ -80,7 +80,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `moveFeedback` | Move feedback | Göçüm bahasy |
 | `moveFeedbackSub` | Rates each move you play | Her göçümiňizi bahalandyrýar |
 | `showBest` | Show best | Iň gowusyny görkez |
-| `showBestSub` | An arrow to the better move after yours | Göçümiňizden soň has gowy göçüme ok |
+| `showBestSub` | Shows an arrow to the best move for you to play now | Häzirki ýagdaýda iň gowy göçüme ok |
 | `boardImage` | Board image | Tagta suraty |
 | `boardImageSub` | Share the position as a PNG | Ýagdaýy PNG hökmünde paýlaşyň |
 | `copyFen` | Copy FEN | FEN göçür |
@@ -202,8 +202,8 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `themePin` | Pin | Baglanma |
 | `themeEndgame` | Endgame | Ahyrky oýun |
 | `themeWinMaterial` | Win material | Material ýeňmek |
-| `loomMate1` | Mate in 1 | 1 göçümde şahmat |
-| `loomMate2` | Mate in 2 | 2 göçümde şahmat |
+| `loomMate1` | Mate in 1 | Şahmat 1 |
+| `loomMate2` | Mate in 2 | Şahmat 2 |
 | `loomForks` | Forks | Çatallar |
 | `loomPins` | Pins | Baglanmalar |
 | `loomEndgames` | Endgames | Ahyrky oýunlar |
@@ -211,7 +211,6 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `puzzlesNext` | Next: {theme} | Indiki: {theme} |
 | `puzzlesMoreSoon` | More are coming soon. | Täzeleri ýakynda goşular. |
 | `reviewPuzzles` | Review puzzles | Meseleleri gaýtalaň |
-| `continueTheme` | Continue · {theme} | Dowam ediň · {theme} |
 | `statRating` | RATING | REÝTING |
 | `statKnots` | KNOTS | DÜWÜNLER |
 | `statBest` | BEST | IŇ GOWY |

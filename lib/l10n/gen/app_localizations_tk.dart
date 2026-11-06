@@ -304,7 +304,7 @@ class AppL10nTk extends AppL10n {
   String get showBest => 'Iň gowusyny görkez';
 
   @override
-  String get showBestSub => 'Göçümiňizden soň has gowy göçüme ok';
+  String get showBestSub => 'Häzirki ýagdaýda iň gowy göçüme ok';
 
   @override
   String get boardImage => 'Tagta suraty';
@@ -752,10 +752,10 @@ class AppL10nTk extends AppL10n {
   String get themeWinMaterial => 'Material ýeňmek';
 
   @override
-  String get loomMate1 => '1 göçümde şahmat';
+  String get loomMate1 => 'Şahmat 1';
 
   @override
-  String get loomMate2 => '2 göçümde şahmat';
+  String get loomMate2 => 'Şahmat 2';
 
   @override
   String get loomForks => 'Çatallar';
@@ -779,11 +779,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get reviewPuzzles => 'Meseleleri gaýtalaň';
-
-  @override
-  String continueTheme(String theme) {
-    return 'Dowam ediň · $theme';
-  }
 
   @override
   String get statRating => 'REÝTING';

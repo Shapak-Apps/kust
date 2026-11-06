@@ -861,28 +861,35 @@ class _PlayerBar extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Row(
-                  children: [
-                    for (final piece in captured)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 1),
-                        child: PieceImage(
-                          assetForPiece(piece),
-                          width: 16,
-                          height: 16,
+                // After many captures the row is wider than the room beside the
+                // clock: it shrinks to fit instead of overflowing.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final piece in captured)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 1),
+                          child: PieceImage(
+                            assetForPiece(piece),
+                            width: 16,
+                            height: 16,
+                          ),
                         ),
-                      ),
-                    if (captured.isNotEmpty && advantage > 0)
-                      const SizedBox(width: 5),
-                    if (advantage > 0)
-                      Text(
-                        '+$advantage',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: muted,
+                      if (captured.isNotEmpty && advantage > 0)
+                        const SizedBox(width: 5),
+                      if (advantage > 0)
+                        Text(
+                          '+$advantage',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: muted,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

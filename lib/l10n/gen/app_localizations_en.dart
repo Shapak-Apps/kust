@@ -304,7 +304,8 @@ class AppL10nEn extends AppL10n {
   String get showBest => 'Show best';
 
   @override
-  String get showBestSub => 'An arrow to the better move after yours';
+  String get showBestSub =>
+      'Shows an arrow to the best move for you to play now';
 
   @override
   String get boardImage => 'Board image';
@@ -776,11 +777,6 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get reviewPuzzles => 'Review puzzles';
-
-  @override
-  String continueTheme(String theme) {
-    return 'Continue · $theme';
-  }
 
   @override
   String get statRating => 'RATING';

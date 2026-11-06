@@ -84,10 +84,8 @@ class _BoardView {
     MoveFeedback? feedback;
     Square? square;
     int? index;
-    ({Square from, Square to})? bestArrow;
-
     if (g.practiceMode &&
-        (g.moveFeedbackEnabled || g.showBestEnabled) &&
+        g.moveFeedbackEnabled &&
         !g.isSelfAnalysisActive &&
         g.moves.isNotEmpty) {
       int? lastPlayerIndex;
@@ -104,20 +102,6 @@ class _BoardView {
         // Once the piece is taken the rating no longer belongs to the square.
         final stillThere =
             g.displayPosition.board.pieceAt(landed)?.color == record.side;
-        // Show best: when the engine preferred another move, an arrow to
-        // it, until the player makes the next one.
-        final rated = record.feedback;
-        final best = record.bestMove;
-        if (g.showBestEnabled &&
-            rated != null &&
-            best != null &&
-            !const {
-              MoveQuality.brilliant,
-              MoveQuality.great,
-              MoveQuality.best,
-            }.contains(rated.quality)) {
-          bestArrow = (from: best.from, to: _castlingDisplaySquare(best.to));
-        }
         if (g.moveFeedbackEnabled && record.feedback != null && stillThere) {
           feedback = record.feedback;
           square = _castlingDisplaySquare(record.move.to);
@@ -152,7 +136,7 @@ class _BoardView {
           : null,
       premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
       paused: g.paused,
-      bestArrow: bestArrow,
+      bestArrow: g.isSelfAnalysisActive ? null : g.suggestArrow,
     );
   }
 
@@ -171,7 +155,7 @@ class _BoardView {
     return (from: hints.first, to: hints.last);
   }
 
-  /// The better move than the player's last one (Show best).
+  /// The best move for the player to play now (Show best).
   final ({Square from, Square to})? bestArrow;
 
   /// The arrow drawn on the board: a hint asked for wins over Show best.

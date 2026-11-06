@@ -176,7 +176,7 @@
   "moveFeedback": "Move feedback",
   "moveFeedbackSub": "Rates each move you play",
   "showBest": "Show best",
-  "showBestSub": "An arrow to the better move after yours",
+  "showBestSub": "Shows an arrow to the best move for you to play now",
   "boardImage": "Board image",
   "boardImageSub": "Share the position as a PNG",
   "copyFen": "Copy FEN",
@@ -499,14 +499,6 @@
   },
   "puzzlesMoreSoon": "More are coming soon.",
   "reviewPuzzles": "Review puzzles",
-  "continueTheme": "Continue · {theme}",
-  "@continueTheme": {
-    "placeholders": {
-      "theme": {
-        "type": "String"
-      }
-    }
-  },
   "statRating": "RATING",
   "statKnots": "KNOTS",
   "statBest": "BEST",
