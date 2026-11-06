@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/foundation.dart'
     show listEquals, setEquals, visibleForTesting;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -287,8 +286,22 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   Piece? _dragPiece;
   final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
 
-  /// The square the dragged piece is over, ringed.
-  Square? _hover;
+  /// The square the dragged piece is over, ringed. A notifier of its own so
+  /// that crossing from square to square redraws only the ring, not the
+  /// whole board.
+  final ValueNotifier<Square?> _hover = ValueNotifier(null);
+
+  /// The finger on the board: which pointer, where it went down, and whether
+  /// it has moved far enough to be a drag rather than a tap. Followed by
+  /// hand, without the gesture arena, so the piece lifts after a few pixels
+  /// instead of after the usual 36.
+  int? _pointer;
+  Offset? _downAt;
+  bool _moved = false;
+
+  /// How far (in logical pixels) a finger must travel before a touch is a
+  /// drag, not a tap.
+  static const double _dragSlop = 6;
 
   /// A move made by dropping: it is already in place, so it does not glide.
   ({Square from, Square to})? _dropped;
@@ -369,6 +382,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     _captureController.dispose();
     _snapController.dispose();
     _dragAt.dispose();
+    _hover.dispose();
     super.dispose();
   }
 
@@ -403,8 +417,52 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   Offset _pieceCentre(Offset finger) =>
       finger - Offset(0, _squareSize * _dragLift);
 
-  void _onDragStart(DragStartDetails details) {
-    final square = _squareAtOffset(details.localPosition);
+  void _onPointerDown(PointerDownEvent event) {
+    if (_pointer != null) return;
+    _pointer = event.pointer;
+    _downAt = event.localPosition;
+    _moved = false;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (event.pointer != _pointer) return;
+    if (_dragFrom != null) {
+      _onDragUpdate(event.localPosition);
+      return;
+    }
+    final down = _downAt;
+    if (down == null || _moved) return;
+    if ((event.localPosition - down).distance <= _dragSlop) return;
+    _moved = true;
+    // Lift the piece from where the finger first touched.
+    _onDragStart(down);
+    if (_dragFrom != null) _onDragUpdate(event.localPosition);
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (event.pointer != _pointer) return;
+    final moved = _moved;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    if (_dragFrom != null) {
+      _onDragEnd();
+    } else if (!moved) {
+      _handleTap(event.localPosition);
+    }
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (event.pointer != _pointer) return;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    // A cancelled touch puts the piece back; it never plays a move.
+    if (_dragFrom != null) _onDragEnd(cancelled: true);
+  }
+
+  void _onDragStart(Offset position) {
+    final square = _squareAtOffset(position);
     if (square == null) return;
     final controller = ref.read(chessControllerProvider.notifier);
     if (!controller.pickUp(square)) return;
@@ -421,24 +479,23 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       _dragFrom = square;
       _dragPiece = piece;
       _snapPiece = null;
-      _hover = square;
     });
-    _dragAt.value = details.localPosition;
+    _hover.value = square;
+    _dragAt.value = position;
   }
 
-  void _onDragUpdate(DragUpdateDetails details) {
+  void _onDragUpdate(Offset position) {
     if (_dragFrom == null) return;
-    _dragAt.value = details.localPosition;
-    final over = _squareAtOffset(_pieceCentre(details.localPosition));
-    if (over != _hover) setState(() => _hover = over);
+    _dragAt.value = position;
+    _hover.value = _squareAtOffset(_pieceCentre(position));
   }
 
-  void _onDragEnd([DragEndDetails? _]) {
+  void _onDragEnd({bool cancelled = false}) {
     final from = _dragFrom;
     final piece = _dragPiece;
     final at = _dragAt.value;
     if (from == null || piece == null || at == null) return;
-    final target = _squareAtOffset(_pieceCentre(at));
+    final target = cancelled ? null : _squareAtOffset(_pieceCentre(at));
 
     var played = false;
     if (target != null && target != from) {
@@ -454,7 +511,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     setState(() {
       _dragFrom = null;
       _dragPiece = null;
-      _hover = null;
       if (!played) {
         // Fly back to where it came from.
         _snapSquare = from;
@@ -463,6 +519,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             _pieceCentre(at) - Offset(_squareSize / 2, _squareSize / 2);
       }
     });
+    _hover.value = null;
     _dragAt.value = null;
     if (!played) _snapController.forward(from: 0);
   }
@@ -697,17 +754,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
-                GestureDetector(
+                Listener(
                   key: const ValueKey('board_grid'),
                   behavior: HitTestBehavior.opaque,
-                  onTapUp: (details) => _handleTap(details.localPosition),
-                  // Pick up the piece where the finger first touched, not
-                  // where the drag was recognised a few pixels later.
-                  dragStartBehavior: DragStartBehavior.down,
-                  onPanStart: _onDragStart,
-                  onPanUpdate: _onDragUpdate,
-                  onPanEnd: _onDragEnd,
-                  onPanCancel: _onDragEnd,
+                  onPointerDown: _onPointerDown,
+                  onPointerMove: _onPointerMove,
+                  onPointerUp: _onPointerUp,
+                  onPointerCancel: _onPointerCancel,
                   child: RepaintBoundary(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -872,21 +925,36 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
-                if (_dragPiece != null && _hover != null)
-                  Positioned(
-                    key: const ValueKey('drag_hover'),
-                    left: _getSquareOffset(_hover!, _squareSize).dx,
-                    top: _getSquareOffset(_hover!, _squareSize).dy,
-                    width: _squareSize,
-                    height: _squareSize,
+                if (_dragPiece != null)
+                  Positioned.fill(
                     child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            width: _squareSize * 0.06,
-                          ),
-                        ),
+                      child: ValueListenableBuilder<Square?>(
+                        valueListenable: _hover,
+                        builder: (context, hover, _) {
+                          if (hover == null) return const SizedBox.shrink();
+                          final at = _getSquareOffset(hover, _squareSize);
+                          return Stack(
+                            children: [
+                              Positioned(
+                                key: const ValueKey('drag_hover'),
+                                left: at.dx,
+                                top: at.dy,
+                                width: _squareSize,
+                                height: _squareSize,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.75,
+                                      ),
+                                      width: _squareSize * 0.06,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),

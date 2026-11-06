@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
@@ -24,6 +25,9 @@ bool get _shouldWarmUpEngine => !kDebugMode;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Touch events are lined up with the frames, so a dragged piece moves
+  // smoothly even when the screen runs faster than the touch panel reports.
+  GestureBinding.instance.resamplingEnabled = true;
   // Portrait only: the layouts are made for an upright phone.
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
