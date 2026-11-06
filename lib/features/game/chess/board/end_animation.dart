@@ -1,21 +1,21 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 
 /// How the board shows the end of a game, before the result dialog.
 ///
-/// Checkmate: the mated king's square turns red and the king tips over; the
-/// winner's king turns green and hops. A draw (stalemate, 50 moves,
-/// repetition, no material, ...): both king squares turn grey and an equals
-/// badge pops up on each.
+/// Checkmate: the two kings change colour, the winner's to green and the
+/// mated king's to red, fading in; nothing else on the board is painted. A
+/// draw (stalemate, 50 moves, repetition, no material, ...): both king squares
+/// turn grey and an equals badge, made like the badge of a rated move, pops up
+/// on each.
 
 /// The pause after the last move, so its piece lands before this starts.
 const Duration kEndFxDelay = Duration(milliseconds: 300);
 
 /// How long the checkmate show runs.
-const Duration kMateFxDuration = Duration(milliseconds: 1500);
+const Duration kMateFxDuration = Duration(milliseconds: 800);
 
 /// How long the draw show runs.
 const Duration kDrawFxDuration = Duration(milliseconds: 900);
@@ -102,80 +102,18 @@ class _EndTintPainter extends CustomPainter {
       old.cells.length != cells.length;
 }
 
-/// The mated king: it turns red and tips over, with a small rebound.
-///
-/// [towards] is +1 to fall to the right, -1 to the left. [child] is the
-/// king, built once.
-class TippingKing extends StatelessWidget {
-  const TippingKing({
+/// A king that fades into [color]: green for the winner, red for the mated
+/// king. [child] is the king, built once.
+class TintedKing extends StatelessWidget {
+  const TintedKing({
     super.key,
     required this.progress,
-    required this.towards,
-    required this.cell,
+    required this.color,
     required this.child,
   });
 
   final Animation<double> progress;
-  final int towards;
-
-  /// The size of a square.
-  final double cell;
-  final Widget child;
-
-  /// How far over it has gone, in quarter turns: past the flat, then back.
-  static double lean(double t) {
-    if (t < 0.12) return 0;
-    if (t < 0.58) {
-      return 1.1 * Curves.easeInCubic.transform((t - 0.12) / 0.46);
-    }
-    if (t < 0.78) {
-      return 1.1 - 0.1 * Curves.easeOut.transform((t - 0.58) / 0.2);
-    }
-    return 1.0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: progress,
-      child: child,
-      builder: (context, child) {
-        final t = progress.value;
-        final quarter = lean(t);
-        // A little shake before it goes, so it looks hit.
-        final shake = t < 0.12 ? math.sin(t / 0.12 * math.pi * 4) * 0.05 : 0.0;
-        return Transform.translate(
-          offset: Offset(0, cell * 0.03 * quarter.clamp(0.0, 1.0)),
-          child: Transform.rotate(
-            angle: towards * quarter * math.pi / 2 + shake,
-            alignment: const Alignment(0, 0.3),
-            child: ColorFiltered(
-              colorFilter: ColorFilter.mode(
-                kEndRed.withValues(alpha: 0.62 * tintProgress(t)),
-                BlendMode.srcATop,
-              ),
-              child: child,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// The winner's king: it turns green and hops, tilting left and right.
-class HoppingKing extends StatelessWidget {
-  const HoppingKing({
-    super.key,
-    required this.progress,
-    required this.cell,
-    required this.child,
-  });
-
-  final Animation<double> progress;
-
-  /// The size of a square.
-  final double cell;
+  final Color color;
   final Widget child;
 
   @override
@@ -183,110 +121,78 @@ class HoppingKing extends StatelessWidget {
     return AnimatedBuilder(
       animation: progress,
       child: child,
-      builder: (context, child) {
-        final t = progress.value;
-        // Starts a moment after the colour, then settles.
-        final q = ((t - 0.1) / 0.9).clamp(0.0, 1.0);
-        final fade = 1 - 0.45 * q;
-        final hop = math.sin(q * math.pi * 3).abs() * fade;
-        final sway = math.sin(q * math.pi * 3 + math.pi / 2);
-        final tilt = math.sin(q * math.pi * 3) * 0.30 * fade;
-        return Transform.translate(
-          offset: Offset(
-            sway * cell * 0.10 * fade * (q > 0 ? 1 : 0),
-            -cell * 0.38 * hop,
-          ),
-          child: Transform.rotate(
-            angle: q >= 1 ? 0 : tilt,
-            child: Transform.scale(
-              scale: 1 + 0.12 * hop,
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  kEndGreen.withValues(alpha: 0.55 * tintProgress(t)),
-                  BlendMode.srcATop,
-                ),
-                child: child,
-              ),
-            ),
-          ),
-        );
-      },
+      builder: (context, child) => ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          color.withValues(alpha: 0.78 * tintProgress(progress.value, 0.8)),
+          BlendMode.srcATop,
+        ),
+        child: child,
+      ),
     );
   }
 }
 
-/// The equals badge of a draw, on the corner of a king's square like the
-/// badge of a rated move. It pops in with a small overshoot.
+/// The equals badge of a draw, on the corner of a king's square. Made like
+/// [MoveFeedbackBadge]: a flat coloured circle with a soft glow that pops in
+/// with a small overshoot, then the white sign fades in.
 class DrawBadge extends StatelessWidget {
   const DrawBadge({super.key, required this.progress, required this.size});
 
   final Animation<double> progress;
   final double size;
 
+  static const Color color = Color(0xFF98968F);
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: progress,
       builder: (context, _) {
-        final pop = Curves.easeOutBack
-            .transform(((progress.value - 0.15) / 0.4).clamp(0.0, 1.0))
-            .clamp(0.0, 1.2);
+        // The badge's own 450 ms: the circle in the first half, the sign
+        // after it, as on a rated move.
+        final t = (progress.value * 2).clamp(0.0, 1.0);
+        final circle = const Interval(
+          0.0,
+          0.55,
+          curve: Curves.easeOutBack,
+        ).transform(t);
+        final sign = const Interval(
+          0.45,
+          1.0,
+          curve: Curves.easeIn,
+        ).transform(t);
         return Transform.scale(
-          scale: pop,
+          scale: circle.clamp(0.01, 1.2),
           child: Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
+              color: color,
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFB9B7B2), Color(0xFF8A8883)],
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.35),
-                width: size * 0.04,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: kEndGrey.withValues(alpha: 0.5),
-                  blurRadius: size * 0.3,
-                  offset: Offset(0, size * 0.1),
+                  color: color.withValues(alpha: 0.45),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
             alignment: Alignment.center,
-            child: _Equals(size: size * 0.52),
+            child: Opacity(
+              opacity: sign,
+              child: SvgPicture.asset(
+                'assets/icons/moves/draw.svg',
+                width: size * 0.62,
+                height: size * 0.62,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
           ),
         );
       },
-    );
-  }
-}
-
-/// Two round bars: the equals sign.
-class _Equals extends StatelessWidget {
-  const _Equals({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget bar() => Container(
-      width: size,
-      height: size * 0.24,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(size),
-      ),
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        bar(),
-        SizedBox(height: size * 0.2),
-        bar(),
-      ],
     );
   }
 }

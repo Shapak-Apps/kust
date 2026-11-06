@@ -220,20 +220,18 @@ void main() {
       return c;
     }
 
-    testWidgets('checkmate: the mated king tips over, the winner hops', (
-      tester,
-    ) async {
+    testWidgets('checkmate: only the two kings change colour', (tester) async {
       await ending(
         tester,
         'rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2',
         'd8h4',
         GameStatus.checkmate,
       );
-      expect(find.byKey(const ValueKey('end_tint')), findsOneWidget);
+      // No square is painted; the two kings are drawn in their colours.
+      expect(find.byKey(const ValueKey('end_tint')), findsNothing);
       expect(find.byKey(const ValueKey('end_king_e1')), findsOneWidget);
       expect(find.byKey(const ValueKey('end_king_e8')), findsOneWidget);
-      expect(find.byType(TippingKing), findsOneWidget);
-      expect(find.byType(HoppingKing), findsOneWidget);
+      expect(find.byType(TintedKing), findsNWidgets(2));
       expect(find.byType(DrawBadge), findsNothing);
       await tester.pump(const Duration(milliseconds: 1600));
       await _finish(tester);
@@ -250,7 +248,7 @@ void main() {
       );
       expect(find.byKey(const ValueKey('end_tint')), findsOneWidget);
       expect(find.byType(DrawBadge), findsNWidgets(2));
-      expect(find.byType(TippingKing), findsNothing);
+      expect(find.byType(TintedKing), findsNothing);
       await tester.pump(const Duration(seconds: 1));
       await _finish(tester);
     });

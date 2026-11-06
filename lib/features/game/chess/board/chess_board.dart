@@ -666,7 +666,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
-        final checkedKing = view.checkedKing;
+        // While the checkmate show colours the kings, the square of the mated
+        // king keeps its own colour: only the pieces change.
+        final checkedKing = (_end?.mate ?? false) && _endActive
+            ? null
+            : view.checkedKing;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final colors = [
           for (final rank in ranks)
@@ -704,7 +708,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   ),
                 ),
 
-                if (_end != null && _endActive && !view.analysis)
+                if (_end != null && _endActive && !_end!.mate && !view.analysis)
                   Positioned.fill(
                     key: const ValueKey('end_tint'),
                     child: IgnorePointer(
@@ -1134,12 +1138,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
     end,
   ) {
-    if (end.mate) {
-      return [
-        if (end.loser != null) (end.loser!, kEndRed),
-        if (end.winner != null) (end.winner!, kEndGreen),
-      ];
-    }
+    // A checkmate paints no square: only the two kings change colour.
+    if (end.mate) return const [];
     return [
       if (end.white != null) (end.white!, kEndGrey),
       if (end.black != null) (end.black!, kEndGrey),
@@ -1184,30 +1184,22 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (end.mate) {
       final loser = end.loser, winner = end.winner;
       if (loser == null || winner == null) return const [];
-      // It tips towards the middle of the board, never off its edge.
-      final towards = (_flipped ? 7 - fileOf(loser) : fileOf(loser)) < 4
-          ? 1
-          : -1;
       final turn = view.position.turn;
       return [
         _endKing(
           loser,
           turn,
           view,
-          (king) => TippingKing(
-            progress: _endController,
-            towards: towards,
-            cell: _squareSize,
-            child: king,
-          ),
+          (king) =>
+              TintedKing(progress: _endController, color: kEndRed, child: king),
         ),
         _endKing(
           winner,
           turn.opposite,
           view,
-          (king) => HoppingKing(
+          (king) => TintedKing(
             progress: _endController,
-            cell: _squareSize,
+            color: kEndGreen,
             child: king,
           ),
         ),
