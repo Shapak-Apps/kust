@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
@@ -12,6 +13,7 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/board/board_squares_painter.dart';
+import 'package:kust/features/game/chess/board/end_animation.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -265,6 +267,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   late AnimationController _moveController;
   late AnimationController _captureController;
 
+  /// The end-of-game show (see end_animation.dart): which kings it is about,
+  /// whether it has begun (it waits for the last move to land), and its clock.
+  late AnimationController _endController;
+  ({bool mate, Square? winner, Square? loser, Square? white, Square? black})?
+  _end;
+  bool _endActive = false;
+  Timer? _endTimer;
+
   Square? _animFrom;
   Square? _animTo;
   Piece? _animPiece;
@@ -344,6 +354,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       vsync: this,
       duration: _snapBackDuration,
     );
+    _endController = AnimationController(
+      vsync: this,
+      duration: kMateFxDuration,
+    );
     _snapController.addStatusListener((status) {
       if (status == AnimationStatus.completed && _snapPiece != null) {
         setState(() {
@@ -381,6 +395,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     _moveController.dispose();
     _captureController.dispose();
     _snapController.dispose();
+    _endTimer?.cancel();
+    _endController.dispose();
     _dragAt.dispose();
     _hover.dispose();
     super.dispose();
@@ -592,6 +608,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
+      _trackEnd(previous, next);
 
       if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) {
         _glideReviewStep(previous, next);
@@ -721,7 +738,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           child: SizedBox(
             width: side,
             height: side,
+            // Not clipped: a king may hop out above the board, and a badge
+            // on the top row may stand over its edge.
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 // Every child of this stack is keyed: pieces in flight come
                 // and go above the grid, and without keys the layers after
@@ -740,6 +760,25 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
                 ),
+
+                if (_end != null && _endActive && !view.analysis)
+                  Positioned.fill(
+                    key: const ValueKey('end_tint'),
+                    child: IgnorePointer(
+                      child: EndTintLayer(
+                        progress: _endController,
+                        devicePixelRatio: dpr,
+                        cells: [
+                          for (final (square, color) in _endTints(_end!))
+                            (
+                              row: ranks.indexOf(rankOf(square)),
+                              col: files.indexOf(fileOf(square)),
+                              color: color,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
 
                 if (badgeFeedback != null && badgeSquare != null)
                   Positioned.fill(
@@ -1065,6 +1104,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
+                // The end-of-game show: the mated king tips over, the winner's
+                // hops; or the equals badges of a draw.
+                if (_end != null && _endActive && !view.analysis)
+                  ..._endLayers(_end!, view),
+
                 if (view.badgeFeedback != null && view.badgeSquare != null)
                   Positioned(
                     key: const ValueKey('feedback_badge'),
@@ -1109,6 +1153,102 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   /// Where the rook from [corner] stands once castled: beside the king.
   Square _rookCastledSquare(Square corner) =>
       squareAt(fileOf(corner) == 7 ? 5 : 3, rankOf(corner));
+
+  /// Starts the end-of-game show when a game ends in checkmate or a draw,
+  /// and clears it when a new game begins.
+  void _trackEnd(GameState previous, GameState next) {
+    final mate = next.status == GameStatus.checkmate;
+    final over = mate || next.status == GameStatus.draw;
+    if (over && previous.status == GameStatus.playing) {
+      final board = next.position.board;
+      final turn = next.position.turn;
+      _endTimer?.cancel();
+      _end = (
+        mate: mate,
+        winner: mate ? board.kingOf(turn.opposite) : null,
+        loser: mate ? board.kingOf(turn) : null,
+        white: board.kingOf(Side.white),
+        black: board.kingOf(Side.black),
+      );
+      _endActive = false;
+      _endController
+        ..stop()
+        ..value = 0
+        ..duration = mate ? kMateFxDuration : kDrawFxDuration;
+      final still = MediaQuery.of(context).disableAnimations;
+      _endTimer = Timer(still ? Duration.zero : kEndFxDelay, () {
+        if (!mounted) return;
+        setState(() => _endActive = true);
+        if (still) {
+          _endController.value = 1;
+        } else {
+          _endController.forward(from: 0);
+        }
+      });
+    } else if (!over && _end != null) {
+      _endTimer?.cancel();
+      _endController
+        ..stop()
+        ..value = 0;
+      setState(() {
+        _end = null;
+        _endActive = false;
+      });
+    }
+  }
+
+  /// The squares the show colours, with their colours.
+  List<(Square, Color)> _endTints(
+    ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
+    end,
+  ) {
+    if (end.mate) {
+      return [
+        if (end.loser != null) (end.loser!, kEndRed),
+        if (end.winner != null) (end.winner!, kEndGreen),
+      ];
+    }
+    return [
+      if (end.white != null) (end.white!, kEndGrey),
+      if (end.black != null) (end.black!, kEndGrey),
+    ];
+  }
+
+  List<Widget> _endLayers(
+    ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
+    end,
+    _BoardView view,
+  ) {
+    // A checkmate paints squares only; a draw adds the equals badges.
+    if (end.mate) return const [];
+    return [
+      for (final square in [end.white, end.black])
+        if (square != null)
+          Positioned(
+            key: ValueKey('end_badge_${square.name}'),
+            left: _getSquareOffset(square, _squareSize).dx,
+            top: _getSquareOffset(square, _squareSize).dy,
+            width: _squareSize,
+            height: _squareSize,
+            child: IgnorePointer(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    right: _onRightEdge(square) ? null : -_squareSize * 0.22,
+                    left: _onRightEdge(square) ? -_squareSize * 0.22 : null,
+                    top: -_squareSize * 0.22,
+                    child: DrawBadge(
+                      progress: _endController,
+                      size: _squareSize * 0.52,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    ];
+  }
 
   /// Whether [square] is shown in the rightmost column.
   bool _onRightEdge(Square square) => fileOf(square) == (_flipped ? 0 : 7);

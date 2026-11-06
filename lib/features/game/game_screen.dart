@@ -21,6 +21,7 @@ import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/features/game/chess/board/end_animation.dart';
 import 'package:kust/features/game/end_text.dart';
 import 'package:kust/features/game/game_export.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -59,6 +60,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
     with WidgetsBindingObserver {
   bool _hasDismissedResultDialog = false;
 
+  /// The result dialog of a checkmate or a draw waits for the board's
+  /// end-of-game show to finish.
+  Timer? _endDialogTimer;
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +85,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   void dispose() {
+    _endDialogTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -324,16 +330,33 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
       switch (next.status) {
         case GameStatus.playing:
+          _endDialogTimer?.cancel();
           _hasDismissedResultDialog = false;
           _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
         case GameStatus.draw:
+          // The kings play out the ending on the board first.
+          _endDialogTimer?.cancel();
+          final still = MediaQuery.of(context).disableAnimations;
+          final fx = next.status == GameStatus.checkmate
+              ? kMateFxDuration
+              : kDrawFxDuration;
+          _endDialogTimer = Timer(
+            still ? Duration.zero : kEndFxDelay + fx + kEndFxRest,
+            () {
+              if (!mounted) return;
+              final now = ref.read(chessControllerProvider);
+              if (now.status == next.status) _showEndDialogForState(now);
+            },
+          );
+          break;
         case GameStatus.timeout:
         case GameStatus.resigned:
           _showEndDialogForState(next);
           break;
         case GameStatus.loading:
+          _endDialogTimer?.cancel();
           break;
       }
     });
@@ -418,9 +441,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   KustIconButton(
                     icon: Icons.emoji_events_outlined,
                     label: context.t.showResult,
-                    onTap: () => _showEndDialogForState(
-                      ref.read(chessControllerProvider),
-                    ),
+                    onTap: () {
+                      _endDialogTimer?.cancel();
+                      _showEndDialogForState(ref.read(chessControllerProvider));
+                    },
                   ),
               ],
             ),
