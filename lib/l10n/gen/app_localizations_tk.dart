@@ -304,7 +304,7 @@ class AppL10nTk extends AppL10n {
   String get showBest => 'Iň gowusyny görkez';
 
   @override
-  String get showBestSub => 'Göçümiňizden soň has gowy göçüme ok';
+  String get showBestSub => 'Häzirki ýagdaýda iň gowy göçüme ok';
 
   @override
   String get boardImage => 'Tagta suraty';

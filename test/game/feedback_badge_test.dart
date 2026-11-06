@@ -162,25 +162,16 @@ void main() {
     await _finish(tester);
   });
 
-  testWidgets('Show best draws an arrow to the better move, on its own', (
+  testWidgets('Show best draws an arrow to the best move to play now', (
     tester,
   ) async {
     final controller = await _board(tester);
-    final staged = _staged(controller.state, ['a2a3']);
-    final played = staged.moves.single;
-    controller.state = staged.copyWith(
+    controller.state = controller.state.copyWith(
+      practiceMode: true,
       moveFeedbackEnabled: false,
       showBestEnabled: true,
-      moves: [
-        played.copyWith(
-          feedback: const MoveFeedback(
-            quality: MoveQuality.inaccuracy,
-            bestSan: 'e4',
-            playedSan: 'a3',
-          ),
-          bestMove: NormalMove.fromUci('e2e4'),
-        ),
-      ],
+      engineFailed: true,
+      suggestSquares: {Square.e2, Square.e4},
     );
     await tester.pump();
     final arrow = tester.widget<MoveArrow>(find.byType(MoveArrow));
@@ -191,7 +182,7 @@ void main() {
     // Feedback is off, so there is no badge, only the arrow.
     expect(find.byType(MoveFeedbackBadge), findsNothing);
 
-    controller.state = controller.state.copyWith(showBestEnabled: false);
+    controller.state = controller.state.copyWith(suggestSquares: const {});
     await tester.pump();
     expect(find.byType(MoveArrow), findsNothing);
     await _finish(tester);

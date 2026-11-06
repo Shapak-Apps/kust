@@ -636,7 +636,7 @@ abstract class AppL10n {
   /// No description provided for @showBestSub.
   ///
   /// In en, this message translates to:
-  /// **'An arrow to the better move after yours'**
+  /// **'Shows an arrow to the best move for you to play now'**
   String get showBestSub;
 
   /// No description provided for @boardImage.

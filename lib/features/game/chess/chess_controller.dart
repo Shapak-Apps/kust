@@ -58,6 +58,7 @@ class GameState {
     this.legalDestinations = const {},
     this.moveSquares = const [],
     this.hintSquares = const {},
+    this.suggestSquares = const {},
     this.history = const [],
     this.moves = const [],
     this.status = GameStatus.loading,
@@ -97,6 +98,15 @@ class GameState {
   final Set<Square> legalDestinations;
   final List<Square> moveSquares;
   final Set<Square> hintSquares;
+
+  /// Show best: the two squares of the best move for the player to play now,
+  /// kept up to date while it is the player's turn in a practice game.
+  final Set<Square> suggestSquares;
+
+  /// The same as an arrow, or null.
+  ({Square from, Square to})? get suggestArrow => suggestSquares.length == 2
+      ? (from: suggestSquares.first, to: suggestSquares.last)
+      : null;
   final List<Position> history;
   final List<MoveRecord> moves;
   final GameStatus status;
@@ -262,6 +272,7 @@ class GameState {
     Set<Square>? legalDestinations,
     List<Square>? moveSquares,
     Set<Square>? hintSquares,
+    Set<Square>? suggestSquares,
     List<Position>? history,
     List<MoveRecord>? moves,
     GameStatus? status,
@@ -309,6 +320,7 @@ class GameState {
           : (legalDestinations ?? this.legalDestinations),
       moveSquares: moveSquares ?? this.moveSquares,
       hintSquares: hintSquares ?? this.hintSquares,
+      suggestSquares: suggestSquares ?? this.suggestSquares,
       history: history ?? this.history,
       moves: moves ?? this.moves,
       status: status ?? this.status,
@@ -732,7 +744,61 @@ class ChessController extends Notifier<GameState> {
     await prefs.setBool(kShowBestPrefKey, enabled);
     if (_isDisposed) return;
     state = state.copyWith(showBestEnabled: enabled);
-    if (enabled) _analyzeLastPlayerMove();
+    // On: an arrow for the position now, and it stays up to date until the
+    // switch goes off.
+    if (enabled) {
+      unawaited(_refreshSuggestion());
+    } else {
+      _cancelSuggestion();
+      state = state.copyWith(suggestSquares: const {});
+    }
+  }
+
+  int _suggestId = 0;
+  bool _suggesting = false;
+
+  /// Drops a suggestion being worked out and stops its search, so the bot is
+  /// not kept waiting for it.
+  void _cancelSuggestion() {
+    _suggestId++;
+    if (_suggesting) {
+      _suggesting = false;
+      _engine.stopThinking();
+    }
+  }
+
+  /// Works out the best move for the position on the board, when it is the
+  /// player's turn in a practice game with Show best on, and shows it.
+  Future<void> _refreshSuggestion() async {
+    if (_isDisposed) return;
+    _cancelSuggestion();
+    final id = _suggestId;
+    if (state.suggestSquares.isNotEmpty) {
+      state = state.copyWith(suggestSquares: const {});
+    }
+    if (!state.showBestEnabled ||
+        !state.practiceMode ||
+        state.mode != GameMode.bot ||
+        state.status != GameStatus.playing ||
+        !state.isPlayerTurn ||
+        state.isBotThinking) {
+      return;
+    }
+    final fen = state.position.fen;
+    _suggesting = true;
+    final String uci;
+    try {
+      uci = await _engine.evaluateBestHint(fen);
+    } catch (_) {
+      return;
+    } finally {
+      if (id == _suggestId) _suggesting = false;
+    }
+    if (_isDisposed || id != _suggestId || state.position.fen != fen) return;
+    if (uci == '(none)' || uci.length < 4) return;
+    final from = squareAt(_fileFromChar(uci[0]), int.parse(uci[1]) - 1);
+    final to = squareAt(_fileFromChar(uci[2]), int.parse(uci[3]) - 1);
+    state = state.copyWith(suggestSquares: {from, to});
   }
 
   bool _isPlayerMove(MoveRecord played) {
@@ -775,11 +841,7 @@ class ChessController extends Notifier<GameState> {
 
   Future<void> _analyzeMoveAt(int moveIndex) async {
     if (_isDisposed) return;
-    // The rating and the best move come from one search, for either.
-    if (!state.practiceMode ||
-        (!state.moveFeedbackEnabled && !state.showBestEnabled)) {
-      return;
-    }
+    if (!state.practiceMode || !state.moveFeedbackEnabled) return;
     if (moveIndex < 0 || moveIndex >= state.moves.length) return;
     if (moveIndex >= state.history.length) return;
 
@@ -960,6 +1022,8 @@ class ChessController extends Notifier<GameState> {
             _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
             if (state.position.turn != playerSide) {
               _requestBotMove();
+            } else {
+              unawaited(_refreshSuggestion());
             }
           })
           .catchError((Object _) {
@@ -1356,6 +1420,7 @@ class ChessController extends Notifier<GameState> {
       clearSelection: true,
       moveSquares: const [],
       hintSquares: const {},
+      suggestSquares: const {},
       status: GameStatus.playing,
       isBotThinking: false,
       lastMove: undoMove,
@@ -1372,6 +1437,7 @@ class ChessController extends Notifier<GameState> {
     _playSound(capturedPiece != null ? 'capture.wav' : 'move.wav');
 
     _refreshEvaluation();
+    unawaited(_refreshSuggestion());
   }
 
   void analysisMoveBack() {
@@ -1777,6 +1843,7 @@ class ChessController extends Notifier<GameState> {
       clearSelection: true,
       moveSquares: [move.from, move.to],
       hintSquares: const {},
+      suggestSquares: const {},
       status: gameStatus,
       lastMove: move,
       lastMoveInstant: instant,
@@ -1788,6 +1855,7 @@ class ChessController extends Notifier<GameState> {
       clearAnalysis: true,
     );
 
+    _cancelSuggestion();
     if (state.status == GameStatus.playing) {
       _addIncrement(oldPosition.turn);
       // The engine works one request at a time, in order: rate the move
@@ -1919,6 +1987,7 @@ class ChessController extends Notifier<GameState> {
     }
 
     _refreshEvaluation();
+    if (state.status == GameStatus.playing) unawaited(_refreshSuggestion());
   }
 
   NormalMove _parseUciMove(String uci, Position position) {

@@ -304,7 +304,7 @@ class AppL10nRu extends AppL10n {
   String get showBest => 'Лучший ход';
 
   @override
-  String get showBestSub => 'Стрелка к лучшему ходу после вашего';
+  String get showBestSub => 'Стрелка к лучшему ходу в текущей позиции';
 
   @override
   String get boardImage => 'Изображение доски';
