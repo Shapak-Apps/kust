@@ -5,11 +5,10 @@ import 'package:kust/features/game/chess/board/board_squares_painter.dart';
 
 /// How the board shows the end of a game, before the result dialog.
 ///
-/// Checkmate: the two kings change colour, the winner's to green and the
-/// mated king's to red, fading in; nothing else on the board is painted. A
-/// draw (stalemate, 50 moves, repetition, no material, ...): both king squares
-/// turn grey and an equals badge, made like the badge of a rated move, pops up
-/// on each.
+/// Checkmate: the winner's king square fades to green and the mated king's to
+/// red; the pieces stay as they are. A draw (stalemate, 50 moves, repetition,
+/// no material, ...): both king squares fade to grey and an equals badge, made
+/// like the badge of a rated move, pops up on each.
 
 /// The pause after the last move, so its piece lands before this starts.
 const Duration kEndFxDelay = Duration(milliseconds: 300);
@@ -23,9 +22,11 @@ const Duration kDrawFxDuration = Duration(milliseconds: 900);
 /// A breath between the end of the show and the dialog.
 const Duration kEndFxRest = Duration(milliseconds: 400);
 
-const Color kEndRed = Color(0xFFE5484D);
-const Color kEndGreen = Color(0xFF3CB77C);
-const Color kEndGrey = Color(0xFF9A9A9A);
+// Strong, nearly solid colours, so the square reads the same on a light or a
+// dark square and a white or a black king stands out on it.
+const Color kEndRed = Color(0xFFD93F45);
+const Color kEndGreen = Color(0xFF2E9E66);
+const Color kEndGrey = Color(0xFF77756F);
 
 /// Fades [Curves.easeOut] over the first [share] of the show: how far the
 /// colours have come.
@@ -77,7 +78,7 @@ class _EndTintPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final s = tintProgress(progress.value);
+    final s = tintProgress(progress.value, 0.5);
     if (s <= 0) return;
     for (final cell in cells) {
       final rect = BoardSquaresPainter.squareRect(
@@ -90,7 +91,7 @@ class _EndTintPainter extends CustomPainter {
         rect,
         Paint()
           ..isAntiAlias = false
-          ..color = cell.color.withValues(alpha: 0.62 * s),
+          ..color = cell.color.withValues(alpha: 0.94 * s),
       );
     }
   }
@@ -100,36 +101,6 @@ class _EndTintPainter extends CustomPainter {
       old.progress != progress ||
       old.devicePixelRatio != devicePixelRatio ||
       old.cells.length != cells.length;
-}
-
-/// A king that fades into [color]: green for the winner, red for the mated
-/// king. [child] is the king, built once.
-class TintedKing extends StatelessWidget {
-  const TintedKing({
-    super.key,
-    required this.progress,
-    required this.color,
-    required this.child,
-  });
-
-  final Animation<double> progress;
-  final Color color;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: progress,
-      child: child,
-      builder: (context, child) => ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          color.withValues(alpha: 0.78 * tintProgress(progress.value, 0.8)),
-          BlendMode.srcATop,
-        ),
-        child: child,
-      ),
-    );
-  }
 }
 
 /// The equals badge of a draw, on the corner of a king's square. Made like

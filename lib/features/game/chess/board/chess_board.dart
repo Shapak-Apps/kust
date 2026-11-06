@@ -666,11 +666,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
         final ranks = List.generate(8, (i) => _flipped ? i : 7 - i);
         final files = List.generate(8, (i) => _flipped ? 7 - i : i);
-        // While the checkmate show colours the kings, the square of the mated
-        // king keeps its own colour: only the pieces change.
-        final checkedKing = (_end?.mate ?? false) && _endActive
-            ? null
-            : view.checkedKing;
+        final checkedKing = view.checkedKing;
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final colors = [
           for (final rank in ranks)
@@ -708,7 +704,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   ),
                 ),
 
-                if (_end != null && _endActive && !_end!.mate && !view.analysis)
+                if (_end != null && _endActive && !view.analysis)
                   Positioned.fill(
                     key: const ValueKey('end_tint'),
                     child: IgnorePointer(
@@ -1138,42 +1134,16 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
     end,
   ) {
-    // A checkmate paints no square: only the two kings change colour.
-    if (end.mate) return const [];
+    if (end.mate) {
+      return [
+        if (end.loser != null) (end.loser!, kEndRed),
+        if (end.winner != null) (end.winner!, kEndGreen),
+      ];
+    }
     return [
       if (end.white != null) (end.white!, kEndGrey),
       if (end.black != null) (end.black!, kEndGrey),
     ];
-  }
-
-  /// A king of the show at its square, built once and moved by the clock.
-  Widget _endKing(
-    Square square,
-    Side side,
-    _BoardView view,
-    Widget Function(Widget king) animate,
-  ) {
-    final at = _getSquareOffset(square, _squareSize);
-    return Positioned(
-      key: ValueKey('end_king_${square.name}'),
-      left: at.dx,
-      top: at.dy,
-      width: _squareSize,
-      height: _squareSize,
-      child: IgnorePointer(
-        child: animate(
-          RepaintBoundary(
-            child: SizedBox.square(
-              dimension: _squareSize,
-              child: _buildRotatedPiece(
-                Piece(color: side, role: Role.king),
-                view,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   List<Widget> _endLayers(
@@ -1181,30 +1151,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     end,
     _BoardView view,
   ) {
-    if (end.mate) {
-      final loser = end.loser, winner = end.winner;
-      if (loser == null || winner == null) return const [];
-      final turn = view.position.turn;
-      return [
-        _endKing(
-          loser,
-          turn,
-          view,
-          (king) =>
-              TintedKing(progress: _endController, color: kEndRed, child: king),
-        ),
-        _endKing(
-          winner,
-          turn.opposite,
-          view,
-          (king) => TintedKing(
-            progress: _endController,
-            color: kEndGreen,
-            child: king,
-          ),
-        ),
-      ];
-    }
+    // A checkmate paints squares only; a draw adds the equals badges.
+    if (end.mate) return const [];
     return [
       for (final square in [end.white, end.black])
         if (square != null)
@@ -1291,16 +1239,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
       // Lifted by the finger, or flying back after an illegal drop.
       if (_dragFrom == square || _snapSquare == square) hidePiece = true;
-
-      // A king taking part in the checkmate show is drawn by the show.
-      final end = _end;
-      if (end != null &&
-          _endActive &&
-          end.mate &&
-          !view.analysis &&
-          (square == end.winner || square == end.loser)) {
-        hidePiece = true;
-      }
     }
 
     final props = BoardSquareProps(
