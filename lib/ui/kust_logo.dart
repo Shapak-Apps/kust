@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// The Küşt wordmark: the letters in the text colour, the two dots over
-/// the ü in gold.
+/// the ü and the tail under the ş in gold.
 ///
 /// [height] is the height of the capitals. The cedilla of the ş hangs
 /// below them, so the mark is laid out by its capitals: the hook spills
@@ -39,9 +39,11 @@ class KustLogo extends StatelessWidget {
           alignment: Alignment.topCenter,
           maxHeight: box,
           child: Stack(
+            // The gold goes first, so the tail of the ş sits behind the letter
+            // and the S stays whole on top of it.
             children: [
-              layer('assets/images/wordmark_letters.svg', context.k.ink),
               layer('assets/images/wordmark_dots.svg', KustTokens.gold),
+              layer('assets/images/wordmark_letters.svg', context.k.ink),
             ],
           ),
         ),
