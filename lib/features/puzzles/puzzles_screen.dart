@@ -272,9 +272,8 @@ class _PuzzlesScreenState extends State<PuzzlesScreen> {
             total: loom.total,
             action: loom.allDone
                 ? context.t.reviewPuzzles
-                : context.t.continueTheme(
-                    puzzleThemeLabel(next.theme, context.t),
-                  ),
+                // Just the theme: "Continue" says what a button is for.
+                : puzzleThemeLabel(next.theme, context.t),
             onAction: loom.allDone ? list : play,
             onList: list,
           ),
@@ -423,7 +422,7 @@ class _Carpet extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: k.body.copyWith(
-                fontSize: 15,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w800,
                 color: color,
               ),
@@ -433,7 +432,7 @@ class _Carpet extends StatelessWidget {
               progress.statusIn(context.t),
               textAlign: align,
               style: k.caption.copyWith(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: onLoom
                     ? LoomColors.saffron

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kust/widgets/piece_image.dart';
@@ -118,8 +117,18 @@ class _PuzzleBoardState extends State<PuzzleBoard>
   Square? _dragFrom;
   Piece? _dragPiece;
   final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
-  Square? _hover;
+
+  /// The square the dragged piece is over; its own notifier, so crossing
+  /// squares redraws only the ring.
+  final ValueNotifier<Square?> _hover = ValueNotifier(null);
   double _cell = 0;
+
+  /// The finger on the board, followed by hand so a piece lifts after a few
+  /// pixels instead of after the gesture arena's 36.
+  int? _pointer;
+  Offset? _downAt;
+  bool _moved = false;
+  static const double _dragSlop = 6;
 
   /// A move made by dropping; its glide is skipped, the piece is there.
   ({Square from, Square to})? _dropped;
@@ -198,6 +207,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     _slideCtrl.dispose();
     _snapCtrl.dispose();
     _dragAt.dispose();
+    _hover.dispose();
     super.dispose();
   }
 
@@ -273,9 +283,51 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     return _squareAt(local, _cell);
   }
 
-  void _onDragStart(DragStartDetails details) {
+  void _onPointerDown(PointerDownEvent event) {
+    if (_pointer != null) return;
+    _pointer = event.pointer;
+    _downAt = event.localPosition;
+    _moved = false;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (event.pointer != _pointer) return;
+    if (_dragFrom != null) {
+      _onDragUpdate(event.localPosition);
+      return;
+    }
+    final down = _downAt;
+    if (down == null || _moved) return;
+    if ((event.localPosition - down).distance <= _dragSlop) return;
+    _moved = true;
+    _onDragStart(down);
+    if (_dragFrom != null) _onDragUpdate(event.localPosition);
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (event.pointer != _pointer) return;
+    final moved = _moved;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    if (_dragFrom != null) {
+      _onDragEnd();
+    } else if (!moved && _cell > 0) {
+      _handleTap(_squareAt(event.localPosition, _cell));
+    }
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (event.pointer != _pointer) return;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    if (_dragFrom != null) _onDragEnd(cancelled: true);
+  }
+
+  void _onDragStart(Offset position) {
     if (!widget.interactive) return;
-    final square = _squareUnder(details.localPosition);
+    final square = _squareUnder(position);
     if (square == null) return;
     final piece = widget.position.board.pieceAt(square);
     if (piece == null || piece.color != widget.position.turn) return;
@@ -285,30 +337,28 @@ class _PuzzleBoardState extends State<PuzzleBoard>
       _targets = _destinationsFrom(square);
       _dragFrom = square;
       _dragPiece = piece;
-      _hover = square;
       _snapPiece = null;
     });
-    _dragAt.value = details.localPosition;
+    _hover.value = square;
+    _dragAt.value = position;
   }
 
-  void _onDragUpdate(DragUpdateDetails details) {
+  void _onDragUpdate(Offset position) {
     if (_dragFrom == null) return;
-    _dragAt.value = details.localPosition;
-    final over = _squareUnder(_pieceCentre(details.localPosition));
-    if (over != _hover) setState(() => _hover = over);
+    _dragAt.value = position;
+    _hover.value = _squareUnder(_pieceCentre(position));
   }
 
-  void _onDragEnd([DragEndDetails? _]) {
+  void _onDragEnd({bool cancelled = false}) {
     final from = _dragFrom;
     final piece = _dragPiece;
     final at = _dragAt.value;
     if (from == null || piece == null || at == null) return;
-    final target = _squareUnder(_pieceCentre(at));
+    final target = cancelled ? null : _squareUnder(_pieceCentre(at));
     final move = target == null || target == from ? null : _targets[target];
     setState(() {
       _dragFrom = null;
       _dragPiece = null;
-      _hover = null;
       if (move != null) {
         _selected = null;
         _targets = const {};
@@ -318,6 +368,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
         _snapStart = _pieceCentre(at) - Offset(_cell / 2, _cell / 2);
       }
     });
+    _hover.value = null;
     _dragAt.value = null;
     if (move != null) {
       _dropped = (from: from, to: target!);
@@ -345,18 +396,12 @@ class _PuzzleBoardState extends State<PuzzleBoard>
         final hintFrom = widget.hintFrom;
         final hintTo = widget.hintTo;
 
-        return GestureDetector(
+        return Listener(
           behavior: HitTestBehavior.opaque,
-          onTapUp: (details) {
-            _handleTap(_squareAt(details.localPosition, cell));
-          },
-          // Pick up the piece where the finger first touched, not where the
-          // drag was recognised a few pixels later.
-          dragStartBehavior: DragStartBehavior.down,
-          onPanStart: _onDragStart,
-          onPanUpdate: _onDragUpdate,
-          onPanEnd: _onDragEnd,
-          onPanCancel: _onDragEnd,
+          onPointerDown: _onPointerDown,
+          onPointerMove: _onPointerMove,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: _onPointerCancel,
           child: SizedBox(
             width: boardSize,
             height: boardSize,
@@ -427,20 +472,34 @@ class _PuzzleBoardState extends State<PuzzleBoard>
                       toCol: _colOf(hintTo),
                     ),
                   ),
-                if (_dragPiece != null && _hover != null)
-                  Positioned(
-                    left: _colOf(_hover!) * cell,
-                    top: _rowOf(_hover!) * cell,
-                    width: cell,
-                    height: cell,
+                if (_dragPiece != null)
+                  Positioned.fill(
                     child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            width: cell * 0.06,
-                          ),
-                        ),
+                      child: ValueListenableBuilder<Square?>(
+                        valueListenable: _hover,
+                        builder: (context, hover, _) {
+                          if (hover == null) return const SizedBox.shrink();
+                          return Stack(
+                            children: [
+                              Positioned(
+                                left: _colOf(hover) * cell,
+                                top: _rowOf(hover) * cell,
+                                width: cell,
+                                height: cell,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.75,
+                                      ),
+                                      width: cell * 0.06,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),

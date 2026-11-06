@@ -179,6 +179,42 @@ void main() {
       await _finish(tester);
     });
 
+    testWidgets('a piece lifts after a few pixels, a tap with a shaky finger '
+        'still selects', (tester) async {
+      final c = await _board(tester);
+      // A few pixels of shake is still a tap.
+      final tap = await tester.startGesture(_centre(tester, Square.e2));
+      await tap.moveBy(const Offset(2, -2));
+      await tap.up();
+      await tester.pump();
+      expect(c.state.selectedSquare, Square.e2);
+      expect(find.byKey(const ValueKey('dragged_piece')), findsNothing);
+
+      // A short drag lifts the piece at once (the old gesture needed 36).
+      final drag = await tester.startGesture(_centre(tester, Square.g1));
+      await drag.moveBy(const Offset(0, -9));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('dragged_piece')), findsOneWidget);
+      await drag.cancel();
+      await tester.pump(const Duration(milliseconds: 300));
+      await _finish(tester);
+    });
+
+    testWidgets('a cancelled touch puts the piece back without a move', (
+      tester,
+    ) async {
+      final c = await _board(tester);
+      final cell = tester.getRect(find.byType(ChessBoard)).width / 8;
+      final start = _centre(tester, Square.e2);
+      final gesture = await tester.startGesture(start);
+      await gesture.moveTo(_centre(tester, Square.e4) + Offset(0, cell * 0.3));
+      await tester.pump();
+      await gesture.cancel();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(c.state.moves, isEmpty);
+      await _finish(tester);
+    });
+
     testWidgets('the opponent\'s pieces cannot be picked up', (tester) async {
       final c = await _board(tester);
       await _drag(tester, Square.e7, Square.e5);

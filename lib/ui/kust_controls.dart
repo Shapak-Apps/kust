@@ -276,11 +276,17 @@ class KustSegmented<T> extends StatelessWidget {
                           onChanged(key);
                         },
                         child: Center(
-                          child: Text(
-                            options[key]!,
-                            style: k.body.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: key == value ? k.ink : k.muted,
+                          // A long word in a small segment shrinks to fit
+                          // instead of wrapping and being cut off.
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              options[key]!,
+                              maxLines: 1,
+                              style: k.body.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: key == value ? k.ink : k.muted,
+                              ),
                             ),
                           ),
                         ),

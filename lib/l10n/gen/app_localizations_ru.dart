@@ -234,7 +234,7 @@ class AppL10nRu extends AppL10n {
   }
 
   @override
-  String get takeBack => 'Вернуть ход';
+  String get takeBack => 'Вернуть';
 
   @override
   String get pause => 'Пауза';
@@ -304,7 +304,7 @@ class AppL10nRu extends AppL10n {
   String get showBest => 'Лучший ход';
 
   @override
-  String get showBestSub => 'Стрелка к лучшему ходу после вашего';
+  String get showBestSub => 'Стрелка к лучшему ходу в текущей позиции';
 
   @override
   String get boardImage => 'Изображение доски';
@@ -751,10 +751,10 @@ class AppL10nRu extends AppL10n {
   String get themeWinMaterial => 'Выигрыш материала';
 
   @override
-  String get loomMate1 => 'Мат в 1 ход';
+  String get loomMate1 => 'Мат в 1';
 
   @override
-  String get loomMate2 => 'Мат в 2 хода';
+  String get loomMate2 => 'Мат в 2';
 
   @override
   String get loomForks => 'Вилки';
@@ -778,11 +778,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get reviewPuzzles => 'Повторить задачи';
-
-  @override
-  String continueTheme(String theme) {
-    return 'Продолжить · $theme';
-  }
 
   @override
   String get statRating => 'РЕЙТИНГ';
@@ -1111,4 +1106,10 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get languageAuto => 'Система';
+
+  @override
+  String get youWonGame => 'Вы победили.';
+
+  @override
+  String get youWonOnTime => 'Вы победили по времени.';
 }

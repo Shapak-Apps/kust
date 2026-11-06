@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/features/game/chess/board/chess_board.dart';
+import 'package:kust/features/game/chess/board/end_animation.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/move_record.dart';
@@ -162,25 +163,16 @@ void main() {
     await _finish(tester);
   });
 
-  testWidgets('Show best draws an arrow to the better move, on its own', (
+  testWidgets('Show best draws an arrow to the best move to play now', (
     tester,
   ) async {
     final controller = await _board(tester);
-    final staged = _staged(controller.state, ['a2a3']);
-    final played = staged.moves.single;
-    controller.state = staged.copyWith(
+    controller.state = controller.state.copyWith(
+      practiceMode: true,
       moveFeedbackEnabled: false,
       showBestEnabled: true,
-      moves: [
-        played.copyWith(
-          feedback: const MoveFeedback(
-            quality: MoveQuality.inaccuracy,
-            bestSan: 'e4',
-            playedSan: 'a3',
-          ),
-          bestMove: NormalMove.fromUci('e2e4'),
-        ),
-      ],
+      engineFailed: true,
+      suggestSquares: {Square.e2, Square.e4},
     );
     await tester.pump();
     final arrow = tester.widget<MoveArrow>(find.byType(MoveArrow));
@@ -191,9 +183,76 @@ void main() {
     // Feedback is off, so there is no badge, only the arrow.
     expect(find.byType(MoveFeedbackBadge), findsNothing);
 
-    controller.state = controller.state.copyWith(showBestEnabled: false);
+    controller.state = controller.state.copyWith(suggestSquares: const {});
     await tester.pump();
     expect(find.byType(MoveArrow), findsNothing);
     await _finish(tester);
+  });
+
+  group('end of game show', () {
+    Future<ChessController> ending(
+      WidgetTester tester,
+      String fenBefore,
+      String uci,
+      GameStatus end,
+    ) async {
+      final c = await _board(tester);
+      c.state = c.state.copyWith(
+        position: Chess.fromSetup(Setup.parseFen(fenBefore)),
+        status: GameStatus.playing,
+        engineFailed: true,
+      );
+      await tester.pump();
+      final after = c.state.position.play(NormalMove.fromUci(uci));
+      c.state = c.state.copyWith(position: after, status: end);
+      await tester.pump();
+      // After the last move has landed, the show begins.
+      await tester.pump(const Duration(milliseconds: 400));
+      return c;
+    }
+
+    testWidgets('checkmate: the two king squares are coloured', (tester) async {
+      await ending(
+        tester,
+        'rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2',
+        'd8h4',
+        GameStatus.checkmate,
+      );
+      // The two king squares are painted; the pieces stay as they are.
+      expect(find.byKey(const ValueKey('end_tint')), findsOneWidget);
+      expect(find.byType(DrawBadge), findsNothing);
+      await tester.pump(const Duration(milliseconds: 1600));
+      await _finish(tester);
+    });
+
+    testWidgets('a draw: both king squares turn grey with an equals badge', (
+      tester,
+    ) async {
+      await ending(
+        tester,
+        '7k/8/5K2/6Q1/8/8/8/8 w - - 0 1',
+        'g5g6',
+        GameStatus.draw,
+      );
+      expect(find.byKey(const ValueKey('end_tint')), findsOneWidget);
+      expect(find.byType(DrawBadge), findsNWidgets(2));
+      await tester.pump(const Duration(seconds: 1));
+      await _finish(tester);
+    });
+
+    testWidgets('a new game clears the show', (tester) async {
+      final c = await ending(
+        tester,
+        '7k/8/5K2/6Q1/8/8/8/8 w - - 0 1',
+        'g5g6',
+        GameStatus.draw,
+      );
+      expect(find.byType(DrawBadge), findsNWidgets(2));
+      c.state = c.state.copyWith(status: GameStatus.playing);
+      await tester.pump();
+      expect(find.byType(DrawBadge), findsNothing);
+      expect(find.byKey(const ValueKey('end_tint')), findsNothing);
+      await _finish(tester);
+    });
   });
 }

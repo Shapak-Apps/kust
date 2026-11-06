@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/foundation.dart'
     show listEquals, setEquals, visibleForTesting;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,6 +13,7 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
 import 'package:kust/features/game/chess/board/board_squares_painter.dart';
+import 'package:kust/features/game/chess/board/end_animation.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -83,10 +84,8 @@ class _BoardView {
     MoveFeedback? feedback;
     Square? square;
     int? index;
-    ({Square from, Square to})? bestArrow;
-
     if (g.practiceMode &&
-        (g.moveFeedbackEnabled || g.showBestEnabled) &&
+        g.moveFeedbackEnabled &&
         !g.isSelfAnalysisActive &&
         g.moves.isNotEmpty) {
       int? lastPlayerIndex;
@@ -103,20 +102,6 @@ class _BoardView {
         // Once the piece is taken the rating no longer belongs to the square.
         final stillThere =
             g.displayPosition.board.pieceAt(landed)?.color == record.side;
-        // Show best: when the engine preferred another move, an arrow to
-        // it, until the player makes the next one.
-        final rated = record.feedback;
-        final best = record.bestMove;
-        if (g.showBestEnabled &&
-            rated != null &&
-            best != null &&
-            !const {
-              MoveQuality.brilliant,
-              MoveQuality.great,
-              MoveQuality.best,
-            }.contains(rated.quality)) {
-          bestArrow = (from: best.from, to: _castlingDisplaySquare(best.to));
-        }
         if (g.moveFeedbackEnabled && record.feedback != null && stillThere) {
           feedback = record.feedback;
           square = _castlingDisplaySquare(record.move.to);
@@ -151,7 +136,7 @@ class _BoardView {
           : null,
       premoves: g.isSelfAnalysisActive ? const [] : g.livePremoves,
       paused: g.paused,
-      bestArrow: bestArrow,
+      bestArrow: g.isSelfAnalysisActive ? null : g.suggestArrow,
     );
   }
 
@@ -170,7 +155,7 @@ class _BoardView {
     return (from: hints.first, to: hints.last);
   }
 
-  /// The better move than the player's last one (Show best).
+  /// The best move for the player to play now (Show best).
   final ({Square from, Square to})? bestArrow;
 
   /// The arrow drawn on the board: a hint asked for wins over Show best.
@@ -266,6 +251,14 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   late AnimationController _moveController;
   late AnimationController _captureController;
 
+  /// The end-of-game show (see end_animation.dart): which kings it is about,
+  /// whether it has begun (it waits for the last move to land), and its clock.
+  late AnimationController _endController;
+  ({bool mate, Square? winner, Square? loser, Square? white, Square? black})?
+  _end;
+  bool _endActive = false;
+  Timer? _endTimer;
+
   Square? _animFrom;
   Square? _animTo;
   Piece? _animPiece;
@@ -287,8 +280,22 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   Piece? _dragPiece;
   final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
 
-  /// The square the dragged piece is over, ringed.
-  Square? _hover;
+  /// The square the dragged piece is over, ringed. A notifier of its own so
+  /// that crossing from square to square redraws only the ring, not the
+  /// whole board.
+  final ValueNotifier<Square?> _hover = ValueNotifier(null);
+
+  /// The finger on the board: which pointer, where it went down, and whether
+  /// it has moved far enough to be a drag rather than a tap. Followed by
+  /// hand, without the gesture arena, so the piece lifts after a few pixels
+  /// instead of after the usual 36.
+  int? _pointer;
+  Offset? _downAt;
+  bool _moved = false;
+
+  /// How far (in logical pixels) a finger must travel before a touch is a
+  /// drag, not a tap.
+  static const double _dragSlop = 6;
 
   /// A move made by dropping: it is already in place, so it does not glide.
   ({Square from, Square to})? _dropped;
@@ -331,6 +338,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       vsync: this,
       duration: _snapBackDuration,
     );
+    _endController = AnimationController(
+      vsync: this,
+      duration: kMateFxDuration,
+    );
     _snapController.addStatusListener((status) {
       if (status == AnimationStatus.completed && _snapPiece != null) {
         setState(() {
@@ -368,7 +379,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     _moveController.dispose();
     _captureController.dispose();
     _snapController.dispose();
+    _endTimer?.cancel();
+    _endController.dispose();
     _dragAt.dispose();
+    _hover.dispose();
     super.dispose();
   }
 
@@ -403,8 +417,52 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   Offset _pieceCentre(Offset finger) =>
       finger - Offset(0, _squareSize * _dragLift);
 
-  void _onDragStart(DragStartDetails details) {
-    final square = _squareAtOffset(details.localPosition);
+  void _onPointerDown(PointerDownEvent event) {
+    if (_pointer != null) return;
+    _pointer = event.pointer;
+    _downAt = event.localPosition;
+    _moved = false;
+  }
+
+  void _onPointerMove(PointerMoveEvent event) {
+    if (event.pointer != _pointer) return;
+    if (_dragFrom != null) {
+      _onDragUpdate(event.localPosition);
+      return;
+    }
+    final down = _downAt;
+    if (down == null || _moved) return;
+    if ((event.localPosition - down).distance <= _dragSlop) return;
+    _moved = true;
+    // Lift the piece from where the finger first touched.
+    _onDragStart(down);
+    if (_dragFrom != null) _onDragUpdate(event.localPosition);
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (event.pointer != _pointer) return;
+    final moved = _moved;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    if (_dragFrom != null) {
+      _onDragEnd();
+    } else if (!moved) {
+      _handleTap(event.localPosition);
+    }
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    if (event.pointer != _pointer) return;
+    _pointer = null;
+    _downAt = null;
+    _moved = false;
+    // A cancelled touch puts the piece back; it never plays a move.
+    if (_dragFrom != null) _onDragEnd(cancelled: true);
+  }
+
+  void _onDragStart(Offset position) {
+    final square = _squareAtOffset(position);
     if (square == null) return;
     final controller = ref.read(chessControllerProvider.notifier);
     if (!controller.pickUp(square)) return;
@@ -421,24 +479,23 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       _dragFrom = square;
       _dragPiece = piece;
       _snapPiece = null;
-      _hover = square;
     });
-    _dragAt.value = details.localPosition;
+    _hover.value = square;
+    _dragAt.value = position;
   }
 
-  void _onDragUpdate(DragUpdateDetails details) {
+  void _onDragUpdate(Offset position) {
     if (_dragFrom == null) return;
-    _dragAt.value = details.localPosition;
-    final over = _squareAtOffset(_pieceCentre(details.localPosition));
-    if (over != _hover) setState(() => _hover = over);
+    _dragAt.value = position;
+    _hover.value = _squareAtOffset(_pieceCentre(position));
   }
 
-  void _onDragEnd([DragEndDetails? _]) {
+  void _onDragEnd({bool cancelled = false}) {
     final from = _dragFrom;
     final piece = _dragPiece;
     final at = _dragAt.value;
     if (from == null || piece == null || at == null) return;
-    final target = _squareAtOffset(_pieceCentre(at));
+    final target = cancelled ? null : _squareAtOffset(_pieceCentre(at));
 
     var played = false;
     if (target != null && target != from) {
@@ -454,7 +511,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     setState(() {
       _dragFrom = null;
       _dragPiece = null;
-      _hover = null;
       if (!played) {
         // Fly back to where it came from.
         _snapSquare = from;
@@ -463,6 +519,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             _pieceCentre(at) - Offset(_squareSize / 2, _squareSize / 2);
       }
     });
+    _hover.value = null;
     _dragAt.value = null;
     if (!played) _snapController.forward(from: 0);
   }
@@ -535,6 +592,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;
+      _trackEnd(previous, next);
 
       if (previous.isSelfAnalysisActive || next.isSelfAnalysisActive) {
         _glideReviewStep(previous, next);
@@ -664,7 +722,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           child: SizedBox(
             width: side,
             height: side,
+            // Not clipped: a king may hop out above the board, and a badge
+            // on the top row may stand over its edge.
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 // Every child of this stack is keyed: pieces in flight come
                 // and go above the grid, and without keys the layers after
@@ -684,6 +745,25 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   ),
                 ),
 
+                if (_end != null && _endActive && !view.analysis)
+                  Positioned.fill(
+                    key: const ValueKey('end_tint'),
+                    child: IgnorePointer(
+                      child: EndTintLayer(
+                        progress: _endController,
+                        devicePixelRatio: dpr,
+                        cells: [
+                          for (final (square, color) in _endTints(_end!))
+                            (
+                              row: ranks.indexOf(rankOf(square)),
+                              col: files.indexOf(fileOf(square)),
+                              color: color,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 if (badgeFeedback != null && badgeSquare != null)
                   Positioned.fill(
                     key: const ValueKey('feedback_glow'),
@@ -697,17 +777,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
-                GestureDetector(
+                Listener(
                   key: const ValueKey('board_grid'),
                   behavior: HitTestBehavior.opaque,
-                  onTapUp: (details) => _handleTap(details.localPosition),
-                  // Pick up the piece where the finger first touched, not
-                  // where the drag was recognised a few pixels later.
-                  dragStartBehavior: DragStartBehavior.down,
-                  onPanStart: _onDragStart,
-                  onPanUpdate: _onDragUpdate,
-                  onPanEnd: _onDragEnd,
-                  onPanCancel: _onDragEnd,
+                  onPointerDown: _onPointerDown,
+                  onPointerMove: _onPointerMove,
+                  onPointerUp: _onPointerUp,
+                  onPointerCancel: _onPointerCancel,
                   child: RepaintBoundary(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -872,21 +948,36 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
-                if (_dragPiece != null && _hover != null)
-                  Positioned(
-                    key: const ValueKey('drag_hover'),
-                    left: _getSquareOffset(_hover!, _squareSize).dx,
-                    top: _getSquareOffset(_hover!, _squareSize).dy,
-                    width: _squareSize,
-                    height: _squareSize,
+                if (_dragPiece != null)
+                  Positioned.fill(
                     child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            width: _squareSize * 0.06,
-                          ),
-                        ),
+                      child: ValueListenableBuilder<Square?>(
+                        valueListenable: _hover,
+                        builder: (context, hover, _) {
+                          if (hover == null) return const SizedBox.shrink();
+                          final at = _getSquareOffset(hover, _squareSize);
+                          return Stack(
+                            children: [
+                              Positioned(
+                                key: const ValueKey('drag_hover'),
+                                left: at.dx,
+                                top: at.dy,
+                                width: _squareSize,
+                                height: _squareSize,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.75,
+                                      ),
+                                      width: _squareSize * 0.06,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -997,6 +1088,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
+                // The end-of-game show: the mated king tips over, the winner's
+                // hops; or the equals badges of a draw.
+                if (_end != null && _endActive && !view.analysis)
+                  ..._endLayers(_end!, view),
+
                 if (view.badgeFeedback != null && view.badgeSquare != null)
                   Positioned(
                     key: const ValueKey('feedback_badge'),
@@ -1041,6 +1137,102 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   /// Where the rook from [corner] stands once castled: beside the king.
   Square _rookCastledSquare(Square corner) =>
       squareAt(fileOf(corner) == 7 ? 5 : 3, rankOf(corner));
+
+  /// Starts the end-of-game show when a game ends in checkmate or a draw,
+  /// and clears it when a new game begins.
+  void _trackEnd(GameState previous, GameState next) {
+    final mate = next.status == GameStatus.checkmate;
+    final over = mate || next.status == GameStatus.draw;
+    if (over && previous.status == GameStatus.playing) {
+      final board = next.position.board;
+      final turn = next.position.turn;
+      _endTimer?.cancel();
+      _end = (
+        mate: mate,
+        winner: mate ? board.kingOf(turn.opposite) : null,
+        loser: mate ? board.kingOf(turn) : null,
+        white: board.kingOf(Side.white),
+        black: board.kingOf(Side.black),
+      );
+      _endActive = false;
+      _endController
+        ..stop()
+        ..value = 0
+        ..duration = mate ? kMateFxDuration : kDrawFxDuration;
+      final still = MediaQuery.of(context).disableAnimations;
+      _endTimer = Timer(still ? Duration.zero : kEndFxDelay, () {
+        if (!mounted) return;
+        setState(() => _endActive = true);
+        if (still) {
+          _endController.value = 1;
+        } else {
+          _endController.forward(from: 0);
+        }
+      });
+    } else if (!over && _end != null) {
+      _endTimer?.cancel();
+      _endController
+        ..stop()
+        ..value = 0;
+      setState(() {
+        _end = null;
+        _endActive = false;
+      });
+    }
+  }
+
+  /// The squares the show colours, with their colours.
+  List<(Square, Color)> _endTints(
+    ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
+    end,
+  ) {
+    if (end.mate) {
+      return [
+        if (end.loser != null) (end.loser!, kEndRed),
+        if (end.winner != null) (end.winner!, kEndGreen),
+      ];
+    }
+    return [
+      if (end.white != null) (end.white!, kEndGrey),
+      if (end.black != null) (end.black!, kEndGrey),
+    ];
+  }
+
+  List<Widget> _endLayers(
+    ({bool mate, Square? winner, Square? loser, Square? white, Square? black})
+    end,
+    _BoardView view,
+  ) {
+    // A checkmate paints squares only; a draw adds the equals badges.
+    if (end.mate) return const [];
+    return [
+      for (final square in [end.white, end.black])
+        if (square != null)
+          Positioned(
+            key: ValueKey('end_badge_${square.name}'),
+            left: _getSquareOffset(square, _squareSize).dx,
+            top: _getSquareOffset(square, _squareSize).dy,
+            width: _squareSize,
+            height: _squareSize,
+            child: IgnorePointer(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    right: _onRightEdge(square) ? null : -_squareSize * 0.22,
+                    left: _onRightEdge(square) ? -_squareSize * 0.22 : null,
+                    top: -_squareSize * 0.22,
+                    child: DrawBadge(
+                      progress: _endController,
+                      size: _squareSize * 0.52,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    ];
+  }
 
   /// Whether [square] is shown in the rightmost column.
   bool _onRightEdge(Square square) => fileOf(square) == (_flipped ? 0 : 7);

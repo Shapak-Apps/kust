@@ -67,7 +67,7 @@ class AppL10nTk extends AppL10n {
   String get blackName => 'Gara';
 
   @override
-  String get random => 'Tötänleýin';
+  String get random => 'Tapawudy ýok';
 
   @override
   String get play => 'Oýna';
@@ -124,13 +124,13 @@ class AppL10nTk extends AppL10n {
   String get keepPlaying => 'Oýny dowam et';
 
   @override
-  String get resignTitle => 'Bu oýny boynuňyza alýarsyňyzmy?';
+  String get resignTitle => 'Bu oýny boýnuňyza alýarsyňyzmy?';
 
   @override
   String get resignSubtitle => 'Oýun gutarar we ýeňiliş hasaplanar.';
 
   @override
-  String get resign => 'Boynuna al';
+  String get resign => 'Boýnuňa al';
 
   @override
   String get leaveGame => 'Oýundan çyk';
@@ -165,7 +165,7 @@ class AppL10nTk extends AppL10n {
   String get gameEndedOnTime => 'Oýun wagt boýunça gutardy.';
 
   @override
-  String get youResigned => 'Siz boynuňyza aldyňyz.';
+  String get youResigned => 'Siz boýnuňyza aldyňyz.';
 
   @override
   String endCheckmateWon(String name) {
@@ -197,7 +197,7 @@ class AppL10nTk extends AppL10n {
   String get lobby => 'Baş sahypa';
 
   @override
-  String get rematch => 'Gaýtadan oýna';
+  String get rematch => 'Ýene oýna';
 
   @override
   String ratingChange(int rating, String change) {
@@ -304,7 +304,7 @@ class AppL10nTk extends AppL10n {
   String get showBest => 'Iň gowusyny görkez';
 
   @override
-  String get showBestSub => 'Göçümiňizden soň has gowy göçüme ok';
+  String get showBestSub => 'Häzirki ýagdaýda iň gowy göçüme ok';
 
   @override
   String get boardImage => 'Tagta suraty';
@@ -752,10 +752,10 @@ class AppL10nTk extends AppL10n {
   String get themeWinMaterial => 'Material ýeňmek';
 
   @override
-  String get loomMate1 => '1 göçümde şahmat';
+  String get loomMate1 => 'Şahmat 1';
 
   @override
-  String get loomMate2 => '2 göçümde şahmat';
+  String get loomMate2 => 'Şahmat 2';
 
   @override
   String get loomForks => 'Çatallar';
@@ -779,11 +779,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get reviewPuzzles => 'Meseleleri gaýtalaň';
-
-  @override
-  String continueTheme(String theme) {
-    return 'Dowam ediň · $theme';
-  }
 
   @override
   String get statRating => 'REÝTING';
@@ -1113,4 +1108,10 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get languageAuto => 'Ulgam';
+
+  @override
+  String get youWonGame => 'Siz ýeňdiňiz.';
+
+  @override
+  String get youWonOnTime => 'Siz wagt boýunça ýeňdiňiz.';
 }
