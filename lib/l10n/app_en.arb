@@ -499,14 +499,6 @@
   },
   "puzzlesMoreSoon": "More are coming soon.",
   "reviewPuzzles": "Review puzzles",
-  "continueTheme": "Continue · {theme}",
-  "@continueTheme": {
-    "placeholders": {
-      "theme": {
-        "type": "String"
-      }
-    }
-  },
   "statRating": "RATING",
   "statKnots": "KNOTS",
   "statBest": "BEST",

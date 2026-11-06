@@ -1485,12 +1485,6 @@ abstract class AppL10n {
   /// **'Review puzzles'**
   String get reviewPuzzles;
 
-  /// No description provided for @continueTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue · {theme}'**
-  String continueTheme(String theme);
-
   /// No description provided for @statRating.
   ///
   /// In en, this message translates to:

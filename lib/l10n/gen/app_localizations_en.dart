@@ -778,11 +778,6 @@ class AppL10nEn extends AppL10n {
   String get reviewPuzzles => 'Review puzzles';
 
   @override
-  String continueTheme(String theme) {
-    return 'Continue · $theme';
-  }
-
-  @override
   String get statRating => 'RATING';
 
   @override

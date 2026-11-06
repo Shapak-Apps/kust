@@ -106,15 +106,23 @@ class _Item extends StatelessWidget {
       children: [
         icon,
         const SizedBox(height: 4),
-        Text(
-          action.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          // The bar has a fixed height, so labels stop growing a little
-          // above the normal size.
-          textScaler: MediaQuery.textScalerOf(context)
-              .clamp(maxScaleFactor: 1.15),
-          style: k.caption.copyWith(color: colour, fontWeight: FontWeight.w800),
+        // A little smaller than a caption, and shrunk to fit when a word is
+        // long (Russian, Turkmen), so it is never cut off with dots.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            action.label,
+            maxLines: 1,
+            // The bar has a fixed height, so labels stop growing a little
+            // above the normal size.
+            textScaler: MediaQuery.textScalerOf(context)
+                .clamp(maxScaleFactor: 1.15),
+            style: k.caption.copyWith(
+              color: colour,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ),
       ],
     );

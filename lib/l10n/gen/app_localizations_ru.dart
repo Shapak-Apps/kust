@@ -234,7 +234,7 @@ class AppL10nRu extends AppL10n {
   }
 
   @override
-  String get takeBack => 'Вернуть ход';
+  String get takeBack => 'Вернуть';
 
   @override
   String get pause => 'Пауза';
@@ -751,10 +751,10 @@ class AppL10nRu extends AppL10n {
   String get themeWinMaterial => 'Выигрыш материала';
 
   @override
-  String get loomMate1 => 'Мат в 1 ход';
+  String get loomMate1 => 'Мат в 1';
 
   @override
-  String get loomMate2 => 'Мат в 2 хода';
+  String get loomMate2 => 'Мат в 2';
 
   @override
   String get loomForks => 'Вилки';
@@ -778,11 +778,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get reviewPuzzles => 'Повторить задачи';
-
-  @override
-  String continueTheme(String theme) {
-    return 'Продолжить · $theme';
-  }
 
   @override
   String get statRating => 'РЕЙТИНГ';

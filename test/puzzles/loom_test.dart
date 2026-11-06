@@ -235,7 +235,7 @@ void main() {
           findsOneWidget,
         );
         for (final level in kLoomLevels) {
-          expect(find.text(level.theme), findsOneWidget);
+          expect(find.text(level.theme), findsAtLeastNWidgets(1));
           expect(find.text(level.tribe.toUpperCase()), findsNothing);
         }
         expect(find.textContaining('0 of 20 knots'), findsOneWidget);
@@ -243,7 +243,9 @@ void main() {
         expect(find.text('Daily puzzle'), findsNothing);
         // Levels 2 to 5 have puzzles but wait for level 1 to be woven.
         expect(find.text('Not started'), findsNWidgets(4));
-        expect(find.text('Continue · Mate in 1'), findsOneWidget);
+        // The button names the theme only; the map shows it too.
+        expect(find.text('Mate in 1'), findsNWidgets(2));
+        expect(find.textContaining('Continue'), findsNothing);
         expect(
           find.bySemanticsLabel(RegExp('Mate in 1, 0 of 20 knots')),
           findsOneWidget,
