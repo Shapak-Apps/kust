@@ -296,7 +296,11 @@ class _ReviewBody extends StatelessWidget {
             _KeyMoment(move: learn[i], onTap: () => onOpen(learn[i].ply)),
           ],
         const SizedBox(height: 28),
-        KustButton(label: t.reviewOpenReplay, onTap: () => onOpen()),
+        KustButton(
+          label: t.reviewOpenReplay,
+          style: KustButtonStyle.green,
+          onTap: () => onOpen(),
+        ),
       ],
     );
   }

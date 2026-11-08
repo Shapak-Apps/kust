@@ -7,6 +7,7 @@ import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/bots.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -115,24 +116,35 @@ class BotSays extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 6),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: k.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: k.caption.copyWith(fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 2),
-                Text(text, style: k.body.copyWith(fontStyle: FontStyle.italic)),
-              ],
+          child: CustomPaint(
+            painter: SpeechBubblePainter(fill: k.surfaceAlt, border: k.line),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BubbleMetrics.tail + 14,
+                12,
+                14,
+                12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name,
+                    style: k.caption.copyWith(
+                      color: k.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    text,
+                    style: k.body.copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
