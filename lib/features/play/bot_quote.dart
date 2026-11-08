@@ -106,19 +106,19 @@ class BotSays extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           child: Image.asset(
             image,
-            width: 44,
-            height: 44,
-            cacheWidth: 132,
+            width: 68,
+            height: 68,
+            cacheWidth: 204,
             fit: BoxFit.cover,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: k.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),

@@ -579,7 +579,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String pieceSetSemantics(String set) {
-    return '$set daşlar';
+    return '$set çöpler';
   }
 
   @override
@@ -871,15 +871,15 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get coachFork =>
-      'Bir wagtyň özünde iki daşa hüjüm edýän göçümi tapyň.\nÇatal görýärsiňizmi?\nBir daş, iki nyşan. Ol nirä düşýär?';
+      'Bir wagtyň özünde iki çöpe hüjüm edýän göçümi tapyň.\nÇatal görýärsiňizmi?\nBir çöp, iki nyşan. Ol nirä düşýär?';
 
   @override
   String get coachPin =>
-      'Bir daş gozgalyp bilmeýär. Muny ulanyp bilersiňizmi?\nBaglanan daşy tapyň we basyşy artdyryň.\nŞasynyň öňünde näme gysylyp galdy?';
+      'Bir çöp gozgalyp bilmeýär. Muny ulanyp bilersiňizmi?\nBaglanan çöpi tapyň we basyşy artdyryň.\nŞasynyň öňünde näme gysylyp galdy?';
 
   @override
   String get coachEndgame =>
-      'Az daş, uly pikirler. Howlukmaň.\nAhyrky oýunda şa — söweşiji.\nÄhtiýatly göçümler muny ýeňýär.';
+      'Az çöp, uly pikirler. Howlukmaň.\nAhyrky oýunda şa — söweşiji.\nÄhtiýatly göçümler muny ýeňýär.';
 
   @override
   String get coachGeneric =>
@@ -895,7 +895,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get coachRetry =>
-      'Öwreniň, soň özüňiz synanyşyň.\nIndi bilýärsiňiz. «Gaýtala» basyň!\nDaşlaryň bilelikde nähili işleýändigine syn ediň.';
+      'Öwreniň, soň özüňiz synanyşyň.\nIndi bilýärsiňiz. «Gaýtala» basyň!\nÇöpleriň bilelikde nähili işleýändigine syn ediň.';
 
   @override
   String get coachDaily =>
@@ -1316,7 +1316,7 @@ class AppL10nTk extends AppL10n {
   String get learnWrong => 'Bolmady. Ýene synanyşyň.';
 
   @override
-  String get learnNotBest => 'Bu iň gymmat daşy almak däl.';
+  String get learnNotBest => 'Bu iň gymmat çöpi almak däl.';
 
   @override
   String get learnStalemate => 'Bu pat, deňe deň. Şahmady tapyň.';
@@ -1359,10 +1359,10 @@ class AppL10nTk extends AppL10n {
   }
 
   @override
-  String get taskCapture => 'Bellenen ähli daşlary alyň';
+  String get taskCapture => 'Bellenen ähli çöpleri alyň';
 
   @override
-  String get taskBestCapture => 'Iň gymmat daşy alyň';
+  String get taskBestCapture => 'Iň gymmat çöpi alyň';
 
   @override
   String get taskCheck => 'Şah beriň';
@@ -1374,7 +1374,7 @@ class AppL10nTk extends AppL10n {
   String get taskEscape => 'Şahyňyza şah berildi. Ondan çykyň.';
 
   @override
-  String get taskEscapeCapture => 'Hüjüm edýän daşy alyp, şahdan çykyň';
+  String get taskEscapeCapture => 'Hüjüm edýän çöpi alyp, şahdan çykyň';
 
   @override
   String get taskCastleKing =>
@@ -1402,7 +1402,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get lessonRookIntro =>
-      'Gala göni çyzykda, hatar ýa-da sütün boýunça islendik öýjük sanyna göçýär. Ol başga daşlaryň üstünden böküp bilmeýär.';
+      'Gala göni çyzykda, hatar ýa-da sütün boýunça islendik öýjük sanyna göçýär. Ol başga çöpleriň üstünden böküp bilmeýär.';
 
   @override
   String get lessonBishopTitle => 'Pil';
@@ -1416,14 +1416,14 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get lessonQueenIntro =>
-      'Wezir iň güýçli daş. Ol gala bilen pilin göçümlerini birleşdirýär: göni ýa-da çapraz islendik öýjük sanyna.';
+      'Wezir iň güýçli çöp. Ol gala bilen pilin göçümlerini birleşdirýär: göni ýa-da çapraz islendik öýjük sanyna.';
 
   @override
   String get lessonKnightTitle => 'At';
 
   @override
   String get lessonKnightIntro =>
-      'At «G» şekilinde göçýär: bir tarapa iki öýjük, ýanyna bir öýjük. Ol başga daşlaryň üstünden böküp bilýän ýeke-täk daşdyr.';
+      'At «G» şekilinde göçýär: bir tarapa iki öýjük, ýanyna bir öýjük. Ol başga çöpleriň üstünden böküp bilýän ýeke-täk çöpdür.';
 
   @override
   String get lessonKingTitle => 'Şa';
@@ -1437,14 +1437,14 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get lessonValuesIntro =>
-      'Daşlaryň bahasy bar: peşka 1, at 3, pil 3, gala 5, wezir 9. Has gymmat daşy almak artykmaçlyk berýär. Hemişe iň gymmat daşy almagy gözläň.';
+      'Çöpleriň bahasy bar: peşka 1, at 3, pil 3, gala 5, wezir 9. Has gymmat çöpi almak artykmaçlyk berýär. Hemişe iň gymmat çöpi almagy gözläň.';
 
   @override
   String get lessonCheckTitle => 'Şah';
 
   @override
   String get lessonCheckIntro =>
-      'Şa hüjüm astynda bolsa, oňa şah diýilýär. Derrew şahdan çykmaly: şany süýşüriň, hüjümi ýapyň ýa-da hüjüm edýän daşy alyň.';
+      'Şa hüjüm astynda bolsa, oňa şah diýilýär. Derrew şahdan çykmaly: şany süýşüriň, hüjümi ýapyň ýa-da hüjüm edýän çöpi alyň.';
 
   @override
   String get lessonSpecialTitle => 'Aýratyn göçümler';
