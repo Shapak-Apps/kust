@@ -52,6 +52,22 @@
   "keepPlaying": "Keep playing",
   "resignTitle": "Resign this game?",
   "resignSubtitle": "The game will end and count as a loss.",
+  "resignLocalTitle": "{name}: resign?",
+  "resignLocalSubtitle": "The game will end and {winner} wins.",
+  "@resignLocalTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@resignLocalSubtitle": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
   "resign": "Resign",
   "leaveGame": "Leave game",
   "exportGame": "Export game",

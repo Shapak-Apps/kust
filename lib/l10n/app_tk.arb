@@ -38,6 +38,8 @@
   "keepPlaying": "Oýny dowam et",
   "resignTitle": "Bu oýny boýnuňyza alýarsyňyzmy?",
   "resignSubtitle": "Oýun gutarar we ýeňiliş hasaplanar.",
+  "resignLocalTitle": "{name} boýnuna alýarmy?",
+  "resignLocalSubtitle": "Oýun gutarar. {winner} ýeňiji bolar.",
   "resign": "Boýnuňa al",
   "leaveGame": "Oýundan çyk",
   "exportGame": "Oýny eksport et",

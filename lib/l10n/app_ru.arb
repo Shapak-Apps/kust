@@ -38,6 +38,8 @@
   "keepPlaying": "Продолжить игру",
   "resignTitle": "Сдать эту партию?",
   "resignSubtitle": "Партия закончится поражением.",
+  "resignLocalTitle": "{name}: сдаться?",
+  "resignLocalSubtitle": "Партия закончится. Победа: {winner}.",
   "resign": "Сдаться",
   "leaveGame": "Выйти из партии",
   "exportGame": "Экспорт партии",

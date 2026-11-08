@@ -130,6 +130,16 @@ class AppL10nEn extends AppL10n {
   String get resignSubtitle => 'The game will end and count as a loss.';
 
   @override
+  String resignLocalTitle(String name) {
+    return '$name: resign?';
+  }
+
+  @override
+  String resignLocalSubtitle(String winner) {
+    return 'The game will end and $winner wins.';
+  }
+
+  @override
   String get resign => 'Resign';
 
   @override

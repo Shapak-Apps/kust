@@ -130,6 +130,16 @@ class AppL10nRu extends AppL10n {
   String get resignSubtitle => 'Партия закончится поражением.';
 
   @override
+  String resignLocalTitle(String name) {
+    return '$name: сдаться?';
+  }
+
+  @override
+  String resignLocalSubtitle(String winner) {
+    return 'Партия закончится. Победа: $winner.';
+  }
+
+  @override
   String get resign => 'Сдаться';
 
   @override
