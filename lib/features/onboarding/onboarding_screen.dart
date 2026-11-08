@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/onboarding/onboarding_level.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
@@ -43,7 +44,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       level: _level,
     );
     if (!mounted) return;
-    context.go('/play');
+    final router = GoRouter.of(context);
+    if (_level == OnboardingLevel.beginner) {
+      // Someone new to chess starts with the first lesson.
+      router.go('/learn');
+      router.push('/lesson/${kLessons.first.id}');
+    } else {
+      router.go('/play');
+    }
   }
 
   @override

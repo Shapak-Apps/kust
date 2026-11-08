@@ -26,7 +26,7 @@ class _AppShellState extends State<AppShell> {
     // second.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.go(const ['/play', '/puzzles', '/history'][index]);
+      context.go(const ['/play', '/puzzles', '/learn', '/history'][index]);
     });
   }
 
@@ -35,8 +35,10 @@ class _AppShellState extends State<AppShell> {
     final location = GoRouterState.of(context).uri.path;
     final current = location.startsWith('/puzzles')
         ? 1
-        : location.startsWith('/history')
+        : location.startsWith('/learn')
         ? 2
+        : location.startsWith('/history')
+        ? 3
         : 0;
     if (_pending == current) _pending = null;
     final selected = _pending ?? current;
@@ -62,6 +64,11 @@ class _AppShellState extends State<AppShell> {
                   Icons.extension_outlined,
                   Icons.extension_rounded,
                   context.t.navPuzzles,
+                ),
+                KustNavItem(
+                  Icons.school_outlined,
+                  Icons.school_rounded,
+                  context.t.navLearn,
                 ),
                 KustNavItem(
                   Icons.history_rounded,

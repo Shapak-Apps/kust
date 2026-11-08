@@ -1275,4 +1275,189 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get reviewTooShort => 'This game is too short to review.';
+
+  @override
+  String get navLearn => 'Learn';
+
+  @override
+  String get learnTitle => 'Learn';
+
+  @override
+  String get learnSub => 'From your first move to checkmate';
+
+  @override
+  String lessonCount(int done, int total) {
+    return '$done of $total lessons';
+  }
+
+  @override
+  String lessonTasks(int n) {
+    return '$n tasks';
+  }
+
+  @override
+  String get lessonStart => 'Start lesson';
+
+  @override
+  String get learnNext => 'Up next';
+
+  @override
+  String taskProgress(int n, int total) {
+    return 'Task $n of $total';
+  }
+
+  @override
+  String get learnWrong => 'Not quite. Try again.';
+
+  @override
+  String get learnNotBest => 'That is not the most valuable capture.';
+
+  @override
+  String get learnStalemate => 'That is stalemate, a draw. Find the checkmate.';
+
+  @override
+  String get learnWellDone => 'Well done!';
+
+  @override
+  String get lessonDone => 'Lesson complete!';
+
+  @override
+  String get lessonNext => 'Next lesson';
+
+  @override
+  String get lessonAll => 'All lessons';
+
+  @override
+  String get lessonPlayGame => 'Play a game';
+
+  @override
+  String get learnHint => 'Hint';
+
+  @override
+  String get learnAllDone => 'You finished every lesson. Time to play!';
+
+  @override
+  String get pieceKing => 'king';
+
+  @override
+  String get piecePawn => 'pawn';
+
+  @override
+  String taskCollectOne(String piece) {
+    return 'Move the $piece to the star';
+  }
+
+  @override
+  String taskCollectMany(String piece) {
+    return 'Collect every star with the $piece';
+  }
+
+  @override
+  String get taskCapture => 'Capture all the marked pieces';
+
+  @override
+  String get taskBestCapture => 'Capture the most valuable piece';
+
+  @override
+  String get taskCheck => 'Give check';
+
+  @override
+  String get taskMate => 'Checkmate in one move';
+
+  @override
+  String get taskEscape => 'Your king is in check. Get out of check.';
+
+  @override
+  String get taskEscapeCapture => 'Get out of check by capturing the attacker';
+
+  @override
+  String get taskCastleKing =>
+      'Castle kingside: move the king two squares towards the rook';
+
+  @override
+  String get taskCastleQueen =>
+      'Castle queenside: move the king two squares towards the rook';
+
+  @override
+  String get taskEnPassant => 'Capture the pawn en passant';
+
+  @override
+  String get taskPromote => 'Move the pawn to the last row to promote it';
+
+  @override
+  String get lessonPawnTitle => 'The pawn';
+
+  @override
+  String get lessonPawnIntro =>
+      'Pawns are the foot soldiers. A pawn moves one square forward, or two from its starting square. It captures one square diagonally forward, never straight ahead.';
+
+  @override
+  String get lessonRookTitle => 'The rook';
+
+  @override
+  String get lessonRookIntro =>
+      'The rook moves any number of squares in a straight line, along a row or a column. It cannot jump over other pieces.';
+
+  @override
+  String get lessonBishopTitle => 'The bishop';
+
+  @override
+  String get lessonBishopIntro =>
+      'The bishop moves any number of squares diagonally. It always stays on the same colour of square.';
+
+  @override
+  String get lessonQueenTitle => 'The queen';
+
+  @override
+  String get lessonQueenIntro =>
+      'The queen is the strongest piece. She moves like a rook and a bishop together: any number of squares in a straight line or diagonally.';
+
+  @override
+  String get lessonKnightTitle => 'The knight';
+
+  @override
+  String get lessonKnightIntro =>
+      'The knight moves in an L: two squares one way and one square to the side. It is the only piece that jumps over others.';
+
+  @override
+  String get lessonKingTitle => 'The king';
+
+  @override
+  String get lessonKingIntro =>
+      'The king moves one square in any direction. Protect him: if he is lost, the game is lost. He can never step next to the enemy king or into an attack.';
+
+  @override
+  String get lessonValuesTitle => 'Taking pieces';
+
+  @override
+  String get lessonValuesIntro =>
+      'Pieces are worth points: pawn 1, knight 3, bishop 3, rook 5, queen 9. Capturing a bigger piece wins material. Always look for the most valuable capture.';
+
+  @override
+  String get lessonCheckTitle => 'Check';
+
+  @override
+  String get lessonCheckIntro =>
+      'When a king is attacked, it is in check. You must get out of check at once: move the king, block the attack, or capture the attacker.';
+
+  @override
+  String get lessonSpecialTitle => 'Special moves';
+
+  @override
+  String get lessonSpecialIntro =>
+      'Castling moves your king two squares towards a rook, and the rook jumps over it. En passant lets a pawn capture one that has just moved two squares past it. A pawn that reaches the last row promotes, usually to a queen.';
+
+  @override
+  String get lessonMateTitle => 'Checkmate';
+
+  @override
+  String get lessonMateIntro =>
+      'Checkmate is a check that cannot be escaped: the game ends and you win. If the other side has no legal move but is not in check, it is stalemate, a draw. Be careful not to stalemate when you are winning.';
+
+  @override
+  String get lessonFirstMatesTitle => 'Your first checkmates';
+
+  @override
+  String get lessonFirstMatesIntro =>
+      'Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.';
 }

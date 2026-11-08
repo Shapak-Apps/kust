@@ -1,3 +1,5 @@
+import 'package:kust/features/learn/learn_screen.dart';
+import 'package:kust/features/learn/lesson_screen.dart';
 import 'package:kust/features/review/review_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -59,6 +61,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         ),
       ),
       GoRoute(
+        path: '/lesson/:id',
+        builder: (context, state) =>
+            LessonScreen(lessonId: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/review/:id',
         builder: (context, state) =>
             ReviewScreen(gameId: state.pathParameters['id']!),
@@ -81,6 +88,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
                 _tabPage(state, const PuzzlesScreen()),
           ),
 
+          GoRoute(
+            path: '/learn',
+            pageBuilder: (context, state) =>
+                _tabPage(state, const LearnScreen()),
+          ),
           GoRoute(
             path: '/history',
             pageBuilder: (context, state) =>
