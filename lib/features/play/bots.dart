@@ -1,9 +1,13 @@
+/// How a bot talks: it picks the lines it says during a game.
+enum BotMood { cheerful, calm, cocky, wise }
+
 class Bot {
   final String id;
   final String name;
   final int elo;
   final String imagePath;
   final bool isTkm;
+  final BotMood mood;
 
   const Bot({
     required this.id,
@@ -11,6 +15,7 @@ class Bot {
     required this.elo,
     required this.imagePath,
     this.isTkm = false,
+    this.mood = BotMood.cheerful,
   });
 }
 
@@ -20,12 +25,37 @@ const List<Bot> kInternationalBots = [
     name: 'Elizabeth',
     elo: 600,
     imagePath: 'assets/bots/Elizabeth.webp',
+    mood: BotMood.calm,
   ),
   Bot(id: 'mark', name: 'Mark', elo: 700, imagePath: 'assets/bots/Mark.webp'),
-  Bot(id: 'apex', name: 'Apex', elo: 800, imagePath: 'assets/bots/Apex.webp'),
-  Bot(id: 'karl', name: 'Karl', elo: 1000, imagePath: 'assets/bots/Karl.webp'),
-  Bot(id: 'maya', name: 'Maya', elo: 1200, imagePath: 'assets/bots/Maya.webp'),
-  Bot(id: 'yura', name: 'Yura', elo: 1400, imagePath: 'assets/bots/Yura.webp'),
+  Bot(
+    id: 'apex',
+    name: 'Apex',
+    elo: 800,
+    imagePath: 'assets/bots/Apex.webp',
+    mood: BotMood.cocky,
+  ),
+  Bot(
+    id: 'karl',
+    name: 'Karl',
+    elo: 1000,
+    imagePath: 'assets/bots/Karl.webp',
+    mood: BotMood.wise,
+  ),
+  Bot(
+    id: 'maya',
+    name: 'Maya',
+    elo: 1200,
+    imagePath: 'assets/bots/Maya.webp',
+    mood: BotMood.calm,
+  ),
+  Bot(
+    id: 'yura',
+    name: 'Yura',
+    elo: 1400,
+    imagePath: 'assets/bots/Yura.webp',
+    mood: BotMood.cocky,
+  ),
 ];
 
 const List<Bot> kTkmBots = [
@@ -49,5 +79,6 @@ const List<Bot> kTkmBots = [
     elo: 2000,
     imagePath: 'assets/bots/Berdi.webp',
     isTkm: true,
+    mood: BotMood.wise,
   ),
 ];

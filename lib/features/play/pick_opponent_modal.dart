@@ -4,6 +4,8 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kust/features/play/bot_card.dart';
+import 'package:kust/features/play/bot_quote.dart';
+import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/play/practice_mode_checkbox.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -96,6 +98,21 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
         PracticeModeCheckbox(
           value: _practice,
           onChanged: (v) => setState(() => _practice = v),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.topCenter,
+          child: bot == null
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: BotSays(
+                    key: ValueKey(bot.id),
+                    name: bot.name,
+                    image: bot.imagePath,
+                    text: botGreeting(context.t, bot),
+                  ),
+                ),
         ),
         const SizedBox(height: 16),
         KustButton(

@@ -130,6 +130,16 @@ class AppL10nTk extends AppL10n {
   String get resignSubtitle => 'Oýun gutarar we ýeňiliş hasaplanar.';
 
   @override
+  String resignLocalTitle(String name) {
+    return '$name boýnuna alýarmy?';
+  }
+
+  @override
+  String resignLocalSubtitle(String winner) {
+    return 'Oýun gutarar. $winner ýeňiji bolar.';
+  }
+
+  @override
   String get resign => 'Boýnuňa al';
 
   @override
@@ -268,16 +278,16 @@ class AppL10nTk extends AppL10n {
   String get cancelPromotion => 'Öwrülişigi ýatyr';
 
   @override
-  String get pieceQueen => 'wezir';
+  String get pieceQueen => 'Wezir';
 
   @override
-  String get pieceRook => 'gala';
+  String get pieceRook => 'Gala';
 
   @override
-  String get pieceBishop => 'pil';
+  String get pieceBishop => 'Pil';
 
   @override
-  String get pieceKnight => 'at';
+  String get pieceKnight => 'At';
 
   @override
   String get noMovesYet => 'Heniz göçüm ýok';
@@ -569,7 +579,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String pieceSetSemantics(String set) {
-    return '$set daşlar';
+    return '$set çöpler';
   }
 
   @override
@@ -861,15 +871,15 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get coachFork =>
-      'Bir wagtyň özünde iki daşa hüjüm edýän göçümi tapyň.\nÇatal görýärsiňizmi?\nBir daş, iki nyşan. Ol nirä düşýär?';
+      'Bir wagtyň özünde iki çöpe hüjüm edýän göçümi tapyň.\nÇatal görýärsiňizmi?\nBir çöp, iki nyşan. Ol nirä düşýär?';
 
   @override
   String get coachPin =>
-      'Bir daş gozgalyp bilmeýär. Muny ulanyp bilersiňizmi?\nBaglanan daşy tapyň we basyşy artdyryň.\nŞasynyň öňünde näme gysylyp galdy?';
+      'Bir çöp gozgalyp bilmeýär. Muny ulanyp bilersiňizmi?\nBaglanan çöpi tapyň we basyşy artdyryň.\nŞasynyň öňünde näme gysylyp galdy?';
 
   @override
   String get coachEndgame =>
-      'Az daş, uly pikirler. Howlukmaň.\nAhyrky oýunda şa — söweşiji.\nÄhtiýatly göçümler muny ýeňýär.';
+      'Az çöp, uly pikirler. Howlukmaň.\nAhyrky oýunda şa — söweşiji.\nÄhtiýatly göçümler muny ýeňýär.';
 
   @override
   String get coachGeneric =>
@@ -885,7 +895,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get coachRetry =>
-      'Öwreniň, soň özüňiz synanyşyň.\nIndi bilýärsiňiz. «Gaýtala» basyň!\nDaşlaryň bilelikde nähili işleýändigine syn ediň.';
+      'Öwreniň, soň özüňiz synanyşyň.\nIndi bilýärsiňiz. «Gaýtala» basyň!\nÇöpleriň bilelikde nähili işleýändigine syn ediň.';
 
   @override
   String get coachDaily =>
@@ -1114,4 +1124,346 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get youWonOnTime => 'Siz wagt boýunça ýeňdiňiz.';
+
+  @override
+  String get botGreetBahar =>
+      'Salam! Men Bahar. Men hem küşt öwrenýärin, oýnalyň!';
+
+  @override
+  String get botGreetElizabeth => 'Salam. Ýakymly bir oýun oýnalymy?';
+
+  @override
+  String get botGreetMark => 'Hey! Oýna taýynsyňyzmy? Men taýyn!';
+
+  @override
+  String get botGreetApex => 'Meni ýeňip bilersiňiz öýdýärsiňizmi? Görkeziň.';
+
+  @override
+  String get botGreetKarl => 'Howlukmaň. Küşt sabyrlylyga sylag berýär.';
+
+  @override
+  String get botGreetEnejan => 'Hoş geldiňiz! Oturyň, bir oýun oýnalyň.';
+
+  @override
+  String get botGreetMaya =>
+      'Salam! Men akylly göçümleri halaýaryn. Siziňkini görkeziň.';
+
+  @override
+  String get botGreetYura => 'Oýnalyň. Men aňsat bermeýärin.';
+
+  @override
+  String get botGreetBerdi => 'Hoş geldiňiz. Küşt uzak ýol. Geliň, ýöreliň.';
+
+  @override
+  String get botCheerfulBlunder =>
+      'Aha! Sag boluň!|Waý, muny bilgeşleýin etdiňizmi?';
+
+  @override
+  String get botCheerfulBrilliant =>
+      'Waý, haýran galdyryjy göçüm!|Siz örän gowy oýnaýarsyňyz!';
+
+  @override
+  String get botCheerfulWin =>
+      'Ýeňdim! Gowy oýun boldy!|Örän gyzykly boldy, ýene oýnalymy?';
+
+  @override
+  String get botCheerfulLoss =>
+      'Siz ýeňdiňiz! Gutlaýaryn!|Waý, ýeňdiňiz! Ýene bir oýnalyň!';
+
+  @override
+  String get botCheerfulDraw =>
+      'Deňe deň! Adalatly netije.|Hiç kim utulmady, ikimiz hem gazandyk!';
+
+  @override
+  String get botCalmBlunder => 'Gyzykly saýlaw.|Muny şatlyk bilen alaryn.';
+
+  @override
+  String get botCalmBrilliant =>
+      'Gowy göçüm. Gözüňiz ýitidir.|Täsirli. Muny garaşmadym.';
+
+  @override
+  String get botCalmWin =>
+      'Gowy oýun. Sag boluň.|Indiki gezek bagtyňyz getsin.';
+
+  @override
+  String get botCalmLoss =>
+      'Gowy oýnadyňyz. Mynasyp ýeňiş.|Gutlaýaryn, hakyky ýeňiş.';
+
+  @override
+  String get botCalmDraw => 'Adalatly netije.|Güýçlerimiz deň eken.';
+
+  @override
+  String get botCockyBlunder => 'Ha! Aňsat boldy.|Bu siziň meýilnamaňyzmydy?';
+
+  @override
+  String get botCockyBrilliant =>
+      'Bagt getirdi. Öwrenişmäň.|Ýagşy, bu erbet däl.';
+
+  @override
+  String get botCockyWin => 'Hiç şübhem ýokdy.|Indiki gezek, çempion.';
+
+  @override
+  String get botCockyLoss =>
+      'Bolýar, bu gezek siz. Täzeden?|Täze başlaýanyň bagty. Ýene!';
+
+  @override
+  String get botCockyDraw =>
+      'Deňe deň? Men entek gyzyp ýördüm.|Hm. Indiki gezek men ýeňerin.';
+
+  @override
+  String get botWiseBlunder => 'Göçmezden öň oýlanyň.|Her göçümiň bahasy bar.';
+
+  @override
+  String get botWiseBrilliant => 'Ýatda galjak göçüm.|Ine, hakyky küşt.';
+
+  @override
+  String get botWiseWin => 'Her oýun bir zat öwredýär.|Muňa seredip öwreniň.';
+
+  @override
+  String get botWiseLoss =>
+      'Siz maňa bir zat öwretdiňiz.|Gowy oýnadyňyz, mynasyp ýeňiş.';
+
+  @override
+  String get botWiseDraw =>
+      'Deňagramlylyk hem netijedir.|Rahat oýun, rahat tamamlanyş.';
+
+  @override
+  String get botChat => 'Botlaryň gepleşigi';
+
+  @override
+  String get botChatSub => 'Botlar oýun barada pikir aýdýar';
+
+  @override
+  String get reviewTitle => 'Oýunyň seljermesi';
+
+  @override
+  String get reviewButton => 'Seljerme';
+
+  @override
+  String reviewAnalyzing(int percent) {
+    return 'Oýun seljerilýär… $percent%';
+  }
+
+  @override
+  String get reviewAccuracy => 'Takyklyk';
+
+  @override
+  String get reviewMoves => 'Göçümler';
+
+  @override
+  String get reviewGraph => 'Kim öňdedi';
+
+  @override
+  String get reviewKeyTitle => 'Öwrenmeli göçümler';
+
+  @override
+  String get reviewNoBig => 'Uly ýalňyşlyk ýok. Gowy oýnadyňyz!';
+
+  @override
+  String reviewBestWas(String san) {
+    return 'Takyk göçüm: $san';
+  }
+
+  @override
+  String reviewMoveNo(int n) {
+    return '$n-nji göçüm';
+  }
+
+  @override
+  String get reviewOpenReplay => 'Gaýtalamany aç';
+
+  @override
+  String get reviewNoEngine =>
+      'Bu enjamda hereketlendiriji ýok, oýny seljerip bolmaýar.';
+
+  @override
+  String get reviewFailed => 'Seljerme tamamlanmady.';
+
+  @override
+  String get reviewTooShort => 'Bu oýun seljermek üçin gaty gysga.';
+
+  @override
+  String get navLearn => 'Sapaklar';
+
+  @override
+  String get learnTitle => 'Sapaklar';
+
+  @override
+  String get learnSub => 'Ilkinji göçümden şahmada çenli';
+
+  @override
+  String lessonCount(int done, int total) {
+    return '$done/$total sapak';
+  }
+
+  @override
+  String lessonTasks(int n) {
+    return '$n tabşyryk';
+  }
+
+  @override
+  String get lessonStart => 'Sapagy başla';
+
+  @override
+  String get learnNext => 'Indiki';
+
+  @override
+  String taskProgress(int n, int total) {
+    return 'Tabşyryk $n/$total';
+  }
+
+  @override
+  String get learnWrong => 'Bolmady. Ýene synanyşyň.';
+
+  @override
+  String get learnNotBest => 'Bu iň gymmat çöpi almak däl.';
+
+  @override
+  String get learnStalemate => 'Bu pat, deňe deň. Şahmady tapyň.';
+
+  @override
+  String get learnWellDone => 'Ajaýyp!';
+
+  @override
+  String get lessonDone => 'Sapak tamamlandy!';
+
+  @override
+  String get lessonNext => 'Indiki sapak';
+
+  @override
+  String get lessonAll => 'Ähli sapaklar';
+
+  @override
+  String get lessonPlayGame => 'Oýun oýnaň';
+
+  @override
+  String get learnHint => 'Kömek';
+
+  @override
+  String get learnAllDone => 'Ähli sapaklary gutardyňyz. Oýnamaga wagt!';
+
+  @override
+  String get pieceKing => 'Şa';
+
+  @override
+  String get piecePawn => 'Peşka';
+
+  @override
+  String taskCollectOne(String piece) {
+    return '$piece bilen ýyldyza baryň';
+  }
+
+  @override
+  String taskCollectMany(String piece) {
+    return '$piece bilen ähli ýyldyzlary ýygnaň';
+  }
+
+  @override
+  String get taskCapture => 'Bellenen ähli çöpleri alyň';
+
+  @override
+  String get taskBestCapture => 'Iň gymmat çöpi alyň';
+
+  @override
+  String get taskCheck => 'Şah beriň';
+
+  @override
+  String get taskMate => 'Bir göçümde şahmat ediň';
+
+  @override
+  String get taskEscape => 'Şahyňyza şah berildi. Ondan çykyň.';
+
+  @override
+  String get taskEscapeCapture => 'Hüjüm edýän çöpi alyp, şahdan çykyň';
+
+  @override
+  String get taskCastleKing =>
+      'Kiçi rokirowka ediň: şany gala tarap iki öýjük süýşüriň';
+
+  @override
+  String get taskCastleQueen =>
+      'Uly rokirowka ediň: şany gala tarap iki öýjük süýşüriň';
+
+  @override
+  String get taskEnPassant => 'Peşkany geçip barýarka alyň (en passant)';
+
+  @override
+  String get taskPromote => 'Peşkany soňky hatara ýetirip, ýokarlandyryň';
+
+  @override
+  String get lessonPawnTitle => 'Peşka';
+
+  @override
+  String get lessonPawnIntro =>
+      'Peşkalar piýada esgerlerdir. Peşka bir öýjük öňe, başlangyç ýerinden bolsa iki öýjük öňe göçýär. Ol diňe çapraz bir öýjügi alýar, göni öňdäkini däl.';
+
+  @override
+  String get lessonRookTitle => 'Gala';
+
+  @override
+  String get lessonRookIntro =>
+      'Gala göni çyzykda, hatar ýa-da sütün boýunça islendik öýjük sanyna göçýär. Ol başga çöpleriň üstünden böküp bilmeýär.';
+
+  @override
+  String get lessonBishopTitle => 'Pil';
+
+  @override
+  String get lessonBishopIntro =>
+      'Pil çapraz islendik öýjük sanyna göçýär. Ol hemişe şol bir reňkdäki öýjüklerde galýar.';
+
+  @override
+  String get lessonQueenTitle => 'Wezir';
+
+  @override
+  String get lessonQueenIntro =>
+      'Wezir iň güýçli çöp. Ol gala bilen pilin göçümlerini birleşdirýär: göni ýa-da çapraz islendik öýjük sanyna.';
+
+  @override
+  String get lessonKnightTitle => 'At';
+
+  @override
+  String get lessonKnightIntro =>
+      'At «G» şekilinde göçýär: bir tarapa iki öýjük, ýanyna bir öýjük. Ol başga çöpleriň üstünden böküp bilýän ýeke-täk çöpdür.';
+
+  @override
+  String get lessonKingTitle => 'Şa';
+
+  @override
+  String get lessonKingIntro =>
+      'Şa islendik tarapa bir öýjük göçýär. Ony goraň: şa ýitse, oýun ýitýär. Ol garşydaşyň şasynyň ýanyna ýa-da hüjüm astyndaky öýjüge baryp bilmeýär.';
+
+  @override
+  String get lessonValuesTitle => 'Daşlary almak';
+
+  @override
+  String get lessonValuesIntro =>
+      'Çöpleriň bahasy bar: peşka 1, at 3, pil 3, gala 5, wezir 9. Has gymmat çöpi almak artykmaçlyk berýär. Hemişe iň gymmat çöpi almagy gözläň.';
+
+  @override
+  String get lessonCheckTitle => 'Şah';
+
+  @override
+  String get lessonCheckIntro =>
+      'Şa hüjüm astynda bolsa, oňa şah diýilýär. Derrew şahdan çykmaly: şany süýşüriň, hüjümi ýapyň ýa-da hüjüm edýän çöpi alyň.';
+
+  @override
+  String get lessonSpecialTitle => 'Aýratyn göçümler';
+
+  @override
+  String get lessonSpecialIntro =>
+      'Rokirowka şany gala tarap iki öýjük süýşürýär, gala bolsa onuň üstünden geçýär. En passant peşka iki öýjük bilen geçen garşydaş peşkany almaga mümkinçilik berýär. Soňky hatara ýeten peşka ýokarlanýar, adatça wezir bolýar.';
+
+  @override
+  String get lessonMateTitle => 'Şahmat';
+
+  @override
+  String get lessonMateIntro =>
+      'Şahmat – çykyp bolmaýan şah: oýun gutarýar we siz ýeňýärsiňiz. Garşydaşyň göçümi ýok, ýöne şah ýok bolsa, bu pat – deňe deň. Ýeňip barýarkaňyz, pat etmekden gaça duruň.';
+
+  @override
+  String get lessonFirstMatesTitle => 'Ilkinji şahmatlaryňyz';
+
+  @override
+  String get lessonFirstMatesIntro =>
+      'Oýunlary ýeňdirýän üç nagyş: soňky hatardaky şahmat, iki galanyň basgançagy we wezir bilen şa. Bir göçümde şahmady tapyň.';
 }

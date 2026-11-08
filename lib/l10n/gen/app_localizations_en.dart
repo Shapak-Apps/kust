@@ -130,6 +130,16 @@ class AppL10nEn extends AppL10n {
   String get resignSubtitle => 'The game will end and count as a loss.';
 
   @override
+  String resignLocalTitle(String name) {
+    return '$name: resign?';
+  }
+
+  @override
+  String resignLocalSubtitle(String winner) {
+    return 'The game will end and $winner wins.';
+  }
+
+  @override
   String get resign => 'Resign';
 
   @override
@@ -1108,4 +1118,346 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get youWonOnTime => 'You won on time.';
+
+  @override
+  String get botGreetBahar =>
+      'Salam! I am Bahar. I am learning chess too, let\'s play!';
+
+  @override
+  String get botGreetElizabeth => 'Good day. Shall we have a pleasant game?';
+
+  @override
+  String get botGreetMark => 'Hey! Ready for a game? I am!';
+
+  @override
+  String get botGreetApex => 'Think you can beat me? Let\'s see.';
+
+  @override
+  String get botGreetKarl => 'Take your time. Chess rewards patience.';
+
+  @override
+  String get botGreetEnejan => 'Welcome! Sit down, let\'s play a game.';
+
+  @override
+  String get botGreetMaya => 'Hi! I like clever moves. Show me yours.';
+
+  @override
+  String get botGreetYura => 'Let\'s play. I do not go easy.';
+
+  @override
+  String get botGreetBerdi => 'Welcome. Chess is a long road. Let us walk it.';
+
+  @override
+  String get botCheerfulBlunder =>
+      'Oh! Thank you for that!|Whoa, did you mean to do that?';
+
+  @override
+  String get botCheerfulBrilliant =>
+      'Wow, what a move!|You are really good at this!';
+
+  @override
+  String get botCheerfulWin =>
+      'Yay, a win! Great game!|That was fun, play again?';
+
+  @override
+  String get botCheerfulLoss =>
+      'You got me! Well played!|Wow, you win! Let\'s go again!';
+
+  @override
+  String get botCheerfulDraw =>
+      'A draw! Fair and square.|Nobody lost, so we both won!';
+
+  @override
+  String get botCalmBlunder =>
+      'An interesting choice.|I will gladly take that.';
+
+  @override
+  String get botCalmBrilliant =>
+      'A fine move. Well seen.|Impressive. That was unexpected.';
+
+  @override
+  String get botCalmWin => 'A good game. Thank you.|Better luck next time.';
+
+  @override
+  String get botCalmLoss =>
+      'Well played. You earned it.|Congratulations, a deserved win.';
+
+  @override
+  String get botCalmDraw => 'A fair result.|We were evenly matched.';
+
+  @override
+  String get botCockyBlunder => 'Ha! Too easy.|Was that your plan?';
+
+  @override
+  String get botCockyBrilliant =>
+      'Lucky shot. Don\'t get used to it.|Okay, that was not bad.';
+
+  @override
+  String get botCockyWin => 'Never in doubt.|Better luck next time, champ.';
+
+  @override
+  String get botCockyLoss =>
+      'Fine, this one is yours. Rematch?|Beginner\'s luck. Again!';
+
+  @override
+  String get botCockyDraw =>
+      'A draw? I was only warming up.|Hmm. Next time I win.';
+
+  @override
+  String get botWiseBlunder => 'Think before you move.|Every move has a price.';
+
+  @override
+  String get botWiseBrilliant =>
+      'A move worth remembering.|Now that is real chess.';
+
+  @override
+  String get botWiseWin => 'Every game teaches something.|Learn from this one.';
+
+  @override
+  String get botWiseLoss =>
+      'You taught me something today.|Well played, a worthy victory.';
+
+  @override
+  String get botWiseDraw =>
+      'Balance is also a result.|A calm game, a calm ending.';
+
+  @override
+  String get botChat => 'Bot chat';
+
+  @override
+  String get botChatSub => 'Bots comment on the game';
+
+  @override
+  String get reviewTitle => 'Game review';
+
+  @override
+  String get reviewButton => 'Review';
+
+  @override
+  String reviewAnalyzing(int percent) {
+    return 'Analyzing the game… $percent%';
+  }
+
+  @override
+  String get reviewAccuracy => 'Accuracy';
+
+  @override
+  String get reviewMoves => 'Moves';
+
+  @override
+  String get reviewGraph => 'Who was winning';
+
+  @override
+  String get reviewKeyTitle => 'Moves to learn from';
+
+  @override
+  String get reviewNoBig => 'No big mistakes. Well played!';
+
+  @override
+  String reviewBestWas(String san) {
+    return 'Best was $san';
+  }
+
+  @override
+  String reviewMoveNo(int n) {
+    return 'Move $n';
+  }
+
+  @override
+  String get reviewOpenReplay => 'Open replay';
+
+  @override
+  String get reviewNoEngine =>
+      'The engine is not available on this device, so the game cannot be analyzed.';
+
+  @override
+  String get reviewFailed => 'The analysis did not finish.';
+
+  @override
+  String get reviewTooShort => 'This game is too short to review.';
+
+  @override
+  String get navLearn => 'Learn';
+
+  @override
+  String get learnTitle => 'Learn';
+
+  @override
+  String get learnSub => 'From your first move to checkmate';
+
+  @override
+  String lessonCount(int done, int total) {
+    return '$done of $total lessons';
+  }
+
+  @override
+  String lessonTasks(int n) {
+    return '$n tasks';
+  }
+
+  @override
+  String get lessonStart => 'Start lesson';
+
+  @override
+  String get learnNext => 'Up next';
+
+  @override
+  String taskProgress(int n, int total) {
+    return 'Task $n of $total';
+  }
+
+  @override
+  String get learnWrong => 'Not quite. Try again.';
+
+  @override
+  String get learnNotBest => 'That is not the most valuable capture.';
+
+  @override
+  String get learnStalemate => 'That is stalemate, a draw. Find the checkmate.';
+
+  @override
+  String get learnWellDone => 'Well done!';
+
+  @override
+  String get lessonDone => 'Lesson complete!';
+
+  @override
+  String get lessonNext => 'Next lesson';
+
+  @override
+  String get lessonAll => 'All lessons';
+
+  @override
+  String get lessonPlayGame => 'Play a game';
+
+  @override
+  String get learnHint => 'Hint';
+
+  @override
+  String get learnAllDone => 'You finished every lesson. Time to play!';
+
+  @override
+  String get pieceKing => 'king';
+
+  @override
+  String get piecePawn => 'pawn';
+
+  @override
+  String taskCollectOne(String piece) {
+    return 'Move the $piece to the star';
+  }
+
+  @override
+  String taskCollectMany(String piece) {
+    return 'Collect every star with the $piece';
+  }
+
+  @override
+  String get taskCapture => 'Capture all the marked pieces';
+
+  @override
+  String get taskBestCapture => 'Capture the most valuable piece';
+
+  @override
+  String get taskCheck => 'Give check';
+
+  @override
+  String get taskMate => 'Checkmate in one move';
+
+  @override
+  String get taskEscape => 'Your king is in check. Get out of check.';
+
+  @override
+  String get taskEscapeCapture => 'Get out of check by capturing the attacker';
+
+  @override
+  String get taskCastleKing =>
+      'Castle kingside: move the king two squares towards the rook';
+
+  @override
+  String get taskCastleQueen =>
+      'Castle queenside: move the king two squares towards the rook';
+
+  @override
+  String get taskEnPassant => 'Capture the pawn en passant';
+
+  @override
+  String get taskPromote => 'Move the pawn to the last row to promote it';
+
+  @override
+  String get lessonPawnTitle => 'The pawn';
+
+  @override
+  String get lessonPawnIntro =>
+      'Pawns are the foot soldiers. A pawn moves one square forward, or two from its starting square. It captures one square diagonally forward, never straight ahead.';
+
+  @override
+  String get lessonRookTitle => 'The rook';
+
+  @override
+  String get lessonRookIntro =>
+      'The rook moves any number of squares in a straight line, along a row or a column. It cannot jump over other pieces.';
+
+  @override
+  String get lessonBishopTitle => 'The bishop';
+
+  @override
+  String get lessonBishopIntro =>
+      'The bishop moves any number of squares diagonally. It always stays on the same colour of square.';
+
+  @override
+  String get lessonQueenTitle => 'The queen';
+
+  @override
+  String get lessonQueenIntro =>
+      'The queen is the strongest piece. She moves like a rook and a bishop together: any number of squares in a straight line or diagonally.';
+
+  @override
+  String get lessonKnightTitle => 'The knight';
+
+  @override
+  String get lessonKnightIntro =>
+      'The knight moves in an L: two squares one way and one square to the side. It is the only piece that jumps over others.';
+
+  @override
+  String get lessonKingTitle => 'The king';
+
+  @override
+  String get lessonKingIntro =>
+      'The king moves one square in any direction. Protect him: if he is lost, the game is lost. He can never step next to the enemy king or into an attack.';
+
+  @override
+  String get lessonValuesTitle => 'Taking pieces';
+
+  @override
+  String get lessonValuesIntro =>
+      'Pieces are worth points: pawn 1, knight 3, bishop 3, rook 5, queen 9. Capturing a bigger piece wins material. Always look for the most valuable capture.';
+
+  @override
+  String get lessonCheckTitle => 'Check';
+
+  @override
+  String get lessonCheckIntro =>
+      'When a king is attacked, it is in check. You must get out of check at once: move the king, block the attack, or capture the attacker.';
+
+  @override
+  String get lessonSpecialTitle => 'Special moves';
+
+  @override
+  String get lessonSpecialIntro =>
+      'Castling moves your king two squares towards a rook, and the rook jumps over it. En passant lets a pawn capture one that has just moved two squares past it. A pawn that reaches the last row promotes, usually to a queen.';
+
+  @override
+  String get lessonMateTitle => 'Checkmate';
+
+  @override
+  String get lessonMateIntro =>
+      'Checkmate is a check that cannot be escaped: the game ends and you win. If the other side has no legal move but is not in check, it is stalemate, a draw. Be careful not to stalemate when you are winning.';
+
+  @override
+  String get lessonFirstMatesTitle => 'Your first checkmates';
+
+  @override
+  String get lessonFirstMatesIntro =>
+      'Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.';
 }

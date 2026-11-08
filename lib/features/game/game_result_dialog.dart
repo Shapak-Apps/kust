@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -16,12 +17,20 @@ class GameResultContent extends StatelessWidget {
     required this.message,
     required this.onRematch,
     required this.onLobby,
+    this.botQuote,
+    this.onReview,
   });
 
   final String title;
   final String message;
   final VoidCallback onRematch;
   final VoidCallback onLobby;
+
+  /// Opens the review of the game; given with the saved game's id.
+  final void Function(String gameId)? onReview;
+
+  /// What the opponent says about the game, with its portrait.
+  final ({String name, String image, String text})? botQuote;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +46,19 @@ class GameResultContent extends StatelessWidget {
           textAlign: TextAlign.center,
           style: k.body.copyWith(color: k.muted),
         ),
+        if (botQuote != null) ...[
+          const SizedBox(height: 16),
+          BotSays(
+            name: botQuote!.name,
+            image: botQuote!.image,
+            text: botQuote!.text,
+          ),
+        ],
         const SizedBox(height: 20),
         const ResultRatingLine(),
         const ResultAccuracyLine(),
         const SizedBox(height: 4),
+        if (onReview != null) _ReviewButton(onReview: onReview!),
         Row(
           children: [
             Expanded(
@@ -151,6 +169,33 @@ class ResultAccuracyLine extends ConsumerWidget {
           duration: const Duration(milliseconds: 250),
           child: child,
         ),
+      ),
+    );
+  }
+}
+
+/// "Review", once the game is saved and long enough to be worth it.
+class _ReviewButton extends ConsumerWidget {
+  const _ReviewButton({required this.onReview});
+
+  final void Function(String gameId) onReview;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (id: g.savedGameId, plies: g.moves.length),
+      ),
+    );
+    if (data.id == null || data.plies < 5) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: KustButton(
+        label: context.t.reviewButton,
+        icon: Icons.insights_rounded,
+        style: KustButtonStyle.green,
+        height: 48,
+        onTap: () => onReview(data.id!),
       ),
     );
   }

@@ -327,6 +327,18 @@ abstract class AppL10n {
   /// **'The game will end and count as a loss.'**
   String get resignSubtitle;
 
+  /// No description provided for @resignLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: resign?'**
+  String resignLocalTitle(String name);
+
+  /// No description provided for @resignLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The game will end and {winner} wins.'**
+  String resignLocalSubtitle(String winner);
+
   /// No description provided for @resign.
   ///
   /// In en, this message translates to:
@@ -2054,6 +2066,600 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'You won on time.'**
   String get youWonOnTime;
+
+  /// No description provided for @botGreetBahar.
+  ///
+  /// In en, this message translates to:
+  /// **'Salam! I am Bahar. I am learning chess too, let\'s play!'**
+  String get botGreetBahar;
+
+  /// No description provided for @botGreetElizabeth.
+  ///
+  /// In en, this message translates to:
+  /// **'Good day. Shall we have a pleasant game?'**
+  String get botGreetElizabeth;
+
+  /// No description provided for @botGreetMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey! Ready for a game? I am!'**
+  String get botGreetMark;
+
+  /// No description provided for @botGreetApex.
+  ///
+  /// In en, this message translates to:
+  /// **'Think you can beat me? Let\'s see.'**
+  String get botGreetApex;
+
+  /// No description provided for @botGreetKarl.
+  ///
+  /// In en, this message translates to:
+  /// **'Take your time. Chess rewards patience.'**
+  String get botGreetKarl;
+
+  /// No description provided for @botGreetEnejan.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome! Sit down, let\'s play a game.'**
+  String get botGreetEnejan;
+
+  /// No description provided for @botGreetMaya.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I like clever moves. Show me yours.'**
+  String get botGreetMaya;
+
+  /// No description provided for @botGreetYura.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s play. I do not go easy.'**
+  String get botGreetYura;
+
+  /// No description provided for @botGreetBerdi.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome. Chess is a long road. Let us walk it.'**
+  String get botGreetBerdi;
+
+  /// No description provided for @botCheerfulBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Oh! Thank you for that!|Whoa, did you mean to do that?'**
+  String get botCheerfulBlunder;
+
+  /// No description provided for @botCheerfulBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'Wow, what a move!|You are really good at this!'**
+  String get botCheerfulBrilliant;
+
+  /// No description provided for @botCheerfulWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Yay, a win! Great game!|That was fun, play again?'**
+  String get botCheerfulWin;
+
+  /// No description provided for @botCheerfulLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'You got me! Well played!|Wow, you win! Let\'s go again!'**
+  String get botCheerfulLoss;
+
+  /// No description provided for @botCheerfulDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A draw! Fair and square.|Nobody lost, so we both won!'**
+  String get botCheerfulDraw;
+
+  /// No description provided for @botCalmBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'An interesting choice.|I will gladly take that.'**
+  String get botCalmBlunder;
+
+  /// No description provided for @botCalmBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'A fine move. Well seen.|Impressive. That was unexpected.'**
+  String get botCalmBrilliant;
+
+  /// No description provided for @botCalmWin.
+  ///
+  /// In en, this message translates to:
+  /// **'A good game. Thank you.|Better luck next time.'**
+  String get botCalmWin;
+
+  /// No description provided for @botCalmLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Well played. You earned it.|Congratulations, a deserved win.'**
+  String get botCalmLoss;
+
+  /// No description provided for @botCalmDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A fair result.|We were evenly matched.'**
+  String get botCalmDraw;
+
+  /// No description provided for @botCockyBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Ha! Too easy.|Was that your plan?'**
+  String get botCockyBlunder;
+
+  /// No description provided for @botCockyBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'Lucky shot. Don\'t get used to it.|Okay, that was not bad.'**
+  String get botCockyBrilliant;
+
+  /// No description provided for @botCockyWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Never in doubt.|Better luck next time, champ.'**
+  String get botCockyWin;
+
+  /// No description provided for @botCockyLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine, this one is yours. Rematch?|Beginner\'s luck. Again!'**
+  String get botCockyLoss;
+
+  /// No description provided for @botCockyDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A draw? I was only warming up.|Hmm. Next time I win.'**
+  String get botCockyDraw;
+
+  /// No description provided for @botWiseBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Think before you move.|Every move has a price.'**
+  String get botWiseBlunder;
+
+  /// No description provided for @botWiseBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'A move worth remembering.|Now that is real chess.'**
+  String get botWiseBrilliant;
+
+  /// No description provided for @botWiseWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Every game teaches something.|Learn from this one.'**
+  String get botWiseWin;
+
+  /// No description provided for @botWiseLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'You taught me something today.|Well played, a worthy victory.'**
+  String get botWiseLoss;
+
+  /// No description provided for @botWiseDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance is also a result.|A calm game, a calm ending.'**
+  String get botWiseDraw;
+
+  /// No description provided for @botChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot chat'**
+  String get botChat;
+
+  /// No description provided for @botChatSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots comment on the game'**
+  String get botChatSub;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Game review'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewButton;
+
+  /// No description provided for @reviewAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing the game… {percent}%'**
+  String reviewAnalyzing(int percent);
+
+  /// No description provided for @reviewAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get reviewAccuracy;
+
+  /// No description provided for @reviewMoves.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves'**
+  String get reviewMoves;
+
+  /// No description provided for @reviewGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Who was winning'**
+  String get reviewGraph;
+
+  /// No description provided for @reviewKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves to learn from'**
+  String get reviewKeyTitle;
+
+  /// No description provided for @reviewNoBig.
+  ///
+  /// In en, this message translates to:
+  /// **'No big mistakes. Well played!'**
+  String get reviewNoBig;
+
+  /// No description provided for @reviewBestWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Best was {san}'**
+  String reviewBestWas(String san);
+
+  /// No description provided for @reviewMoveNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {n}'**
+  String reviewMoveNo(int n);
+
+  /// No description provided for @reviewOpenReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Open replay'**
+  String get reviewOpenReplay;
+
+  /// No description provided for @reviewNoEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'The engine is not available on this device, so the game cannot be analyzed.'**
+  String get reviewNoEngine;
+
+  /// No description provided for @reviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis did not finish.'**
+  String get reviewFailed;
+
+  /// No description provided for @reviewTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'This game is too short to review.'**
+  String get reviewTooShort;
+
+  /// No description provided for @navLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get navLearn;
+
+  /// No description provided for @learnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learnTitle;
+
+  /// No description provided for @learnSub.
+  ///
+  /// In en, this message translates to:
+  /// **'From your first move to checkmate'**
+  String get learnSub;
+
+  /// No description provided for @lessonCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} lessons'**
+  String lessonCount(int done, int total);
+
+  /// No description provided for @lessonTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} tasks'**
+  String lessonTasks(int n);
+
+  /// No description provided for @lessonStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get lessonStart;
+
+  /// No description provided for @learnNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get learnNext;
+
+  /// No description provided for @taskProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Task {n} of {total}'**
+  String taskProgress(int n, int total);
+
+  /// No description provided for @learnWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Try again.'**
+  String get learnWrong;
+
+  /// No description provided for @learnNotBest.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not the most valuable capture.'**
+  String get learnNotBest;
+
+  /// No description provided for @learnStalemate.
+  ///
+  /// In en, this message translates to:
+  /// **'That is stalemate, a draw. Find the checkmate.'**
+  String get learnStalemate;
+
+  /// No description provided for @learnWellDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Well done!'**
+  String get learnWellDone;
+
+  /// No description provided for @lessonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson complete!'**
+  String get lessonDone;
+
+  /// No description provided for @lessonNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next lesson'**
+  String get lessonNext;
+
+  /// No description provided for @lessonAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All lessons'**
+  String get lessonAll;
+
+  /// No description provided for @lessonPlayGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a game'**
+  String get lessonPlayGame;
+
+  /// No description provided for @learnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get learnHint;
+
+  /// No description provided for @learnAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You finished every lesson. Time to play!'**
+  String get learnAllDone;
+
+  /// No description provided for @pieceKing.
+  ///
+  /// In en, this message translates to:
+  /// **'king'**
+  String get pieceKing;
+
+  /// No description provided for @piecePawn.
+  ///
+  /// In en, this message translates to:
+  /// **'pawn'**
+  String get piecePawn;
+
+  /// No description provided for @taskCollectOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the {piece} to the star'**
+  String taskCollectOne(String piece);
+
+  /// No description provided for @taskCollectMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect every star with the {piece}'**
+  String taskCollectMany(String piece);
+
+  /// No description provided for @taskCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture all the marked pieces'**
+  String get taskCapture;
+
+  /// No description provided for @taskBestCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture the most valuable piece'**
+  String get taskBestCapture;
+
+  /// No description provided for @taskCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Give check'**
+  String get taskCheck;
+
+  /// No description provided for @taskMate.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkmate in one move'**
+  String get taskMate;
+
+  /// No description provided for @taskEscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Your king is in check. Get out of check.'**
+  String get taskEscape;
+
+  /// No description provided for @taskEscapeCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Get out of check by capturing the attacker'**
+  String get taskEscapeCapture;
+
+  /// No description provided for @taskCastleKing.
+  ///
+  /// In en, this message translates to:
+  /// **'Castle kingside: move the king two squares towards the rook'**
+  String get taskCastleKing;
+
+  /// No description provided for @taskCastleQueen.
+  ///
+  /// In en, this message translates to:
+  /// **'Castle queenside: move the king two squares towards the rook'**
+  String get taskCastleQueen;
+
+  /// No description provided for @taskEnPassant.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture the pawn en passant'**
+  String get taskEnPassant;
+
+  /// No description provided for @taskPromote.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the pawn to the last row to promote it'**
+  String get taskPromote;
+
+  /// No description provided for @lessonPawnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The pawn'**
+  String get lessonPawnTitle;
+
+  /// No description provided for @lessonPawnIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pawns are the foot soldiers. A pawn moves one square forward, or two from its starting square. It captures one square diagonally forward, never straight ahead.'**
+  String get lessonPawnIntro;
+
+  /// No description provided for @lessonRookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The rook'**
+  String get lessonRookTitle;
+
+  /// No description provided for @lessonRookIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The rook moves any number of squares in a straight line, along a row or a column. It cannot jump over other pieces.'**
+  String get lessonRookIntro;
+
+  /// No description provided for @lessonBishopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The bishop'**
+  String get lessonBishopTitle;
+
+  /// No description provided for @lessonBishopIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The bishop moves any number of squares diagonally. It always stays on the same colour of square.'**
+  String get lessonBishopIntro;
+
+  /// No description provided for @lessonQueenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The queen'**
+  String get lessonQueenTitle;
+
+  /// No description provided for @lessonQueenIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The queen is the strongest piece. She moves like a rook and a bishop together: any number of squares in a straight line or diagonally.'**
+  String get lessonQueenIntro;
+
+  /// No description provided for @lessonKnightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The knight'**
+  String get lessonKnightTitle;
+
+  /// No description provided for @lessonKnightIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The knight moves in an L: two squares one way and one square to the side. It is the only piece that jumps over others.'**
+  String get lessonKnightIntro;
+
+  /// No description provided for @lessonKingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The king'**
+  String get lessonKingTitle;
+
+  /// No description provided for @lessonKingIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The king moves one square in any direction. Protect him: if he is lost, the game is lost. He can never step next to the enemy king or into an attack.'**
+  String get lessonKingIntro;
+
+  /// No description provided for @lessonValuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking pieces'**
+  String get lessonValuesTitle;
+
+  /// No description provided for @lessonValuesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pieces are worth points: pawn 1, knight 3, bishop 3, rook 5, queen 9. Capturing a bigger piece wins material. Always look for the most valuable capture.'**
+  String get lessonValuesIntro;
+
+  /// No description provided for @lessonCheckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get lessonCheckTitle;
+
+  /// No description provided for @lessonCheckIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'When a king is attacked, it is in check. You must get out of check at once: move the king, block the attack, or capture the attacker.'**
+  String get lessonCheckIntro;
+
+  /// No description provided for @lessonSpecialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Special moves'**
+  String get lessonSpecialTitle;
+
+  /// No description provided for @lessonSpecialIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Castling moves your king two squares towards a rook, and the rook jumps over it. En passant lets a pawn capture one that has just moved two squares past it. A pawn that reaches the last row promotes, usually to a queen.'**
+  String get lessonSpecialIntro;
+
+  /// No description provided for @lessonMateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkmate'**
+  String get lessonMateTitle;
+
+  /// No description provided for @lessonMateIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkmate is a check that cannot be escaped: the game ends and you win. If the other side has no legal move but is not in check, it is stalemate, a draw. Be careful not to stalemate when you are winning.'**
+  String get lessonMateIntro;
+
+  /// No description provided for @lessonFirstMatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first checkmates'**
+  String get lessonFirstMatesTitle;
+
+  /// No description provided for @lessonFirstMatesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.'**
+  String get lessonFirstMatesIntro;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

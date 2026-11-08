@@ -109,4 +109,64 @@ void main() {
       expect(l(elo), greaterThanOrEqualTo(l(elo + 100)));
     }
   });
+  moveDelayTests();
+}
+
+void moveDelayTests() {
+  group('move delay', () {
+    List<CandidateMove> close() => const [
+      CandidateMove('e2e4', 30),
+      CandidateMove('d2d4', 25),
+      CandidateMove('g1f3', 20),
+    ];
+
+    Duration avg(BotPolicy p, List<CandidateMove> c, GamePhase phase) {
+      var total = 0;
+      for (var i = 0; i < 200; i++) {
+        total += p.moveDelay(c, phase: phase).inMilliseconds;
+      }
+      return Duration(milliseconds: total ~/ 200);
+    }
+
+    test('the opening is quicker than the middlegame', () {
+      final p = BotPolicy(elo: 1200, seed: 1);
+      expect(
+        avg(p, close(), GamePhase.opening),
+        lessThan(avg(p, close(), GamePhase.middlegame)),
+      );
+    });
+
+    test('a forced or obvious move comes fast', () {
+      final p = BotPolicy(elo: 1200, seed: 2);
+      final forced = avg(p, const [
+        CandidateMove('e2e4', 0),
+      ], GamePhase.middlegame);
+      final obvious = avg(p, const [
+        CandidateMove('d1h5', 900),
+        CandidateMove('a2a3', 100),
+      ], GamePhase.middlegame);
+      final tense = avg(p, close(), GamePhase.middlegame);
+      expect(forced, lessThan(const Duration(milliseconds: 700)));
+      expect(obvious, lessThan(tense));
+    });
+
+    test('weak bots are more impulsive than strong ones', () {
+      expect(
+        avg(BotPolicy(elo: 400, seed: 3), close(), GamePhase.middlegame),
+        lessThan(
+          avg(BotPolicy(elo: 2000, seed: 3), close(), GamePhase.middlegame),
+        ),
+      );
+    });
+
+    test('a short clock caps the time spent', () {
+      final p = BotPolicy(elo: 2000, seed: 4);
+      for (var i = 0; i < 50; i++) {
+        expect(
+          p.moveDelay(close(), clockLeft: const Duration(seconds: 4)),
+          lessThanOrEqualTo(const Duration(milliseconds: 250)),
+        );
+      }
+    });
+  });
 }

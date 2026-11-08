@@ -169,6 +169,45 @@ class BotPolicy {
     return chosen.uci;
   }
 
+  /// How long the bot sits on its move before playing it, like a person
+  /// would: quick in the opening, longest in the middlegame. A forced move
+  /// or one that is far better than the rest comes fast; a position with
+  /// several close options takes longer. Weaker bots are more impulsive. On
+  /// a clock it never spends more than a twentieth of what is left
+  /// ([clockLeft], null when untimed).
+  Duration moveDelay(
+    List<CandidateMove> candidates, {
+    GamePhase phase = GamePhase.middlegame,
+    Duration? clockLeft,
+  }) {
+    final (low, high) = switch (phase) {
+      GamePhase.opening => (450.0, 1100.0),
+      GamePhase.middlegame => (1000.0, 2800.0),
+      GamePhase.endgame => (600.0, 1700.0),
+    };
+    var ms = low + (high - low) * _random.nextDouble();
+    ms *= 0.8 + 0.35 * ((elo - 400) / 1600).clamp(0.0, 1.0);
+
+    if (candidates.length <= 1) {
+      ms = 300.0 + _random.nextInt(250);
+    } else {
+      final sorted = [for (final c in candidates) c.cp]
+        ..sort((a, b) => b.compareTo(a));
+      final lead = sorted[0] - sorted[1];
+      final close = sorted.where((cp) => sorted[0] - cp <= 60).length;
+      if (lead > 300) {
+        ms *= 0.45;
+      } else if (close >= 3) {
+        ms *= 1.3;
+      }
+    }
+
+    if (clockLeft != null) {
+      ms = min(ms, clockLeft.inMilliseconds / 20);
+    }
+    return Duration(milliseconds: ms.round().clamp(150, 4000));
+  }
+
   /// An inaccuracy (40 to 100 lost) or a mistake (100 up to [maxLoss]),
   /// whichever the candidates offer, or null when none fits.
   CandidateMove? _lapse(List<CandidateMove> candidates, int best) {

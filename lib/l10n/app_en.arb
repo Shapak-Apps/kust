@@ -52,6 +52,22 @@
   "keepPlaying": "Keep playing",
   "resignTitle": "Resign this game?",
   "resignSubtitle": "The game will end and count as a loss.",
+  "resignLocalTitle": "{name}: resign?",
+  "resignLocalSubtitle": "The game will end and {winner} wins.",
+  "@resignLocalTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@resignLocalSubtitle": {
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
   "resign": "Resign",
   "leaveGame": "Leave game",
   "exportGame": "Export game",
@@ -698,5 +714,170 @@
   "language": "Language",
   "languageAuto": "System",
   "youWonGame": "You won the game.",
-  "youWonOnTime": "You won on time."
+  "youWonOnTime": "You won on time.",
+  "botGreetBahar": "Salam! I am Bahar. I am learning chess too, let's play!",
+  "botGreetElizabeth": "Good day. Shall we have a pleasant game?",
+  "botGreetMark": "Hey! Ready for a game? I am!",
+  "botGreetApex": "Think you can beat me? Let's see.",
+  "botGreetKarl": "Take your time. Chess rewards patience.",
+  "botGreetEnejan": "Welcome! Sit down, let's play a game.",
+  "botGreetMaya": "Hi! I like clever moves. Show me yours.",
+  "botGreetYura": "Let's play. I do not go easy.",
+  "botGreetBerdi": "Welcome. Chess is a long road. Let us walk it.",
+  "botCheerfulBlunder": "Oh! Thank you for that!|Whoa, did you mean to do that?",
+  "botCheerfulBrilliant": "Wow, what a move!|You are really good at this!",
+  "botCheerfulWin": "Yay, a win! Great game!|That was fun, play again?",
+  "botCheerfulLoss": "You got me! Well played!|Wow, you win! Let's go again!",
+  "botCheerfulDraw": "A draw! Fair and square.|Nobody lost, so we both won!",
+  "botCalmBlunder": "An interesting choice.|I will gladly take that.",
+  "botCalmBrilliant": "A fine move. Well seen.|Impressive. That was unexpected.",
+  "botCalmWin": "A good game. Thank you.|Better luck next time.",
+  "botCalmLoss": "Well played. You earned it.|Congratulations, a deserved win.",
+  "botCalmDraw": "A fair result.|We were evenly matched.",
+  "botCockyBlunder": "Ha! Too easy.|Was that your plan?",
+  "botCockyBrilliant": "Lucky shot. Don't get used to it.|Okay, that was not bad.",
+  "botCockyWin": "Never in doubt.|Better luck next time, champ.",
+  "botCockyLoss": "Fine, this one is yours. Rematch?|Beginner's luck. Again!",
+  "botCockyDraw": "A draw? I was only warming up.|Hmm. Next time I win.",
+  "botWiseBlunder": "Think before you move.|Every move has a price.",
+  "botWiseBrilliant": "A move worth remembering.|Now that is real chess.",
+  "botWiseWin": "Every game teaches something.|Learn from this one.",
+  "botWiseLoss": "You taught me something today.|Well played, a worthy victory.",
+  "botWiseDraw": "Balance is also a result.|A calm game, a calm ending.",
+  "botChat": "Bot chat",
+  "botChatSub": "Bots comment on the game",
+  "reviewTitle": "Game review",
+  "reviewButton": "Review",
+  "reviewAnalyzing": "Analyzing the game… {percent}%",
+  "@reviewAnalyzing": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewAccuracy": "Accuracy",
+  "reviewMoves": "Moves",
+  "reviewGraph": "Who was winning",
+  "reviewKeyTitle": "Moves to learn from",
+  "reviewNoBig": "No big mistakes. Well played!",
+  "reviewBestWas": "Best was {san}",
+  "@reviewBestWas": {
+    "placeholders": {
+      "san": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewMoveNo": "Move {n}",
+  "@reviewMoveNo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewOpenReplay": "Open replay",
+  "reviewNoEngine": "The engine is not available on this device, so the game cannot be analyzed.",
+  "reviewFailed": "The analysis did not finish.",
+  "reviewTooShort": "This game is too short to review.",
+  "navLearn": "Learn",
+  "learnTitle": "Learn",
+  "learnSub": "From your first move to checkmate",
+  "lessonCount": "{done} of {total} lessons",
+  "@lessonCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonTasks": "{n} tasks",
+  "@lessonTasks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonStart": "Start lesson",
+  "learnNext": "Up next",
+  "taskProgress": "Task {n} of {total}",
+  "@taskProgress": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "learnWrong": "Not quite. Try again.",
+  "learnNotBest": "That is not the most valuable capture.",
+  "learnStalemate": "That is stalemate, a draw. Find the checkmate.",
+  "learnWellDone": "Well done!",
+  "lessonDone": "Lesson complete!",
+  "lessonNext": "Next lesson",
+  "lessonAll": "All lessons",
+  "lessonPlayGame": "Play a game",
+  "learnHint": "Hint",
+  "learnAllDone": "You finished every lesson. Time to play!",
+  "pieceKing": "king",
+  "pieceQueen": "queen",
+  "pieceRook": "rook",
+  "pieceBishop": "bishop",
+  "pieceKnight": "knight",
+  "piecePawn": "pawn",
+  "taskCollectOne": "Move the {piece} to the star",
+  "@taskCollectOne": {
+    "placeholders": {
+      "piece": {
+        "type": "String"
+      }
+    }
+  },
+  "taskCollectMany": "Collect every star with the {piece}",
+  "@taskCollectMany": {
+    "placeholders": {
+      "piece": {
+        "type": "String"
+      }
+    }
+  },
+  "taskCapture": "Capture all the marked pieces",
+  "taskBestCapture": "Capture the most valuable piece",
+  "taskCheck": "Give check",
+  "taskMate": "Checkmate in one move",
+  "taskEscape": "Your king is in check. Get out of check.",
+  "taskEscapeCapture": "Get out of check by capturing the attacker",
+  "taskCastleKing": "Castle kingside: move the king two squares towards the rook",
+  "taskCastleQueen": "Castle queenside: move the king two squares towards the rook",
+  "taskEnPassant": "Capture the pawn en passant",
+  "taskPromote": "Move the pawn to the last row to promote it",
+  "lessonPawnTitle": "The pawn",
+  "lessonPawnIntro": "Pawns are the foot soldiers. A pawn moves one square forward, or two from its starting square. It captures one square diagonally forward, never straight ahead.",
+  "lessonRookTitle": "The rook",
+  "lessonRookIntro": "The rook moves any number of squares in a straight line, along a row or a column. It cannot jump over other pieces.",
+  "lessonBishopTitle": "The bishop",
+  "lessonBishopIntro": "The bishop moves any number of squares diagonally. It always stays on the same colour of square.",
+  "lessonQueenTitle": "The queen",
+  "lessonQueenIntro": "The queen is the strongest piece. She moves like a rook and a bishop together: any number of squares in a straight line or diagonally.",
+  "lessonKnightTitle": "The knight",
+  "lessonKnightIntro": "The knight moves in an L: two squares one way and one square to the side. It is the only piece that jumps over others.",
+  "lessonKingTitle": "The king",
+  "lessonKingIntro": "The king moves one square in any direction. Protect him: if he is lost, the game is lost. He can never step next to the enemy king or into an attack.",
+  "lessonValuesTitle": "Taking pieces",
+  "lessonValuesIntro": "Pieces are worth points: pawn 1, knight 3, bishop 3, rook 5, queen 9. Capturing a bigger piece wins material. Always look for the most valuable capture.",
+  "lessonCheckTitle": "Check",
+  "lessonCheckIntro": "When a king is attacked, it is in check. You must get out of check at once: move the king, block the attack, or capture the attacker.",
+  "lessonSpecialTitle": "Special moves",
+  "lessonSpecialIntro": "Castling moves your king two squares towards a rook, and the rook jumps over it. En passant lets a pawn capture one that has just moved two squares past it. A pawn that reaches the last row promotes, usually to a queen.",
+  "lessonMateTitle": "Checkmate",
+  "lessonMateIntro": "Checkmate is a check that cannot be escaped: the game ends and you win. If the other side has no legal move but is not in check, it is stalemate, a draw. Be careful not to stalemate when you are winning.",
+  "lessonFirstMatesTitle": "Your first checkmates",
+  "lessonFirstMatesIntro": "Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move."
 }
