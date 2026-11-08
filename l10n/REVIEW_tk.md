@@ -305,3 +305,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `languageAuto` | System | Ulgam |
 | `youWonGame` | You won the game. | Siz ýeňdiňiz. |
 | `youWonOnTime` | You won on time. | Siz wagt boýunça ýeňdiňiz. |
+
+## Bot chat
+
+All of these are unreviewed: the nine `botGreet*` greetings, the twenty `bot{Cheerful,Calm,Cocky,Wise}{Blunder,Brilliant,Win,Loss,Draw}` lines (two per key, split by `|`), and `botChat` / `botChatSub`.

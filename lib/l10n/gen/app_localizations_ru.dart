@@ -1122,4 +1122,113 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get youWonOnTime => 'Вы победили по времени.';
+
+  @override
+  String get botGreetBahar =>
+      'Салам! Я Бахар. Я тоже учусь шахматам, давайте играть!';
+
+  @override
+  String get botGreetElizabeth => 'Добрый день. Сыграем приятную партию?';
+
+  @override
+  String get botGreetMark => 'Привет! Готовы к партии? Я готов!';
+
+  @override
+  String get botGreetApex => 'Думаете, сможете меня обыграть? Посмотрим.';
+
+  @override
+  String get botGreetKarl => 'Не торопитесь. Шахматы любят терпение.';
+
+  @override
+  String get botGreetEnejan => 'Добро пожаловать! Присаживайтесь, сыграем.';
+
+  @override
+  String get botGreetMaya => 'Привет! Люблю умные ходы. Покажите свои.';
+
+  @override
+  String get botGreetYura => 'Сыграем. Я не поддаюсь.';
+
+  @override
+  String get botGreetBerdi =>
+      'Добро пожаловать. Шахматы — долгий путь. Пройдём его.';
+
+  @override
+  String get botCheerfulBlunder =>
+      'О, спасибо за подарок!|Ого, это вы нарочно?';
+
+  @override
+  String get botCheerfulBrilliant => 'Вау, какой ход!|Вы здорово играете!';
+
+  @override
+  String get botCheerfulWin =>
+      'Ура, победа! Отличная партия!|Было весело, сыграем ещё?';
+
+  @override
+  String get botCheerfulLoss =>
+      'Вы победили! Отлично сыграно!|Ого, вы выиграли! Давайте ещё!';
+
+  @override
+  String get botCheerfulDraw =>
+      'Ничья! Всё честно.|Никто не проиграл, значит, выиграли оба!';
+
+  @override
+  String get botCalmBlunder => 'Любопытный выбор.|Охотно это возьму.';
+
+  @override
+  String get botCalmBrilliant =>
+      'Хороший ход. Тонко подмечено.|Впечатляет. Это было неожиданно.';
+
+  @override
+  String get botCalmWin => 'Хорошая партия. Спасибо.|В следующий раз повезёт.';
+
+  @override
+  String get botCalmLoss =>
+      'Отлично сыграно. Победа заслуженна.|Поздравляю, победа по праву.';
+
+  @override
+  String get botCalmDraw => 'Справедливый результат.|Мы оказались равны.';
+
+  @override
+  String get botCockyBlunder => 'Ха! Слишком просто.|Это и был ваш план?';
+
+  @override
+  String get botCockyBrilliant => 'Повезло. Не привыкайте.|Ладно, неплохо.';
+
+  @override
+  String get botCockyWin =>
+      'Ни секунды не сомневался.|В следующий раз повезёт, чемпион.';
+
+  @override
+  String get botCockyLoss =>
+      'Ладно, это ваша победа. Реванш?|Новичкам везёт. Ещё раз!';
+
+  @override
+  String get botCockyDraw =>
+      'Ничья? Я только разогревался.|Хм. В следующий раз я выиграю.';
+
+  @override
+  String get botWiseBlunder =>
+      'Думайте, прежде чем ходить.|У каждого хода своя цена.';
+
+  @override
+  String get botWiseBrilliant =>
+      'Ход, достойный запоминания.|Вот это настоящие шахматы.';
+
+  @override
+  String get botWiseWin =>
+      'Каждая партия чему-то учит.|Извлеките урок из этой.';
+
+  @override
+  String get botWiseLoss =>
+      'Сегодня вы меня кое-чему научили.|Хорошо сыграно, достойная победа.';
+
+  @override
+  String get botWiseDraw =>
+      'Равновесие — тоже результат.|Спокойная партия, спокойный финал.';
+
+  @override
+  String get botChat => 'Чат ботов';
+
+  @override
+  String get botChatSub => 'Боты комментируют партию';
 }

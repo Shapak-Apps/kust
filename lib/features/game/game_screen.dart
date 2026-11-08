@@ -11,6 +11,8 @@ import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/play/bot_quote.dart';
+import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/pick_opponent_modal.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_record.dart';
@@ -277,12 +279,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
     );
   }
 
+  /// What the opponent says as the game ends, if bot chat is on.
+  ({String name, String image, String text})? _botEndQuote() {
+    final game = ref.read(chessControllerProvider);
+    final bot = game.bot;
+    final moment = botEndMoment(game);
+    if (bot == null || moment == null || !AppSettings.instance.botChat.value) {
+      return null;
+    }
+    return (
+      name: bot.name,
+      image: bot.imagePath,
+      text: botLine(context.t, bot, moment, game.moves.length),
+    );
+  }
+
   void _showResultDialog(String title, String message) {
     showKustDialog<void>(
       context,
       builder: (dialogContext) => GameResultContent(
         title: title,
         message: message,
+        botQuote: _botEndQuote(),
         onRematch: () {
           Navigator.of(dialogContext).pop();
           final controller = ref.read(chessControllerProvider.notifier);
@@ -520,6 +538,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                           ? null
                                           : widget.bot!.imagePath,
                                       thinkingText: context.t.thinking,
+                                      bot: widget.isLocal ? null : widget.bot,
                                     ),
                                     SizedBox(
                                       width: side,
@@ -787,6 +806,7 @@ class _PlayerBar extends ConsumerWidget {
     this.subtitle,
     this.avatarPath,
     this.thinkingText,
+    this.bot,
   });
 
   final Side side;
@@ -794,6 +814,7 @@ class _PlayerBar extends ConsumerWidget {
   final String? subtitle;
   final String? avatarPath;
   final String? thinkingText;
+  final Bot? bot;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -879,32 +900,34 @@ class _PlayerBar extends ConsumerWidget {
                 const SizedBox(height: 2),
                 // After many captures the row is wider than the room beside the
                 // clock: it shrinks to fit instead of overflowing.
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final piece in captured)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 1),
-                          child: PieceImage(
-                            assetForPiece(piece),
-                            width: 16,
-                            height: 16,
+                _withBotQuote(
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final piece in captured)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 1),
+                            child: PieceImage(
+                              assetForPiece(piece),
+                              width: 16,
+                              height: 16,
+                            ),
                           ),
-                        ),
-                      if (captured.isNotEmpty && advantage > 0)
-                        const SizedBox(width: 5),
-                      if (advantage > 0)
-                        Text(
-                          '+$advantage',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: muted,
+                        if (captured.isNotEmpty && advantage > 0)
+                          const SizedBox(width: 5),
+                        if (advantage > 0)
+                          Text(
+                            '+$advantage',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: muted,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -924,6 +947,12 @@ class _PlayerBar extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Against a bot, its remarks take the place of [captured] for a moment.
+  Widget _withBotQuote(Widget captured) {
+    final b = bot;
+    return b == null ? captured : BotQuoteSwitcher(bot: b, child: captured);
   }
 
   Widget _buildAvatar(ThemeData theme) {

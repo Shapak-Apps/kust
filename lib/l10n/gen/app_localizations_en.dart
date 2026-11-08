@@ -1118,4 +1118,112 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get youWonOnTime => 'You won on time.';
+
+  @override
+  String get botGreetBahar =>
+      'Salam! I am Bahar. I am learning chess too, let\'s play!';
+
+  @override
+  String get botGreetElizabeth => 'Good day. Shall we have a pleasant game?';
+
+  @override
+  String get botGreetMark => 'Hey! Ready for a game? I am!';
+
+  @override
+  String get botGreetApex => 'Think you can beat me? Let\'s see.';
+
+  @override
+  String get botGreetKarl => 'Take your time. Chess rewards patience.';
+
+  @override
+  String get botGreetEnejan => 'Welcome! Sit down, let\'s play a game.';
+
+  @override
+  String get botGreetMaya => 'Hi! I like clever moves. Show me yours.';
+
+  @override
+  String get botGreetYura => 'Let\'s play. I do not go easy.';
+
+  @override
+  String get botGreetBerdi => 'Welcome. Chess is a long road. Let us walk it.';
+
+  @override
+  String get botCheerfulBlunder =>
+      'Oh! Thank you for that!|Whoa, did you mean to do that?';
+
+  @override
+  String get botCheerfulBrilliant =>
+      'Wow, what a move!|You are really good at this!';
+
+  @override
+  String get botCheerfulWin =>
+      'Yay, a win! Great game!|That was fun, play again?';
+
+  @override
+  String get botCheerfulLoss =>
+      'You got me! Well played!|Wow, you win! Let\'s go again!';
+
+  @override
+  String get botCheerfulDraw =>
+      'A draw! Fair and square.|Nobody lost, so we both won!';
+
+  @override
+  String get botCalmBlunder =>
+      'An interesting choice.|I will gladly take that.';
+
+  @override
+  String get botCalmBrilliant =>
+      'A fine move. Well seen.|Impressive. That was unexpected.';
+
+  @override
+  String get botCalmWin => 'A good game. Thank you.|Better luck next time.';
+
+  @override
+  String get botCalmLoss =>
+      'Well played. You earned it.|Congratulations, a deserved win.';
+
+  @override
+  String get botCalmDraw => 'A fair result.|We were evenly matched.';
+
+  @override
+  String get botCockyBlunder => 'Ha! Too easy.|Was that your plan?';
+
+  @override
+  String get botCockyBrilliant =>
+      'Lucky shot. Don\'t get used to it.|Okay, that was not bad.';
+
+  @override
+  String get botCockyWin => 'Never in doubt.|Better luck next time, champ.';
+
+  @override
+  String get botCockyLoss =>
+      'Fine, this one is yours. Rematch?|Beginner\'s luck. Again!';
+
+  @override
+  String get botCockyDraw =>
+      'A draw? I was only warming up.|Hmm. Next time I win.';
+
+  @override
+  String get botWiseBlunder => 'Think before you move.|Every move has a price.';
+
+  @override
+  String get botWiseBrilliant =>
+      'A move worth remembering.|Now that is real chess.';
+
+  @override
+  String get botWiseWin => 'Every game teaches something.|Learn from this one.';
+
+  @override
+  String get botWiseLoss =>
+      'You taught me something today.|Well played, a worthy victory.';
+
+  @override
+  String get botWiseDraw =>
+      'Balance is also a result.|A calm game, a calm ending.';
+
+  @override
+  String get botChat => 'Bot chat';
+
+  @override
+  String get botChatSub => 'Bots comment on the game';
 }

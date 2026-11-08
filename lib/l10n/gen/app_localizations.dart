@@ -2066,6 +2066,192 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'You won on time.'**
   String get youWonOnTime;
+
+  /// No description provided for @botGreetBahar.
+  ///
+  /// In en, this message translates to:
+  /// **'Salam! I am Bahar. I am learning chess too, let\'s play!'**
+  String get botGreetBahar;
+
+  /// No description provided for @botGreetElizabeth.
+  ///
+  /// In en, this message translates to:
+  /// **'Good day. Shall we have a pleasant game?'**
+  String get botGreetElizabeth;
+
+  /// No description provided for @botGreetMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Hey! Ready for a game? I am!'**
+  String get botGreetMark;
+
+  /// No description provided for @botGreetApex.
+  ///
+  /// In en, this message translates to:
+  /// **'Think you can beat me? Let\'s see.'**
+  String get botGreetApex;
+
+  /// No description provided for @botGreetKarl.
+  ///
+  /// In en, this message translates to:
+  /// **'Take your time. Chess rewards patience.'**
+  String get botGreetKarl;
+
+  /// No description provided for @botGreetEnejan.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome! Sit down, let\'s play a game.'**
+  String get botGreetEnejan;
+
+  /// No description provided for @botGreetMaya.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi! I like clever moves. Show me yours.'**
+  String get botGreetMaya;
+
+  /// No description provided for @botGreetYura.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s play. I do not go easy.'**
+  String get botGreetYura;
+
+  /// No description provided for @botGreetBerdi.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome. Chess is a long road. Let us walk it.'**
+  String get botGreetBerdi;
+
+  /// No description provided for @botCheerfulBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Oh! Thank you for that!|Whoa, did you mean to do that?'**
+  String get botCheerfulBlunder;
+
+  /// No description provided for @botCheerfulBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'Wow, what a move!|You are really good at this!'**
+  String get botCheerfulBrilliant;
+
+  /// No description provided for @botCheerfulWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Yay, a win! Great game!|That was fun, play again?'**
+  String get botCheerfulWin;
+
+  /// No description provided for @botCheerfulLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'You got me! Well played!|Wow, you win! Let\'s go again!'**
+  String get botCheerfulLoss;
+
+  /// No description provided for @botCheerfulDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A draw! Fair and square.|Nobody lost, so we both won!'**
+  String get botCheerfulDraw;
+
+  /// No description provided for @botCalmBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'An interesting choice.|I will gladly take that.'**
+  String get botCalmBlunder;
+
+  /// No description provided for @botCalmBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'A fine move. Well seen.|Impressive. That was unexpected.'**
+  String get botCalmBrilliant;
+
+  /// No description provided for @botCalmWin.
+  ///
+  /// In en, this message translates to:
+  /// **'A good game. Thank you.|Better luck next time.'**
+  String get botCalmWin;
+
+  /// No description provided for @botCalmLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Well played. You earned it.|Congratulations, a deserved win.'**
+  String get botCalmLoss;
+
+  /// No description provided for @botCalmDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A fair result.|We were evenly matched.'**
+  String get botCalmDraw;
+
+  /// No description provided for @botCockyBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Ha! Too easy.|Was that your plan?'**
+  String get botCockyBlunder;
+
+  /// No description provided for @botCockyBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'Lucky shot. Don\'t get used to it.|Okay, that was not bad.'**
+  String get botCockyBrilliant;
+
+  /// No description provided for @botCockyWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Never in doubt.|Better luck next time, champ.'**
+  String get botCockyWin;
+
+  /// No description provided for @botCockyLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine, this one is yours. Rematch?|Beginner\'s luck. Again!'**
+  String get botCockyLoss;
+
+  /// No description provided for @botCockyDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'A draw? I was only warming up.|Hmm. Next time I win.'**
+  String get botCockyDraw;
+
+  /// No description provided for @botWiseBlunder.
+  ///
+  /// In en, this message translates to:
+  /// **'Think before you move.|Every move has a price.'**
+  String get botWiseBlunder;
+
+  /// No description provided for @botWiseBrilliant.
+  ///
+  /// In en, this message translates to:
+  /// **'A move worth remembering.|Now that is real chess.'**
+  String get botWiseBrilliant;
+
+  /// No description provided for @botWiseWin.
+  ///
+  /// In en, this message translates to:
+  /// **'Every game teaches something.|Learn from this one.'**
+  String get botWiseWin;
+
+  /// No description provided for @botWiseLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'You taught me something today.|Well played, a worthy victory.'**
+  String get botWiseLoss;
+
+  /// No description provided for @botWiseDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance is also a result.|A calm game, a calm ending.'**
+  String get botWiseDraw;
+
+  /// No description provided for @botChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot chat'**
+  String get botChat;
+
+  /// No description provided for @botChatSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots comment on the game'**
+  String get botChatSub;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

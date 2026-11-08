@@ -1124,4 +1124,112 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get youWonOnTime => 'Siz wagt boýunça ýeňdiňiz.';
+
+  @override
+  String get botGreetBahar =>
+      'Salam! Men Bahar. Men hem küşt öwrenýärin, oýnalyň!';
+
+  @override
+  String get botGreetElizabeth => 'Salam. Ýakymly bir oýun oýnalymy?';
+
+  @override
+  String get botGreetMark => 'Hey! Oýna taýynsyňyzmy? Men taýyn!';
+
+  @override
+  String get botGreetApex => 'Meni ýeňip bilersiňiz öýdýärsiňizmi? Görkeziň.';
+
+  @override
+  String get botGreetKarl => 'Howlukmaň. Küşt sabyrlylyga sylag berýär.';
+
+  @override
+  String get botGreetEnejan => 'Hoş geldiňiz! Oturyň, bir oýun oýnalyň.';
+
+  @override
+  String get botGreetMaya =>
+      'Salam! Men akylly göçümleri halaýaryn. Siziňkini görkeziň.';
+
+  @override
+  String get botGreetYura => 'Oýnalyň. Men aňsat bermeýärin.';
+
+  @override
+  String get botGreetBerdi => 'Hoş geldiňiz. Küşt uzak ýol. Geliň, ýöreliň.';
+
+  @override
+  String get botCheerfulBlunder =>
+      'Aha! Sag boluň!|Waý, muny bilgeşleýin etdiňizmi?';
+
+  @override
+  String get botCheerfulBrilliant =>
+      'Waý, haýran galdyryjy göçüm!|Siz örän gowy oýnaýarsyňyz!';
+
+  @override
+  String get botCheerfulWin =>
+      'Ýeňdim! Gowy oýun boldy!|Örän gyzykly boldy, ýene oýnalymy?';
+
+  @override
+  String get botCheerfulLoss =>
+      'Siz ýeňdiňiz! Gutlaýaryn!|Waý, ýeňdiňiz! Ýene bir oýnalyň!';
+
+  @override
+  String get botCheerfulDraw =>
+      'Deňe deň! Adalatly netije.|Hiç kim utulmady, ikimiz hem gazandyk!';
+
+  @override
+  String get botCalmBlunder => 'Gyzykly saýlaw.|Muny şatlyk bilen alaryn.';
+
+  @override
+  String get botCalmBrilliant =>
+      'Gowy göçüm. Gözüňiz ýitidir.|Täsirli. Muny garaşmadym.';
+
+  @override
+  String get botCalmWin =>
+      'Gowy oýun. Sag boluň.|Indiki gezek bagtyňyz getsin.';
+
+  @override
+  String get botCalmLoss =>
+      'Gowy oýnadyňyz. Mynasyp ýeňiş.|Gutlaýaryn, hakyky ýeňiş.';
+
+  @override
+  String get botCalmDraw => 'Adalatly netije.|Güýçlerimiz deň eken.';
+
+  @override
+  String get botCockyBlunder => 'Ha! Aňsat boldy.|Bu siziň meýilnamaňyzmydy?';
+
+  @override
+  String get botCockyBrilliant =>
+      'Bagt getirdi. Öwrenişmäň.|Ýagşy, bu erbet däl.';
+
+  @override
+  String get botCockyWin => 'Hiç şübhem ýokdy.|Indiki gezek, çempion.';
+
+  @override
+  String get botCockyLoss =>
+      'Bolýar, bu gezek siz. Täzeden?|Täze başlaýanyň bagty. Ýene!';
+
+  @override
+  String get botCockyDraw =>
+      'Deňe deň? Men entek gyzyp ýördüm.|Hm. Indiki gezek men ýeňerin.';
+
+  @override
+  String get botWiseBlunder => 'Göçmezden öň oýlanyň.|Her göçümiň bahasy bar.';
+
+  @override
+  String get botWiseBrilliant => 'Ýatda galjak göçüm.|Ine, hakyky küşt.';
+
+  @override
+  String get botWiseWin => 'Her oýun bir zat öwredýär.|Muňa seredip öwreniň.';
+
+  @override
+  String get botWiseLoss =>
+      'Siz maňa bir zat öwretdiňiz.|Gowy oýnadyňyz, mynasyp ýeňiş.';
+
+  @override
+  String get botWiseDraw =>
+      'Deňagramlylyk hem netijedir.|Rahat oýun, rahat tamamlanyş.';
+
+  @override
+  String get botChat => 'Botlaryň gepleşigi';
+
+  @override
+  String get botChatSub => 'Botlar oýun barada pikir aýdýar';
 }
