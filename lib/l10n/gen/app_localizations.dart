@@ -2252,6 +2252,90 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Bots comment on the game'**
   String get botChatSub;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Game review'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewButton;
+
+  /// No description provided for @reviewAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing the game… {percent}%'**
+  String reviewAnalyzing(int percent);
+
+  /// No description provided for @reviewAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get reviewAccuracy;
+
+  /// No description provided for @reviewMoves.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves'**
+  String get reviewMoves;
+
+  /// No description provided for @reviewGraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Who was winning'**
+  String get reviewGraph;
+
+  /// No description provided for @reviewKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves to learn from'**
+  String get reviewKeyTitle;
+
+  /// No description provided for @reviewNoBig.
+  ///
+  /// In en, this message translates to:
+  /// **'No big mistakes. Well played!'**
+  String get reviewNoBig;
+
+  /// No description provided for @reviewBestWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Best was {san}'**
+  String reviewBestWas(String san);
+
+  /// No description provided for @reviewMoveNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {n}'**
+  String reviewMoveNo(int n);
+
+  /// No description provided for @reviewOpenReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Open replay'**
+  String get reviewOpenReplay;
+
+  /// No description provided for @reviewNoEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'The engine is not available on this device, so the game cannot be analyzed.'**
+  String get reviewNoEngine;
+
+  /// No description provided for @reviewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The analysis did not finish.'**
+  String get reviewFailed;
+
+  /// No description provided for @reviewTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'This game is too short to review.'**
+  String get reviewTooShort;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

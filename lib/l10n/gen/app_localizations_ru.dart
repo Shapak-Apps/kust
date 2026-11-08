@@ -1231,4 +1231,53 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get botChatSub => 'Боты комментируют партию';
+
+  @override
+  String get reviewTitle => 'Разбор партии';
+
+  @override
+  String get reviewButton => 'Разбор';
+
+  @override
+  String reviewAnalyzing(int percent) {
+    return 'Анализ партии… $percent%';
+  }
+
+  @override
+  String get reviewAccuracy => 'Точность';
+
+  @override
+  String get reviewMoves => 'Ходы';
+
+  @override
+  String get reviewGraph => 'Кто был впереди';
+
+  @override
+  String get reviewKeyTitle => 'Ходы, из которых стоит извлечь урок';
+
+  @override
+  String get reviewNoBig => 'Грубых ошибок нет. Отлично сыграно!';
+
+  @override
+  String reviewBestWas(String san) {
+    return 'Лучше было $san';
+  }
+
+  @override
+  String reviewMoveNo(int n) {
+    return 'Ход $n';
+  }
+
+  @override
+  String get reviewOpenReplay => 'Открыть повтор';
+
+  @override
+  String get reviewNoEngine =>
+      'Движок недоступен на этом устройстве, партию нельзя проанализировать.';
+
+  @override
+  String get reviewFailed => 'Анализ не завершён.';
+
+  @override
+  String get reviewTooShort => 'Партия слишком короткая для разбора.';
 }

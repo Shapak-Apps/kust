@@ -73,6 +73,7 @@ class GameState {
     this.resignedSide,
     this.botMoment,
     this.botMomentSeq = 0,
+    this.savedGameId,
     this.timeControl,
     this.whiteTimeLeft = Duration.zero,
     this.blackTimeLeft = Duration.zero,
@@ -134,6 +135,9 @@ class GameState {
   /// grows with every remark so the same one can come twice.
   final BotMoment? botMoment;
   final int botMomentSeq;
+
+  /// The history id of this game once it is saved, for the review.
+  final String? savedGameId;
 
   final TimeControl? timeControl;
   final Duration whiteTimeLeft;
@@ -298,6 +302,7 @@ class GameState {
     Side? resignedSide,
     BotMoment? botMoment,
     int? botMomentSeq,
+    String? savedGameId,
     bool clearLastMove = false,
     bool clearCapture = false,
     TimeControl? timeControl,
@@ -353,6 +358,7 @@ class GameState {
       resignedSide: resignedSide ?? this.resignedSide,
       botMoment: botMoment ?? this.botMoment,
       botMomentSeq: botMomentSeq ?? this.botMomentSeq,
+      savedGameId: savedGameId ?? this.savedGameId,
       timeControl: timeControl ?? this.timeControl,
       whiteTimeLeft: whiteTimeLeft ?? this.whiteTimeLeft,
       blackTimeLeft: blackTimeLeft ?? this.blackTimeLeft,
@@ -1672,6 +1678,8 @@ class ChessController extends Notifier<GameState> {
             : '${tc.baseMinutes}+${tc.incrementSeconds}',
       ),
     );
+
+    if (!_isDisposed) state = state.copyWith(savedGameId: recordId);
 
     if (!isLocal && bot != null) {
       unawaited(

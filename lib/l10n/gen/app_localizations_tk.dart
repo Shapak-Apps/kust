@@ -1232,4 +1232,53 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get botChatSub => 'Botlar oýun barada pikir aýdýar';
+
+  @override
+  String get reviewTitle => 'Oýunyň seljermesi';
+
+  @override
+  String get reviewButton => 'Seljerme';
+
+  @override
+  String reviewAnalyzing(int percent) {
+    return 'Oýun seljerilýär… $percent%';
+  }
+
+  @override
+  String get reviewAccuracy => 'Takyklyk';
+
+  @override
+  String get reviewMoves => 'Göçümler';
+
+  @override
+  String get reviewGraph => 'Kim öňdedi';
+
+  @override
+  String get reviewKeyTitle => 'Öwrenmeli göçümler';
+
+  @override
+  String get reviewNoBig => 'Uly ýalňyşlyk ýok. Gowy oýnadyňyz!';
+
+  @override
+  String reviewBestWas(String san) {
+    return 'Takyk göçüm: $san';
+  }
+
+  @override
+  String reviewMoveNo(int n) {
+    return '$n-nji göçüm';
+  }
+
+  @override
+  String get reviewOpenReplay => 'Gaýtalamany aç';
+
+  @override
+  String get reviewNoEngine =>
+      'Bu enjamda hereketlendiriji ýok, oýny seljerip bolmaýar.';
+
+  @override
+  String get reviewFailed => 'Seljerme tamamlanmady.';
+
+  @override
+  String get reviewTooShort => 'Bu oýun seljermek üçin gaty gysga.';
 }

@@ -745,5 +745,40 @@
   "botWiseLoss": "You taught me something today.|Well played, a worthy victory.",
   "botWiseDraw": "Balance is also a result.|A calm game, a calm ending.",
   "botChat": "Bot chat",
-  "botChatSub": "Bots comment on the game"
+  "botChatSub": "Bots comment on the game",
+  "reviewTitle": "Game review",
+  "reviewButton": "Review",
+  "reviewAnalyzing": "Analyzing the game… {percent}%",
+  "@reviewAnalyzing": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewAccuracy": "Accuracy",
+  "reviewMoves": "Moves",
+  "reviewGraph": "Who was winning",
+  "reviewKeyTitle": "Moves to learn from",
+  "reviewNoBig": "No big mistakes. Well played!",
+  "reviewBestWas": "Best was {san}",
+  "@reviewBestWas": {
+    "placeholders": {
+      "san": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewMoveNo": "Move {n}",
+  "@reviewMoveNo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "reviewOpenReplay": "Open replay",
+  "reviewNoEngine": "The engine is not available on this device, so the game cannot be analyzed.",
+  "reviewFailed": "The analysis did not finish.",
+  "reviewTooShort": "This game is too short to review."
 }

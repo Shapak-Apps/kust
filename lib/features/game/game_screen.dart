@@ -301,6 +301,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
         title: title,
         message: message,
         botQuote: _botEndQuote(),
+        onReview: (id) {
+          Navigator.of(dialogContext).pop();
+          context.push('/review/$id');
+        },
         onRematch: () {
           Navigator.of(dialogContext).pop();
           final controller = ref.read(chessControllerProvider.notifier);

@@ -1,3 +1,4 @@
+import 'package:kust/features/review/review_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,8 +53,15 @@ GoRouter createRouter({required bool onboardingCompleted}) {
 
       GoRoute(
         path: '/history/:id',
+        builder: (context, state) => ReplayScreen(
+          gameId: state.pathParameters['id']!,
+          initialPly: int.tryParse(state.uri.queryParameters['ply'] ?? '') ?? 0,
+        ),
+      ),
+      GoRoute(
+        path: '/review/:id',
         builder: (context, state) =>
-            ReplayScreen(gameId: state.pathParameters['id']!),
+            ReviewScreen(gameId: state.pathParameters['id']!),
       ),
 
       ShellRoute(
