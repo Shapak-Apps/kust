@@ -18,12 +18,16 @@ class GameResultContent extends StatelessWidget {
     required this.onRematch,
     required this.onLobby,
     this.botQuote,
+    this.onReview,
   });
 
   final String title;
   final String message;
   final VoidCallback onRematch;
   final VoidCallback onLobby;
+
+  /// Opens the review of the game; given with the saved game's id.
+  final void Function(String gameId)? onReview;
 
   /// What the opponent says about the game, with its portrait.
   final ({String name, String image, String text})? botQuote;
@@ -54,6 +58,7 @@ class GameResultContent extends StatelessWidget {
         const ResultRatingLine(),
         const ResultAccuracyLine(),
         const SizedBox(height: 4),
+        if (onReview != null) _ReviewButton(onReview: onReview!),
         Row(
           children: [
             Expanded(
@@ -164,6 +169,33 @@ class ResultAccuracyLine extends ConsumerWidget {
           duration: const Duration(milliseconds: 250),
           child: child,
         ),
+      ),
+    );
+  }
+}
+
+/// "Review", once the game is saved and long enough to be worth it.
+class _ReviewButton extends ConsumerWidget {
+  const _ReviewButton({required this.onReview});
+
+  final void Function(String gameId) onReview;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(
+      chessControllerProvider.select(
+        (g) => (id: g.savedGameId, plies: g.moves.length),
+      ),
+    );
+    if (data.id == null || data.plies < 5) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: KustButton(
+        label: context.t.reviewButton,
+        icon: Icons.insights_rounded,
+        style: KustButtonStyle.secondary,
+        height: 48,
+        onTap: () => onReview(data.id!),
       ),
     );
   }

@@ -358,5 +358,19 @@
   "botWiseLoss": "Siz maňa bir zat öwretdiňiz.|Gowy oýnadyňyz, mynasyp ýeňiş.",
   "botWiseDraw": "Deňagramlylyk hem netijedir.|Rahat oýun, rahat tamamlanyş.",
   "botChat": "Botlaryň gepleşigi",
-  "botChatSub": "Botlar oýun barada pikir aýdýar"
+  "botChatSub": "Botlar oýun barada pikir aýdýar",
+  "reviewTitle": "Oýunyň seljermesi",
+  "reviewButton": "Seljerme",
+  "reviewAnalyzing": "Oýun seljerilýär… {percent}%",
+  "reviewAccuracy": "Takyklyk",
+  "reviewMoves": "Göçümler",
+  "reviewGraph": "Kim öňdedi",
+  "reviewKeyTitle": "Öwrenmeli göçümler",
+  "reviewNoBig": "Uly ýalňyşlyk ýok. Gowy oýnadyňyz!",
+  "reviewBestWas": "Takyk göçüm: {san}",
+  "reviewMoveNo": "{n}-nji göçüm",
+  "reviewOpenReplay": "Gaýtalamany aç",
+  "reviewNoEngine": "Bu enjamda hereketlendiriji ýok, oýny seljerip bolmaýar.",
+  "reviewFailed": "Seljerme tamamlanmady.",
+  "reviewTooShort": "Bu oýun seljermek üçin gaty gysga."
 }

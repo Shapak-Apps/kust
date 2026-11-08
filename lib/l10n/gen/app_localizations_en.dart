@@ -1226,4 +1226,53 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get botChatSub => 'Bots comment on the game';
+
+  @override
+  String get reviewTitle => 'Game review';
+
+  @override
+  String get reviewButton => 'Review';
+
+  @override
+  String reviewAnalyzing(int percent) {
+    return 'Analyzing the game… $percent%';
+  }
+
+  @override
+  String get reviewAccuracy => 'Accuracy';
+
+  @override
+  String get reviewMoves => 'Moves';
+
+  @override
+  String get reviewGraph => 'Who was winning';
+
+  @override
+  String get reviewKeyTitle => 'Moves to learn from';
+
+  @override
+  String get reviewNoBig => 'No big mistakes. Well played!';
+
+  @override
+  String reviewBestWas(String san) {
+    return 'Best was $san';
+  }
+
+  @override
+  String reviewMoveNo(int n) {
+    return 'Move $n';
+  }
+
+  @override
+  String get reviewOpenReplay => 'Open replay';
+
+  @override
+  String get reviewNoEngine =>
+      'The engine is not available on this device, so the game cannot be analyzed.';
+
+  @override
+  String get reviewFailed => 'The analysis did not finish.';
+
+  @override
+  String get reviewTooShort => 'This game is too short to review.';
 }

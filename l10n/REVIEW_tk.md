@@ -309,3 +309,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 ## Bot chat
 
 All of these are unreviewed: the nine `botGreet*` greetings, the twenty `bot{Cheerful,Calm,Cocky,Wise}{Blunder,Brilliant,Win,Loss,Draw}` lines (two per key, split by `|`), and `botChat` / `botChatSub`.
+
+## Game review
+
+All `review*` strings (title, button, analysing, accuracy, moves, graph, key moments, no mistakes, best was, move number, open replay, no engine, failed, too short) are unreviewed.

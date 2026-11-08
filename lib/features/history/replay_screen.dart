@@ -42,9 +42,13 @@ class ReplayScreen extends StatefulWidget {
     this.evaluator,
     this.analyzer,
     this.playSound,
+    this.initialPly = 0,
   });
 
   final String gameId;
+
+  /// The position to open on, as a count of moves from the start.
+  final int initialPly;
 
   /// Use this game instead of looking [gameId] up in the store (for tests).
   final GameRecord? record;
@@ -66,7 +70,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
   late final GameRecord? _game =
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
-  int _ply = 0;
+  late int _ply = widget.initialPly.clamp(0, _last);
   ({Square from, Square to})? _slide;
   int _slideKey = 0;
 
@@ -92,6 +96,9 @@ class _ReplayScreenState extends State<ReplayScreen> {
   @override
   void initState() {
     super.initState();
+    if (_ply > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _reviewCurrent());
+    }
     SharedPreferences.getInstance().then((prefs) {
       if (!mounted) return;
       setState(() {
@@ -471,6 +478,12 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   label: context.t.end,
                   onTap: _ply < _last ? () => _go(_last) : null,
                 ),
+                if (_last >= 4)
+                  KustAction(
+                    icon: Icons.insights_rounded,
+                    label: context.t.reviewButton,
+                    onTap: () => context.push('/review/${game.id}'),
+                  ),
               ],
             ),
           ),
