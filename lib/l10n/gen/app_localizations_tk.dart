@@ -130,6 +130,16 @@ class AppL10nTk extends AppL10n {
   String get resignSubtitle => 'Oýun gutarar we ýeňiliş hasaplanar.';
 
   @override
+  String resignLocalTitle(String name) {
+    return '$name boýnuna alýarmy?';
+  }
+
+  @override
+  String resignLocalSubtitle(String winner) {
+    return 'Oýun gutarar. $winner ýeňiji bolar.';
+  }
+
+  @override
   String get resign => 'Boýnuňa al';
 
   @override

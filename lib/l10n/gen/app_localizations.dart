@@ -327,6 +327,18 @@ abstract class AppL10n {
   /// **'The game will end and count as a loss.'**
   String get resignSubtitle;
 
+  /// No description provided for @resignLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: resign?'**
+  String resignLocalTitle(String name);
+
+  /// No description provided for @resignLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The game will end and {winner} wins.'**
+  String resignLocalSubtitle(String winner);
+
   /// No description provided for @resign.
   ///
   /// In en, this message translates to:

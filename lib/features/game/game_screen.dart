@@ -239,14 +239,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _confirmResign() {
+    final game = ref.read(chessControllerProvider);
+    final local = game.mode == GameMode.local;
+    final side = game.position.turn;
     showKustSheet<void>(
       context,
       builder: (sheetContext) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           KustSheetHeader(
-            title: sheetContext.t.resignTitle,
-            subtitle: sheetContext.t.resignSubtitle,
+            title: local
+                ? sheetContext.t.resignLocalTitle(
+                    sideName(sheetContext.t, game, side),
+                  )
+                : sheetContext.t.resignTitle,
+            subtitle: local
+                ? sheetContext.t.resignLocalSubtitle(
+                    sideName(sheetContext.t, game, side.opposite),
+                  )
+                : sheetContext.t.resignSubtitle,
           ),
           KustButton(
             label: sheetContext.t.resign,
