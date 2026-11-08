@@ -280,8 +280,10 @@ void main() {
     c.selectSquare(Square.f3);
 
     engine.release();
-    // Past the bot's 0.4 s minimum, into its glide.
-    await tester.pump(const Duration(milliseconds: 420));
+    // Past the bot's thinking time, into its glide.
+    for (var i = 0; i < 80 && c.state.moves.length < 3; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
     await tester.pump(const Duration(milliseconds: 16));
     expect(c.state.moves.length, 3);
     // The bot's pawn is still on its way; the knight did not restart it.
