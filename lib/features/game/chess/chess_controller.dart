@@ -24,8 +24,6 @@ import 'package:kust/features/play/pick_opponent_modal.dart';
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
-const Duration kBotMinMoveTime = Duration(milliseconds: 400);
-
 const String kEvalBarPrefKey = 'eval_bar_enabled';
 const String kMoveFeedbackPrefKey = 'move_feedback_enabled';
 const String kShowBestPrefKey = 'show_best_enabled';
@@ -1880,6 +1878,14 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
+  /// What the bot has left on its clock, or null in an untimed game.
+  Duration? _botClockLeft() {
+    final left = state.playerSide == Side.white
+        ? state.blackTimeLeft
+        : state.whiteTimeLeft;
+    return left > Duration.zero ? left : null;
+  }
+
   Future<void> _requestBotMove() async {
     final requestId = ++_moveRequestId;
     state = state.copyWith(isBotThinking: true);
@@ -1888,6 +1894,7 @@ class ChessController extends Notifier<GameState> {
     final policy = _policy;
 
     final String uci;
+    Duration delay = Duration.zero;
     try {
       final candidates = await _engine.candidateMoves(
         state.position.fen,
@@ -1901,6 +1908,11 @@ class ChessController extends Notifier<GameState> {
               candidates,
               phase: phaseOf(state.position.fen, state.moves.length),
             );
+      delay = policy.moveDelay(
+        candidates,
+        phase: phaseOf(state.position.fen, state.moves.length),
+        clockLeft: _botClockLeft(),
+      );
     } catch (_) {
       if (!_isDisposed && requestId == _moveRequestId) {
         state = state.copyWith(isBotThinking: false, engineFailed: true);
@@ -1916,7 +1928,7 @@ class ChessController extends Notifier<GameState> {
 
     final move = _parseUciMove(uci, state.position);
 
-    final remaining = kBotMinMoveTime - DateTime.now().difference(startedAt);
+    final remaining = delay - DateTime.now().difference(startedAt);
     if (remaining > Duration.zero) await Future.delayed(remaining);
 
     if (_isDisposed || requestId != _moveRequestId) return;
