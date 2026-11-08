@@ -32,6 +32,9 @@ class AppSettings {
   /// has moved, if it is still legal.
   final ValueNotifier<bool> premoves = ValueNotifier(true);
 
+  /// Bots remark on the game now and then.
+  final ValueNotifier<bool> botChat = ValueNotifier(true);
+
   /// The language picked in settings: `en`, `ru` or `tk`, or null to follow
   /// the phone.
   final ValueNotifier<String?> language = ValueNotifier(null);
@@ -53,6 +56,7 @@ class AppSettings {
     pieceSet.value = PieceSet.fromName(prefs.getString('piece_set'));
     castleOnRook.value = prefs.getBool('castle_on_rook') ?? false;
     premoves.value = prefs.getBool('premoves_enabled') ?? true;
+    botChat.value = prefs.getBool('bot_chat') ?? true;
     _apply();
   }
 
@@ -100,6 +104,11 @@ class AppSettings {
   Future<void> setPremoves(bool value) async {
     premoves.value = value;
     await _prefs?.setBool('premoves_enabled', value);
+  }
+
+  Future<void> setBotChat(bool value) async {
+    botChat.value = value;
+    await _prefs?.setBool('bot_chat', value);
   }
 
   void _apply() {

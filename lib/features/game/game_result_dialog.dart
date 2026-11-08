@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -16,12 +17,16 @@ class GameResultContent extends StatelessWidget {
     required this.message,
     required this.onRematch,
     required this.onLobby,
+    this.botQuote,
   });
 
   final String title;
   final String message;
   final VoidCallback onRematch;
   final VoidCallback onLobby;
+
+  /// What the opponent says about the game, with its portrait.
+  final ({String name, String image, String text})? botQuote;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +42,14 @@ class GameResultContent extends StatelessWidget {
           textAlign: TextAlign.center,
           style: k.body.copyWith(color: k.muted),
         ),
+        if (botQuote != null) ...[
+          const SizedBox(height: 16),
+          BotSays(
+            name: botQuote!.name,
+            image: botQuote!.image,
+            text: botQuote!.text,
+          ),
+        ],
         const SizedBox(height: 20),
         const ResultRatingLine(),
         const ResultAccuracyLine(),

@@ -104,6 +104,16 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setPremoves,
           ),
         ),
+        ValueListenableBuilder<bool>(
+          valueListenable: s.botChat,
+          builder: (_, v, _) => KustToggleRow(
+            icon: Icons.chat_bubble_outline_rounded,
+            title: context.t.botChat,
+            subtitle: context.t.botChatSub,
+            value: v,
+            onChanged: s.setBotChat,
+          ),
+        ),
         const SizedBox(height: 24),
         KustSectionLabel(context.t.feedbackSection),
         ValueListenableBuilder<bool>(

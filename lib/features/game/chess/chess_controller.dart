@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show Random;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,7 @@ import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
+import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/pick_opponent_modal.dart';
 
 const String kStartFen =
@@ -69,6 +71,8 @@ class GameState {
     this.endReason,
     this.flagFell,
     this.resignedSide,
+    this.botMoment,
+    this.botMomentSeq = 0,
     this.timeControl,
     this.whiteTimeLeft = Duration.zero,
     this.blackTimeLeft = Duration.zero,
@@ -125,6 +129,11 @@ class GameState {
 
   /// Who gave up, once the game ended by resigning.
   final Side? resignedSide;
+
+  /// The latest thing the bot has to say about the game, and a counter that
+  /// grows with every remark so the same one can come twice.
+  final BotMoment? botMoment;
+  final int botMomentSeq;
 
   final TimeControl? timeControl;
   final Duration whiteTimeLeft;
@@ -287,6 +296,8 @@ class GameState {
     EndReason? endReason,
     Side? flagFell,
     Side? resignedSide,
+    BotMoment? botMoment,
+    int? botMomentSeq,
     bool clearLastMove = false,
     bool clearCapture = false,
     TimeControl? timeControl,
@@ -340,6 +351,8 @@ class GameState {
       endReason: endReason ?? this.endReason,
       flagFell: flagFell ?? this.flagFell,
       resignedSide: resignedSide ?? this.resignedSide,
+      botMoment: botMoment ?? this.botMoment,
+      botMomentSeq: botMomentSeq ?? this.botMomentSeq,
       timeControl: timeControl ?? this.timeControl,
       whiteTimeLeft: whiteTimeLeft ?? this.whiteTimeLeft,
       blackTimeLeft: blackTimeLeft ?? this.blackTimeLeft,
@@ -938,6 +951,7 @@ class ChessController extends Notifier<GameState> {
       }
       // Celebrated when the game ends, not over the board mid-game.
       if (quality == MoveQuality.brilliant) _brilliantThisGame = true;
+      _botRemarkOn(moveIndex, quality);
     } catch (_) {
     } finally {
       if (epoch == _feedbackEpoch) _feedbackPending.remove(moveIndex);
@@ -945,6 +959,28 @@ class ChessController extends Notifier<GameState> {
         state = state.copyWith(feedbackAnalyzing: false);
       }
     }
+  }
+
+  final Random _chatRandom = Random();
+  int _lastRemarkPly = -100;
+
+  /// Now and then the bot comments on a move of yours that was very good or
+  /// very bad, but never twice within a few moves.
+  void _botRemarkOn(int moveIndex, MoveQuality quality) {
+    if (state.mode != GameMode.bot || state.bot == null) return;
+    if (state.moves[moveIndex].side != state.playerSide) return;
+    final moment = switch (quality) {
+      MoveQuality.brilliant || MoveQuality.great => BotMoment.brilliant,
+      MoveQuality.blunder => BotMoment.blunder,
+      _ => null,
+    };
+    if (moment == null || moveIndex - _lastRemarkPly < 6) return;
+    if (_chatRandom.nextDouble() > 0.7) return;
+    _lastRemarkPly = moveIndex;
+    state = state.copyWith(
+      botMoment: moment,
+      botMomentSeq: state.botMomentSeq + 1,
+    );
   }
 
   String _promotionChar(Role role) {
@@ -990,6 +1026,7 @@ class ChessController extends Notifier<GameState> {
     _accuracyEpoch++;
     _resetFeedbackQueue();
     _brilliantThisGame = false;
+    _lastRemarkPly = -100;
     _policy = BotPolicy(
       elo: bot.elo,
       seed: DateTime.now().microsecondsSinceEpoch,
@@ -1042,6 +1079,7 @@ class ChessController extends Notifier<GameState> {
     _accuracyEpoch++;
     _resetFeedbackQueue();
     _brilliantThisGame = false;
+    _lastRemarkPly = -100;
     _initClocks(timeControl);
 
     final base = timeControl?.base ?? Duration.zero;
