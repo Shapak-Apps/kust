@@ -8,9 +8,10 @@ It is also a case study: one author's ideas and system design, built with AI. Th
 
 ## What it does
 
-- **Bots with a personality.** Nine opponents from 400 to 2000 Elo. They run on Stockfish, weakened like a person would be: clean openings, shaky middlegames, calm endgames, and no blunders from 1000 up.
+- **Bots with a personality.** Nine opponents from 400 to 2000 Elo. They run on Stockfish, weakened like a person would be: clean openings, shaky middlegames, calm endgames, and no blunders from 1000 up. They think for a human amount of time and talk back.
 - **Pass and play.** One phone, two people, optional clocks, pause and abort. No engine, no excuses.
-- **Move feedback.** Practice mode rates every move from brilliant to blunder, shows accuracy, hints, undo, and a live arrow to the best move.
+- **Move feedback and review.** Practice mode rates every move from brilliant to blunder, shows hints, undo and a live arrow to the best move. After a game, a review shows accuracy for both sides, who was winning when, and the moves worth learning from.
+- **Lessons.** Eleven short lessons from the first pawn move to simple checkmates, played on the board. A new player lands on the first one after setup.
 - **Puzzles woven into a carpet.** Five levels of twenty, one traditional Turkmen göl per level, plus a daily puzzle with a streak and a coach.
 - **History and replay.** Every game is saved. Step through it with evaluation and best-move arrows, run an analysis, export it as PNG, FEN or PGN.
 - **The small things.** Drag and drop, premoves, castling on the rook, four piece sets, sounds and haptics, achievements, a rating that moves.

@@ -278,16 +278,16 @@ class AppL10nTk extends AppL10n {
   String get cancelPromotion => 'Öwrülişigi ýatyr';
 
   @override
-  String get pieceQueen => 'wezir';
+  String get pieceQueen => 'Wezir';
 
   @override
-  String get pieceRook => 'gala';
+  String get pieceRook => 'Gala';
 
   @override
-  String get pieceBishop => 'pil';
+  String get pieceBishop => 'Pil';
 
   @override
-  String get pieceKnight => 'at';
+  String get pieceKnight => 'At';
 
   @override
   String get noMovesYet => 'Heniz göçüm ýok';
@@ -1281,4 +1281,189 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get reviewTooShort => 'Bu oýun seljermek üçin gaty gysga.';
+
+  @override
+  String get navLearn => 'Sapaklar';
+
+  @override
+  String get learnTitle => 'Sapaklar';
+
+  @override
+  String get learnSub => 'Ilkinji göçümden şahmada çenli';
+
+  @override
+  String lessonCount(int done, int total) {
+    return '$done/$total sapak';
+  }
+
+  @override
+  String lessonTasks(int n) {
+    return '$n tabşyryk';
+  }
+
+  @override
+  String get lessonStart => 'Sapagy başla';
+
+  @override
+  String get learnNext => 'Indiki';
+
+  @override
+  String taskProgress(int n, int total) {
+    return 'Tabşyryk $n/$total';
+  }
+
+  @override
+  String get learnWrong => 'Bolmady. Ýene synanyşyň.';
+
+  @override
+  String get learnNotBest => 'Bu iň gymmat daşy almak däl.';
+
+  @override
+  String get learnStalemate => 'Bu pat, deňe deň. Şahmady tapyň.';
+
+  @override
+  String get learnWellDone => 'Ajaýyp!';
+
+  @override
+  String get lessonDone => 'Sapak tamamlandy!';
+
+  @override
+  String get lessonNext => 'Indiki sapak';
+
+  @override
+  String get lessonAll => 'Ähli sapaklar';
+
+  @override
+  String get lessonPlayGame => 'Oýun oýnaň';
+
+  @override
+  String get learnHint => 'Kömek';
+
+  @override
+  String get learnAllDone => 'Ähli sapaklary gutardyňyz. Oýnamaga wagt!';
+
+  @override
+  String get pieceKing => 'Şa';
+
+  @override
+  String get piecePawn => 'Peşka';
+
+  @override
+  String taskCollectOne(String piece) {
+    return '$piece bilen ýyldyza baryň';
+  }
+
+  @override
+  String taskCollectMany(String piece) {
+    return '$piece bilen ähli ýyldyzlary ýygnaň';
+  }
+
+  @override
+  String get taskCapture => 'Bellenen ähli daşlary alyň';
+
+  @override
+  String get taskBestCapture => 'Iň gymmat daşy alyň';
+
+  @override
+  String get taskCheck => 'Şah beriň';
+
+  @override
+  String get taskMate => 'Bir göçümde şahmat ediň';
+
+  @override
+  String get taskEscape => 'Şahyňyza şah berildi. Ondan çykyň.';
+
+  @override
+  String get taskEscapeCapture => 'Hüjüm edýän daşy alyp, şahdan çykyň';
+
+  @override
+  String get taskCastleKing =>
+      'Kiçi rokirowka ediň: şany gala tarap iki öýjük süýşüriň';
+
+  @override
+  String get taskCastleQueen =>
+      'Uly rokirowka ediň: şany gala tarap iki öýjük süýşüriň';
+
+  @override
+  String get taskEnPassant => 'Peşkany geçip barýarka alyň (en passant)';
+
+  @override
+  String get taskPromote => 'Peşkany soňky hatara ýetirip, ýokarlandyryň';
+
+  @override
+  String get lessonPawnTitle => 'Peşka';
+
+  @override
+  String get lessonPawnIntro =>
+      'Peşkalar piýada esgerlerdir. Peşka bir öýjük öňe, başlangyç ýerinden bolsa iki öýjük öňe göçýär. Ol diňe çapraz bir öýjügi alýar, göni öňdäkini däl.';
+
+  @override
+  String get lessonRookTitle => 'Gala';
+
+  @override
+  String get lessonRookIntro =>
+      'Gala göni çyzykda, hatar ýa-da sütün boýunça islendik öýjük sanyna göçýär. Ol başga daşlaryň üstünden böküp bilmeýär.';
+
+  @override
+  String get lessonBishopTitle => 'Pil';
+
+  @override
+  String get lessonBishopIntro =>
+      'Pil çapraz islendik öýjük sanyna göçýär. Ol hemişe şol bir reňkdäki öýjüklerde galýar.';
+
+  @override
+  String get lessonQueenTitle => 'Wezir';
+
+  @override
+  String get lessonQueenIntro =>
+      'Wezir iň güýçli daş. Ol gala bilen pilin göçümlerini birleşdirýär: göni ýa-da çapraz islendik öýjük sanyna.';
+
+  @override
+  String get lessonKnightTitle => 'At';
+
+  @override
+  String get lessonKnightIntro =>
+      'At «G» şekilinde göçýär: bir tarapa iki öýjük, ýanyna bir öýjük. Ol başga daşlaryň üstünden böküp bilýän ýeke-täk daşdyr.';
+
+  @override
+  String get lessonKingTitle => 'Şa';
+
+  @override
+  String get lessonKingIntro =>
+      'Şa islendik tarapa bir öýjük göçýär. Ony goraň: şa ýitse, oýun ýitýär. Ol garşydaşyň şasynyň ýanyna ýa-da hüjüm astyndaky öýjüge baryp bilmeýär.';
+
+  @override
+  String get lessonValuesTitle => 'Daşlary almak';
+
+  @override
+  String get lessonValuesIntro =>
+      'Daşlaryň bahasy bar: peşka 1, at 3, pil 3, gala 5, wezir 9. Has gymmat daşy almak artykmaçlyk berýär. Hemişe iň gymmat daşy almagy gözläň.';
+
+  @override
+  String get lessonCheckTitle => 'Şah';
+
+  @override
+  String get lessonCheckIntro =>
+      'Şa hüjüm astynda bolsa, oňa şah diýilýär. Derrew şahdan çykmaly: şany süýşüriň, hüjümi ýapyň ýa-da hüjüm edýän daşy alyň.';
+
+  @override
+  String get lessonSpecialTitle => 'Aýratyn göçümler';
+
+  @override
+  String get lessonSpecialIntro =>
+      'Rokirowka şany gala tarap iki öýjük süýşürýär, gala bolsa onuň üstünden geçýär. En passant peşka iki öýjük bilen geçen garşydaş peşkany almaga mümkinçilik berýär. Soňky hatara ýeten peşka ýokarlanýar, adatça wezir bolýar.';
+
+  @override
+  String get lessonMateTitle => 'Şahmat';
+
+  @override
+  String get lessonMateIntro =>
+      'Şahmat – çykyp bolmaýan şah: oýun gutarýar we siz ýeňýärsiňiz. Garşydaşyň göçümi ýok, ýöne şah ýok bolsa, bu pat – deňe deň. Ýeňip barýarkaňyz, pat etmekden gaça duruň.';
+
+  @override
+  String get lessonFirstMatesTitle => 'Ilkinji şahmatlaryňyz';
+
+  @override
+  String get lessonFirstMatesIntro =>
+      'Oýunlary ýeňdirýän üç nagyş: soňky hatardaky şahmat, iki galanyň basgançagy we wezir bilen şa. Bir göçümde şahmady tapyň.';
 }

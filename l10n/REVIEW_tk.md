@@ -313,3 +313,7 @@ All of these are unreviewed: the nine `botGreet*` greetings, the twenty `bot{Che
 ## Game review
 
 All `review*` strings (title, button, analysing, accuracy, moves, graph, key moments, no mistakes, best was, move number, open replay, no engine, failed, too short) are unreviewed.
+
+## Learn
+
+All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `lesson*` (titles and introductions), `task*`, and the piece names `pieceKing` (Şa), `pieceQueen` (Wezir), `pieceBishop` (Pil), `pieceKnight` (At). Rook (Gala) and pawn (Peşka) come from the glossary.

@@ -278,16 +278,16 @@ class AppL10nRu extends AppL10n {
   String get cancelPromotion => 'Отменить превращение';
 
   @override
-  String get pieceQueen => 'ферзя';
+  String get pieceQueen => 'Ферзь';
 
   @override
-  String get pieceRook => 'ладью';
+  String get pieceRook => 'Ладья';
 
   @override
-  String get pieceBishop => 'слона';
+  String get pieceBishop => 'Слон';
 
   @override
-  String get pieceKnight => 'коня';
+  String get pieceKnight => 'Конь';
 
   @override
   String get noMovesYet => 'Ходов пока нет';
@@ -1280,4 +1280,190 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get reviewTooShort => 'Партия слишком короткая для разбора.';
+
+  @override
+  String get navLearn => 'Уроки';
+
+  @override
+  String get learnTitle => 'Уроки';
+
+  @override
+  String get learnSub => 'От первого хода до мата';
+
+  @override
+  String lessonCount(int done, int total) {
+    return '$done из $total уроков';
+  }
+
+  @override
+  String lessonTasks(int n) {
+    return '$n заданий';
+  }
+
+  @override
+  String get lessonStart => 'Начать урок';
+
+  @override
+  String get learnNext => 'Дальше';
+
+  @override
+  String taskProgress(int n, int total) {
+    return 'Задание $n из $total';
+  }
+
+  @override
+  String get learnWrong => 'Не совсем. Попробуйте ещё.';
+
+  @override
+  String get learnNotBest => 'Это не самое ценное взятие.';
+
+  @override
+  String get learnStalemate => 'Это пат, ничья. Найдите мат.';
+
+  @override
+  String get learnWellDone => 'Отлично!';
+
+  @override
+  String get lessonDone => 'Урок пройден!';
+
+  @override
+  String get lessonNext => 'Следующий урок';
+
+  @override
+  String get lessonAll => 'Все уроки';
+
+  @override
+  String get lessonPlayGame => 'Сыграть партию';
+
+  @override
+  String get learnHint => 'Подсказка';
+
+  @override
+  String get learnAllDone => 'Вы прошли все уроки. Пора играть!';
+
+  @override
+  String get pieceKing => 'Король';
+
+  @override
+  String get piecePawn => 'Пешка';
+
+  @override
+  String taskCollectOne(String piece) {
+    return '$piece: дойдите до звезды';
+  }
+
+  @override
+  String taskCollectMany(String piece) {
+    return '$piece: соберите все звёзды';
+  }
+
+  @override
+  String get taskCapture => 'Возьмите все отмеченные фигуры';
+
+  @override
+  String get taskBestCapture => 'Возьмите самую ценную фигуру';
+
+  @override
+  String get taskCheck => 'Объявите шах';
+
+  @override
+  String get taskMate => 'Мат в один ход';
+
+  @override
+  String get taskEscape => 'Вашему королю шах. Уйдите от шаха.';
+
+  @override
+  String get taskEscapeCapture => 'Уйдите от шаха, взяв атакующую фигуру';
+
+  @override
+  String get taskCastleKing =>
+      'Сделайте короткую рокировку: король на две клетки к ладье';
+
+  @override
+  String get taskCastleQueen =>
+      'Сделайте длинную рокировку: король на две клетки к ладье';
+
+  @override
+  String get taskEnPassant => 'Возьмите пешку на проходе';
+
+  @override
+  String get taskPromote =>
+      'Доведите пешку до последней горизонтали и превратите её';
+
+  @override
+  String get lessonPawnTitle => 'Пешка';
+
+  @override
+  String get lessonPawnIntro =>
+      'Пешки — пехотинцы. Пешка ходит на одну клетку вперёд, а со стартовой клетки может на две. Бьёт она на одну клетку по диагонали вперёд, но не прямо.';
+
+  @override
+  String get lessonRookTitle => 'Ладья';
+
+  @override
+  String get lessonRookIntro =>
+      'Ладья ходит на любое число клеток по прямой: по горизонтали или вертикали. Через другие фигуры она не прыгает.';
+
+  @override
+  String get lessonBishopTitle => 'Слон';
+
+  @override
+  String get lessonBishopIntro =>
+      'Слон ходит на любое число клеток по диагонали. Он всегда остаётся на клетках одного цвета.';
+
+  @override
+  String get lessonQueenTitle => 'Ферзь';
+
+  @override
+  String get lessonQueenIntro =>
+      'Ферзь — самая сильная фигура. Он ходит как ладья и слон вместе: на любое число клеток по прямой или по диагонали.';
+
+  @override
+  String get lessonKnightTitle => 'Конь';
+
+  @override
+  String get lessonKnightIntro =>
+      'Конь ходит буквой «Г»: две клетки в одну сторону и одна в сторону. Это единственная фигура, которая перепрыгивает через другие.';
+
+  @override
+  String get lessonKingTitle => 'Король';
+
+  @override
+  String get lessonKingIntro =>
+      'Король ходит на одну клетку в любую сторону. Берегите его: потеряете короля — проиграете партию. Он не может встать рядом с королём соперника или под удар.';
+
+  @override
+  String get lessonValuesTitle => 'Взятие фигур';
+
+  @override
+  String get lessonValuesIntro =>
+      'Фигуры стоят очков: пешка 1, конь 3, слон 3, ладья 5, ферзь 9. Взять фигуру покрупнее — выиграть материал. Всегда ищите самое ценное взятие.';
+
+  @override
+  String get lessonCheckTitle => 'Шах';
+
+  @override
+  String get lessonCheckIntro =>
+      'Когда королю угрожают, ему шах. Из-под шаха нужно выйти сразу: отвести короля, закрыться или взять атакующую фигуру.';
+
+  @override
+  String get lessonSpecialTitle => 'Особые ходы';
+
+  @override
+  String get lessonSpecialIntro =>
+      'Рокировка двигает короля на две клетки к ладье, а ладья перепрыгивает через него. Взятие на проходе позволяет пешке взять пешку, только что прошедшую две клетки. Пешка на последней горизонтали превращается, обычно в ферзя.';
+
+  @override
+  String get lessonMateTitle => 'Мат';
+
+  @override
+  String get lessonMateIntro =>
+      'Мат — шах, от которого не уйти: партия окончена, вы победили. Если у соперника нет ходов, но шаха нет, это пат, ничья. Когда выигрываете, не поставьте пат.';
+
+  @override
+  String get lessonFirstMatesTitle => 'Первые маты';
+
+  @override
+  String get lessonFirstMatesIntro =>
+      'Три приёма, которые выигрывают партии: мат по последней горизонтали, мат двумя ладьями и мат ферзём с королём. Найдите мат в один ход.';
 }
