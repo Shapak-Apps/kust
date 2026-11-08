@@ -11,7 +11,6 @@ import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/review/game_review.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
@@ -253,12 +252,13 @@ class _ReviewBody extends StatelessWidget {
         : data.worst(yourSide);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       children: [
         Row(
           children: [
             for (final side in order) ...[
-              if (side != order.first) const SizedBox(width: 12),
+              if (side != order.first)
+                Container(width: 1, height: 64, color: k.line),
               Expanded(
                 child: _AccuracyCard(
                   name: names[side]!,
@@ -269,44 +269,34 @@ class _ReviewBody extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 12),
-        KustCard(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(t.reviewGraph, style: k.caption),
-              const SizedBox(height: 10),
-              _WinGraph(data: data, onTapPly: onOpen),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        _CountsCard(data: data, order: order, names: names),
-        const SizedBox(height: 20),
-        Text(t.reviewKeyTitle, style: k.title),
+        Center(child: Text(t.reviewAccuracy, style: k.caption)),
+        const SizedBox(height: 28),
+        Text(t.reviewGraph, style: k.caption),
         const SizedBox(height: 10),
+        _WinGraph(data: data, onTapPly: onOpen),
+        const SizedBox(height: 28),
+        _CountsCard(data: data, order: order, names: names),
+        const SizedBox(height: 28),
+        Text(t.reviewKeyTitle, style: k.title),
+        const SizedBox(height: 4),
         if (learn.isEmpty)
-          KustCard(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
             child: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: k.success),
+                Icon(Icons.check_circle_rounded, color: k.success, size: 28),
                 const SizedBox(width: 12),
                 Expanded(child: Text(t.reviewNoBig, style: k.body)),
               ],
             ),
           )
         else
-          for (final m in learn) ...[
-            _KeyMoment(move: m, onTap: () => onOpen(m.ply)),
-            const SizedBox(height: 8),
+          for (var i = 0; i < learn.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
+            _KeyMoment(move: learn[i], onTap: () => onOpen(learn[i].ply)),
           ],
-        const SizedBox(height: 12),
-        KustButton(
-          label: t.reviewOpenReplay,
-          style: KustButtonStyle.outline,
-          onTap: () => onOpen(),
-        ),
+        const SizedBox(height: 28),
+        KustButton(label: t.reviewOpenReplay, onTap: () => onOpen()),
       ],
     );
   }
@@ -334,30 +324,23 @@ class _AccuracyCard extends StatelessWidget {
         : v >= 55
         ? k.ink
         : k.danger;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      decoration: BoxDecoration(
-        color: highlight ? k.accent.withValues(alpha: 0.1) : k.surface,
-        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-        border: Border.all(color: highlight ? k.accent : k.line),
-      ),
-      child: Column(
-        children: [
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: k.caption,
+    return Column(
+      children: [
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: k.caption.copyWith(
+            color: highlight ? k.accent : k.muted,
+            fontWeight: FontWeight.w800,
           ),
-          const SizedBox(height: 6),
-          Text(
-            v == null ? '–' : v.toStringAsFixed(1),
-            style: k.display.copyWith(color: color),
-          ),
-          const SizedBox(height: 2),
-          Text(context.t.reviewAccuracy, style: k.caption),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          v == null ? '–' : v.toStringAsFixed(1),
+          style: k.display.copyWith(fontSize: 40, height: 1.05, color: color),
+        ),
+      ],
     );
   }
 }
@@ -500,57 +483,51 @@ class _CountsCard extends StatelessWidget {
       for (final q in MoveQuality.values)
         if (order.any((s) => (counts[s]![q] ?? 0) > 0)) q,
     ];
-    return KustCard(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(context.t.reviewMoves, style: k.caption)),
-              for (final s in order)
-                SizedBox(
-                  width: 76,
-                  child: Text(
-                    names[s]!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: k.caption,
-                  ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(context.t.reviewMoves, style: k.caption)),
+            for (final s in order)
+              SizedBox(
+                width: 76,
+                child: Text(
+                  names[s]!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: k.caption,
                 ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          for (final q in rows)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: [
-                  _QualityDot(quality: q, size: 22),
-                  const SizedBox(width: 10),
-                  Expanded(
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final q in rows)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              children: [
+                _QualityDot(quality: q, size: 31),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(q.label, style: k.body.copyWith(color: q.color)),
+                ),
+                for (final s in order)
+                  SizedBox(
+                    width: 76,
                     child: Text(
-                      q.label,
-                      style: k.body.copyWith(color: q.color),
-                    ),
-                  ),
-                  for (final s in order)
-                    SizedBox(
-                      width: 76,
-                      child: Text(
-                        '${counts[s]![q] ?? 0}',
-                        textAlign: TextAlign.center,
-                        style: k.body.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: (counts[s]![q] ?? 0) == 0 ? k.muted : k.ink,
-                        ),
+                      '${counts[s]![q] ?? 0}',
+                      textAlign: TextAlign.center,
+                      style: k.body.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: (counts[s]![q] ?? 0) == 0 ? k.muted : k.ink,
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
@@ -591,17 +568,12 @@ class _KeyMoment extends StatelessWidget {
     final t = context.t;
     return Pressable(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          border: Border.all(color: k.line),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(
           children: [
-            _QualityDot(quality: move.quality, size: 34),
-            const SizedBox(width: 12),
+            _QualityDot(quality: move.quality, size: 48),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

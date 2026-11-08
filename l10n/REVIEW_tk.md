@@ -146,7 +146,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `soundEffects` | Sound effects | Ses effektleri |
 | `haptics` | Haptics | Titreme |
 | `boardThemeSemantics` | {theme} board | {theme} tagta |
-| `pieceSetSemantics` | {set} pieces | {set} daşlar |
+| `pieceSetSemantics` | {set} pieces | {set} çöpler |
 | `boardBrown` | Brown | Goňur |
 | `boardGreen` | Green | Ýaşyl |
 | `boardDarkBlue` | Dark Blue | Goýy gök |
@@ -231,13 +231,13 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `coachMateIn1` | One move ends the game. Can you see it? ⏎ Find the move that mates right now. ⏎ The king has no way out. Close the door! | Bir göçüm oýny gutarýar. Ony görýärsiňizmi? ⏎ Hut şu wagt şahmat edýän göçümi tapyň. ⏎ Şanyň çykar ýoly ýok. Gapyny ýapyň! |
 | `coachMateIn2` | Can you force mate in two moves? ⏎ Start with a check or a strong threat. ⏎ Two moves to mate. Which one comes first? | Iki göçümde şahmat edip bilersiňizmi? ⏎ Şah ýa-da güýçli haýbat bilen başlaň. ⏎ Şahmata iki göçüm. Haýsysy birinji? |
 | `coachMateIn3` | Mate in three. Think forcing moves. ⏎ Checks first, then see where the king goes. | Üç göçümde şahmat. Mejbur edýän göçümler hakda pikir ediň. ⏎ Öň şahlar, soň şanyň nirä gidýändigine seret. |
-| `coachFork` | Find a move that attacks two pieces at once. ⏎ Can you spot a fork? ⏎ One piece, two targets. Where does it land? | Bir wagtyň özünde iki daşa hüjüm edýän göçümi tapyň. ⏎ Çatal görýärsiňizmi? ⏎ Bir daş, iki nyşan. Ol nirä düşýär? |
-| `coachPin` | A piece cannot move. Can you use that? ⏎ Look for a pinned piece and pile on. ⏎ What is stuck in front of its king? | Bir daş gozgalyp bilmeýär. Muny ulanyp bilersiňizmi? ⏎ Baglanan daşy tapyň we basyşy artdyryň. ⏎ Şasynyň öňünde näme gysylyp galdy? |
-| `coachEndgame` | Few pieces, big ideas. Take your time. ⏎ In the endgame your king is a fighter. ⏎ Careful moves win this one. | Az daş, uly pikirler. Howlukmaň. ⏎ Ahyrky oýunda şa — söweşiji. ⏎ Ähtiýatly göçümler muny ýeňýär. |
+| `coachFork` | Find a move that attacks two pieces at once. ⏎ Can you spot a fork? ⏎ One piece, two targets. Where does it land? | Bir wagtyň özünde iki çöpe hüjüm edýän göçümi tapyň. ⏎ Çatal görýärsiňizmi? ⏎ Bir çöp, iki nyşan. Ol nirä düşýär? |
+| `coachPin` | A piece cannot move. Can you use that? ⏎ Look for a pinned piece and pile on. ⏎ What is stuck in front of its king? | Bir çöp gozgalyp bilmeýär. Muny ulanyp bilersiňizmi? ⏎ Baglanan çöpi tapyň we basyşy artdyryň. ⏎ Şasynyň öňünde näme gysylyp galdy? |
+| `coachEndgame` | Few pieces, big ideas. Take your time. ⏎ In the endgame your king is a fighter. ⏎ Careful moves win this one. | Az çöp, uly pikirler. Howlukmaň. ⏎ Ahyrky oýunda şa — söweşiji. ⏎ Ähtiýatly göçümler muny ýeňýär. |
 | `coachGeneric` | Look for checks, captures and threats first. ⏎ What is hanging? Take your time. ⏎ The best move is usually forcing. | Ilki şahlary, alyşlary we haýbatlary gözläň. ⏎ Näme goragsyz? Howlukmaň. ⏎ Iň gowy göçüm adatça mejbur edýär. |
 | `coachWrong` | Close, but not quite. Try another move. ⏎ Not this one. Think about checks and captures. ⏎ Hmm, look again. You can do this! ⏎ That lets them off. What else is there? | Ýakyn, ýöne däl. Başga göçüm synanyşyň. ⏎ Bu däl. Şahlar we alyşlar hakda pikir ediň. ⏎ Hm, ýene seredip görüň. Siz edip bilersiňiz! ⏎ Muňa garşydaş sypýar. Başga näme bar? |
 | `coachCorrect` | Nice work! On to the next one. ⏎ You saw it. Well played! ⏎ Sharp eyes. That was clean. ⏎ Another knot woven. Keep going! | Ajaýyp iş! Indikä geçeliň. ⏎ Siz ony gördüňiz. Gowy oýnadyňyz! ⏎ Ötgür göz. Arassa oýnadyňyz. ⏎ Ýene bir düwün dokaldy. Dowam ediň! |
-| `coachRetry` | Study it, then try it yourself. ⏎ Now you know. Hit Retry! ⏎ Watch how the pieces work together. | Öwreniň, soň özüňiz synanyşyň. ⏎ Indi bilýärsiňiz. «Gaýtala» basyň! ⏎ Daşlaryň bilelikde nähili işleýändigine syn ediň. |
+| `coachRetry` | Study it, then try it yourself. ⏎ Now you know. Hit Retry! ⏎ Watch how the pieces work together. | Öwreniň, soň özüňiz synanyşyň. ⏎ Indi bilýärsiňiz. «Gaýtala» basyň! ⏎ Çöpleriň bilelikde nähili işleýändigine syn ediň. |
 | `coachDaily` | Never skip puzzle day! ⏎ Look for checks, captures and threats first. ⏎ One puzzle a day keeps the blunders away. ⏎ Take your time: the best move is usually forcing. | Mesele gününi hiç haçan geçirmäň! ⏎ Ilki şahlary, alyşlary we haýbatlary gözläň. ⏎ Günde bir mesele erbet göçümleri daşlaşdyrýar. ⏎ Howlukmaň: iň gowy göçüm adatça mejbur edýär. |
 | `achEarnedOf` | {earned} of {total} earned | {earned}/{total} gazanyldy |
 | `achUnlocked` | Achievement unlocked | Baýrak gazanyldy |
