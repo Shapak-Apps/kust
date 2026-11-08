@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/learn/lessons.dart';
@@ -37,15 +38,14 @@ class MountainLayout {
   );
 
   Offset get base => Offset(width * 0.5, height - footRoom + 70);
-  Offset get summit => Offset(width * 0.5, 64);
-  Offset get flag => Offset(width * 0.5, 138);
+  Offset get flag => Offset(width * 0.5, 38);
 
   /// How far above the bottom edge lesson [i] is.
   double fromBottom(int i) => footRoom + i * step;
 }
 
-/// The mountain scene and the trail: sky, ranges, snow, trees and clouds,
-/// then the path, solid and gold where it has been climbed, dashed above.
+/// The trail up the mountain, solid and gold where it has been climbed and
+/// dashed above. The mountain itself is the picture under it.
 class MountainPainter extends CustomPainter {
   const MountainPainter({required this.layout, required this.climbed});
 
@@ -54,204 +54,12 @@ class MountainPainter extends CustomPainter {
   /// How many lessons, from the first, are done.
   final int climbed;
 
-  static const Color sky1 = Color(0xFF111826);
-  static const Color sky2 = Color(0xFF2B2622);
-  static const Color far = Color(0xFF2A3140);
-  static const Color mid = Color(0xFF353E50);
-  static const Color near = Color(0xFF414B5F);
-  static const Color snow = Color(0xFFEDF1F7);
-  static const Color snowShade = Color(0xFFC3CCDA);
-  static const Color pine = Color(0xFF2C5A43);
   static const Color gold = Color(0xFFFFBB00);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = layout.width, h = layout.height;
-
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [sky1, sky2],
-        ).createShader(Offset.zero & size),
-    );
-    _stars(canvas, w, h);
-    _cloud(canvas, Offset(w * 0.18, h * 0.30), 1.0);
-    _cloud(canvas, Offset(w * 0.86, h * 0.47), 0.8);
-    _cloud(canvas, Offset(w * 0.14, h * 0.66), 0.9);
-
-    // Far ranges.
-    _peak(canvas, Offset(w * 0.10, h * 0.34), w * 0.30, h, far);
-    _peak(canvas, Offset(w * 0.92, h * 0.42), w * 0.34, h, far);
-    _peak(canvas, Offset(w * 0.80, h * 0.62), w * 0.40, h, mid);
-    _peak(canvas, Offset(w * 0.06, h * 0.70), w * 0.40, h, mid);
-
-    // The great mountain, with a snow cap.
-    final peak = layout.summit;
-    final body = Path()
-      ..moveTo(-12, h)
-      ..lineTo(-12, h * 0.66)
-      ..lineTo(w * 0.12, h * 0.50)
-      ..lineTo(w * 0.20, h * 0.53)
-      ..lineTo(w * 0.34, h * 0.30)
-      ..lineTo(w * 0.42, h * 0.24)
-      ..lineTo(peak.dx - 8, peak.dy + 24)
-      ..lineTo(peak.dx, peak.dy)
-      ..lineTo(peak.dx + 12, peak.dy + 20)
-      ..lineTo(w * 0.60, h * 0.22)
-      ..lineTo(w * 0.70, h * 0.32)
-      ..lineTo(w * 0.80, h * 0.46)
-      ..lineTo(w * 0.90, h * 0.50)
-      ..lineTo(w + 12, h * 0.60)
-      ..lineTo(w + 12, h)
-      ..close();
-    canvas.drawPath(
-      body,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [near, Color(0xFF2E3544)],
-        ).createShader(Offset.zero & size),
-    );
-    // The shaded side of the mountain.
-    final shade = Path()
-      ..moveTo(peak.dx, peak.dy)
-      ..lineTo(peak.dx + 12, peak.dy + 20)
-      ..lineTo(w * 0.60, h * 0.22)
-      ..lineTo(w * 0.70, h * 0.32)
-      ..lineTo(w * 0.80, h * 0.46)
-      ..lineTo(w * 0.90, h * 0.50)
-      ..lineTo(w + 12, h * 0.60)
-      ..lineTo(w + 12, h)
-      ..lineTo(w * 0.66, h)
-      ..lineTo(w * 0.58, h * 0.52)
-      ..lineTo(w * 0.52, h * 0.30)
-      ..close();
-    canvas.drawPath(shade, Paint()..color = const Color(0x22000000));
-    _cap(canvas, peak);
-
-    _trees(canvas, w, h);
     _trail(canvas);
     _flag(canvas);
-  }
-
-  void _stars(Canvas canvas, double w, double h) {
-    final paint = Paint()..color = const Color(0x55FFFFFF);
-    final random = math.Random(7);
-    for (var i = 0; i < 36; i++) {
-      canvas.drawCircle(
-        Offset(random.nextDouble() * w, random.nextDouble() * h * 0.22),
-        random.nextDouble() * 1.2 + 0.4,
-        paint,
-      );
-    }
-  }
-
-  void _cloud(Canvas canvas, Offset c, double scale) {
-    final paint = Paint()..color = const Color(0x16FFFFFF);
-    for (final (dx, dy, r) in const [
-      (-34.0, 4.0, 18.0),
-      (-12.0, -8.0, 24.0),
-      (14.0, -2.0, 21.0),
-      (36.0, 6.0, 15.0),
-    ]) {
-      canvas.drawCircle(c + Offset(dx, dy) * scale, r * scale, paint);
-    }
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: c + Offset(0, 14 * scale),
-          width: 96 * scale,
-          height: 14 * scale,
-        ),
-        Radius.circular(8 * scale),
-      ),
-      paint,
-    );
-  }
-
-  /// A triangular summit at [tip] reaching down to [bottom].
-  void _peak(
-    Canvas canvas,
-    Offset tip,
-    double halfBase,
-    double bottom,
-    Color c,
-  ) {
-    canvas.drawPath(
-      Path()
-        ..moveTo(tip.dx - halfBase, bottom)
-        ..lineTo(tip.dx - halfBase * 0.22, tip.dy + (bottom - tip.dy) * 0.18)
-        ..lineTo(tip.dx, tip.dy)
-        ..lineTo(tip.dx + halfBase * 0.3, tip.dy + (bottom - tip.dy) * 0.2)
-        ..lineTo(tip.dx + halfBase, bottom)
-        ..close(),
-      Paint()..color = c,
-    );
-  }
-
-  void _cap(Canvas canvas, Offset peak) {
-    final path = Path()
-      ..moveTo(peak.dx, peak.dy)
-      ..lineTo(peak.dx + 12, peak.dy + 20)
-      ..lineTo(peak.dx + 56, peak.dy + 118)
-      ..lineTo(peak.dx + 34, peak.dy + 104)
-      ..lineTo(peak.dx + 22, peak.dy + 128)
-      ..lineTo(peak.dx + 4, peak.dy + 100)
-      ..lineTo(peak.dx - 14, peak.dy + 130)
-      ..lineTo(peak.dx - 30, peak.dy + 100)
-      ..lineTo(peak.dx - 52, peak.dy + 116)
-      ..lineTo(peak.dx - 8, peak.dy + 24)
-      ..close();
-    canvas.drawPath(path, Paint()..color = snow);
-    canvas.drawPath(
-      Path()
-        ..moveTo(peak.dx, peak.dy)
-        ..lineTo(peak.dx + 12, peak.dy + 20)
-        ..lineTo(peak.dx + 56, peak.dy + 118)
-        ..lineTo(peak.dx + 34, peak.dy + 104)
-        ..lineTo(peak.dx + 22, peak.dy + 128)
-        ..lineTo(peak.dx + 4, peak.dy + 100)
-        ..close(),
-      Paint()..color = snowShade,
-    );
-  }
-
-  void _trees(Canvas canvas, double w, double h) {
-    for (final (fx, dy, s) in const [
-      (0.07, 54.0, 1.0),
-      (0.16, 24.0, 0.8),
-      (0.90, 60.0, 1.1),
-      (0.80, 20.0, 0.8),
-      (0.97, 28.0, 0.7),
-      (0.05, 150.0, 0.7),
-      (0.93, 168.0, 0.8),
-    ]) {
-      final base = Offset(w * fx, h - dy);
-      for (var tier = 0; tier < 3; tier++) {
-        final tw = (30 - tier * 7) * s;
-        final top = base.dy - (16 + tier * 14) * s;
-        canvas.drawPath(
-          Path()
-            ..moveTo(base.dx - tw, top + 22 * s)
-            ..lineTo(base.dx, top - 4 * s)
-            ..lineTo(base.dx + tw, top + 22 * s)
-            ..close(),
-          Paint()..color = pine,
-        );
-      }
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: base + Offset(0, 6 * s),
-          width: 5 * s,
-          height: 10 * s,
-        ),
-        Paint()..color = const Color(0xFF4A3A2C),
-      );
-    }
   }
 
   /// The points the trail goes through: the foot, each lesson, the summit.
@@ -312,8 +120,8 @@ class MountainPainter extends CustomPainter {
   }
 
   void _flag(Canvas canvas) {
-    final base = layout.flag + const Offset(0, 30);
-    final top = layout.flag - const Offset(0, 30);
+    final base = layout.flag + const Offset(0, 34);
+    final top = layout.flag - const Offset(0, 28);
     canvas.drawLine(
       base,
       top,
@@ -388,6 +196,12 @@ class _MountainPathState extends State<MountainPath>
       height: layout.height,
       child: Stack(
         children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/images/learn_mountain.svg',
+              fit: BoxFit.fill,
+            ),
+          ),
           Positioned.fill(
             child: RepaintBoundary(
               child: CustomPaint(
