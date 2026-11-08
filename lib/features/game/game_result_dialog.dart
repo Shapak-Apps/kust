@@ -5,7 +5,6 @@ import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
 
@@ -189,35 +188,14 @@ class _ReviewButton extends ConsumerWidget {
       ),
     );
     if (data.id == null || data.plies < 5) return const SizedBox.shrink();
-    final k = context.k;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Pressable(
+      child: KustButton(
+        label: context.t.reviewButton,
+        icon: Icons.insights_rounded,
+        style: KustButtonStyle.green,
+        height: 48,
         onTap: () => onReview(data.id!),
-        haptic: true,
-        child: Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: k.accent.withValues(alpha: 0.16),
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
-            border: Border.all(color: k.accent, width: 1.5),
-          ),
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.insights_rounded, color: k.accent, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                context.t.reviewButton,
-                style: k.body.copyWith(
-                  color: k.accent,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

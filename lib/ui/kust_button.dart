@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
-enum KustButtonStyle { primary, secondary, outline }
+enum KustButtonStyle {
+  primary,
+  secondary,
+  outline,
+
+  /// The felt green of the app's headers, for the quieter main action.
+  green,
+}
 
 class KustButton extends StatelessWidget {
   const KustButton({
@@ -42,6 +49,13 @@ class KustButton extends StatelessWidget {
         bg = Colors.transparent;
         fg = enabled ? k.ink : k.muted;
         border = Border.all(color: k.line, width: 1.5);
+      case KustButtonStyle.green:
+        bg = enabled ? const Color(0xFF145A3F) : k.surfaceAlt;
+        fg = enabled ? const Color(0xFFBFF0D6) : k.muted;
+        border = Border.all(
+          color: enabled ? const Color(0xFF3CB77C) : k.line,
+          width: 1.5,
+        );
     }
 
     final child = Container(
