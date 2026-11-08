@@ -178,7 +178,7 @@ class _LessonScreenState extends State<LessonScreen> {
     return LayoutBuilder(
       builder: (context, box) {
         const chrome = 150.0; // prompt, progress and the hint row
-        final side = math.min(box.maxWidth - 32, box.maxHeight - chrome);
+        final side = math.min(box.maxWidth, box.maxHeight - chrome);
         final landed = _lastMove == null
             ? null
             : TaskRunner.landing(_lastMove!, _beforeLast ?? runner.position);
@@ -406,38 +406,47 @@ class _Intro extends StatelessWidget {
     final k = context.k;
     final t = context.t;
     final piece = lesson.piece;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      children: [
-        Center(
-          child: Container(
-            width: 112,
-            height: 112,
-            decoration: BoxDecoration(
-              color: k.accent.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 112,
+                height: 112,
+                decoration: BoxDecoration(
+                  color: k.accent.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: piece == null
+                    ? Icon(lesson.icon, size: 52, color: k.accent)
+                    : PieceImage(
+                        assetForPiece(Piece(color: Side.white, role: piece)),
+                        width: 76,
+                        height: 76,
+                      ),
+              ),
             ),
-            alignment: Alignment.center,
-            child: piece == null
-                ? Icon(lesson.icon, size: 52, color: k.accent)
-                : PieceImage(
-                    assetForPiece(Piece(color: Side.white, role: piece)),
-                    width: 76,
-                    height: 76,
-                  ),
-          ),
+            const SizedBox(height: 24),
+            Text(
+              lesson.title(t),
+              textAlign: TextAlign.center,
+              style: k.display,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              lesson.intro(t),
+              textAlign: TextAlign.center,
+              style: k.body.copyWith(height: 1.5, color: k.muted),
+            ),
+            const SizedBox(height: 28),
+            KustButton(label: t.lessonStart, onTap: onStart),
+          ],
         ),
-        const SizedBox(height: 24),
-        Text(lesson.title(t), textAlign: TextAlign.center, style: k.display),
-        const SizedBox(height: 12),
-        Text(
-          lesson.intro(t),
-          textAlign: TextAlign.center,
-          style: k.body.copyWith(height: 1.5, color: k.muted),
-        ),
-        const SizedBox(height: 28),
-        KustButton(label: t.lessonStart, onTap: onStart),
-      ],
+      ),
     );
   }
 }

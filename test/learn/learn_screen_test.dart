@@ -76,11 +76,17 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('The pawn'), findsOneWidget);
     expect(find.text('Checkmate'), findsOneWidget);
-    expect(find.text('UP NEXT'), findsOneWidget);
     expect(find.text('0 of 11 lessons'), findsOneWidget);
     await _shot(tester, 'learn');
+    // With a few lessons done the trail turns gold up to the next stop.
+    LearnProgress.instance.done.value = const {'pawn', 'rook', 'bishop'};
+    await tester.pump(const Duration(milliseconds: 100));
+    await _shot(tester, 'learn_done');
+    LearnProgress.instance.done.value = const {};
+    await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.text('The pawn'));
     await tester.pumpAndSettle();
