@@ -80,6 +80,10 @@ void main() {
     expect(find.text('The pawn'), findsOneWidget);
     expect(find.text('Checkmate'), findsOneWidget);
     expect(find.text('0 of 11 lessons'), findsOneWidget);
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
     await _shot(tester, 'learn');
     // With a few lessons done the trail turns gold up to the next stop.
     LearnProgress.instance.done.value = const {'pawn', 'rook', 'bishop'};
