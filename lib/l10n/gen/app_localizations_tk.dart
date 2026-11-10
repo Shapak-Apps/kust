@@ -326,7 +326,7 @@ class AppL10nTk extends AppL10n {
   String get copyFen => 'FEN göçür';
 
   @override
-  String get copyFenSub => 'Bu ýagdaý, islendik şahmat programmasy üçin';
+  String get copyFenSub => 'Islendik küşt programmasy üçin';
 
   @override
   String get copyPgn => 'PGN göçür';
@@ -511,7 +511,7 @@ class AppL10nTk extends AppL10n {
   String get playWithBots => 'Botlar bilen oýnaň';
 
   @override
-  String get playWithBotsSub => 'Botlarymyzyň biri bilen güýç synanyşyň';
+  String get playWithBotsSub => 'Botlarymyz bilen güýç synanyşyň';
 
   @override
   String get playLocally => 'Şu enjamda oýnaň';

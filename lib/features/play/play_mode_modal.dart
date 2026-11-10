@@ -32,7 +32,10 @@ class PlayModeModal extends StatelessWidget {
       children: [
         KustSheetHeader(title: context.t.newGame),
         KustOption(
-          leading: const KustIconTile(Icons.smart_toy_outlined),
+          leading: const KustIconTile(
+            Icons.smart_toy_rounded,
+            color: Color(0xFFFFBB00),
+          ),
           title: context.t.playWithBots,
           subtitle: context.t.playWithBotsSub,
           trailing: chevron(),
@@ -43,7 +46,10 @@ class PlayModeModal extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         KustOption(
-          leading: const KustIconTile(Icons.people_outline_rounded),
+          leading: const KustIconTile(
+            Icons.people_rounded,
+            color: Color(0xFF3CB77C),
+          ),
           title: context.t.playLocally,
           subtitle: context.t.playLocallySub,
           trailing: chevron(),
