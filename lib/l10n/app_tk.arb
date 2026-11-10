@@ -450,5 +450,12 @@
   "lessonBackToMap": "Karta dolan",
   "learnCoachDone": "Boldy! «Dowam et» basyň.",
   "lessonPerfect": "Kemsiz sapak!",
-  "learnGo": "Başla"
+  "learnGo": "Başla",
+  "onbLearn": "Noldan öwreniň",
+  "onbLearnSub": "Ilkinji göçümden şahmada çenli gysga sapaklar",
+  "onbCoachHi": "Salam! Men Bahar. Geliň, Küşti size görä sazlalyň.",
+  "onbCoachLevel": "Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.",
+  "onbCoachReady": "Ajaýyp! Tagtaňyz taýyn.",
+  "onbStartLesson": "Ilkinji sapagy başla",
+  "onbRatingLabel": "BAŞLANGYÇ REÝTING"
 }

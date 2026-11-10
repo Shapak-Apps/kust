@@ -1534,4 +1534,26 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get learnGo => 'Начать';
+
+  @override
+  String get onbLearn => 'Учитесь с нуля';
+
+  @override
+  String get onbLearnSub => 'Короткие уроки от первого хода до мата';
+
+  @override
+  String get onbCoachHi => 'Салам! Я Бахар. Давайте настроим Küşt для вас.';
+
+  @override
+  String get onbCoachLevel =>
+      'Расскажите, как вы играете, и я подберу соперников.';
+
+  @override
+  String get onbCoachReady => 'Отлично! Ваша доска готова.';
+
+  @override
+  String get onbStartLesson => 'Начать первый урок';
+
+  @override
+  String get onbRatingLabel => 'НАЧАЛЬНЫЙ РЕЙТИНГ';
 }

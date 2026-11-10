@@ -1534,4 +1534,26 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get learnGo => 'Başla';
+
+  @override
+  String get onbLearn => 'Noldan öwreniň';
+
+  @override
+  String get onbLearnSub => 'Ilkinji göçümden şahmada çenli gysga sapaklar';
+
+  @override
+  String get onbCoachHi => 'Salam! Men Bahar. Geliň, Küşti size görä sazlalyň.';
+
+  @override
+  String get onbCoachLevel =>
+      'Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.';
+
+  @override
+  String get onbCoachReady => 'Ajaýyp! Tagtaňyz taýyn.';
+
+  @override
+  String get onbStartLesson => 'Ilkinji sapagy başla';
+
+  @override
+  String get onbRatingLabel => 'BAŞLANGYÇ REÝTING';
 }

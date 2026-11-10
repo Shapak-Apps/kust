@@ -1528,4 +1528,26 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get learnGo => 'Start';
+
+  @override
+  String get onbLearn => 'Learn from zero';
+
+  @override
+  String get onbLearnSub => 'Short lessons from the first move to checkmate';
+
+  @override
+  String get onbCoachHi => 'Salam! I\'m Bahar. Let\'s set Küşt up for you.';
+
+  @override
+  String get onbCoachLevel =>
+      'Tell me how you play, and I\'ll pick fair opponents.';
+
+  @override
+  String get onbCoachReady => 'Great! Your board is ready.';
+
+  @override
+  String get onbStartLesson => 'Start the first lesson';
+
+  @override
+  String get onbRatingLabel => 'STARTING RATING';
 }

@@ -9,7 +9,7 @@ import 'package:kust/core/settings.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
-import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/widgets/more_sheet.dart';
 
 Map<String, dynamic> _arb(String lang) =>
@@ -140,12 +140,15 @@ void main() {
       expect(find.text(texts), findsOneWidget);
       expect(tester.takeException(), isNull);
       // Through the steps: the level cards, then the last page.
-      await tester.tap(find.byType(KustButton).last);
+      await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text(lang == 'ru' ? 'Любитель' : 'Orta'));
+      final level = find.text(lang == 'ru' ? 'Любитель' : 'Orta');
+      await tester.ensureVisible(level);
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(KustButton).last);
+      await tester.tap(level);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
