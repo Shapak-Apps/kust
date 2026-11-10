@@ -271,7 +271,7 @@ class _PlayScreenState extends State<PlayScreen> {
           crossAxisCount: 3,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          mainAxisExtent: 132,
+          mainAxisExtent: 158,
         ),
         itemBuilder: (context, i) => RepaintBoundary(
           child: BotCard(bot: bots[i], onTap: () => _startGameWithBot(bots[i])),

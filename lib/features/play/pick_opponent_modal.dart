@@ -48,7 +48,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
         crossAxisCount: 3,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        mainAxisExtent: 132,
+        mainAxisExtent: 158,
       ),
       children: [
         for (final bot in bots)
