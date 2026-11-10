@@ -285,11 +285,14 @@ class _MountainPathState extends State<MountainPath>
 
     final label = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: layout.width * 0.42),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xB8100E0C),
-          borderRadius: BorderRadius.circular(10),
+      child: DefaultTextStyle.merge(
+        // No box behind the name: a soft shadow keeps it readable on the
+        // mountain.
+        style: const TextStyle(
+          shadows: [
+            Shadow(color: Color(0xE6000000), blurRadius: 8),
+            Shadow(color: Color(0x99000000), blurRadius: 2),
+          ],
         ),
         child: Column(
           crossAxisAlignment: onLeft
@@ -314,9 +317,9 @@ class _MountainPathState extends State<MountainPath>
               title,
               textAlign: onLeft ? TextAlign.left : TextAlign.right,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 height: 1.15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
                 color: finished || isNext
                     ? Colors.white
                     : const Color(0xFF9AA2B5),
