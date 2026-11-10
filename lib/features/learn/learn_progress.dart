@@ -36,6 +36,12 @@ class LearnProgress {
   int starsOf(String id) =>
       done.value.contains(id) ? (_stars[id] ?? 1).clamp(1, 3) : 0;
 
+  /// The stars of every finished lesson, by id.
+  Map<String, int> get stars => {
+    for (final l in kLessons)
+      if (done.value.contains(l.id)) l.id: starsOf(l.id),
+  };
+
   /// All the stars earned so far.
   int get totalStars => kLessons.fold(0, (sum, l) => sum + starsOf(l.id));
 
