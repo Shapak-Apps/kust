@@ -41,13 +41,14 @@ class KustOption extends StatelessWidget {
         haptic: true,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.all(14),
+          constraints: const BoxConstraints(minHeight: 76),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? k.accent.withValues(alpha: 0.12) : k.bg,
+            color: selected ? k.accent.withValues(alpha: 0.12) : k.surface,
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
             border: Border.all(
-              color: selected ? k.accent : k.line,
-              width: selected ? 1.5 : 1,
+              color: selected ? k.accent : Colors.transparent,
+              width: 1.5,
             ),
           ),
           child: Row(
@@ -56,11 +57,18 @@ class KustOption extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       title,
-                      style: k.body.copyWith(fontWeight: FontWeight.w700),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
+                    if (subtitle != null) const SizedBox(height: 2),
                     if (subtitle != null)
                       if (subtitleLines case final lines?)
                         Stack(
@@ -82,7 +90,17 @@ class KustOption extends StatelessWidget {
                           ],
                         )
                       else
-                        Text(subtitle!, style: k.caption),
+                        // One line in every row, so rows in a list match:
+                        // a long subtitle shrinks rather than wraps.
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            subtitle!,
+                            maxLines: 1,
+                            style: k.caption.copyWith(fontSize: 13),
+                          ),
+                        ),
                   ],
                 ),
               ),
@@ -102,9 +120,17 @@ class KustOption extends StatelessWidget {
 
 /// Square icon tile for use as [KustOption.leading].
 class KustIconTile extends StatelessWidget {
-  const KustIconTile(this.icon, {super.key, this.radius = KustSpace.rSmall});
+  const KustIconTile(
+    this.icon, {
+    super.key,
+    this.radius = KustSpace.rSmall,
+    this.color,
+  });
 
   final IconData icon;
+
+  /// With a colour the icon stands bare and larger, without its tile.
+  final Color? color;
 
   /// Corner radius; 0 gives a square tile.
   final double radius;
@@ -112,6 +138,13 @@ class KustIconTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
+    if (color case final c?) {
+      return SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, size: 32, color: c),
+      );
+    }
     return Container(
       width: 44,
       height: 44,

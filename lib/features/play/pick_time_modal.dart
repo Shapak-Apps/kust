@@ -91,7 +91,10 @@ class _PickTimeControlModalState extends State<PickTimeControlModal> {
         KustOption(
           title: context.t.noClock,
           subtitle: context.t.noClockSub,
-          leading: const KustIconTile(Icons.all_inclusive_rounded),
+          leading: const KustIconTile(
+            Icons.all_inclusive_rounded,
+            color: Color(0xFF5AA9E6),
+          ),
           selected: selected == _options.length,
           onTap: () => setState(() => _selected = _options.length),
         ),
