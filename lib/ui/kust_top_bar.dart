@@ -141,8 +141,10 @@ class KustTopBar extends StatelessWidget {
           // scroll on a mid-range phone.
           ? RepaintBoundary(
               child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                // Grouped with the tab bar's blur: one read of the page for
+                // both.
+                child: BackdropFilter.grouped(
+                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
                   child: ColoredBox(
                     color: k.bg.withValues(alpha: 0.8),
                     child: bar,
