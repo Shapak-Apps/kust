@@ -294,3 +294,43 @@ final List<Lesson> kLessons = [
     ],
   ),
 ];
+
+/// A stage of the climb: a run of lessons on one theme.
+class Camp {
+  const Camp({required this.id, required this.first, required this.last});
+
+  final String id;
+
+  /// Indexes in [kLessons], both included.
+  final int first;
+  final int last;
+
+  int get length => last - first + 1;
+
+  bool get isSummit => id == 'mate';
+
+  String title(AppL10n t) => switch (id) {
+    'pieces' => t.campPiecesTitle,
+    'rules' => t.campRulesTitle,
+    _ => t.campMateTitle,
+  };
+
+  String subtitle(AppL10n t) => switch (id) {
+    'pieces' => t.campPiecesSub,
+    'rules' => t.campRulesSub,
+    _ => t.campMateSub,
+  };
+
+  /// "CAMP 1", "CAMP 2", then "SUMMIT".
+  String label(AppL10n t) =>
+      isSummit ? t.summitLabel : t.campLabel(kCamps.indexOf(this) + 1);
+
+  static Camp of(int lessonIndex) =>
+      kCamps.firstWhere((c) => lessonIndex >= c.first && lessonIndex <= c.last);
+}
+
+const List<Camp> kCamps = [
+  Camp(id: 'pieces', first: 0, last: 5),
+  Camp(id: 'rules', first: 6, last: 8),
+  Camp(id: 'mate', first: 9, last: 10),
+];

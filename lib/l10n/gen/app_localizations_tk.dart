@@ -1466,4 +1466,72 @@ class AppL10nTk extends AppL10n {
   @override
   String get lessonFirstMatesIntro =>
       'Oýunlary ýeňdirýän üç nagyş: soňky hatardaky şahmat, iki galanyň basgançagy we wezir bilen şa. Bir göçümde şahmady tapyň.';
+
+  @override
+  String get campPiecesTitle => 'Çöpler';
+
+  @override
+  String get campPiecesSub => 'Her çöpüň nähili göçýändigini öwreniň';
+
+  @override
+  String get campRulesTitle => 'Düzgünler';
+
+  @override
+  String get campRulesSub => 'Almak, şah we aýratyn göçümler';
+
+  @override
+  String get campMateTitle => 'Şahmat';
+
+  @override
+  String get campMateSub => 'Ilkinji oýunlaryňyzy ýeňiň';
+
+  @override
+  String campLabel(int n) {
+    return '$n-NJI LAGER';
+  }
+
+  @override
+  String get summitLabel => 'DEPE';
+
+  @override
+  String get learnStartTip => 'BAŞLA';
+
+  @override
+  String learnUpNext(int n) {
+    return 'INDIKI · $n-NJI SAPAK';
+  }
+
+  @override
+  String lessonLabel(int n) {
+    return '$n-NJI SAPAK';
+  }
+
+  @override
+  String lessonMinutes(int n, int m) {
+    return '$n tabşyryk · $m min';
+  }
+
+  @override
+  String get learnSummitDone => 'Siz depä çykdyňyz';
+
+  @override
+  String get lessonMistakes => 'Ýalňyşlyklar';
+
+  @override
+  String get lessonHintsUsed => 'Kömekler';
+
+  @override
+  String get lessonTasksDone => 'Tabşyryklar';
+
+  @override
+  String get lessonBackToMap => 'Karta dolan';
+
+  @override
+  String get learnCoachDone => 'Boldy! «Dowam et» basyň.';
+
+  @override
+  String get lessonPerfect => 'Kemsiz sapak!';
+
+  @override
+  String get learnGo => 'Başla';
 }

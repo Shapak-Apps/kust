@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/l10n/gen/app_localizations.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_controls.dart';
 

@@ -317,3 +317,7 @@ All `review*` strings (title, button, analysing, accuracy, moves, graph, key mom
 ## Learn
 
 All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `lesson*` (titles and introductions), `task*`, and the piece names `pieceKing` (Şa), `pieceQueen` (Wezir), `pieceBishop` (Pil), `pieceKnight` (At). Rook (Gala) and pawn (Peşka) come from the glossary.
+
+## Learn redesign
+
+Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnStartTip`, `learnGo` (Başla), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.

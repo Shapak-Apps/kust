@@ -1466,4 +1466,72 @@ class AppL10nRu extends AppL10n {
   @override
   String get lessonFirstMatesIntro =>
       'Три приёма, которые выигрывают партии: мат по последней горизонтали, мат двумя ладьями и мат ферзём с королём. Найдите мат в один ход.';
+
+  @override
+  String get campPiecesTitle => 'Фигуры';
+
+  @override
+  String get campPiecesSub => 'Как ходит каждая фигура';
+
+  @override
+  String get campRulesTitle => 'Правила';
+
+  @override
+  String get campRulesSub => 'Взятия, шах и особые ходы';
+
+  @override
+  String get campMateTitle => 'Мат';
+
+  @override
+  String get campMateSub => 'Выиграйте первые партии';
+
+  @override
+  String campLabel(int n) {
+    return 'ЛАГЕРЬ $n';
+  }
+
+  @override
+  String get summitLabel => 'ВЕРШИНА';
+
+  @override
+  String get learnStartTip => 'НАЧАТЬ';
+
+  @override
+  String learnUpNext(int n) {
+    return 'ДАЛЕЕ · УРОК $n';
+  }
+
+  @override
+  String lessonLabel(int n) {
+    return 'УРОК $n';
+  }
+
+  @override
+  String lessonMinutes(int n, int m) {
+    return '$n заданий · $m мин';
+  }
+
+  @override
+  String get learnSummitDone => 'Вы на вершине';
+
+  @override
+  String get lessonMistakes => 'Ошибки';
+
+  @override
+  String get lessonHintsUsed => 'Подсказки';
+
+  @override
+  String get lessonTasksDone => 'Задания';
+
+  @override
+  String get lessonBackToMap => 'К карте';
+
+  @override
+  String get learnCoachDone => 'Получилось! Нажмите «Продолжить».';
+
+  @override
+  String get lessonPerfect => 'Идеальный урок!';
+
+  @override
+  String get learnGo => 'Начать';
 }

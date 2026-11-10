@@ -1460,4 +1460,72 @@ class AppL10nEn extends AppL10n {
   @override
   String get lessonFirstMatesIntro =>
       'Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.';
+
+  @override
+  String get campPiecesTitle => 'The pieces';
+
+  @override
+  String get campPiecesSub => 'Learn how every piece moves';
+
+  @override
+  String get campRulesTitle => 'The rules';
+
+  @override
+  String get campRulesSub => 'Captures, check and special moves';
+
+  @override
+  String get campMateTitle => 'Checkmate';
+
+  @override
+  String get campMateSub => 'Win your first games';
+
+  @override
+  String campLabel(int n) {
+    return 'CAMP $n';
+  }
+
+  @override
+  String get summitLabel => 'SUMMIT';
+
+  @override
+  String get learnStartTip => 'START';
+
+  @override
+  String learnUpNext(int n) {
+    return 'UP NEXT · LESSON $n';
+  }
+
+  @override
+  String lessonLabel(int n) {
+    return 'LESSON $n';
+  }
+
+  @override
+  String lessonMinutes(int n, int m) {
+    return '$n tasks · $m min';
+  }
+
+  @override
+  String get learnSummitDone => 'You reached the summit';
+
+  @override
+  String get lessonMistakes => 'Mistakes';
+
+  @override
+  String get lessonHintsUsed => 'Hints';
+
+  @override
+  String get lessonTasksDone => 'Tasks';
+
+  @override
+  String get lessonBackToMap => 'Back to the map';
+
+  @override
+  String get learnCoachDone => 'That is it! Tap Continue.';
+
+  @override
+  String get lessonPerfect => 'Perfect lesson!';
+
+  @override
+  String get learnGo => 'Start';
 }

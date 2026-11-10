@@ -8,16 +8,24 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/learn/learn_progress.dart';
+import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_task.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
 
-/// One lesson: an introduction, then its tasks one after the other.
+/// The guide who explains every lesson.
+const String _coachImage = 'assets/bots/Bahar.webp';
+
+const Color _green = Color(0xFF3CB77C);
+const Color _gold = Color(0xFFFFBB00);
+
+/// One lesson: an introduction from the coach, the tasks one after the
+/// other, and the stars at the end.
 class LessonScreen extends StatefulWidget {
   const LessonScreen({super.key, required this.lessonId});
 
@@ -27,10 +35,15 @@ class LessonScreen extends StatefulWidget {
   State<LessonScreen> createState() => _LessonScreenState();
 }
 
+/// What the coach says under the prompt after a move.
+enum _Note { none, wrong, stalemate, done }
+
 class _LessonScreenState extends State<LessonScreen> {
   late final Lesson? _lesson = kLessons
       .where((l) => l.id == widget.lessonId)
       .firstOrNull;
+
+  int get _index => kLessons.indexWhere((l) => l.id == widget.lessonId);
 
   /// -1 is the introduction, 0.. the tasks, and the number of tasks the end.
   int _step = -1;
@@ -43,10 +56,11 @@ class _LessonScreenState extends State<LessonScreen> {
   int _slideKey = 0;
   Square? _hintFrom;
   Square? _hintTo;
-
-  /// What the board says after a move that was not right, or null.
-  String? _message;
+  _Note _note = _Note.none;
   bool _solved = false;
+  int _mistakes = 0;
+  int _hints = 0;
+  int _stars = 0;
   Timer? _timer;
 
   @override
@@ -55,15 +69,14 @@ class _LessonScreenState extends State<LessonScreen> {
     super.dispose();
   }
 
-  void _start(int step) {
+  void _go(int step) {
     final lesson = _lesson!;
     _timer?.cancel();
     setState(() {
       _step = step;
-      _message = null;
+      _note = _Note.none;
       _solved = false;
       _lastMove = null;
-      _beforeLast = null;
       _slide = null;
       _hintFrom = _hintTo = null;
       _runner = step >= 0 && step < lesson.tasks.length
@@ -71,7 +84,8 @@ class _LessonScreenState extends State<LessonScreen> {
           : null;
     });
     if (step >= lesson.tasks.length) {
-      LearnProgress.instance.complete(lesson.id);
+      _stars = LearnProgress.starsFor(mistakes: _mistakes, hints: _hints);
+      LearnProgress.instance.complete(lesson.id, stars: _stars);
       SoundService.instance.playJingle('game-win.wav');
       SoundService.instance.buzzMedium();
     }
@@ -85,23 +99,25 @@ class _LessonScreenState extends State<LessonScreen> {
     switch (step) {
       case TaskStep.wrong:
       case TaskStep.stalemate:
+        _mistakes++;
         SoundService.instance.playSfx('illegal.wav');
         SoundService.instance.buzz(heavy: true);
         setState(
-          () => _message = step == TaskStep.stalemate
-              ? context.t.learnStalemate
-              : context.t.learnWrong,
+          () => _note = step == TaskStep.stalemate
+              ? _Note.stalemate
+              : _Note.wrong,
         );
         _timer?.cancel();
-        _timer = Timer(const Duration(milliseconds: 2400), () {
-          if (mounted) setState(() => _message = null);
+        _timer = Timer(const Duration(milliseconds: 2600), () {
+          if (mounted) setState(() => _note = _Note.none);
         });
       case TaskStep.progress:
       case TaskStep.done:
         final capture = before.board.pieceAt(move.to) != null;
         SoundService.instance.playSfx(capture ? 'capture.wav' : 'move.wav');
+        _timer?.cancel();
         setState(() {
-          _message = null;
+          _note = step == TaskStep.done ? _Note.done : _Note.none;
           _hintFrom = _hintTo = null;
           _lastMove = move;
           _beforeLast = before;
@@ -109,170 +125,368 @@ class _LessonScreenState extends State<LessonScreen> {
           _slideKey++;
           _solved = step == TaskStep.done;
         });
-        if (step == TaskStep.done) {
-          SoundService.instance.buzzMedium();
-          _timer?.cancel();
-          _timer = Timer(const Duration(milliseconds: 1100), () {
-            if (mounted) _start(_step + 1);
-          });
-        }
+        if (step == TaskStep.done) SoundService.instance.buzzMedium();
     }
   }
 
   void _hint() {
     final move = _runner?.hint();
-    if (move == null) return;
+    if (move == null || _solved) return;
+    _hints++;
     setState(() {
       _hintFrom = move.from;
       _hintTo = move.to;
     });
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 2200), () {
+    _timer = Timer(const Duration(milliseconds: 2400), () {
       if (mounted) setState(() => _hintFrom = _hintTo = null);
     });
   }
 
+  void _close() => context.canPop() ? context.pop() : context.go('/learn');
+
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
     final lesson = _lesson;
-    final t = context.t;
     return Scaffold(
-      backgroundColor: k.bg,
-      body: Column(
-        children: [
-          KustTopBar(
-            title: lesson?.title(t) ?? t.learnTitle,
-            leading: KustIconButton(
-              icon: Icons.arrow_back_rounded,
-              label: t.back,
-              onTap: () =>
-                  context.canPop() ? context.pop() : context.go('/learn'),
-            ),
-          ),
-          Expanded(
-            child: lesson == null
-                ? const SizedBox.shrink()
-                : AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: KeyedSubtree(
-                      key: ValueKey(_step),
-                      child: _step < 0
-                          ? _Intro(lesson: lesson, onStart: () => _start(0))
-                          : _step >= lesson.tasks.length
-                          ? _Complete(lesson: lesson)
-                          : _taskView(context, lesson),
-                    ),
+      backgroundColor: const Color(0xFF151311),
+      body: SafeArea(
+        child: lesson == null
+            ? const SizedBox.shrink()
+            : AnimatedSwitcher(
+                duration: const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, a) => FadeTransition(
+                  opacity: a,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0.06, 0),
+                      end: Offset.zero,
+                    ).animate(a),
+                    child: child,
                   ),
-          ),
-        ],
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(_step),
+                  child: _step < 0
+                      ? _Intro(
+                          lesson: lesson,
+                          number: _index + 1,
+                          onClose: _close,
+                          onStart: () => _go(0),
+                        )
+                      : _step >= lesson.tasks.length
+                      ? _Complete(
+                          lesson: lesson,
+                          stars: _stars,
+                          mistakes: _mistakes,
+                          hints: _hints,
+                          onClose: _close,
+                        )
+                      : _taskView(context, lesson),
+                ),
+              ),
       ),
     );
   }
 
   Widget _taskView(BuildContext context, Lesson lesson) {
-    final k = context.k;
     final t = context.t;
     final runner = _runner!;
     final task = runner.task;
-    return LayoutBuilder(
-      builder: (context, box) {
-        const chrome = 150.0; // prompt, progress and the hint row
-        final side = math.min(box.maxWidth, box.maxHeight - chrome);
-        final landed = _lastMove == null
-            ? null
-            : TaskRunner.landing(_lastMove!, _beforeLast ?? runner.position);
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: _StepBar(count: lesson.tasks.length, at: _step),
-            ),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+    final landed = _lastMove == null
+        ? null
+        : TaskRunner.landing(_lastMove!, _beforeLast!);
+    final (note, noteColor) = switch (_note) {
+      _Note.none => (null, null),
+      _Note.wrong => (t.learnWrong, const Color(0xFFFF8A80)),
+      _Note.stalemate => (t.learnStalemate, const Color(0xFFFF8A80)),
+      _Note.done => (t.learnCoachDone, const Color(0xFF9EE7C1)),
+    };
+    return Column(
+      children: [
+        _TopBar(
+          count: lesson.tasks.length,
+          at: _step,
+          solved: _solved,
+          onClose: _close,
+          onHint: _solved ? null : _hint,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: _Coach(
+            title: taskPrompt(t, task),
+            note: note,
+            noteColor: noteColor,
+          ),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final side = math.min(box.maxWidth, box.maxHeight);
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: side,
+                  height: side,
+                  child: Stack(
                     children: [
-                      Text(
-                        t.taskProgress(_step + 1, lesson.tasks.length),
-                        style: k.caption,
+                      PuzzleBoard(
+                        position: runner.position,
+                        flipped: false,
+                        interactive: !_solved,
+                        onMove: _onMove,
+                        lastMove: _lastMove,
+                        hintFrom: _hintFrom,
+                        hintTo: _hintTo,
+                        slide: _slide,
+                        slideKey: _slideKey,
                       ),
-                      const SizedBox(height: 6),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          taskPrompt(t, task),
-                          textAlign: TextAlign.center,
-                          style: k.title,
+                      IgnorePointer(
+                        child: _Marks(
+                          squares: runner.remaining,
+                          starred: task.starred,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: side,
-                        height: side,
-                        child: Stack(
-                          children: [
-                            PuzzleBoard(
-                              position: runner.position,
-                              flipped: false,
-                              interactive: !_solved,
-                              onMove: _onMove,
-                              lastMove: _lastMove,
-                              hintFrom: _hintFrom,
-                              hintTo: _hintTo,
-                              slide: _slide,
-                              slideKey: _slideKey,
-                            ),
-                            IgnorePointer(
-                              child: _Marks(
-                                squares: runner.remaining,
-                                starred: task.starred,
-                              ),
-                            ),
-                            if (_solved && landed != null)
-                              IgnorePointer(child: _DoneBadge(square: landed)),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 24,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 160),
-                          child: _solved
-                              ? Text(
-                                  t.learnWellDone,
-                                  key: const ValueKey('ok'),
-                                  style: k.body.copyWith(
-                                    color: k.success,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                )
-                              : Text(
-                                  _message ?? '',
-                                  key: ValueKey(_message),
-                                  style: k.body.copyWith(color: k.danger),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      KustButton(
-                        label: t.learnHint,
-                        icon: Icons.lightbulb_outline_rounded,
-                        style: KustButtonStyle.outline,
-                        expand: false,
-                        onTap: _solved ? null : _hint,
-                      ),
+                      if (_solved && landed != null)
+                        IgnorePointer(child: _DoneBadge(square: landed)),
                     ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          child: _solved
+              ? _DonePanel(
+                  last: _step == lesson.tasks.length - 1,
+                  onContinue: () => _go(_step + 1),
+                )
+              : const SizedBox(width: double.infinity, height: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.count,
+    required this.at,
+    required this.solved,
+    required this.onClose,
+    required this.onHint,
+  });
+
+  final int count;
+  final int at;
+  final bool solved;
+  final VoidCallback onClose;
+  final VoidCallback? onHint;
+
+  @override
+  Widget build(BuildContext context) {
+    final done = at + (solved ? 1 : 0);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onClose,
+            tooltip: context.t.close,
+            icon: const Icon(Icons.close_rounded, color: Color(0xFF8E8C86)),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: done / count),
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOutCubic,
+                builder: (context, v, _) => Stack(
+                  children: [
+                    Container(height: 14, color: const Color(0xFF2E2A26)),
+                    FractionallySizedBox(
+                      widthFactor: v.clamp(0.02, 1.0),
+                      child: Container(
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: _green,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.topCenter,
+                        padding: const EdgeInsets.fromLTRB(6, 3, 6, 0),
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Semantics(
+            button: true,
+            label: context.t.learnHint,
+            child: Pressable(
+              onTap: onHint,
+              haptic: true,
+              child: Opacity(
+                opacity: onHint == null ? 0.35 : 1,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _gold.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _gold.withValues(alpha: 0.5)),
+                  ),
+                  child: const Icon(
+                    Icons.lightbulb_rounded,
+                    color: _gold,
+                    size: 22,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The coach with the task in a speech bubble, and a note under it after a
+/// move: what went wrong, or that it is done.
+class _Coach extends StatelessWidget {
+  const _Coach({required this.title, this.note, this.noteColor});
+
+  final String title;
+  final String? note;
+  final Color? noteColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            _coachImage,
+            width: 64,
+            height: 64,
+            cacheWidth: 192,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: CustomPaint(
+            painter: SpeechBubblePainter(
+              fill: const Color(0xFF26221E),
+              border: const Color(0xFF3A3530),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                BubbleMetrics.tail + 14,
+                12,
+                14,
+                12,
+              ),
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                alignment: Alignment.topLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: k.body.copyWith(
+                        fontSize: 17,
+                        height: 1.25,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (note != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        note!,
+                        style: k.body.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: noteColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Slides up when a task is done: a cheer and the Continue button.
+class _DonePanel extends StatelessWidget {
+  const _DonePanel({required this.last, required this.onContinue});
+
+  final bool last;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: const BoxDecoration(
+        color: Color(0xFF16352A),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: _green,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                t.learnWellDone,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF9EE7C1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          GreenButton3D(label: t.cont, expand: true, onTap: onContinue),
+        ],
+      ),
     );
   }
 }
@@ -295,16 +509,23 @@ class _DoneBadge extends StatelessWidget {
               top: (7 - square.rank.value) * cell - cell * 0.08,
               width: cell * 0.56,
               height: cell * 0.56,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: context.k.success,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-                child: Icon(
-                  Icons.check_rounded,
-                  size: cell * 0.4,
-                  color: Colors.white,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 380),
+                curve: Curves.easeOutBack,
+                builder: (context, v, child) =>
+                    Transform.scale(scale: v, child: child),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _green,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: Icon(
+                    Icons.check_rounded,
+                    size: cell * 0.4,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -339,7 +560,7 @@ class _Marks extends StatelessWidget {
                     ? Icon(
                         Icons.star_rounded,
                         size: cell * 0.78,
-                        color: const Color(0xFFFFC21A),
+                        color: _gold,
                         shadows: const [
                           Shadow(color: Color(0x66000000), blurRadius: 4),
                         ],
@@ -362,140 +583,402 @@ class _Marks extends StatelessWidget {
   }
 }
 
-class _StepBar extends StatelessWidget {
-  const _StepBar({required this.count, required this.at});
+/// The lesson's piece (or icon) on a big round 3D badge.
+class _Badge extends StatelessWidget {
+  const _Badge({required this.lesson});
 
-  final int count;
-  final int at;
+  final Lesson lesson;
+
+  static const double size = 120;
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
-    return Row(
-      children: [
-        for (var i = 0; i < count; i++) ...[
-          if (i > 0) const SizedBox(width: 6),
-          Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              height: 6,
+    final piece = lesson.piece;
+    return SizedBox(
+      width: size,
+      height: size + 10,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            top: 10,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: const BoxDecoration(
+                color: Color(0xFF20804F),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: _green,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 3,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: piece == null
+                ? Icon(lesson.icon, size: size * 0.46, color: Colors.white)
+                : PieceImage(
+                    assetForPiece(Piece(color: Side.white, role: piece)),
+                    width: size * 0.62,
+                    height: size * 0.62,
+                  ),
+          ),
+          Positioned(
+            top: size * 0.1,
+            child: Container(
+              width: size * 0.6,
+              height: size * 0.24,
               decoration: BoxDecoration(
-                color: i < at
-                    ? k.success
-                    : i == at
-                    ? k.accent
-                    : k.line,
-                borderRadius: BorderRadius.circular(3),
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(size),
               ),
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-class _Intro extends StatelessWidget {
-  const _Intro({required this.lesson, required this.onStart});
-
-  final Lesson lesson;
-  final VoidCallback onStart;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final t = context.t;
-    final piece = lesson.piece;
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  color: k.accent.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: piece == null
-                    ? Icon(lesson.icon, size: 52, color: k.accent)
-                    : PieceImage(
-                        assetForPiece(Piece(color: Side.white, role: piece)),
-                        width: 76,
-                        height: 76,
-                      ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              lesson.title(t),
-              textAlign: TextAlign.center,
-              style: k.display,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              lesson.intro(t),
-              textAlign: TextAlign.center,
-              style: k.body.copyWith(height: 1.5, color: k.muted),
-            ),
-            const SizedBox(height: 28),
-            KustButton(label: t.lessonStart, onTap: onStart),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _Complete extends StatelessWidget {
-  const _Complete({required this.lesson});
+class _Intro extends StatelessWidget {
+  const _Intro({
+    required this.lesson,
+    required this.number,
+    required this.onClose,
+    required this.onStart,
+  });
 
   final Lesson lesson;
+  final int number;
+  final VoidCallback onClose;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final k = context.k;
+    final camp = Camp.of(number - 1);
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: IconButton(
+              onPressed: onClose,
+              tooltip: t.close,
+              icon: const Icon(Icons.close_rounded, color: Color(0xFF8E8C86)),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Badge(lesson: lesson),
+                  const SizedBox(height: 22),
+                  Text(
+                    '${camp.label(t)} · ${t.lessonLabel(number)}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: Color(0xFF9EE7C1),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    lesson.title(t),
+                    textAlign: TextAlign.center,
+                    style: k.display.copyWith(fontSize: 32),
+                  ),
+                  const SizedBox(height: 22),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.asset(
+                          _coachImage,
+                          width: 52,
+                          height: 52,
+                          cacheWidth: 156,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: CustomPaint(
+                          painter: const SpeechBubblePainter(
+                            fill: Color(0xFF26221E),
+                            border: Color(0xFF3A3530),
+                            tailAt: 0.2,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              BubbleMetrics.tail + 14,
+                              12,
+                              14,
+                              14,
+                            ),
+                            child: Text(
+                              lesson.intro(t),
+                              style: k.body.copyWith(
+                                height: 1.45,
+                                color: const Color(0xFFD9D6CE),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    t.lessonMinutes(
+                      lesson.tasks.length,
+                      (lesson.tasks.length * 0.7).ceil(),
+                    ),
+                    style: k.caption,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: GreenButton3D(
+            label: t.lessonStart,
+            expand: true,
+            onTap: onStart,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Complete extends StatelessWidget {
+  const _Complete({
+    required this.lesson,
+    required this.stars,
+    required this.mistakes,
+    required this.hints,
+    required this.onClose,
+  });
+
+  final Lesson lesson;
+  final int stars;
+  final int mistakes;
+  final int hints;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final k = context.k;
+    final next = LearnProgress.instance.after(lesson.id);
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      for (var i = 0; i < 3; i++)
+                        _PopStar(
+                          on: i < stars,
+                          delay: Duration(milliseconds: 250 + i * 220),
+                          size: i == 1 ? 76 : 58,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    stars == 3 ? t.lessonPerfect : t.lessonDone,
+                    textAlign: TextAlign.center,
+                    style: k.display.copyWith(fontSize: 30),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(lesson.title(t), style: k.body.copyWith(color: k.muted)),
+                  if (next == null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      t.learnAllDone,
+                      textAlign: TextAlign.center,
+                      style: k.body.copyWith(color: const Color(0xFF9EE7C1)),
+                    ),
+                  ],
+                  const SizedBox(height: 26),
+                  Row(
+                    children: [
+                      _Stat(
+                        label: t.lessonTasksDone,
+                        value: '${lesson.tasks.length}/${lesson.tasks.length}',
+                        color: _green,
+                        icon: Icons.check_circle_rounded,
+                      ),
+                      const SizedBox(width: 10),
+                      _Stat(
+                        label: t.lessonMistakes,
+                        value: '$mistakes',
+                        color: mistakes == 0 ? _green : const Color(0xFFFF8A80),
+                        icon: Icons.close_rounded,
+                      ),
+                      const SizedBox(width: 10),
+                      _Stat(
+                        label: t.lessonHintsUsed,
+                        value: '$hints',
+                        color: _gold,
+                        icon: Icons.lightbulb_rounded,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: GreenButton3D(
+            label: next == null ? t.lessonPlayGame : t.lessonNext,
+            expand: true,
+            onTap: () => next == null
+                ? context.go('/play')
+                : context.pushReplacement('/lesson/${next.id}'),
+          ),
+        ),
+        TextButton(
+          onPressed: onClose,
+          child: Text(
+            t.lessonBackToMap,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF8E8C86),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
+    );
+  }
+}
+
+/// A star that pops in after [delay], gold when earned, grey when not.
+class _PopStar extends StatefulWidget {
+  const _PopStar({required this.on, required this.delay, required this.size});
+
+  final bool on;
+  final Duration delay;
+  final double size;
+
+  @override
+  State<_PopStar> createState() => _PopStarState();
+}
+
+class _PopStarState extends State<_PopStar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _t = Timer(widget.delay, () {
+      if (!mounted) return;
+      _c.forward();
+      if (widget.on) SoundService.instance.playSfx('move.wav');
+    });
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final v = Curves.elasticOut.transform(_c.value);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Transform.scale(
+            scale: 0.2 + 0.8 * v,
+            child: Opacity(
+              opacity: _c.value.clamp(0.0, 1.0),
+              child: Icon(
+                Icons.star_rounded,
+                size: widget.size,
+                color: widget.on ? _gold : const Color(0xFF3A3632),
+                shadows: widget.on
+                    ? const [Shadow(color: Color(0x88FFBB00), blurRadius: 18)]
+                    : null,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final t = context.t;
-    final next = LearnProgress.instance.after(lesson.id);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF221F1C),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+        ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.emoji_events_rounded, size: 72, color: k.accent),
-            const SizedBox(height: 16),
-            Text(t.lessonDone, textAlign: TextAlign.center, style: k.display),
-            if (next == null) ...[
-              const SizedBox(height: 8),
-              Text(
-                t.learnAllDone,
-                textAlign: TextAlign.center,
-                style: k.body.copyWith(color: k.muted),
-              ),
-            ],
-            const SizedBox(height: 28),
-            if (next != null)
-              KustButton(
-                label: t.lessonNext,
-                onTap: () => context.pushReplacement('/lesson/${next.id}'),
-              )
-            else
-              KustButton(
-                label: t.lessonPlayGame,
-                onTap: () => context.go('/play'),
-              ),
-            const SizedBox(height: 10),
-            KustButton(
-              label: t.lessonAll,
-              style: KustButtonStyle.outline,
-              onTap: () =>
-                  context.canPop() ? context.pop() : context.go('/learn'),
-            ),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 6),
+            Text(value, style: k.title.copyWith(fontWeight: FontWeight.w900)),
+            Text(label, style: k.caption),
           ],
         ),
       ),
