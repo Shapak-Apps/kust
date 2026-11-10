@@ -21,6 +21,7 @@ class SoundService {
     'game-end.wav',
     'game-win.wav',
     'game-draw.wav',
+    'correct.wav',
   ];
 
   static final AudioContext _noFocusCtx = AudioContext(
