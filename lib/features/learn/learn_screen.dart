@@ -1,8 +1,6 @@
-import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/learn/garden_map.dart';
@@ -10,7 +8,6 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
-import 'package:kust/widgets/piece_image.dart';
 
 /// The Learn tab: a garden map with a raised tile for every lesson, from
 /// the first pawn move at the bottom to checkmate at the top. The header tells
@@ -386,11 +383,7 @@ class _UpNextCard extends StatelessWidget {
                     ),
                   ),
                   if (piece != null)
-                    PieceImage(
-                      assetForPiece(Piece(color: Side.white, role: piece)),
-                      width: 30,
-                      height: 30,
-                    )
+                    LearnPiece(piece, height: 38)
                   else
                     Icon(lesson.icon, color: const Color(0xFFF2F0EA)),
                 ],

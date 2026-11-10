@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter, lerpDouble;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,15 +17,10 @@ class KustNavItem {
   final String label;
 }
 
-/// The floating tab bar, as a pane of liquid glass: the page shows through
-/// it blurred, a bright rim catches the light along its top edge, and the
-/// selected tab sits in a clear droplet that stretches towards the tab you
-/// tap and settles there with a little wobble.
-///
-/// Smooth on purpose: the blur shares one read of the page with the top
-/// bar's ([BackdropFilter.grouped] under the shell's [BackdropGroup]), and
-/// the droplet repaints alone in its own layer from its animation, without
-/// rebuilding anything.
+/// The floating tab bar: a compact capsule, icon over label. The selected
+/// tab sits in a soft droplet that stretches towards the tab you tap and
+/// settles there with a little wobble. No blur, so it costs nothing per
+/// frame; the droplet repaints alone in its own layer from its animation.
 class KustNavBar extends StatefulWidget {
   const KustNavBar({
     super.key,
@@ -79,6 +74,7 @@ class _KustNavBarState extends State<KustNavBar>
 
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final radius = BorderRadius.circular(34);
     final width = widget.items.length * _itemWidth;
@@ -90,66 +86,62 @@ class _KustNavBarState extends State<KustNavBar>
         child: Center(
           heightFactor: 1,
           child: RepaintBoundary(
-            child: DecoratedBox(
+            child: Container(
+              padding: const EdgeInsets.all(5),
               decoration: BoxDecoration(
+                color: k.surface.withValues(alpha: isDark ? 0.92 : 0.88),
                 borderRadius: radius,
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.white,
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.12),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: radius,
-                child: BackdropFilter.grouped(
-                  filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                  child: CustomPaint(
-                    painter: _GlassPanePainter(dark: isDark),
-                    child: Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: SizedBox(
-                        width: width,
-                        height: _itemHeight,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: RepaintBoundary(
-                                child: CustomPaint(
-                                  painter: _DropletPainter(
-                                    move: _move,
-                                    from: _from,
-                                    to: _to,
-                                    pressed: _pressed,
-                                    dark: isDark,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                for (var i = 0; i < widget.items.length; i++)
-                                  _NavButton(
-                                    item: widget.items[i],
-                                    selected: i == widget.selectedIndex,
-                                    dark: isDark,
-                                    onDown: () => _pressed.value = i,
-                                    onUp: () => _pressed.value = null,
-                                    onTap: () {
-                                      if (i != widget.selectedIndex) {
-                                        HapticFeedback.selectionClick();
-                                      }
-                                      widget.onSelected(i);
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ],
+              child: SizedBox(
+                width: width,
+                height: _itemHeight,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: RepaintBoundary(
+                        child: CustomPaint(
+                          painter: _DropletPainter(
+                            move: _move,
+                            from: _from,
+                            to: _to,
+                            pressed: _pressed,
+                            dark: isDark,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    Row(
+                      children: [
+                        for (var i = 0; i < widget.items.length; i++)
+                          _NavButton(
+                            item: widget.items[i],
+                            selected: i == widget.selectedIndex,
+                            dark: isDark,
+                            onDown: () => _pressed.value = i,
+                            onUp: () => _pressed.value = null,
+                            onTap: () {
+                              if (i != widget.selectedIndex) {
+                                HapticFeedback.selectionClick();
+                              }
+                              widget.onSelected(i);
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -158,56 +150,6 @@ class _KustNavBarState extends State<KustNavBar>
       ),
     );
   }
-}
-
-/// The glass itself: a dark tint over the blur, light pooling at the top,
-/// and a rim that is bright on the top edge and fades round the sides.
-class _GlassPanePainter extends CustomPainter {
-  const _GlassPanePainter({required this.dark});
-
-  final bool dark;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(34));
-    canvas.drawRRect(
-      rr,
-      Paint()..color = dark ? const Color(0x9E141210) : const Color(0xB8FFFFFF),
-    );
-    canvas.drawRRect(
-      rr,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: dark ? 0.09 : 0.35),
-            Colors.white.withValues(alpha: 0),
-          ],
-          stops: const [0, 0.55],
-        ).createShader(rect),
-    );
-    canvas.drawRRect(
-      rr.deflate(0.75),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white.withValues(alpha: dark ? 0.34 : 0.9),
-            Colors.white.withValues(alpha: dark ? 0.06 : 0.4),
-            Colors.white.withValues(alpha: dark ? 0.12 : 0.6),
-          ],
-          stops: const [0, 0.6, 1],
-        ).createShader(rect),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_GlassPanePainter old) => old.dark != dark;
 }
 
 /// The droplet under the selected tab. Moving, its leading edge races ahead
@@ -269,7 +211,7 @@ class _DropletPainter extends CustomPainter {
       rr,
       Paint()
         ..color = dark
-            ? Colors.white.withValues(alpha: 0.13)
+            ? Colors.white.withValues(alpha: 0.11)
             : Colors.black.withValues(alpha: 0.07),
     );
     // A highlight across its top, like light on a drop.
