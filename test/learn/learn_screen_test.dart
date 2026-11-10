@@ -77,23 +77,28 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('The pawn'), findsOneWidget);
-    expect(find.text('Checkmate'), findsOneWidget);
-    expect(find.text('0 of 11 lessons'), findsOneWidget);
+    expect(find.text('The pawn'), findsWidgets);
+    expect(find.text('Checkmate'), findsWidgets);
+    expect(find.text('0 / 33'), findsOneWidget);
+    expect(find.text('Learn how every piece moves'), findsOneWidget);
+    expect(find.text('START'), findsOneWidget);
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );
     await tester.pump(const Duration(milliseconds: 100));
     await _shot(tester, 'learn');
     // With a few lessons done the trail turns gold up to the next stop.
-    LearnProgress.instance.done.value = const {'pawn', 'rook', 'bishop'};
+    await LearnProgress.instance.complete('pawn', stars: 3);
+    await LearnProgress.instance.complete('rook', stars: 2);
+    await LearnProgress.instance.complete('bishop', stars: 3);
     await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('8 / 33'), findsOneWidget);
     await _shot(tester, 'learn_done');
     LearnProgress.instance.done.value = const {};
     await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.tap(find.text('The pawn'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.text('The pawn').first);
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('lesson pawn'), findsOneWidget);
   });
 
@@ -122,22 +127,69 @@ void main() {
     await tester.tap(find.text('Start lesson'));
     await tester.pumpAndSettle();
     expect(find.text('Move the pawn to the star'), findsOneWidget);
-    expect(find.text('Task 1 of 4'), findsOneWidget);
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     await _shot(tester, 'lesson_task');
 
     // A move that is not the task: the pawn goes one square, the star stays.
     await _drag(tester, 'e2', 'e3');
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
-    // Now two more squares is not possible; one more square reaches e4.
     await _drag(tester, 'e3', 'e4');
+    await tester.pumpAndSettle();
     expect(find.byIcon(Icons.star_rounded), findsNothing);
     expect(find.text('Well done!'), findsOneWidget);
     await _shot(tester, 'lesson_solved');
 
-    await tester.pump(const Duration(milliseconds: 1200));
+    // Continue moves on to the next task.
+    await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('Task 2 of 4'), findsOneWidget);
+    expect(find.text('Well done!'), findsNothing);
     expect(find.text('Move the pawn to the star'), findsOneWidget);
+  });
+
+  completeTests();
+}
+
+void completeTests() {
+  testWidgets('a finished lesson shows its stars and saves them', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const LessonScreen(lessonId: 'king'),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: const ValueKey('shot'),
+        child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await _shot(tester, 'lesson_intro');
+    await tester.tap(find.text('Start lesson'));
+    await tester.pumpAndSettle();
+    for (final (a, b) in [('e1', 'e2'), ('e2', 'd3'), ('d3', 'c4')]) {
+      await _drag(tester, a, b);
+    }
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+    await _drag(tester, 'e1', 'e2');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continue'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Perfect lesson!'), findsOneWidget);
+    expect(find.text('Next lesson'), findsOneWidget);
+    expect(LearnProgress.instance.starsOf('king'), 3);
+    expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
+    await tester.pump(const Duration(seconds: 1));
+    await _shot(tester, 'lesson_complete');
   });
 }

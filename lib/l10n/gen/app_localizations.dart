@@ -2660,6 +2660,126 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.'**
   String get lessonFirstMatesIntro;
+
+  /// No description provided for @campPiecesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The pieces'**
+  String get campPiecesTitle;
+
+  /// No description provided for @campPiecesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn how every piece moves'**
+  String get campPiecesSub;
+
+  /// No description provided for @campRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The rules'**
+  String get campRulesTitle;
+
+  /// No description provided for @campRulesSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Captures, check and special moves'**
+  String get campRulesSub;
+
+  /// No description provided for @campMateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkmate'**
+  String get campMateTitle;
+
+  /// No description provided for @campMateSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Win your first games'**
+  String get campMateSub;
+
+  /// No description provided for @campLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CAMP {n}'**
+  String campLabel(int n);
+
+  /// No description provided for @summitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SUMMIT'**
+  String get summitLabel;
+
+  /// No description provided for @learnStartTip.
+  ///
+  /// In en, this message translates to:
+  /// **'START'**
+  String get learnStartTip;
+
+  /// No description provided for @learnUpNext.
+  ///
+  /// In en, this message translates to:
+  /// **'UP NEXT · LESSON {n}'**
+  String learnUpNext(int n);
+
+  /// No description provided for @lessonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'LESSON {n}'**
+  String lessonLabel(int n);
+
+  /// No description provided for @lessonMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} tasks · {m} min'**
+  String lessonMinutes(int n, int m);
+
+  /// No description provided for @learnSummitDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You reached the summit'**
+  String get learnSummitDone;
+
+  /// No description provided for @lessonMistakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistakes'**
+  String get lessonMistakes;
+
+  /// No description provided for @lessonHintsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints'**
+  String get lessonHintsUsed;
+
+  /// No description provided for @lessonTasksDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get lessonTasksDone;
+
+  /// No description provided for @lessonBackToMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the map'**
+  String get lessonBackToMap;
+
+  /// No description provided for @learnCoachDone.
+  ///
+  /// In en, this message translates to:
+  /// **'That is it! Tap Continue.'**
+  String get learnCoachDone;
+
+  /// No description provided for @lessonPerfect.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect lesson!'**
+  String get lessonPerfect;
+
+  /// No description provided for @learnGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get learnGo;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -8,7 +8,6 @@ import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/pressable.dart';
-import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
 
 /// Where everything sits on the mountain: the lessons wind up it in
@@ -18,19 +17,25 @@ class MountainLayout {
     required this.width,
     required this.count,
     this.footRoom = 120,
+    this.topInset = 0,
   });
 
   final double width;
   final int count;
 
-  /// Room under the first lesson (the tab bar sits over it).
+  /// Room under the first lesson (the up-next card and the tab bar sit over
+  /// it).
   final double footRoom;
 
-  static const double step = 128;
+  /// Sky above the mountain picture, under the header.
+  final double topInset;
+
+  static const double step = 132;
   static const double headRoom = 250;
   static const double nodeSize = 68;
+  static const double currentSize = 84;
 
-  double get height => headRoom + (count - 1) * step + footRoom;
+  double get height => topInset + headRoom + (count - 1) * step + footRoom;
 
   Offset node(int i) => Offset(
     width * (i.isEven ? 0.30 : 0.70) + (i % 3 - 1) * 6,
@@ -38,7 +43,7 @@ class MountainLayout {
   );
 
   Offset get base => Offset(width * 0.5, height - footRoom + 70);
-  Offset get flag => Offset(width * 0.5, 38);
+  Offset get flag => Offset(width * 0.5, topInset + 38);
 
   /// How far above the bottom edge lesson [i] is.
   double fromBottom(int i) => footRoom + i * step;
@@ -148,18 +153,21 @@ class MountainPainter extends CustomPainter {
       old.layout.height != layout.height;
 }
 
-/// The Learn map: the lessons as stops on a trail up a mountain. Done stops
-/// are green, the next one is gold with the climber on it.
+/// The Learn map: the lessons as stops on a trail up a mountain, with a
+/// sign where each camp starts. Done stops are gold with their stars, the
+/// next one is green, bigger and calls "Start".
 class MountainPath extends StatefulWidget {
   const MountainPath({
     super.key,
     required this.layout,
     required this.done,
+    required this.starsOf,
     required this.onOpen,
   });
 
   final MountainLayout layout;
   final Set<String> done;
+  final int Function(String id) starsOf;
   final void Function(Lesson lesson) onOpen;
 
   @override
@@ -170,8 +178,8 @@ class _MountainPathState extends State<MountainPath>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1500),
-  )..repeat(reverse: true);
+    duration: const Duration(milliseconds: 1600),
+  )..repeat();
 
   @override
   void dispose() {
@@ -195,8 +203,14 @@ class _MountainPathState extends State<MountainPath>
       width: layout.width,
       height: layout.height,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Positioned.fill(
+          const Positioned.fill(child: ColoredBox(color: Color(0xFF0B1222))),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: layout.topInset,
+            bottom: 0,
             child: SvgPicture.asset(
               'assets/images/learn_mountain.svg',
               fit: BoxFit.fill,
@@ -209,8 +223,51 @@ class _MountainPathState extends State<MountainPath>
               ),
             ),
           ),
+          for (final camp in kCamps.skip(1)) _campSign(context, camp),
           for (var i = 0; i < kLessons.length; i++) _stop(context, i, climbed),
         ],
+      ),
+    );
+  }
+
+  /// A sign on the trail where [camp] begins.
+  Widget _campSign(BuildContext context, Camp camp) {
+    final layout = widget.layout;
+    final y = (layout.node(camp.first).dy + layout.node(camp.first - 1).dy) / 2;
+    final t = context.t;
+    return Positioned(
+      left: 0,
+      right: 0,
+      top: y - 16,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: const Color(0xE60F4A33),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0x803CB77C)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                camp.isSummit ? Icons.flag_rounded : Icons.cabin_rounded,
+                size: 15,
+                color: const Color(0xFF9EE7C1),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${camp.label(t)} · ${camp.title(t)}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                  color: Color(0xFFBFF0D6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -221,24 +278,17 @@ class _MountainPathState extends State<MountainPath>
     final c = layout.node(i);
     final finished = widget.done.contains(lesson.id);
     final isNext = i == climbed;
-    final onLeft = i.isEven;
-    const size = MountainLayout.nodeSize;
-    final k = context.k;
+    final onLeft = c.dx < layout.width / 2;
+    final size = isNext ? MountainLayout.currentSize : MountainLayout.nodeSize;
     final t = context.t;
     final title = lesson.title(t);
 
-    final node = _Node(
-      lesson: lesson,
-      finished: finished,
-      isNext: isNext,
-      pulse: _pulse,
-    );
     final label = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: layout.width * 0.4),
+      constraints: BoxConstraints(maxWidth: layout.width * 0.42),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xB3141210),
+          color: const Color(0xB8100E0C),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -248,20 +298,28 @@ class _MountainPathState extends State<MountainPath>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '${i + 1}',
-              style: k.caption.copyWith(
-                color: isNext ? MountainPainter.gold : k.muted,
+              t.lessonLabel(i + 1),
+              style: TextStyle(
+                fontSize: 10,
                 fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: isNext
+                    ? const Color(0xFF9EE7C1)
+                    : finished
+                    ? const Color(0xFFFFD466)
+                    : const Color(0xFF7E879C),
               ),
             ),
             Text(
               title,
               textAlign: onLeft ? TextAlign.left : TextAlign.right,
-              style: k.body.copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: 15,
                 height: 1.15,
-                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                color: finished || isNext
+                    ? Colors.white
+                    : const Color(0xFF9AA2B5),
               ),
             ),
           ],
@@ -272,128 +330,274 @@ class _MountainPathState extends State<MountainPath>
     return Positioned(
       left: 0,
       right: 0,
-      top: c.dy - size / 2,
-      height: size,
+      top: c.dy - size / 2 - (isNext ? 52 : 0),
+      height: size + (isNext ? 52 : 0) + 30,
       child: Semantics(
         button: true,
         label: '${i + 1}. $title, ${t.lessonTasks(lesson.tasks.length)}',
         onTap: () => widget.onOpen(lesson),
         excludeSemantics: true,
-        child: Pressable(
-          onTap: () => widget.onOpen(lesson),
-          haptic: true,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(left: c.dx - size / 2, top: 0, child: node),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (isNext)
               Positioned(
-                left: onLeft ? c.dx + size / 2 + 10 : null,
-                right: onLeft ? null : layout.width - c.dx + size / 2 + 10,
+                left: c.dx - 60,
+                width: 120,
                 top: 0,
-                bottom: 0,
+                child: _StartTip(pulse: _pulse),
+              ),
+            Positioned(
+              left: c.dx - size / 2,
+              top: isNext ? 52 : 0,
+              child: Pressable(
+                onTap: () => widget.onOpen(lesson),
+                haptic: true,
+                child: _Node(
+                  lesson: lesson,
+                  finished: finished,
+                  isNext: isNext,
+                  size: size,
+                  pulse: _pulse,
+                ),
+              ),
+            ),
+            if (finished)
+              Positioned(
+                left: c.dx - 30,
+                width: 60,
+                top: size + 10,
+                child: _Stars(count: widget.starsOf(lesson.id)),
+              ),
+            Positioned(
+              left: onLeft ? c.dx + size / 2 + 14 : null,
+              right: onLeft ? null : layout.width - c.dx + size / 2 + 14,
+              top: (isNext ? 52 : 0) - 30,
+              height: size + 60,
+              child: GestureDetector(
+                onTap: () => widget.onOpen(lesson),
                 child: Center(child: label),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+/// The white "START" bubble over the next stop, bobbing gently.
+class _StartTip extends StatelessWidget {
+  const _StartTip({required this.pulse});
+
+  final Animation<double> pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pulse,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(0, -3 * math.sin(pulse.value * 2 * math.pi)),
+        child: child,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [
+                BoxShadow(color: Color(0x55000000), blurRadius: 10),
+              ],
+            ),
+            child: Text(
+              context.t.learnStartTip,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+                color: Color(0xFF20804F),
+              ),
+            ),
+          ),
+          CustomPaint(size: const Size(16, 8), painter: _TipTail()),
+        ],
+      ),
+    );
+  }
+}
+
+class _TipTail extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(0, 0)
+        ..lineTo(size.width, 0)
+        ..lineTo(size.width / 2, size.height)
+        ..close(),
+      Paint()..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_TipTail old) => false;
+}
+
+class _Stars extends StatelessWidget {
+  const _Stars({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < 3; i++)
+          Icon(
+            Icons.star_rounded,
+            size: 18,
+            color: i < count ? MountainPainter.gold : const Color(0xFF4A4F5E),
+            shadows: const [Shadow(color: Color(0xAA000000), blurRadius: 3)],
+          ),
+      ],
+    );
+  }
+}
+
+/// A stop as a round 3D button: a darker rim under a lit face with a shine.
 class _Node extends StatelessWidget {
   const _Node({
     required this.lesson,
     required this.finished,
     required this.isNext,
+    required this.size,
     required this.pulse,
   });
 
   final Lesson lesson;
   final bool finished;
   final bool isNext;
+  final double size;
   final Animation<double> pulse;
+
+  static const double depth = 7;
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
-    const size = MountainLayout.nodeSize;
-    final fill = finished
-        ? k.success
+    final (face, rim) = finished
+        ? (const Color(0xFFFFBB00), const Color(0xFFB98200))
         : isNext
-        ? MountainPainter.gold
-        : const Color(0xFF232B3A);
+        ? (const Color(0xFF3CB77C), const Color(0xFF20804F))
+        : (const Color(0xFF2C3448), const Color(0xFF1B2132));
     final piece = lesson.piece;
-    final Widget glyph = piece == null
+    final glyphSize = size * 0.56;
+    Widget glyph = piece == null
         ? Icon(
             lesson.icon,
-            size: 32,
-            color: isNext || finished ? Colors.white : const Color(0xFFB9C2D2),
+            size: glyphSize * 0.82,
+            color: finished
+                ? const Color(0xFF3A2A00)
+                : isNext
+                ? Colors.white
+                : const Color(0xFF6B7590),
           )
         : PieceImage(
-            assetForPiece(Piece(color: Side.white, role: piece)),
-            width: 42,
-            height: 42,
+            assetForPiece(
+              Piece(color: finished ? Side.black : Side.white, role: piece),
+            ),
+            width: glyphSize,
+            height: glyphSize,
           );
+    if (!finished && !isNext) {
+      glyph = Opacity(opacity: 0.45, child: glyph);
+    }
     return SizedBox(
       width: size,
-      height: size,
+      height: size + depth,
       child: Stack(
         clipBehavior: Clip.none,
-        alignment: Alignment.center,
+        alignment: Alignment.topCenter,
         children: [
           if (isNext)
-            AnimatedBuilder(
-              animation: pulse,
-              builder: (context, _) => Container(
-                width: size + 18 * pulse.value,
-                height: size + 18 * pulse.value,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: MountainPainter.gold.withValues(
-                    alpha: 0.28 * (1 - pulse.value),
-                  ),
-                ),
+            Positioned(
+              left: -24,
+              top: -24,
+              child: AnimatedBuilder(
+                animation: pulse,
+                builder: (context, _) {
+                  final v = pulse.value;
+                  return SizedBox(
+                    width: size + 48,
+                    height: size + 48,
+                    child: Center(
+                      child: Container(
+                        width: size + 48 * v,
+                        height: size + 48 * v,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF3CB77C)
+                              .withValues(alpha: 0.35 * (1 - v)),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
+          Positioned(
+            top: depth,
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: rim,
+                shape: BoxShape.circle,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x80000000),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Container(
-            width: size - 6,
-            height: size - 6,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
-              color: fill,
+              color: face,
               shape: BoxShape.circle,
               border: Border.all(
-                color: finished || isNext
-                    ? Colors.white
-                    : const Color(0xFF5A6678),
-                width: 3,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x66000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
+                color: Colors.white.withValues(
+                  alpha: finished || isNext ? 0.55 : 0.08,
                 ),
-              ],
+                width: 2,
+              ),
             ),
-            alignment: Alignment.center,
-            child: glyph,
           ),
-          if (finished)
-            Positioned(
-              right: -2,
-              top: -2,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: k.success, width: 2),
+          Positioned(
+            top: size * 0.1,
+            child: Container(
+              width: size * 0.6,
+              height: size * 0.26,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(
+                  alpha: finished || isNext ? 0.22 : 0.05,
                 ),
-                child: Icon(Icons.check_rounded, size: 16, color: k.success),
+                borderRadius: BorderRadius.circular(size),
               ),
             ),
+          ),
+          SizedBox(
+            width: size,
+            height: size,
+            child: Center(child: glyph),
+          ),
         ],
       ),
     );
