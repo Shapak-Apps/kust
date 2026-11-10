@@ -321,3 +321,7 @@ All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `less
 ## Learn redesign
 
 Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnStartTip`, `learnGo` (Başla), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
+
+## Onboarding redesign
+
+Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachReady`, `onbStartLesson`, `onbRatingLabel`.

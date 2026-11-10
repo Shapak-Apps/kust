@@ -2780,6 +2780,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Start'**
   String get learnGo;
+
+  /// No description provided for @onbLearn.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn from zero'**
+  String get onbLearn;
+
+  /// No description provided for @onbLearnSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Short lessons from the first move to checkmate'**
+  String get onbLearnSub;
+
+  /// No description provided for @onbCoachHi.
+  ///
+  /// In en, this message translates to:
+  /// **'Salam! I\'m Bahar. Let\'s set Küşt up for you.'**
+  String get onbCoachHi;
+
+  /// No description provided for @onbCoachLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me how you play, and I\'ll pick fair opponents.'**
+  String get onbCoachLevel;
+
+  /// No description provided for @onbCoachReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Great! Your board is ready.'**
+  String get onbCoachReady;
+
+  /// No description provided for @onbStartLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the first lesson'**
+  String get onbStartLesson;
+
+  /// No description provided for @onbRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'STARTING RATING'**
+  String get onbRatingLabel;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

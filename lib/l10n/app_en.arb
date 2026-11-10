@@ -930,5 +930,12 @@
   "lessonBackToMap": "Back to the map",
   "learnCoachDone": "That is it! Tap Continue.",
   "lessonPerfect": "Perfect lesson!",
-  "learnGo": "Start"
+  "learnGo": "Start",
+  "onbLearn": "Learn from zero",
+  "onbLearnSub": "Short lessons from the first move to checkmate",
+  "onbCoachHi": "Salam! I'm Bahar. Let's set Küşt up for you.",
+  "onbCoachLevel": "Tell me how you play, and I'll pick fair opponents.",
+  "onbCoachReady": "Great! Your board is ready.",
+  "onbStartLesson": "Start the first lesson",
+  "onbRatingLabel": "STARTING RATING"
 }
