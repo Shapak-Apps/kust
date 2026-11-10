@@ -8,6 +8,7 @@ import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/learn/mountain.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/widgets/piece_image.dart';
 
@@ -435,10 +436,7 @@ class _UpNextCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            GreenButton3D(
-              label: t.lessonStart.split(' ').first,
-              onTap: onStart,
-            ),
+            KustButton3D(label: t.lessonStart.split(' ').first, onTap: onStart),
           ],
         ),
       ),
@@ -476,76 +474,8 @@ class _SummitCard extends StatelessWidget {
               ),
             ),
           ),
-          GreenButton3D(label: t.play, onTap: () => context.go('/play')),
+          KustButton3D(label: t.play, onTap: () => context.go('/play')),
         ],
-      ),
-    );
-  }
-}
-
-/// A chunky green button with a darker lip under it, pressed down on tap.
-class GreenButton3D extends StatefulWidget {
-  const GreenButton3D({
-    super.key,
-    required this.label,
-    required this.onTap,
-    this.expand = false,
-  });
-
-  final String label;
-  final VoidCallback? onTap;
-  final bool expand;
-
-  @override
-  State<GreenButton3D> createState() => _GreenButton3DState();
-}
-
-class _GreenButton3DState extends State<GreenButton3D> {
-  bool _down = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = widget.onTap != null;
-    const lip = 4.0;
-    return GestureDetector(
-      onTapDown: enabled ? (_) => setState(() => _down = true) : null,
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: enabled
-          ? (_) {
-              setState(() => _down = false);
-              widget.onTap!();
-            }
-          : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
-        margin: EdgeInsets.only(top: _down ? lip : 0, bottom: _down ? 0 : lip),
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
-        decoration: BoxDecoration(
-          color: enabled ? const Color(0xFF3CB77C) : const Color(0xFF3A3632),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: _down || !enabled
-              ? const []
-              : const [
-                  BoxShadow(color: Color(0xFF1F7A4B), offset: Offset(0, lip)),
-                ],
-        ),
-        child: Row(
-          mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              widget.label,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.3,
-                color: enabled
-                    ? const Color(0xFF0B2E1E)
-                    : const Color(0xFF8E8C86),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

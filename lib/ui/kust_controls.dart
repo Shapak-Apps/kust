@@ -322,17 +322,23 @@ class KustSegmented<T> extends StatelessWidget {
                           HapticFeedback.selectionClick();
                           onChanged(key);
                         },
-                        child: Center(
-                          // A long word in a small segment shrinks to fit
-                          // instead of wrapping and being cut off.
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              options[key]!,
-                              maxLines: 1,
-                              style: k.body.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: key == value ? k.ink : k.muted,
+                        child: Padding(
+                          // Room on both sides, so a long word (Turkmen
+                          // "Tapawudy ýok") never touches the pill's edge.
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Center(
+                            // A long word in a small segment shrinks to fit
+                            // instead of wrapping and being cut off.
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                options[key]!,
+                                maxLines: 1,
+                                style: k.body.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: key == value ? k.ink : k.muted,
+                                ),
                               ),
                             ),
                           ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
@@ -513,7 +514,11 @@ class _Panel extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: KustButton(label: action, onTap: onAction),
+                child: KustButton3D(
+                  label: action,
+                  expand: true,
+                  onTap: onAction,
+                ),
               ),
             ],
           ),

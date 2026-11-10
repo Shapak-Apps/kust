@@ -8,12 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/learn/learn_progress.dart';
-import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_task.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
@@ -115,6 +115,10 @@ class _LessonScreenState extends State<LessonScreen> {
       case TaskStep.done:
         final capture = before.board.pieceAt(move.to) != null;
         SoundService.instance.playSfx(capture ? 'capture.wav' : 'move.wav');
+        if (step == TaskStep.done) {
+          // A bright chime for every task done, not only the lesson.
+          SoundService.instance.playSfx('correct.wav');
+        }
         _timer?.cancel();
         setState(() {
           _note = step == TaskStep.done ? _Note.done : _Note.none;
@@ -212,46 +216,53 @@ class _LessonScreenState extends State<LessonScreen> {
           onClose: _close,
           onHint: _solved ? null : _hint,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: _Coach(
-            title: taskPrompt(t, task),
-            note: note,
-            noteColor: noteColor,
-          ),
-        ),
         Expanded(
           child: LayoutBuilder(
             builder: (context, box) {
-              final side = math.min(box.maxWidth, box.maxHeight);
-              return Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: side,
-                  height: side,
-                  child: Stack(
-                    children: [
-                      PuzzleBoard(
-                        position: runner.position,
-                        flipped: false,
-                        interactive: !_solved,
-                        onMove: _onMove,
-                        lastMove: _lastMove,
-                        hintFrom: _hintFrom,
-                        hintTo: _hintTo,
-                        slide: _slide,
-                        slideKey: _slideKey,
+              // The coach and the board sit together in the middle of the
+              // room left between the top bar and the bottom.
+              const coach = 112.0;
+              final side = math.min(box.maxWidth, box.maxHeight - coach);
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                      child: _Coach(
+                        title: taskPrompt(t, task),
+                        note: note,
+                        noteColor: noteColor,
                       ),
-                      IgnorePointer(
-                        child: _Marks(
-                          squares: runner.remaining,
-                          starred: task.starred,
-                        ),
+                    ),
+                    SizedBox(
+                      width: side,
+                      height: side,
+                      child: Stack(
+                        children: [
+                          PuzzleBoard(
+                            position: runner.position,
+                            flipped: false,
+                            interactive: !_solved,
+                            onMove: _onMove,
+                            lastMove: _lastMove,
+                            hintFrom: _hintFrom,
+                            hintTo: _hintTo,
+                            slide: _slide,
+                            slideKey: _slideKey,
+                          ),
+                          IgnorePointer(
+                            child: _Marks(
+                              squares: runner.remaining,
+                              starred: task.starred,
+                            ),
+                          ),
+                          if (_solved && landed != null)
+                            IgnorePointer(child: _DoneBadge(square: landed)),
+                        ],
                       ),
-                      if (_solved && landed != null)
-                        IgnorePointer(child: _DoneBadge(square: landed)),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -384,9 +395,9 @@ class _Coach extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Image.asset(
             _coachImage,
-            width: 64,
-            height: 64,
-            cacheWidth: 192,
+            width: 84,
+            height: 84,
+            cacheWidth: 252,
             fit: BoxFit.cover,
           ),
         ),
@@ -484,7 +495,7 @@ class _DonePanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          GreenButton3D(label: t.cont, expand: true, onTap: onContinue),
+          KustButton3D(label: t.cont, expand: true, onTap: onContinue),
         ],
       ),
     );
@@ -711,9 +722,9 @@ class _Intro extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         child: Image.asset(
                           _coachImage,
-                          width: 52,
-                          height: 52,
-                          cacheWidth: 156,
+                          width: 84,
+                          height: 84,
+                          cacheWidth: 252,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -723,7 +734,7 @@ class _Intro extends StatelessWidget {
                           painter: const SpeechBubblePainter(
                             fill: Color(0xFF26221E),
                             border: Color(0xFF3A3530),
-                            tailAt: 0.2,
+                            tailAt: 0.25,
                           ),
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(
@@ -759,7 +770,7 @@ class _Intro extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          child: GreenButton3D(
+          child: KustButton3D(
             label: t.lessonStart,
             expand: true,
             onTap: onStart,
@@ -859,7 +870,7 @@ class _Complete extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-          child: GreenButton3D(
+          child: KustButton3D(
             label: next == null ? t.lessonPlayGame : t.lessonNext,
             expand: true,
             onTap: () => next == null
