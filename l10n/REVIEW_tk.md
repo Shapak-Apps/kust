@@ -84,7 +84,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `boardImage` | Board image | Tagta suraty |
 | `boardImageSub` | Share the position as a PNG | Ýagdaýy PNG hökmünde paýlaşyň |
 | `copyFen` | Copy FEN | FEN göçür |
-| `copyFenSub` | This position, for any chess app | Bu ýagdaý, islendik şahmat programmasy üçin |
+| `copyFenSub` | This position, for any chess app | Islendik küşt programmasy üçin |
 | `copyPgn` | Copy PGN | PGN göçür |
 | `copyPgnSub` | Every move of the game | Oýnuň ähli göçümleri |
 | `sharePgn` | Share PGN | PGN paýlaş |
@@ -127,7 +127,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `startGame` | Start game | Oýuna başlaň |
 | `newGame` | New game | Täze oýun |
 | `playWithBots` | Play with bots | Botlar bilen oýnaň |
-| `playWithBotsSub` | Challenge one of our bots | Botlarymyzyň biri bilen güýç synanyşyň |
+| `playWithBotsSub` | Challenge one of our bots | Botlarymyz bilen güýç synanyşyň |
 | `playLocally` | Play locally | Şu enjamda oýnaň |
 | `playLocallySub` | Pass & play on this device | Bir enjamda iki oýunçy |
 | `practiceModeSub` | Allows undo, hints and move feedback | Göçümi yza almaga, kömege we göçüm bahasyny görkezmäge rugsat berýär |
@@ -317,3 +317,11 @@ All `review*` strings (title, button, analysing, accuracy, moves, graph, key mom
 ## Learn
 
 All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `lesson*` (titles and introductions), `task*`, and the piece names `pieceKing` (Şa), `pieceQueen` (Wezir), `pieceBishop` (Pil), `pieceKnight` (At). Rook (Gala) and pawn (Peşka) come from the glossary.
+
+## Learn redesign
+
+Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnStartTip`, `learnGo` (Başla), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
+
+## Onboarding redesign
+
+Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachReady`, `onbStartLesson`, `onbRatingLabel`.

@@ -77,6 +77,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('How strong are you?'), findsOneWidget);
 
+      await tester.ensureVisible(find.text('Advanced'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Advanced'));
       await tester.pump();
       await tester.tap(find.text('Continue'));

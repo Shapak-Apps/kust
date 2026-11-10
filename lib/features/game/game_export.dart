@@ -213,7 +213,10 @@ Future<void> showExportSheet(
         KustOption(
           title: sheetContext.t.boardImage,
           subtitle: sheetContext.t.boardImageSub,
-          leading: const KustIconTile(Icons.image_outlined),
+          leading: const KustIconTile(
+            Icons.image_rounded,
+            color: Color(0xFF5AA9E6),
+          ),
           onTap: () async {
             Navigator.pop(sheetContext);
             final png = await boardPng(
@@ -234,7 +237,10 @@ Future<void> showExportSheet(
         KustOption(
           title: sheetContext.t.copyFen,
           subtitle: sheetContext.t.copyFenSub,
-          leading: const KustIconTile(Icons.grid_on_rounded),
+          leading: const KustIconTile(
+            Icons.grid_on_rounded,
+            color: Color(0xFF3CB77C),
+          ),
           onTap: () =>
               _copy(sheetContext, position.fen, sheetContext.t.fenCopied),
         ),
@@ -242,14 +248,20 @@ Future<void> showExportSheet(
         KustOption(
           title: sheetContext.t.copyPgn,
           subtitle: sheetContext.t.copyPgnSub,
-          leading: const KustIconTile(Icons.notes_rounded),
+          leading: const KustIconTile(
+            Icons.notes_rounded,
+            color: Color(0xFFFFBB00),
+          ),
           onTap: () => _copy(sheetContext, pgn, sheetContext.t.pgnCopied),
         ),
         const SizedBox(height: 8),
         KustOption(
           title: sheetContext.t.sharePgn,
           subtitle: sheetContext.t.sharePgnSub,
-          leading: const KustIconTile(Icons.ios_share_rounded),
+          leading: const KustIconTile(
+            Icons.ios_share_rounded,
+            color: Color(0xFFE5795A),
+          ),
           onTap: () {
             Navigator.pop(sheetContext);
             SharePlus.instance.share(ShareParams(text: pgn));

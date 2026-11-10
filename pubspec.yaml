@@ -71,6 +71,7 @@ flutter:
     - assets/pieces/graphite/
     - assets/pieces/shaded/
     - assets/pieces/brushed/
+    - assets/pieces/learn/
     - assets/sounds/
     - assets/puzzles/
     - assets/engine/

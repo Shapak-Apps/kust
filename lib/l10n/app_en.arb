@@ -879,5 +879,63 @@
   "lessonMateTitle": "Checkmate",
   "lessonMateIntro": "Checkmate is a check that cannot be escaped: the game ends and you win. If the other side has no legal move but is not in check, it is stalemate, a draw. Be careful not to stalemate when you are winning.",
   "lessonFirstMatesTitle": "Your first checkmates",
-  "lessonFirstMatesIntro": "Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move."
+  "lessonFirstMatesIntro": "Three patterns that win games: the back rank mate, the two-rook ladder and the queen with the king. Find the mate in one move.",
+  "campPiecesTitle": "The pieces",
+  "campPiecesSub": "Learn how every piece moves",
+  "campRulesTitle": "The rules",
+  "campRulesSub": "Captures, check and special moves",
+  "campMateTitle": "Checkmate",
+  "campMateSub": "Win your first games",
+  "campLabel": "CAMP {n}",
+  "@campLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "summitLabel": "SUMMIT",
+  "learnStartTip": "START",
+  "learnUpNext": "UP NEXT · LESSON {n}",
+  "@learnUpNext": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonLabel": "LESSON {n}",
+  "@lessonLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonMinutes": "{n} tasks · {m} min",
+  "@lessonMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "learnSummitDone": "You reached the summit",
+  "lessonMistakes": "Mistakes",
+  "lessonHintsUsed": "Hints",
+  "lessonTasksDone": "Tasks",
+  "lessonBackToMap": "Back to the map",
+  "learnCoachDone": "That is it! Tap Continue.",
+  "lessonPerfect": "Perfect lesson!",
+  "learnGo": "Start",
+  "onbLearn": "Learn from zero",
+  "onbLearnSub": "Short lessons from the first move to checkmate",
+  "onbCoachHi": "Salam! I'm Bahar. Let's set Küşt up for you.",
+  "onbCoachLevel": "Tell me how you play, and I'll pick fair opponents.",
+  "onbCoachReady": "Great! Your board is ready.",
+  "onbStartLesson": "Start the first lesson",
+  "onbRatingLabel": "STARTING RATING"
 }

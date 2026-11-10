@@ -326,7 +326,7 @@ class AppL10nTk extends AppL10n {
   String get copyFen => 'FEN göçür';
 
   @override
-  String get copyFenSub => 'Bu ýagdaý, islendik şahmat programmasy üçin';
+  String get copyFenSub => 'Islendik küşt programmasy üçin';
 
   @override
   String get copyPgn => 'PGN göçür';
@@ -511,7 +511,7 @@ class AppL10nTk extends AppL10n {
   String get playWithBots => 'Botlar bilen oýnaň';
 
   @override
-  String get playWithBotsSub => 'Botlarymyzyň biri bilen güýç synanyşyň';
+  String get playWithBotsSub => 'Botlarymyz bilen güýç synanyşyň';
 
   @override
   String get playLocally => 'Şu enjamda oýnaň';
@@ -1466,4 +1466,94 @@ class AppL10nTk extends AppL10n {
   @override
   String get lessonFirstMatesIntro =>
       'Oýunlary ýeňdirýän üç nagyş: soňky hatardaky şahmat, iki galanyň basgançagy we wezir bilen şa. Bir göçümde şahmady tapyň.';
+
+  @override
+  String get campPiecesTitle => 'Çöpler';
+
+  @override
+  String get campPiecesSub => 'Her çöpüň nähili göçýändigini öwreniň';
+
+  @override
+  String get campRulesTitle => 'Düzgünler';
+
+  @override
+  String get campRulesSub => 'Almak, şah we aýratyn göçümler';
+
+  @override
+  String get campMateTitle => 'Şahmat';
+
+  @override
+  String get campMateSub => 'Ilkinji oýunlaryňyzy ýeňiň';
+
+  @override
+  String campLabel(int n) {
+    return '$n-NJI LAGER';
+  }
+
+  @override
+  String get summitLabel => 'DEPE';
+
+  @override
+  String get learnStartTip => 'BAŞLA';
+
+  @override
+  String learnUpNext(int n) {
+    return 'INDIKI · $n-NJI SAPAK';
+  }
+
+  @override
+  String lessonLabel(int n) {
+    return '$n-NJI SAPAK';
+  }
+
+  @override
+  String lessonMinutes(int n, int m) {
+    return '$n tabşyryk · $m min';
+  }
+
+  @override
+  String get learnSummitDone => 'Siz depä çykdyňyz';
+
+  @override
+  String get lessonMistakes => 'Ýalňyşlyklar';
+
+  @override
+  String get lessonHintsUsed => 'Kömekler';
+
+  @override
+  String get lessonTasksDone => 'Tabşyryklar';
+
+  @override
+  String get lessonBackToMap => 'Karta dolan';
+
+  @override
+  String get learnCoachDone => 'Boldy! «Dowam et» basyň.';
+
+  @override
+  String get lessonPerfect => 'Kemsiz sapak!';
+
+  @override
+  String get learnGo => 'Başla';
+
+  @override
+  String get onbLearn => 'Noldan öwreniň';
+
+  @override
+  String get onbLearnSub => 'Ilkinji göçümden şahmada çenli gysga sapaklar';
+
+  @override
+  String get onbCoachHi => 'Salam! Men Bahar. Geliň, Küşti size görä sazlalyň.';
+
+  @override
+  String get onbCoachLevel =>
+      'Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.';
+
+  @override
+  String get onbCoachReady => 'Ajaýyp! Tagtaňyz taýyn.';
+
+  @override
+  String get onbStartLesson => 'Ilkinji sapagy başla';
+
+  @override
+  String get onbRatingLabel => 'BAŞLANGYÇ REÝTING';
 }

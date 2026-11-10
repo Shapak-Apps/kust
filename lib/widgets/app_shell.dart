@@ -45,41 +45,44 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       backgroundColor: context.k.bg,
-      body: Stack(
-        children: [
-          Positioned.fill(child: widget.child),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: KustNavBar(
-              selectedIndex: selected,
-              items: [
-                KustNavItem(
-                  Icons.sports_esports_outlined,
-                  Icons.sports_esports_rounded,
-                  context.t.navPlay,
-                ),
-                KustNavItem(
-                  Icons.extension_outlined,
-                  Icons.extension_rounded,
-                  context.t.navPuzzles,
-                ),
-                KustNavItem(
-                  Icons.school_outlined,
-                  Icons.school_rounded,
-                  context.t.navLearn,
-                ),
-                KustNavItem(
-                  Icons.history_rounded,
-                  Icons.history_rounded,
-                  context.t.navHistory,
-                ),
-              ],
-              onSelected: _select,
+      // The top bar and the tab bar blur the page through one shared read.
+      body: BackdropGroup(
+        child: Stack(
+          children: [
+            Positioned.fill(child: widget.child),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: KustNavBar(
+                selectedIndex: selected,
+                items: [
+                  KustNavItem(
+                    Icons.sports_esports_outlined,
+                    Icons.sports_esports_rounded,
+                    context.t.navPlay,
+                  ),
+                  KustNavItem(
+                    Icons.extension_outlined,
+                    Icons.extension_rounded,
+                    context.t.navPuzzles,
+                  ),
+                  KustNavItem(
+                    Icons.school_outlined,
+                    Icons.school_rounded,
+                    context.t.navLearn,
+                  ),
+                  KustNavItem(
+                    Icons.history_rounded,
+                    Icons.history_rounded,
+                    context.t.navHistory,
+                  ),
+                ],
+                onSelected: _select,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

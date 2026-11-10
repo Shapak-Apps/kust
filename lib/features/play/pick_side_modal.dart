@@ -99,7 +99,10 @@ class _PickSideModalState extends State<PickSideModal> {
         KustOption(
           title: context.t.random,
           subtitle: context.t.letFateDecide,
-          leading: const KustIconTile(Icons.shuffle_rounded),
+          leading: const KustIconTile(
+            Icons.shuffle_rounded,
+            color: Color(0xFFB78CF2),
+          ),
           selected: _side == null,
           onTap: () => setState(() => _side = null),
         ),
