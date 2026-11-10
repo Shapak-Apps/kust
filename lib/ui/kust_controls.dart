@@ -28,6 +28,20 @@ class KustOption extends StatelessWidget {
   /// fewer, so options in a list come out the same height.
   final int? subtitleLines;
 
+  /// A card a step lighter than the sheet it sits on, so it reads as
+  /// something to tap.
+  static Color _fill(BuildContext context) {
+    final k = context.k;
+    return Theme.of(context).brightness == Brightness.dark
+        ? Color.alphaBlend(const Color(0x14FFFFFF), k.surfaceAlt)
+        : k.surfaceAlt;
+  }
+
+  static Color _edge(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? const Color(0x12FFFFFF)
+      : context.k.line;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -44,10 +58,10 @@ class KustOption extends StatelessWidget {
           constraints: const BoxConstraints(minHeight: 76),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? k.accent.withValues(alpha: 0.12) : k.surface,
+            color: selected ? k.accent.withValues(alpha: 0.14) : _fill(context),
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
             border: Border.all(
-              color: selected ? k.accent : Colors.transparent,
+              color: selected ? k.accent : _edge(context),
               width: 1.5,
             ),
           ),
