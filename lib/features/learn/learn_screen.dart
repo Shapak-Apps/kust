@@ -5,15 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lessons.dart';
-import 'package:kust/features/learn/mountain.dart';
+import 'package:kust/features/learn/garden_map.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/widgets/piece_image.dart';
 
-/// The Learn tab: a climb up a mountain with a stop for every lesson, from
-/// the first pawn move at the foot to checkmate at the top. The header tells
+/// The Learn tab: a garden map with a raised tile for every lesson, from
+/// the first pawn move at the bottom to checkmate at the top. The header tells
 /// the stars earned and the camp you are in; the card at the bottom starts
 /// the next lesson.
 class LearnScreen extends StatefulWidget {
@@ -49,7 +49,7 @@ class _LearnScreenState extends State<LearnScreen> {
 
   /// The trail starts at the foot, scrolled so the next stop is in view.
   ScrollController _controllerFor(
-    MountainLayout layout,
+    LearnMapLayout layout,
     double viewport,
     int next,
   ) {
@@ -68,16 +68,16 @@ class _LearnScreenState extends State<LearnScreen> {
     final top = MediaQuery.of(context).padding.top;
     final nav = KustNavBar.clearance(context);
     return ColoredBox(
-      color: const Color(0xFF0B1222),
+      color: GardenColors.ground,
       child: !_loaded
           ? const SizedBox.expand()
           : LayoutBuilder(
               builder: (context, box) {
-                final layout = MountainLayout(
+                final layout = LearnMapLayout(
                   width: box.maxWidth,
                   count: kLessons.length,
                   topInset: top + _header - 40,
-                  footRoom: nav + _card + 40,
+                  footRoom: nav + _card + 120,
                 );
                 return ValueListenableBuilder<Set<String>>(
                   valueListenable: LearnProgress.instance.done,
@@ -100,11 +100,12 @@ class _LearnScreenState extends State<LearnScreen> {
                         SingleChildScrollView(
                           controller: controller,
                           reverse: true,
-                          child: MountainPath(
+                          child: LearnMap(
                             layout: layout,
                             done: done,
-                            starsOf: progress.starsOf,
+                            stars: progress.stars,
                             onOpen: _open,
+                            coachImage: 'assets/bots/Bahar.webp',
                           ),
                         ),
                         Positioned(
@@ -168,7 +169,7 @@ class _Header extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF0B1222), Color(0xEE0B1222), Color(0x000B1222)],
+          colors: [Color(0xFF10241A), Color(0xEE10241A), Color(0x0010241A)],
           stops: [0, 0.7, 1],
         ),
       ),
@@ -216,7 +217,7 @@ class _Header extends StatelessWidget {
                     const Icon(
                       Icons.star_rounded,
                       size: 18,
-                      color: MountainPainter.gold,
+                      color: GardenColors.gold,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -460,7 +461,7 @@ class _SummitCard extends StatelessWidget {
         children: [
           const Icon(
             Icons.emoji_events_rounded,
-            color: MountainPainter.gold,
+            color: GardenColors.gold,
             size: 36,
           ),
           const SizedBox(width: 12),

@@ -78,16 +78,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('The pawn'), findsWidgets);
-    expect(find.text('Checkmate'), findsWidgets);
+    expect(find.textContaining('Checkmate'), findsWidgets);
     expect(find.text('0 / 33'), findsOneWidget);
     expect(find.text('Learn how every piece moves'), findsOneWidget);
-    expect(find.text('START'), findsOneWidget);
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );
     await tester.pump(const Duration(milliseconds: 100));
     await _shot(tester, 'learn');
-    // With a few lessons done the trail turns gold up to the next stop.
+    // With a few lessons done their tiles turn green with their stars.
     await LearnProgress.instance.complete('pawn', stars: 3);
     await LearnProgress.instance.complete('rook', stars: 2);
     await LearnProgress.instance.complete('bishop', stars: 3);
