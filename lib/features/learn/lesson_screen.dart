@@ -5,7 +5,6 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lesson_task.dart';
@@ -16,7 +15,6 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/piece_image.dart';
 
 /// The guide who explains every lesson.
 const String _coachImage = 'assets/bots/Bahar.webp';
@@ -594,65 +592,47 @@ class _Marks extends StatelessWidget {
   }
 }
 
-/// The lesson's piece (or icon) on a big round 3D badge.
+/// The lesson's piece standing in a soft glow, or its icon on a round badge.
 class _Badge extends StatelessWidget {
   const _Badge({required this.lesson});
 
   final Lesson lesson;
 
-  static const double size = 120;
-
   @override
   Widget build(BuildContext context) {
     final piece = lesson.piece;
     return SizedBox(
-      width: size,
-      height: size + 10,
+      width: 220,
+      height: 190,
       child: Stack(
-        alignment: Alignment.topCenter,
+        alignment: Alignment.center,
         children: [
-          Positioned(
-            top: 10,
-            child: Container(
-              width: size,
-              height: size,
-              decoration: const BoxDecoration(
-                color: Color(0xFF20804F),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
           Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: _green,
+            width: 190,
+            height: 190,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 3,
+              gradient: RadialGradient(
+                colors: [Color(0x553CB77C), Color(0x003CB77C)],
               ),
             ),
-            alignment: Alignment.center,
-            child: piece == null
-                ? Icon(lesson.icon, size: size * 0.46, color: Colors.white)
-                : PieceImage(
-                    assetForPiece(Piece(color: Side.white, role: piece)),
-                    width: size * 0.62,
-                    height: size * 0.62,
-                  ),
           ),
-          Positioned(
-            top: size * 0.1,
-            child: Container(
-              width: size * 0.6,
-              height: size * 0.24,
+          if (piece == null)
+            Container(
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(size),
+                color: _green,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 3,
+                ),
               ),
-            ),
-          ),
+              child: Icon(lesson.icon, size: 56, color: Colors.white),
+            )
+          else
+            LearnPiece(piece, height: 168),
         ],
       ),
     );

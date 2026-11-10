@@ -3,10 +3,8 @@ import 'dart:math' as math;
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
-import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/widgets/piece_image.dart';
 
 /// Colours of the garden the lessons are laid out in.
 abstract final class GardenColors {
@@ -736,16 +734,11 @@ class LearnMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final next = kLessons.indexWhere((l) => !done.contains(l.id));
     final t = context.t;
-    Widget statue(Offset base, Role role, double size) => Positioned(
-      left: base.dx - size / 2,
-      top: base.dy - 42 - size * 0.92,
-      width: size,
-      height: size,
-      child: PieceImage(
-        assetForPiece(Piece(color: Side.white, role: role)),
-        width: size,
-        height: size,
-      ),
+    // A statue stands on its pedestal: [base] is the pedestal's bottom point.
+    Widget statue(Offset base, Role role, double height) => Positioned(
+      left: base.dx - height * 100 / 135 / 2,
+      top: base.dy - 42 - height + 14,
+      child: LearnPiece(role, height: height),
     );
     final w = layout.width;
     return SizedBox(
@@ -781,7 +774,7 @@ class LearnMap extends StatelessWidget {
                     Role.queen,
                     66,
                   ),
-                  statue(layout.summit + const Offset(-8, 4), Role.king, 84),
+                  statue(layout.summit + const Offset(-10, 28), Role.king, 128),
                   for (final camp in kCamps.skip(1)) _sign(context, camp, t),
                   if (next >= 0) _piece(next),
                 ],
@@ -798,19 +791,21 @@ class LearnMap extends StatelessWidget {
   Widget _piece(int i) {
     final c = layout.tile(i);
     final lesson = kLessons[i];
-    const size = 62.0;
+    const height = 104.0;
+    final role = lesson.piece;
     return Positioned(
-      left: c.dx - size / 2,
-      top: c.dy - size + 8,
-      width: size,
-      height: size,
-      child: lesson.piece == null
-          ? Icon(lesson.icon, size: 40, color: Colors.white)
-          : PieceImage(
-              assetForPiece(Piece(color: Side.white, role: lesson.piece!)),
-              width: size,
-              height: size,
-            ),
+      left: c.dx - height * 100 / 135 / 2,
+      top: c.dy - height + 22,
+      child: role == null
+          ? SizedBox(
+              width: 70,
+              height: height,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Icon(lesson.icon, size: 44, color: Colors.white),
+              ),
+            )
+          : LearnPiece(role, height: height),
     );
   }
 
@@ -818,7 +813,7 @@ class LearnMap extends StatelessWidget {
     final c = layout.tile(i);
     return Positioned(
       left: c.dx - 32,
-      top: c.dy - 136,
+      top: c.dy - 176,
       width: 64,
       height: 78,
       child: RepaintBoundary(child: _Marker(image: coachImage)),

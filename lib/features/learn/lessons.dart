@@ -1,5 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/features/learn/lesson_task.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -334,3 +335,29 @@ const List<Camp> kCamps = [
   Camp(id: 'rules', first: 6, last: 8),
   Camp(id: 'mate', first: 9, last: 10),
 ];
+
+/// The turned-ivory 3D picture of a piece, as used on the Learn map and in
+/// the lessons. 100 wide and 135 tall.
+String learnPieceAsset(Role role) => switch (role) {
+  Role.pawn => 'assets/pieces/learn/P.svg',
+  Role.rook => 'assets/pieces/learn/R.svg',
+  Role.knight => 'assets/pieces/learn/N.svg',
+  Role.bishop => 'assets/pieces/learn/B.svg',
+  Role.queen => 'assets/pieces/learn/Q.svg',
+  Role.king => 'assets/pieces/learn/K.svg',
+};
+
+/// A 3D piece standing [height] tall.
+class LearnPiece extends StatelessWidget {
+  const LearnPiece(this.role, {super.key, required this.height});
+
+  final Role role;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => SvgPicture.asset(
+    learnPieceAsset(role),
+    height: height,
+    width: height * 100 / 135,
+  );
+}
