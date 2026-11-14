@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:kust/core/error_log.dart';
 
 class AppStorage {
   AppStorage._();
@@ -28,12 +29,32 @@ class AppStorage {
   Box get _user => Hive.box(userBoxName);
   Box get _bots => Hive.box(botProgressBoxName);
 
+  /// Boxes that could not be read at start and were emptied. A damaged file
+  /// costs that box's data, but never stops the app from opening.
+  static final List<String> resetBoxes = [];
+
   static Future<void> init() async {
-    await Hive.openBox(userBoxName);
-    await Hive.openBox(botProgressBoxName);
-    await Hive.openBox(puzzleBoxName);
-    await Hive.openBox(historyBoxName);
+    resetBoxes.clear();
+    await _openSafe(userBoxName);
+    await _openSafe(botProgressBoxName);
+    await _openSafe(puzzleBoxName);
+    await _openSafe(historyBoxName);
     await instance._ensureGuest();
+  }
+
+  /// Opens a box; replaced in tests to simulate an unreadable file.
+  @visibleForTesting
+  static Future<Box> Function(String name) opener = Hive.openBox;
+
+  static Future<Box> _openSafe(String name) async {
+    try {
+      return await opener(name);
+    } catch (e, st) {
+      ErrorLog.record(e, st);
+      resetBoxes.add(name);
+      await Hive.deleteBoxFromDisk(name);
+      return opener(name);
+    }
   }
 
   Future<void> _ensureGuest() async {

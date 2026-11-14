@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
+import 'package:kust/core/error_log.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/svg_precache.dart';
@@ -24,7 +25,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 bool get _shouldWarmUpEngine => !kDebugMode;
 
 Future<void> main() async {
+  await runZonedGuarded(_start, ErrorLog.record);
+}
+
+Future<void> _start() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (d) {
+    FlutterError.presentError(d);
+    ErrorLog.record(d.exception, d.stack);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    ErrorLog.record(error, stack);
+    return true;
+  };
   // Touch events are lined up with the frames, so a dragged piece moves
   // smoothly even when the screen runs faster than the touch panel reports.
   GestureBinding.instance.resamplingEnabled = true;
@@ -32,7 +45,11 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
   await AppStorage.init();
-  await AppSettings.instance.load();
+  try {
+    await AppSettings.instance.load();
+  } catch (e, st) {
+    ErrorLog.record(e, st);
+  }
   if (_shouldWarmUpEngine) {
     ChessEngine.instance.warmUp();
   }
