@@ -971,5 +971,11 @@
         "type": "int"
       }
     }
-  }
+  },
+  "retryTitle": "What should you have played?",
+  "retryRight": "That's the move!",
+  "retryWrong": "Not quite. Try again.",
+  "retryShow": "Show answer",
+  "retryTry": "Try again",
+  "retryNoPosition": "This move cannot be shown."
 }

@@ -360,3 +360,14 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 |---|---|---|
 | `continueGame` | Continue your game | Oýny dowam et |
 | `continueGameSub` | {who} · move {n} | {who} · {n}-nji göçüm |
+
+## Try again on a mistake (audit 4.6)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `retryTitle` | What should you have played? | Näme göçmelidiňiz? |
+| `retryRight` | That's the move! | Dogry göçüm! |
+| `retryWrong` | Not quite. Try again. | Doly däl. Ýene synanyşyň. |
+| `retryShow` | Show answer | Jogaby görkez |
+| `retryTry` | Try again | Täzeden synanyş |
+| `retryNoPosition` | This move cannot be shown. | Bu göçümi görkezip bolmaýar. |

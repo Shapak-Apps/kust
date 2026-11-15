@@ -467,5 +467,11 @@
   "defaultPlayerName": "Игрок",
   "saveName": "Сохранить",
   "continueGame": "Продолжить партию",
-  "continueGameSub": "{who} · ход {n}"
+  "continueGameSub": "{who} · ход {n}",
+  "retryTitle": "Как нужно было сыграть?",
+  "retryRight": "Верный ход!",
+  "retryWrong": "Не совсем. Попробуйте ещё.",
+  "retryShow": "Показать ответ",
+  "retryTry": "Ещё раз",
+  "retryNoPosition": "Этот ход нельзя показать."
 }

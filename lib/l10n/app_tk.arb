@@ -467,5 +467,11 @@
   "defaultPlayerName": "Oýunçy",
   "saveName": "Ýatda sakla",
   "continueGame": "Oýny dowam et",
-  "continueGameSub": "{who} · {n}-nji göçüm"
+  "continueGameSub": "{who} · {n}-nji göçüm",
+  "retryTitle": "Näme göçmelidiňiz?",
+  "retryRight": "Dogry göçüm!",
+  "retryWrong": "Doly däl. Ýene synanyşyň.",
+  "retryShow": "Jogaby görkez",
+  "retryTry": "Täzeden synanyş",
+  "retryNoPosition": "Bu göçümi görkezip bolmaýar."
 }

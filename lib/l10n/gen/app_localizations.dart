@@ -2876,6 +2876,42 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{who} · move {n}'**
   String continueGameSub(String who, int n);
+
+  /// No description provided for @retryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should you have played?'**
+  String get retryTitle;
+
+  /// No description provided for @retryRight.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s the move!'**
+  String get retryRight;
+
+  /// No description provided for @retryWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Try again.'**
+  String get retryWrong;
+
+  /// No description provided for @retryShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show answer'**
+  String get retryShow;
+
+  /// No description provided for @retryTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retryTry;
+
+  /// No description provided for @retryNoPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'This move cannot be shown.'**
+  String get retryNoPosition;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
