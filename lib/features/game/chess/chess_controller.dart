@@ -1591,10 +1591,6 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(clearSelection: true);
   }
 
-  void stopEngineWork() {
-    _engine.stopThinking();
-  }
-
   /// Tries to bring the engine back after [GameState.engineFailed].
   Future<void> retryEngine() async {
     if (state.mode != GameMode.bot || state.status != GameStatus.playing) {
