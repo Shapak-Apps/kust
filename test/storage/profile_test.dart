@@ -65,7 +65,10 @@ void main() {
     expect(File(second).existsSync(), false);
   });
 
-  testWidgets('save stays off until the username is valid', (tester) async {
+  testWidgets('the profile shows, and edits in place', (tester) async {
+    await tester.runAsync(
+      () => store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi'),
+    );
     await tester.pumpWidget(
       MaterialApp(
         theme: appDarkTheme,
@@ -75,11 +78,28 @@ void main() {
       ),
     );
     await tester.pump();
-    KustButton save() => tester.widget(find.byType(KustButton));
+    expect(find.text('Ali'), findsOneWidget);
+    expect(find.text('@ali'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+
+    await tester.tap(find.text('Edit profile'));
+    await tester.pump();
+    KustButton save() => tester.widget(
+      find.byWidgetPredicate((w) => w is KustButton && w.label == 'Save'),
+    );
+    await tester.enterText(find.byType(TextField).at(1), 'a');
+    await tester.pump();
     expect(save().onTap, isNull);
     await tester.enterText(find.byType(TextField).at(1), 'kust_fan');
     await tester.pump();
-    expect(save().onTap, isNotNull);
+    // Saved outside the fake clock, so Hive writes for real.
+    await tester.runAsync(() async {
+      save().onTap!();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('@kust_fan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

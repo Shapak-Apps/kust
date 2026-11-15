@@ -61,50 +61,60 @@ void main() {
     Widget app() =>
         MaterialApp(theme: appTheme, home: const OnboardingScreen());
 
-    testWidgets('requires a level before continuing, and can skip', (
+    Future<void> toLevels(WidgetTester tester) async {
+      await tester.tap(find.text('Get started'));
+      await tester.pumpAndSettle();
+      expect(find.text('What should we call you?'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).at(0), 'Aýna');
+      await tester.enterText(find.byType(TextField).at(1), 'Ayna_1');
+      await tester.pump();
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('asks for a name and a valid username, then a level', (
       tester,
     ) async {
       await tester.pumpWidget(app());
       expect(find.text('Chess that helps you improve'), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
-
       await tester.tap(find.text('Get started'));
       await tester.pumpAndSettle();
-      expect(find.text('How strong are you?'), findsOneWidget);
 
-      // Continue is disabled until a level is chosen.
+      // Continue is off until both are filled in, the username lowercased.
+      await tester.enterText(find.byType(TextField).at(0), 'Aýna');
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+      expect(find.text('What should we call you?'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).at(1), 'Ayna_1');
+      await tester.pump();
+      expect(find.text('ayna_1'), findsOneWidget);
       await tester.tap(find.text('Continue'));
       await tester.pumpAndSettle();
       expect(find.text('How strong are you?'), findsOneWidget);
 
       await tester.ensureVisible(find.text('Advanced'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Advanced'));
       await tester.pump();
-      await tester.tap(find.text('Continue'));
-      await tester.pumpAndSettle();
-      expect(find.text('Your starting rating is 1600.'), findsNothing);
-      expect(find.textContaining('starting rating is 1600'), findsOneWidget);
+      expect(find.text('Start playing'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('back returns to the previous step', (tester) async {
       await tester.pumpWidget(app());
-      await tester.tap(find.text('Get started'));
-      await tester.pumpAndSettle();
+      await toLevels(tester);
       await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pumpAndSettle();
-      expect(find.text('Chess that helps you improve'), findsOneWidget);
+      expect(find.text('What should we call you?'), findsOneWidget);
+      // What was typed is still there.
+      expect(find.text('ayna_1'), findsOneWidget);
     });
 
-    testWidgets('skip goes to the final step with the default rating', (
-      tester,
-    ) async {
+    testWidgets('a beginner is offered the first lesson', (tester) async {
       await tester.pumpWidget(app());
-      await tester.tap(find.text('Get started'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Skip for now'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('starting rating is 1200'), findsOneWidget);
+      await toLevels(tester);
+      await tester.tap(find.text('Beginner'));
+      await tester.pump();
+      expect(find.text('Start the first lesson'), findsOneWidget);
     });
   });
 }

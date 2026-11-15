@@ -1911,48 +1911,6 @@ abstract class AppL10n {
   /// **'Chess that helps you improve'**
   String get onbTitle;
 
-  /// No description provided for @onbPlayBots.
-  ///
-  /// In en, this message translates to:
-  /// **'Play bots'**
-  String get onbPlayBots;
-
-  /// No description provided for @onbPlayBotsSub.
-  ///
-  /// In en, this message translates to:
-  /// **'From 400 to 2000 Elo, or pass the phone to a friend'**
-  String get onbPlayBotsSub;
-
-  /// No description provided for @onbSolve.
-  ///
-  /// In en, this message translates to:
-  /// **'Solve puzzles'**
-  String get onbSolve;
-
-  /// No description provided for @onbSolveSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Short tactics with hints and a rating'**
-  String get onbSolveSub;
-
-  /// No description provided for @onbReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Review your games'**
-  String get onbReview;
-
-  /// No description provided for @onbReviewSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Every finished game is saved for replay'**
-  String get onbReviewSub;
-
-  /// No description provided for @onbNoAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'No account needed. Your games and progress stay on this device.'**
-  String get onbNoAccount;
-
   /// No description provided for @onbHowStrong.
   ///
   /// In en, this message translates to:
@@ -2012,18 +1970,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'I play seriously and may compete in tournaments.'**
   String get lvlCompetitiveD;
-
-  /// No description provided for @onbAllSet.
-  ///
-  /// In en, this message translates to:
-  /// **'You’re all set'**
-  String get onbAllSet;
-
-  /// No description provided for @onbStartingRating.
-  ///
-  /// In en, this message translates to:
-  /// **'Your starting rating is {rating}.\nYour first game is one tap away.'**
-  String onbStartingRating(int rating);
 
   /// No description provided for @streakDays.
   ///
@@ -2727,47 +2673,11 @@ abstract class AppL10n {
   /// **'Perfect lesson!'**
   String get lessonPerfect;
 
-  /// No description provided for @onbLearn.
-  ///
-  /// In en, this message translates to:
-  /// **'Learn from zero'**
-  String get onbLearn;
-
-  /// No description provided for @onbLearnSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Short lessons from the first move to checkmate'**
-  String get onbLearnSub;
-
-  /// No description provided for @onbCoachHi.
-  ///
-  /// In en, this message translates to:
-  /// **'Salam! I\'m Bahar. Let\'s set Küşt up for you.'**
-  String get onbCoachHi;
-
-  /// No description provided for @onbCoachLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'Tell me how you play, and I\'ll pick fair opponents.'**
-  String get onbCoachLevel;
-
-  /// No description provided for @onbCoachReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Great! Your board is ready.'**
-  String get onbCoachReady;
-
   /// No description provided for @onbStartLesson.
   ///
   /// In en, this message translates to:
   /// **'Start the first lesson'**
   String get onbStartLesson;
-
-  /// No description provided for @onbRatingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'STARTING RATING'**
-  String get onbRatingLabel;
 
   /// No description provided for @lessonLocked.
   ///
@@ -3014,6 +2924,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Remove photo'**
   String get removePhoto;
+
+  /// No description provided for @onbNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should we call you?'**
+  String get onbNameTitle;
+
+  /// No description provided for @onbNameSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change these later in your profile.'**
+  String get onbNameSub;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

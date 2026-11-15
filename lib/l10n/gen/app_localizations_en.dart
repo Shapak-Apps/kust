@@ -1025,29 +1025,6 @@ class AppL10nEn extends AppL10n {
   String get onbTitle => 'Chess that helps you improve';
 
   @override
-  String get onbPlayBots => 'Play bots';
-
-  @override
-  String get onbPlayBotsSub =>
-      'From 400 to 2000 Elo, or pass the phone to a friend';
-
-  @override
-  String get onbSolve => 'Solve puzzles';
-
-  @override
-  String get onbSolveSub => 'Short tactics with hints and a rating';
-
-  @override
-  String get onbReview => 'Review your games';
-
-  @override
-  String get onbReviewSub => 'Every finished game is saved for replay';
-
-  @override
-  String get onbNoAccount =>
-      'No account needed. Your games and progress stay on this device.';
-
-  @override
   String get onbHowStrong => 'How strong are you?';
 
   @override
@@ -1078,14 +1055,6 @@ class AppL10nEn extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'I play seriously and may compete in tournaments.';
-
-  @override
-  String get onbAllSet => 'You’re all set';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Your starting rating is $rating.\nYour first game is one tap away.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1494,26 +1463,7 @@ class AppL10nEn extends AppL10n {
   String get lessonPerfect => 'Perfect lesson!';
 
   @override
-  String get onbLearn => 'Learn from zero';
-
-  @override
-  String get onbLearnSub => 'Short lessons from the first move to checkmate';
-
-  @override
-  String get onbCoachHi => 'Salam! I\'m Bahar. Let\'s set Küşt up for you.';
-
-  @override
-  String get onbCoachLevel =>
-      'Tell me how you play, and I\'ll pick fair opponents.';
-
-  @override
-  String get onbCoachReady => 'Great! Your board is ready.';
-
-  @override
   String get onbStartLesson => 'Start the first lesson';
-
-  @override
-  String get onbRatingLabel => 'STARTING RATING';
 
   @override
   String lessonLocked(int n) {
@@ -1653,4 +1603,13 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get removePhoto => 'Remove photo';
+
+  @override
+  String get onbNameTitle => 'What should we call you?';
+
+  @override
+  String get onbNameSub => 'You can change these later in your profile.';
+
+  @override
+  String get editProfile => 'Edit profile';
 }
