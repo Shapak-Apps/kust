@@ -357,6 +357,9 @@ class AppL10nRu extends AppL10n {
   String get qGood => 'Хороший';
 
   @override
+  String get qBook => 'Теория';
+
+  @override
   String get qInaccuracy => 'Неточность';
 
   @override
@@ -381,6 +384,11 @@ class AppL10nRu extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · лучший ход';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · теоретический ход';
   }
 
   @override

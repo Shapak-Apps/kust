@@ -380,3 +380,12 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 | `reviewTip3` | Tap the replay button on a key moment to try that position again. | Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň. |
 | `reviewTip4` | Brilliant moves are rare: a sacrifice the engine agrees with. | Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany. |
 | `reviewTip5` | Once analyzed, a game opens instantly next time. | Seljerilen oýun indiki gezek derrew açylýar. |
+
+## Book moves and opening names
+
+Opening names are shown in Russian in the Turkmen app (owner's choice); the Russian names are drafts in `tools/openings/ru_names.tsv`.
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `qBook` | Book | Teoriýa |
+| `bannerBook` | {played} · book move | {played} · teoriýa göçümi |

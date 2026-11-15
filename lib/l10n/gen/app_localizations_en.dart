@@ -358,6 +358,9 @@ class AppL10nEn extends AppL10n {
   String get qGood => 'Good';
 
   @override
+  String get qBook => 'Book';
+
+  @override
   String get qInaccuracy => 'Inaccuracy';
 
   @override
@@ -382,6 +385,11 @@ class AppL10nEn extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · best move';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · book move';
   }
 
   @override

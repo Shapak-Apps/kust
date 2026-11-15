@@ -200,6 +200,7 @@
   "qBest": "Best move",
   "qExcellent": "Excellent",
   "qGood": "Good",
+  "qBook": "Book",
   "qInaccuracy": "Inaccuracy",
   "qMistake": "Mistake",
   "qMiss": "Miss",
@@ -222,6 +223,14 @@
   },
   "bannerBest": "{played} · best move",
   "@bannerBest": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerBook": "{played} · book move",
+  "@bannerBook": {
     "placeholders": {
       "played": {
         "type": "String"

@@ -735,6 +735,12 @@ abstract class AppL10n {
   /// **'Good'**
   String get qGood;
 
+  /// No description provided for @qBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get qBook;
+
   /// No description provided for @qInaccuracy.
   ///
   /// In en, this message translates to:
@@ -776,6 +782,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{played} · best move'**
   String bannerBest(String played);
+
+  /// No description provided for @bannerBook.
+  ///
+  /// In en, this message translates to:
+  /// **'{played} · book move'**
+  String bannerBook(String played);
 
   /// No description provided for @bannerExcellent.
   ///
