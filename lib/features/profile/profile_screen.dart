@@ -34,6 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // A player from before onboarding asked for a username picks one first.
+    if (_store.username == null) _fill();
     _name.addListener(_changed);
     _username.addListener(_changed);
   }
@@ -54,12 +56,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _back() => context.canPop() ? context.pop() : context.go('/play');
 
-  void _edit() {
-    _name.text = _store.displayName(context.t);
+  /// Puts the saved profile in the form and opens it.
+  void _fill() {
+    _name.text = _store.displayName(AppText.now);
     _username.text = _store.username ?? '';
     _bio.text = _store.bio;
-    setState(() => _editing = true);
+    _editing = true;
   }
+
+  void _edit() => setState(_fill);
 
   Future<void> _save() async {
     final saved = await _store.saveProfile(

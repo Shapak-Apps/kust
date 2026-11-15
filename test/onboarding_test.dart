@@ -116,5 +116,16 @@ void main() {
       await tester.pump();
       expect(find.text('Start the first lesson'), findsOneWidget);
     });
+
+    testWidgets('the system back button steps back', (tester) async {
+      await tester.pumpWidget(app());
+      await toLevels(tester);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('What should we call you?'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Chess that helps you improve'), findsOneWidget);
+    });
   });
 }

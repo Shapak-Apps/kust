@@ -4,7 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 
-/// Loads the pieces of the chosen set and the move icons ahead of time, and
+/// Loads the pieces of the chosen set, the move icons and the splash's
+/// wordmark ahead of time, and
 /// the pieces of a newly chosen set as soon as it is picked.
 Future<void> precacheGameSvgs() async {
   AppSettings.instance.pieceSet.addListener(
@@ -13,6 +14,9 @@ Future<void> precacheGameSvgs() async {
   final paths = <String>{
     ...AppSettings.instance.pieceSet.value.assets,
     for (final quality in MoveQuality.values) quality.asset,
+    // The splash's wordmark, wanted half a second after start.
+    'assets/images/wordmark_letters.svg',
+    'assets/images/wordmark_dots.svg',
   };
   await Future.wait(paths.map(_cache));
 }

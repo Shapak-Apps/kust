@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:kust/core/error_log.dart';
@@ -7,7 +8,6 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
-import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
@@ -138,7 +138,7 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setHaptics,
           ),
         ),
-        if (AppStorage.isReady) const _NameRow(),
+        if (AppStorage.isReady) const _ProfileRow(),
         const _LanguagePicker(),
         const _ReportRow(),
       ],
@@ -452,8 +452,9 @@ class _ReportRow extends StatelessWidget {
   }
 }
 
-class _NameRow extends StatelessWidget {
-  const _NameRow();
+/// The player's profile: their name, and the way into the profile screen.
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow();
 
   @override
   Widget build(BuildContext context) {
@@ -461,21 +462,18 @@ class _NameRow extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: AppStorage.instance.nameListenable(),
       builder: (context, _, _) => Pressable(
-        onTap: () => showKustSheet<void>(
-          context,
-          builder: (sheet) => const _NameSheet(),
-        ),
+        onTap: () => context.push('/profile'),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 28),
             child: Row(
               children: [
-                Icon(Icons.badge_outlined, size: 22, color: k.muted),
+                Icon(Icons.person_outline_rounded, size: 22, color: k.muted),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    context.t.yourName,
+                    context.t.profile,
                     style: k.body.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -494,60 +492,6 @@ class _NameRow extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _NameSheet extends StatefulWidget {
-  const _NameSheet();
-
-  @override
-  State<_NameSheet> createState() => _NameSheetState();
-}
-
-class _NameSheetState extends State<_NameSheet> {
-  late final TextEditingController _controller = TextEditingController(
-    text: AppStorage.instance.displayName(AppText.now),
-  );
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    await AppStorage.instance.setGuestName(_controller.text);
-    if (mounted) Navigator.of(context).pop();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        KustSheetHeader(title: context.t.yourName),
-        TextField(
-          controller: _controller,
-          autofocus: true,
-          maxLength: AppStorage.maxNameLength,
-          textCapitalization: TextCapitalization.words,
-          style: k.body,
-          onSubmitted: (_) => _save(),
-          decoration: InputDecoration(
-            counterText: '',
-            filled: true,
-            fillColor: k.surfaceAlt,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(KustSpace.rMedium),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        KustButton(label: context.t.saveName, onTap: _save),
-      ],
     );
   }
 }

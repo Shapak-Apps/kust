@@ -17,6 +17,7 @@ class KustTextField extends StatelessWidget {
     this.capitalization = TextCapitalization.none,
     this.formatters,
     this.onSubmitted,
+    this.action,
   });
 
   /// For a username: only what [AppStorage.usernamePattern] allows, in
@@ -27,6 +28,7 @@ class KustTextField extends StatelessWidget {
     this.helper,
     this.autofocus = false,
     this.onSubmitted,
+    this.action,
   }) : maxLength = 20,
        maxLines = 1,
        prefix = '@',
@@ -50,6 +52,9 @@ class KustTextField extends StatelessWidget {
   final List<TextInputFormatter>? formatters;
   final ValueChanged<String>? onSubmitted;
 
+  /// The keyboard's action key, such as next to move to the field below.
+  final TextInputAction? action;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -63,6 +68,7 @@ class KustTextField extends StatelessWidget {
       inputFormatters: formatters,
       autocorrect: prefix == null,
       onSubmitted: onSubmitted,
+      textInputAction: action,
       style: k.body,
       decoration: InputDecoration(
         counterText: '',

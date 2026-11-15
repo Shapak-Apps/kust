@@ -10,7 +10,7 @@ import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/onboarding/onboarding_level.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_controls.dart';
-import 'package:kust/ui/kust_logo.dart';
+import 'package:kust/ui/kust_splash.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -91,85 +91,93 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 320),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        final entering = child.key == ValueKey(_step);
-        final dx = (_forward ? 1 : -1) * (entering ? 0.08 : -0.08);
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween(
-              begin: Offset(entering ? dx : 0, 0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        );
+    // The system back button steps back too; on the first step it leaves.
+    return PopScope(
+      canPop: _step == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _goTo(_step - 1);
       },
-      child: KeyedSubtree(
-        key: ValueKey(_step),
-        child: switch (_step) {
-          0 => _Welcome(onStart: () => _goTo(1)),
-          1 => _StepPage(
-            onBack: () => _goTo(0),
-            title: t.onbNameTitle,
-            subtitle: t.onbNameSub,
-            button: t.cont,
-            onButton: _named ? () => _goTo(2) : null,
-            children: [
-              KustSectionLabel(t.yourName),
-              KustTextField(
-                controller: _name,
-                maxLength: AppStorage.maxNameLength,
-                autofocus: true,
-                capitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-              KustSectionLabel(t.username),
-              KustTextField.username(
-                controller: _username,
-                helper: t.usernameRule,
-                onSubmitted: (_) => _named ? _goTo(2) : null,
-              ),
-            ],
-          ),
-          _ => _StepPage(
-            onBack: () => _goTo(1),
-            title: t.onbHowStrong,
-            subtitle: t.onbHowStrongSub,
-            button: _level == OnboardingLevel.beginner
-                ? t.onbStartLesson
-                : t.onbStartPlaying,
-            onButton: _level == null || _finishing ? null : _finish,
-            onSkip: _finishing
-                ? null
-                : () {
-                    setState(() => _level = null);
-                    _finish();
-                  },
-            children: [
-              for (final level in OnboardingLevel.values)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _LevelCard(
-                    level: level,
-                    selected: _level == level,
-                    onTap: () => setState(() => _level = level),
-                  ),
-                ),
-            ],
-          ),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final entering = child.key == ValueKey(_step);
+          final dx = (_forward ? 1 : -1) * (entering ? 0.08 : -0.08);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween(
+                begin: Offset(entering ? dx : 0, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
         },
+        child: KeyedSubtree(
+          key: ValueKey(_step),
+          child: switch (_step) {
+            0 => _Welcome(onStart: () => _goTo(1)),
+            1 => _StepPage(
+              onBack: () => _goTo(0),
+              title: t.onbNameTitle,
+              subtitle: t.onbNameSub,
+              button: t.cont,
+              onButton: _named ? () => _goTo(2) : null,
+              children: [
+                KustSectionLabel(t.yourName),
+                KustTextField(
+                  controller: _name,
+                  maxLength: AppStorage.maxNameLength,
+                  autofocus: true,
+                  capitalization: TextCapitalization.words,
+                  action: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                KustSectionLabel(t.username),
+                KustTextField.username(
+                  controller: _username,
+                  helper: t.usernameRule,
+                  onSubmitted: (_) => _named ? _goTo(2) : null,
+                ),
+              ],
+            ),
+            _ => _StepPage(
+              onBack: () => _goTo(1),
+              title: t.onbHowStrong,
+              subtitle: t.onbHowStrongSub,
+              button: _level == OnboardingLevel.beginner
+                  ? t.onbStartLesson
+                  : t.onbStartPlaying,
+              onButton: _level == null || _finishing ? null : _finish,
+              onSkip: _finishing
+                  ? null
+                  : () {
+                      setState(() => _level = null);
+                      _finish();
+                    },
+              children: [
+                for (final level in OnboardingLevel.values)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _LevelCard(
+                      level: level,
+                      selected: _level == level,
+                      onTap: () => setState(() => _level = level),
+                    ),
+                  ),
+              ],
+            ),
+          },
+        ),
       ),
     );
   }
 }
 
-/// The first screen: the Square K on gold, as on the splash screen before
-/// it, a line about the app and one button.
+/// The first screen: the wordmark on gold, just where the opening
+/// animation leaves it, a line about the app under it and one button.
 class _Welcome extends StatelessWidget {
   const _Welcome({required this.onStart});
 
@@ -180,32 +188,37 @@ class _Welcome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final size = MediaQuery.sizeOf(context);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Material(
         color: KustTokens.gold,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Column(
-              children: [
-                const Spacer(flex: 3),
-                const KustSymbol(
-                  height: 128,
-                  color: _ink,
-                  lastMove: Colors.white,
+        child: Stack(
+          children: [
+            // Laid out on the whole screen, as the animation is.
+            const Positioned.fill(child: SplashArt()),
+            Positioned(
+              left: 24,
+              right: 24,
+              top:
+                  size.height / 2 + SplashArt.reachBelowMiddle(size.width) + 28,
+              child: Text(
+                t.onbTitle,
+                textAlign: TextAlign.center,
+                style: context.k.title.copyWith(
+                  color: _ink.withValues(alpha: 0.72),
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 40),
-                Text(
-                  t.onbTitle,
-                  textAlign: TextAlign.center,
-                  style: context.k.title.copyWith(
-                    color: _ink.withValues(alpha: 0.72),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(flex: 4),
-                Semantics(
+              ),
+            ),
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 0,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: 16),
+                child: Semantics(
                   button: true,
                   label: t.onbGetStarted,
                   excludeSemantics: true,
@@ -230,9 +243,9 @@ class _Welcome extends StatelessWidget {
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

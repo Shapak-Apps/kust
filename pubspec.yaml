@@ -58,8 +58,10 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#FFBB00"
   color_dark: "#FFBB00"
-  image: "assets/icons/splash.png"
-  image_dark: "assets/icons/splash.png"
+  # iOS and Android before 12 show this at 512 pt; its K is 104 pt, as big
+  # as Android 12 draws splash.png's K, where the animation starts.
+  image: "assets/icons/splash-small.png"
+  image_dark: "assets/icons/splash-small.png"
 
   android_12:
     color: "#FFBB00"
