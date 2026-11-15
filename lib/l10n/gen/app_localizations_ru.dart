@@ -1581,4 +1581,12 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get saveName => 'Сохранить';
+
+  @override
+  String get continueGame => 'Продолжить партию';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · ход $n';
+  }
 }

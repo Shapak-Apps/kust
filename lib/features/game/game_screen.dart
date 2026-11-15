@@ -20,6 +20,7 @@ import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -46,6 +47,7 @@ class GameScreen extends ConsumerStatefulWidget {
     this.isLocal = false,
     this.timeControl,
     this.practiceMode = false,
+    this.resume,
   });
 
   final Bot? bot;
@@ -53,6 +55,9 @@ class GameScreen extends ConsumerStatefulWidget {
   final bool isLocal;
   final TimeControl? timeControl;
   final bool practiceMode;
+
+  /// A saved game to continue instead of starting a new one.
+  final LiveGame? resume;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -73,7 +78,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
     SoundService.instance.warmUp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
-      if (widget.isLocal) {
+      final saved = widget.resume;
+      if (saved != null) {
+        controller.resumeGame(saved, bot: widget.bot).then((ok) {
+          if (ok || !mounted) return;
+          // A game that cannot be replayed is dropped.
+          LiveGameStore.instance.clear();
+          context.go('/play');
+        });
+      } else if (widget.isLocal) {
         controller.startLocalGame(timeControl: widget.timeControl);
       } else {
         controller.startGame(

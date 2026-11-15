@@ -959,5 +959,17 @@
   "noClock": "No clock",
   "yourName": "Your name",
   "defaultPlayerName": "Player",
-  "saveName": "Save"
+  "saveName": "Save",
+  "continueGame": "Continue your game",
+  "continueGameSub": "{who} · move {n}",
+  "@continueGameSub": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

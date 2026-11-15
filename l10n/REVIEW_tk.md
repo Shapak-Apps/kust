@@ -353,3 +353,10 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 | `yourName` | Your name | Adyňyz |
 | `defaultPlayerName` | Player | Oýunçy |
 | `saveName` | Save | Ýatda sakla |
+
+## Continue a game (audit 4.3)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `continueGame` | Continue your game | Oýny dowam et |
+| `continueGameSub` | {who} · move {n} | {who} · {n}-nji göçüm |
