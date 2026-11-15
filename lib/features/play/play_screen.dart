@@ -162,8 +162,16 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final name = AppStorage.instance.guestName;
+    return ValueListenableBuilder(
+      valueListenable: AppStorage.instance.nameListenable(),
+      builder: (context, _, _) {
+        final name = AppStorage.instance.displayName(context.t);
+        return _page(context, k, name);
+      },
+    );
+  }
 
+  Widget _page(BuildContext context, KustTokens k, String name) {
     return ColoredBox(
       color: k.bg,
       child: Stack(

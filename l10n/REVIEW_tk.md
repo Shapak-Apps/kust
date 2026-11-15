@@ -345,3 +345,11 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 | Key | English | Turkmen (to review) |
 |---|---|---|
 | `noClock` | No clock | Sagatsyz |
+
+## Player name (audit 4.10)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `yourName` | Your name | Adyňyz |
+| `defaultPlayerName` | Player | Oýunçy |
+| `saveName` | Save | Ýatda sakla |

@@ -2846,6 +2846,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Time to improve your chess'**
   String get homeBannerLine;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get yourName;
+
+  /// No description provided for @defaultPlayerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get defaultPlayerName;
+
+  /// No description provided for @saveName.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveName;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

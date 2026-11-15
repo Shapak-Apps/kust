@@ -956,5 +956,8 @@
     }
   },
   "homeBannerLine": "Time to improve your chess",
-  "noClock": "No clock"
+  "noClock": "No clock",
+  "yourName": "Your name",
+  "defaultPlayerName": "Player",
+  "saveName": "Save"
 }

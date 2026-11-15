@@ -1566,4 +1566,13 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeBannerLine => 'Time to improve your chess';
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get defaultPlayerName => 'Player';
+
+  @override
+  String get saveName => 'Save';
 }

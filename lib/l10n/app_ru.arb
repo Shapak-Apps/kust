@@ -462,5 +462,8 @@
   "lessonLockedHint": "Каждый урок опирается на предыдущий.",
   "lessonLockedOpen": "Открыть урок {n}",
   "homeBannerLine": "Пора играть лучше",
-  "noClock": "Без часов"
+  "noClock": "Без часов",
+  "yourName": "Ваше имя",
+  "defaultPlayerName": "Игрок",
+  "saveName": "Сохранить"
 }
