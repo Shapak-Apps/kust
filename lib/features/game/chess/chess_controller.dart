@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' show Random;
 
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -484,6 +485,14 @@ class ChessController extends Notifier<GameState> {
     if (!_chargeElapsed()) return;
     _stopClock();
     state = state.copyWith(paused: true, clearSelection: true);
+  }
+
+  /// Sets the running clocks, so tests can make a flag fall in moments.
+  @visibleForTesting
+  void debugSetClocks({Duration? white, Duration? black}) {
+    if (white != null) _whiteClock = white;
+    if (black != null) _blackClock = black;
+    _lastTick = DateTime.now();
   }
 
   /// Starts the clocks again where they stopped.
@@ -1613,7 +1622,9 @@ class ChessController extends Notifier<GameState> {
   }
 
   Future<void> _recordFinishedGame(GameState game) async {
-    if (_isDisposed || game.moves.isEmpty) return;
+    // Not tied to this controller staying alive: a finished game is saved
+    // even if the screen was left in the same moment.
+    if (game.moves.isEmpty) return;
     final isLocal = game.mode == GameMode.local;
 
     final String result;
@@ -1641,21 +1652,22 @@ class ChessController extends Notifier<GameState> {
     }
 
     int? ratingChange;
+    double? ratedScore;
     final bot = game.bot;
     if (!isLocal && !game.practiceMode && bot != null) {
-      final score = result == GameRecord.win
+      ratedScore = result == GameRecord.win
           ? 1.0
           : result == GameRecord.draw
           ? 0.5
           : 0.0;
-      ratingChange = await PlayerRatingStore.instance.record(
+      ratingChange = PlayerRatingStore.instance.changeFor(
         opponent: bot.elo,
-        score: score,
+        score: ratedScore,
       );
-      if (_isDisposed) return;
-      state = state.copyWith(ratingChange: ratingChange);
     }
 
+    // The game is saved first: whatever happens to this controller next, a
+    // finished game is never missing from the history.
     final tc = game.timeControl;
     final recordId = DateTime.now().microsecondsSinceEpoch.toString();
     await GameHistoryStore.instance.add(
@@ -1678,6 +1690,15 @@ class ChessController extends Notifier<GameState> {
             : '${tc.baseMinutes}+${tc.incrementSeconds}',
       ),
     );
+    if (ratedScore != null && bot != null) {
+      await PlayerRatingStore.instance.record(
+        opponent: bot.elo,
+        score: ratedScore,
+      );
+    }
+    if (!_isDisposed && ratingChange != null) {
+      state = state.copyWith(ratingChange: ratingChange);
+    }
 
     if (!_isDisposed) state = state.copyWith(savedGameId: recordId);
 
@@ -1697,7 +1718,7 @@ class ChessController extends Notifier<GameState> {
       );
       if (_brilliantThisGame) unawaited(AchievementTracker.brilliantMove());
     }
-    if (!isLocal) unawaited(_computeAccuracy(game, recordId));
+    if (!isLocal && !_isDisposed) unawaited(_computeAccuracy(game, recordId));
   }
 
   /// Most player moves analyzed per game, to keep the wait short.

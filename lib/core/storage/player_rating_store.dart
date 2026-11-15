@@ -44,6 +44,16 @@ class PlayerRatingStore {
     return (kFactor * (score - expected)).round();
   }
 
+  /// The change [record] would apply now, without applying it.
+  int changeFor({required int opponent, required double score}) {
+    final current = rating;
+    final next = math.max(
+      minRating,
+      current + delta(rating: current, opponent: opponent, score: score),
+    );
+    return next - current;
+  }
+
   /// Applies a result and returns the change that was actually applied.
   Future<int> record({required int opponent, required double score}) async {
     final current = rating;
