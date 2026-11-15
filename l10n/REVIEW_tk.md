@@ -339,3 +339,9 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 | Key | English | Turkmen (to review) |
 |---|---|---|
 | `homeBannerLine` | Time to improve your chess | Küşt oýnuňyzy gowulandyrmagyň wagty |
+
+## Timed bot games (audit 4.2)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `noClock` | No clock | Sagatsyz |

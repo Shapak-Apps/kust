@@ -590,6 +590,9 @@ class ChessController extends Notifier<GameState> {
   void _flagFell(Side fellSide) {
     if (_isDisposed) return;
     _stopClock();
+    // A bot still thinking has nothing left to play.
+    _moveRequestId++;
+    _engine.stopThinking();
 
     // FIDE 6.9: if the other side cannot mate by any series of moves (a
     // lone king, say), running out of time is a draw.
