@@ -10,6 +10,7 @@ import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/features/play/bot_voice.dart';
@@ -518,6 +519,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ),
                       ),
                     const _HistorySlot(),
+                    const _OpeningSlot(),
                     if (screen.practice && screen.feedback)
                       const SizedBox(
                         height: 24,
@@ -734,6 +736,35 @@ class _HistorySlot extends ConsumerWidget {
       ],
       // The move on the board: the latest, or the one being reviewed.
       selected: data.cursor,
+    );
+  }
+}
+
+/// The opening the game is in. Always one line tall, so the board never
+/// moves when a name appears or goes.
+class _OpeningSlot extends ConsumerWidget {
+  const _OpeningSlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final history = ref.watch(chessControllerProvider.select((g) => g.history));
+    final book = loadedOpeningBook;
+    final opening = book == null ? null : openingOf(book, history);
+    return SizedBox(
+      height: 22,
+      child: opening == null
+          ? null
+          : Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  opening.nameIn(context.t),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.k.caption,
+                ),
+              ),
+            ),
     );
   }
 }

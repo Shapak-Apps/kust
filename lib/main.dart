@@ -39,6 +39,7 @@ Future<void> _start() async {
     ErrorLog.record(error, stack);
     return true;
   };
+  await ErrorLog.init();
   // Touch events are lined up with the frames, so a dragged piece moves
   // smoothly even when the screen runs faster than the touch panel reports.
   GestureBinding.instance.resamplingEnabled = true;

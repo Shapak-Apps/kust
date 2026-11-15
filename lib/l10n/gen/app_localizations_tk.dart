@@ -1595,4 +1595,50 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get reviewTip5 => 'Seljerilen oýun indiki gezek derrew açylýar.';
+
+  @override
+  String get sendErrorReport => 'Ýalňyşlyk hasabatyny iber';
+
+  @override
+  String get taskFork => 'Çatal: bir göçümde iki çöpe hüjüm ediň';
+
+  @override
+  String get taskPin => 'Çöpi öz şasyna baglaň';
+
+  @override
+  String get taskSkewer => 'Şaha şah beriň we arkasyndaky çöpi utuň';
+
+  @override
+  String get lessonForkTitle => 'Çatal';
+
+  @override
+  String get lessonForkIntro =>
+      'Çatal bir wagtda iki çöpe hüjüm edýär. Garşydaş diňe birini halas edip bilýär, beýlekisini siz alýarsyňyz. Atlar çatalyň ussatlary.';
+
+  @override
+  String get lessonPinTitle => 'Baglama';
+
+  @override
+  String get lessonPinIntro =>
+      'Baglanan çöp ýöräp bilmeýär, sebäbi arkasyndaky şa şah astynda galar. Çöpi baglaň, soň ony utmak üçin oňa ýene hüjüm ediň.';
+
+  @override
+  String get lessonSkewerTitle => 'Şiş';
+
+  @override
+  String get lessonSkewerIntro =>
+      'Şiş tersine baglama: şaha şah berýärsiňiz, ol çetleşmeli bolýar, siz bolsa arkasyndaky çöpi alýarsyňyz.';
+
+  @override
+  String get lessonPatternsTitle => 'Şahmat nagyşlary';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň.';
+
+  @override
+  String get campTacticsTitle => 'Taktika';
+
+  @override
+  String get campTacticsSub => 'Akylly göçümler bilen çöp utuň';
 }

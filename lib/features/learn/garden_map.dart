@@ -43,8 +43,8 @@ class LearnMapLayout {
   static const double campGap = 118;
   static const double headRoom = 250;
 
-  /// How far right each tile stands, in half tile widths.
-  static const List<int> _run = [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0];
+  /// How far right each tile stands, in half tile widths; it repeats.
+  static const List<int> _run = [0, 1, 2, 3, 2, 1];
 
   double get height =>
       topInset +
@@ -61,7 +61,7 @@ class LearnMapLayout {
     for (final camp in kCamps.skip(1)) {
       if (i >= camp.first) y -= campGap - step;
     }
-    return Offset(_x0 + _run[i] * tileW / 2, y);
+    return Offset(_x0 + _run[i % _run.length] * tileW / 2, y);
   }
 
   /// Halfway between the last tile of the camp before and [camp]'s first.
@@ -494,7 +494,7 @@ class LearnMapPainter extends CustomPainter {
     );
     add(y(8) - 24, (cv) => GardenArt.pine(cv, Offset(w * 0.9, y(8) - 24), 0.9));
 
-    // Camp 3 and the summit.
+    // Camp 3.
     final camp3 = layout.campY(kCamps[2]);
     add(camp3 + 26, (cv) => _pedestal(cv, Offset(w * 0.17, camp3 + 26)));
     add(
@@ -507,6 +507,29 @@ class LearnMapPainter extends CustomPainter {
       (cv) => GardenArt.tree(cv, Offset(w * 0.06, y(10) + 10), 0.7),
     );
     GardenArt.meadow(c, Offset(w * 0.86, y(10) + 30), 6, 5, spread: 28);
+
+    // Camp 4.
+    final camp4 = layout.campY(kCamps[3]);
+    add(camp4 + 26, (cv) => _pedestal(cv, Offset(w * 0.83, camp4 + 26)));
+    add(
+      camp4 + 40,
+      (cv) => GardenArt.bush(
+        cv,
+        Offset(w * 0.1, camp4 + 40),
+        0.9,
+        berries: GardenArt.pinkBerries,
+      ),
+    );
+    add(
+      y(12) + 4,
+      (cv) => GardenArt.pine(cv, Offset(w * 0.92, y(12) + 4), 0.9),
+    );
+    add(
+      y(11) + 12,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.08, y(11) + 12), 0.9, moss: true),
+    );
+    GardenArt.meadow(c, Offset(w * 0.88, y(13)), 6, 7, spread: 28);
+    add(y(13) + 6, (cv) => GardenArt.tree(cv, Offset(w * 0.1, y(13) + 6), 0.8));
 
     final top = layout.summit;
     add(top.dy + 40, (cv) => _podium(cv, top + const Offset(0, 40)));
@@ -731,6 +754,11 @@ class LearnMap extends StatelessWidget {
                     Offset(w * 0.17, layout.campY(kCamps[2]) + 26),
                     Role.queen,
                     66,
+                  ),
+                  statue(
+                    Offset(w * 0.83, layout.campY(kCamps[3]) + 26),
+                    Role.knight,
+                    64,
                   ),
                   statue(layout.summit + const Offset(0, 28), Role.king, 128),
                   for (final camp in kCamps.skip(1)) _sign(context, camp, t),

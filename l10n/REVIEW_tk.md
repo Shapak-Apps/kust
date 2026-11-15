@@ -389,3 +389,27 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 |---|---|---|
 | `qBook` | Book | Teoriýa |
 | `bannerBook` | {played} · book move | {played} · teoriýa göçümi |
+
+## Error report
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `sendErrorReport` | Send error report | Ýalňyşlyk hasabatyny iber |
+
+## Tactics camp and mate patterns
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `taskFork` | Fork: attack two pieces with one move | Çatal: bir göçümde iki çöpe hüjüm ediň |
+| `taskPin` | Pin a piece to its king | Çöpi öz şasyna baglaň |
+| `taskSkewer` | Check the king and win the piece behind it | Şaha şah beriň we arkasyndaky çöpi utuň |
+| `lessonForkTitle` | The fork | Çatal |
+| `lessonForkIntro` | A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork. | Çatal bir wagtda iki çöpe hüjüm edýär. Garşydaş diňe birini halas edip bilýär, beýlekisini siz alýarsyňyz. Atlar çatalyň ussatlary. |
+| `lessonPinTitle` | The pin | Baglama |
+| `lessonPinIntro` | A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it. | Baglanan çöp ýöräp bilmeýär, sebäbi arkasyndaky şa şah astynda galar. Çöpi baglaň, soň ony utmak üçin oňa ýene hüjüm ediň. |
+| `lessonSkewerTitle` | The skewer | Şiş |
+| `lessonSkewerIntro` | A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it. | Şiş tersine baglama: şaha şah berýärsiňiz, ol çetleşmeli bolýar, siz bolsa arkasyndaky çöpi alýarsyňyz. |
+| `lessonPatternsTitle` | Mate patterns | Şahmat nagyşlary |
+| `lessonPatternsIntro` | Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move. | Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň. |
+| `campTacticsTitle` | Tactics | Taktika |
+| `campTacticsSub` | Win pieces with clever moves | Akylly göçümler bilen çöp utuň |
