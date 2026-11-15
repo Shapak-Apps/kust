@@ -1601,4 +1601,31 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get retryNoPosition => 'This move cannot be shown.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Analyzing your game';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return 'Checking move $n of $total';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Accuracy compares each of your moves with the engine\'s best move.';
+
+  @override
+  String get reviewTip2 =>
+      'A blunder gives away a lot in one move. Look for those first.';
+
+  @override
+  String get reviewTip3 =>
+      'Tap the replay button on a key moment to try that position again.';
+
+  @override
+  String get reviewTip4 =>
+      'Brilliant moves are rare: a sacrifice the engine agrees with.';
+
+  @override
+  String get reviewTip5 => 'Once analyzed, a game opens instantly next time.';
 }

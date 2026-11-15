@@ -473,5 +473,12 @@
   "retryWrong": "Doly däl. Ýene synanyşyň.",
   "retryShow": "Jogaby görkez",
   "retryTry": "Täzeden synanyş",
-  "retryNoPosition": "Bu göçümi görkezip bolmaýar."
+  "retryNoPosition": "Bu göçümi görkezip bolmaýar.",
+  "reviewAnalyzingTitle": "Oýnuňyz seljerilýär",
+  "reviewCheckingMove": "{total} göçümiň {n}-njisi barlanýar",
+  "reviewTip1": "Takyklyk her göçümiňizi motoryň iň gowy göçümi bilen deňeşdirýär.",
+  "reviewTip2": "Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň.",
+  "reviewTip3": "Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň.",
+  "reviewTip4": "Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany.",
+  "reviewTip5": "Seljerilen oýun indiki gezek derrew açylýar."
 }
