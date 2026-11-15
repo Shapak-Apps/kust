@@ -532,7 +532,8 @@ class LearnMapPainter extends CustomPainter {
     GardenArt.shadow(canvas, base, 180, 46);
     GardenArt.block(canvas, base, 150, 80, 18);
     GardenArt.block(canvas, base - const Offset(0, 18), 96, 52, 18);
-    final pole = Offset(base.dx + 44, base.dy - 46);
+    // On the lower step, clear of the king in the middle.
+    final pole = Offset(base.dx + 58, base.dy - 52);
     canvas.drawLine(
       pole,
       pole - const Offset(0, 74),
@@ -559,6 +560,16 @@ class LearnMapPainter extends CustomPainter {
           colors: [Color(0xFF34B36A), Color(0xFF16703D)],
         ).createShader(flag.getBounds()),
     );
+    final star = Path();
+    final mid = Offset(pole.dx + 21, pole.dy - 65);
+    for (var i = 0; i < 10; i++) {
+      final r = i.isEven ? 8.0 : 3.4;
+      final a = -math.pi / 2 + i * math.pi / 5;
+      final p = mid + Offset(math.cos(a) * r, math.sin(a) * r);
+      i == 0 ? star.moveTo(p.dx, p.dy) : star.lineTo(p.dx, p.dy);
+    }
+    star.close();
+    canvas.drawPath(star, Paint()..color = Colors.white);
   }
 
   @override
@@ -721,7 +732,7 @@ class LearnMap extends StatelessWidget {
                     Role.queen,
                     66,
                   ),
-                  statue(layout.summit + const Offset(-10, 28), Role.king, 128),
+                  statue(layout.summit + const Offset(0, 28), Role.king, 128),
                   for (final camp in kCamps.skip(1)) _sign(context, camp, t),
                   if (next >= 0) _piece(next),
                 ],
