@@ -43,7 +43,6 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `gameDrawn` | The game ended in a draw. | Oýun deňe deň gutardy. |
 | `gameEndedOnTime` | The game ended on time. | Oýun wagt boýunça gutardy. |
 | `youResigned` | You resigned. | Siz boýnuňyza aldyňyz. |
-| `endCheckmateWon` | {name} won by checkmate. | {name} şahmat bilen ýeňdi. |
 | `endStalemate` | Game drawn by stalemate. | Pat sebäpli deňe deň. |
 | `endFiftyMove` | Game drawn by 50-move rule. | 50 göçüm düzgüni boýunça deňe deň. |
 | `endInsufficient` | Game drawn due to insufficient material. | Material ýeterlik däl, deňe deň. |
@@ -279,7 +278,6 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `onbStartPlaying` | Start playing | Oýnamaga başlaň |
 | `onbSkip` | Skip for now | Häzirlikçe geçiň |
 | `onbTitle` | Chess that helps you improve | Gowulaşmaga kömek edýän küşt |
-| `onbIntro` | Play bots at your level, train with puzzles and replay your games to learn from them. | Derejeňize laýyk botlar bilen oýnaň, meseleler bilen türgenleşiň we oýunlaryňyzy gaýtadan görüp, olardan öwreniň. |
 | `onbPlayBots` | Play bots | Botlar bilen oýnaň |
 | `onbPlayBotsSub` | From 400 to 2000 Elo, or pass the phone to a friend | 400-den 2000 Elo çenli ýa-da telefony dostuňyza beriň |
 | `onbSolve` | Solve puzzles | Meseleleri çözüň |
@@ -320,7 +318,7 @@ All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `less
 
 ## Learn redesign
 
-Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnStartTip`, `learnGo` (Başla), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
+Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
 
 ## Onboarding redesign
 
@@ -338,7 +336,6 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 
 | Key | English | Turkmen (to review) |
 |---|---|---|
-| `homeBannerLine` | Time to improve your chess | Küşt oýnuňyzy gowulandyrmagyň wagty |
 
 ## Timed bot games (audit 4.2)
 

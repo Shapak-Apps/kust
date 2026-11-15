@@ -178,11 +178,6 @@ class AppL10nTk extends AppL10n {
   String get youResigned => 'Siz boýnuňyza aldyňyz.';
 
   @override
-  String endCheckmateWon(String name) {
-    return '$name şahmat bilen ýeňdi.';
-  }
-
-  @override
   String get endStalemate => 'Pat sebäpli deňe deň.';
 
   @override
@@ -1025,10 +1020,6 @@ class AppL10nTk extends AppL10n {
   String get onbTitle => 'Gowulaşmaga kömek edýän küşt';
 
   @override
-  String get onbIntro =>
-      'Derejeňize laýyk botlar bilen oýnaň, meseleler bilen türgenleşiň we oýunlaryňyzy gaýtadan görüp, olardan öwreniň.';
-
-  @override
   String get onbPlayBots => 'Botlar bilen oýnaň';
 
   @override
@@ -1240,11 +1231,6 @@ class AppL10nTk extends AppL10n {
   String get reviewButton => 'Seljerme';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Oýun seljerilýär… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Takyklyk';
 
   @override
@@ -1292,31 +1278,10 @@ class AppL10nTk extends AppL10n {
   String get learnSub => 'Ilkinji göçümden şahmada çenli';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done/$total sapak';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n tabşyryk';
-  }
-
-  @override
   String get lessonStart => 'Sapagy başla';
 
   @override
-  String get learnNext => 'Indiki';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Tabşyryk $n/$total';
-  }
-
-  @override
   String get learnWrong => 'Bolmady. Ýene synanyşyň.';
-
-  @override
-  String get learnNotBest => 'Bu iň gymmat çöpi almak däl.';
 
   @override
   String get learnStalemate => 'Bu pat, deňe deň. Şahmady tapyň.';
@@ -1329,9 +1294,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get lessonNext => 'Indiki sapak';
-
-  @override
-  String get lessonAll => 'Ähli sapaklar';
 
   @override
   String get lessonPlayGame => 'Oýun oýnaň';
@@ -1494,9 +1456,6 @@ class AppL10nTk extends AppL10n {
   String get summitLabel => 'DEPE';
 
   @override
-  String get learnStartTip => 'BAŞLA';
-
-  @override
   String learnUpNext(int n) {
     return 'INDIKI · $n-NJI SAPAK';
   }
@@ -1533,9 +1492,6 @@ class AppL10nTk extends AppL10n {
   String get lessonPerfect => 'Kemsiz sapak!';
 
   @override
-  String get learnGo => 'Başla';
-
-  @override
   String get onbLearn => 'Noldan öwreniň';
 
   @override
@@ -1569,9 +1525,6 @@ class AppL10nTk extends AppL10n {
   String lessonLockedOpen(int n) {
     return '$n-nji sapagy aç';
   }
-
-  @override
-  String get homeBannerLine => 'Küşt oýnuňyzy gowulandyrmagyň wagty';
 
   @override
   String get yourName => 'Adyňyz';
