@@ -816,7 +816,7 @@ class LearnMap extends StatelessWidget {
       top: c.dy - 176,
       width: 64,
       height: 78,
-      child: RepaintBoundary(child: _Marker(image: coachImage)),
+      child: _Marker(image: coachImage),
     );
   }
 
@@ -886,7 +886,19 @@ class _MarkerState extends State<_Marker> with SingleTickerProviderStateMixin {
   late final AnimationController _bob = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Still when the system asks for less motion.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _bob.stop();
+      _bob.value = 0;
+    } else if (!_bob.isAnimating) {
+      _bob.repeat();
+    }
+  }
 
   @override
   void dispose() {
@@ -896,38 +908,41 @@ class _MarkerState extends State<_Marker> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final card = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x66000000),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(11),
-            child: ColoredBox(
-              color: const Color(0xFF2B7553),
-              child: Image.asset(
-                widget.image,
-                fit: BoxFit.cover,
-                cacheWidth: 180,
+    // Painted once: the bob only moves this layer.
+    final card = RepaintBoundary(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x66000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: ColoredBox(
+                color: const Color(0xFF2B7553),
+                child: Image.asset(
+                  widget.image,
+                  fit: BoxFit.cover,
+                  cacheWidth: 180,
+                ),
               ),
             ),
           ),
-        ),
-        CustomPaint(size: const Size(16, 9), painter: _Tail()),
-      ],
+          CustomPaint(size: const Size(16, 9), painter: _Tail()),
+        ],
+      ),
     );
     return AnimatedBuilder(
       animation: _bob,

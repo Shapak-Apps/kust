@@ -54,6 +54,28 @@ void main() {
     LearnProgress.instance.done.value = const {};
   });
 
+  testWidgets('the coach marker stands still when animations are off', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final off in [true, false]) {
+      final router = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const LearnScreen())],
+      );
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(disableAnimations: off),
+          child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(tester.hasRunningAnimations, !off, reason: 'disabled: $off');
+    }
+  });
+
   testWidgets('the Learn tab lists the lessons and marks the next one', (
     tester,
   ) async {

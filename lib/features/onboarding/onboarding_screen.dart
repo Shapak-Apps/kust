@@ -16,6 +16,7 @@ import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/motion.dart';
 
 const int _stepCount = 3;
 
@@ -632,7 +633,7 @@ class _ReadyStep extends StatelessWidget {
             // The level's piece rises onto its tile.
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 700),
+              duration: motion(context, const Duration(milliseconds: 700)),
               curve: Curves.easeOutBack,
               builder: (context, v, child) => Transform.translate(
                 offset: Offset(0, 30 * (1 - v)),

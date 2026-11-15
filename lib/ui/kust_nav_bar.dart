@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/motion.dart';
 
 const double _barHeight = 62;
 
@@ -120,7 +121,7 @@ class _NavButton extends StatelessWidget {
             TweenAnimationBuilder<double>(
               key: ValueKey(selected),
               tween: Tween(begin: selected ? 0.78 : 1, end: 1),
-              duration: const Duration(milliseconds: 360),
+              duration: motion(context, const Duration(milliseconds: 360)),
               curve: Curves.elasticOut,
               builder: (context, v, child) =>
                   Transform.scale(scale: v, child: child),
