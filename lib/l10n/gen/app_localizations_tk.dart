@@ -1471,7 +1471,7 @@ class AppL10nTk extends AppL10n {
   String get campPiecesTitle => 'Çöpler';
 
   @override
-  String get campPiecesSub => 'Her çöpüň nähili göçýändigini öwreniň';
+  String get campPiecesSub => 'Her çöp nähili göçýär';
 
   @override
   String get campRulesTitle => 'Düzgünler';

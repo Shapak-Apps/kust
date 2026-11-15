@@ -15,6 +15,7 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/kust_top_bar.dart' show kMinTap;
 import 'package:kust/ui/motion.dart';
 
 /// The guide who explains every lesson.
@@ -350,20 +351,25 @@ class _TopBar extends StatelessWidget {
             child: Pressable(
               onTap: onHint,
               haptic: true,
-              child: Opacity(
-                opacity: onHint == null ? 0.35 : 1,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _gold.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _gold.withValues(alpha: 0.5)),
-                  ),
-                  child: const Icon(
-                    Icons.lightbulb_rounded,
-                    color: _gold,
-                    size: 22,
+              child: SizedBox.square(
+                dimension: kMinTap,
+                child: Center(
+                  child: Opacity(
+                    opacity: onHint == null ? 0.35 : 1,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _gold.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+                      ),
+                      child: const Icon(
+                        Icons.lightbulb_rounded,
+                        color: _gold,
+                        size: 22,
+                      ),
+                    ),
                   ),
                 ),
               ),

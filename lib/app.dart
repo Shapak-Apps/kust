@@ -53,11 +53,19 @@ class MyApp extends StatelessWidget {
           builder: (context, child) {
             AppText.sync(AppL10n.of(context));
             final isDark = Theme.of(context).brightness == Brightness.dark;
-            return AnnotatedRegion<SystemUiOverlayStyle>(
-              value: isDark
-                  ? SystemUiOverlayStyle.light
-                  : SystemUiOverlayStyle.dark,
-              child: AchievementToastHost(child: child!),
+            // Large system fonts are honoured up to a point; past it the
+            // fixed-height rows and buttons would break.
+            final media = MediaQuery.of(context);
+            return MediaQuery(
+              data: media.copyWith(
+                textScaler: media.textScaler.clamp(maxScaleFactor: 1.3),
+              ),
+              child: AnnotatedRegion<SystemUiOverlayStyle>(
+                value: isDark
+                    ? SystemUiOverlayStyle.light
+                    : SystemUiOverlayStyle.dark,
+                child: AchievementToastHost(child: child!),
+              ),
             );
           },
         );
