@@ -44,8 +44,13 @@ class NnueStore {
   static Future<bool> verify(File file, String name) async {
     final match = _nameRe.firstMatch(name);
     if (match == null || !await file.exists()) return false;
-    final digest = await sha256.bind(file.openRead()).first;
-    return digest.toString().startsWith(match.group(1)!);
+    // Hashing about 100 MB is done in another isolate, off the UI thread.
+    final path = file.path;
+    final hex = await Isolate.run(() async {
+      final digest = await sha256.bind(File(path).openRead()).first;
+      return digest.toString();
+    });
+    return hex.startsWith(match.group(1)!);
   }
 
   Future<List<String>> _parts(String name) async {

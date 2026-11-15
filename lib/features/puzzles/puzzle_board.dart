@@ -14,19 +14,12 @@ import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
+import 'package:kust/features/game/chess/castling.dart';
 
 const Color _lastMoveColor = Color(0x66FFBB00);
 const Color _selectedColor = Color(0x99FFBB00);
 const Color _hintFromColor = Color(0x6622C55E);
 const Color _targetDotColor = Color(0x33000000);
-
-Square _displayCastleTarget(Square target) {
-  if (target == Square.h1) return Square.g1;
-  if (target == Square.a1) return Square.c1;
-  if (target == Square.h8) return Square.g8;
-  if (target == Square.a8) return Square.c8;
-  return target;
-}
 
 /// The glide for stepping from [fromPly] to [toPly] through [positions] and
 /// [moves] (as built by the replay and puzzle screens), or null when the
@@ -232,7 +225,7 @@ class _PuzzleBoardState extends State<PuzzleBoard>
         promotion: promotes ? Role.queen : null,
       );
       if (isCastle) {
-        targets[_displayCastleTarget(to)] = move;
+        targets[castlingDisplaySquare(to)] = move;
         // The rook itself is a target too when castling on the rook is on.
         if (AppSettings.instance.castleOnRook.value) targets[to] = move;
       } else {
