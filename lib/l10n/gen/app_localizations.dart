@@ -411,12 +411,6 @@ abstract class AppL10n {
   /// **'You resigned.'**
   String get youResigned;
 
-  /// No description provided for @endCheckmateWon.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} won by checkmate.'**
-  String endCheckmateWon(String name);
-
   /// No description provided for @endStalemate.
   ///
   /// In en, this message translates to:
@@ -1905,12 +1899,6 @@ abstract class AppL10n {
   /// **'Chess that helps you improve'**
   String get onbTitle;
 
-  /// No description provided for @onbIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Play bots at your level, train with puzzles and replay your games to learn from them.'**
-  String get onbIntro;
-
   /// No description provided for @onbPlayBots.
   ///
   /// In en, this message translates to:
@@ -2265,12 +2253,6 @@ abstract class AppL10n {
   /// **'Review'**
   String get reviewButton;
 
-  /// No description provided for @reviewAnalyzing.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyzing the game… {percent}%'**
-  String reviewAnalyzing(int percent);
-
   /// No description provided for @reviewAccuracy.
   ///
   /// In en, this message translates to:
@@ -2355,47 +2337,17 @@ abstract class AppL10n {
   /// **'From your first move to checkmate'**
   String get learnSub;
 
-  /// No description provided for @lessonCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} lessons'**
-  String lessonCount(int done, int total);
-
-  /// No description provided for @lessonTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} tasks'**
-  String lessonTasks(int n);
-
   /// No description provided for @lessonStart.
   ///
   /// In en, this message translates to:
   /// **'Start lesson'**
   String get lessonStart;
 
-  /// No description provided for @learnNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Up next'**
-  String get learnNext;
-
-  /// No description provided for @taskProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Task {n} of {total}'**
-  String taskProgress(int n, int total);
-
   /// No description provided for @learnWrong.
   ///
   /// In en, this message translates to:
   /// **'Not quite. Try again.'**
   String get learnWrong;
-
-  /// No description provided for @learnNotBest.
-  ///
-  /// In en, this message translates to:
-  /// **'That is not the most valuable capture.'**
-  String get learnNotBest;
 
   /// No description provided for @learnStalemate.
   ///
@@ -2420,12 +2372,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Next lesson'**
   String get lessonNext;
-
-  /// No description provided for @lessonAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All lessons'**
-  String get lessonAll;
 
   /// No description provided for @lessonPlayGame.
   ///
@@ -2709,12 +2655,6 @@ abstract class AppL10n {
   /// **'SUMMIT'**
   String get summitLabel;
 
-  /// No description provided for @learnStartTip.
-  ///
-  /// In en, this message translates to:
-  /// **'START'**
-  String get learnStartTip;
-
   /// No description provided for @learnUpNext.
   ///
   /// In en, this message translates to:
@@ -2775,12 +2715,6 @@ abstract class AppL10n {
   /// **'Perfect lesson!'**
   String get lessonPerfect;
 
-  /// No description provided for @learnGo.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get learnGo;
-
   /// No description provided for @onbLearn.
   ///
   /// In en, this message translates to:
@@ -2840,12 +2774,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Open lesson {n}'**
   String lessonLockedOpen(int n);
-
-  /// No description provided for @homeBannerLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Time to improve your chess'**
-  String get homeBannerLine;
 
   /// No description provided for @yourName.
   ///

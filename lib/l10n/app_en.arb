@@ -87,14 +87,6 @@
   "gameDrawn": "The game ended in a draw.",
   "gameEndedOnTime": "The game ended on time.",
   "youResigned": "You resigned.",
-  "endCheckmateWon": "{name} won by checkmate.",
-  "@endCheckmateWon": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "endStalemate": "Game drawn by stalemate.",
   "endFiftyMove": "Game drawn by 50-move rule.",
   "endInsufficient": "Game drawn due to insufficient material.",
@@ -667,7 +659,6 @@
   "onbStartPlaying": "Start playing",
   "onbSkip": "Skip for now",
   "onbTitle": "Chess that helps you improve",
-  "onbIntro": "Play bots at your level, train with puzzles and replay your games to learn from them.",
   "onbPlayBots": "Play bots",
   "onbPlayBotsSub": "From 400 to 2000 Elo, or pass the phone to a friend",
   "onbSolve": "Solve puzzles",
@@ -748,14 +739,6 @@
   "botChatSub": "Bots comment on the game",
   "reviewTitle": "Game review",
   "reviewButton": "Review",
-  "reviewAnalyzing": "Analyzing the game… {percent}%",
-  "@reviewAnalyzing": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "reviewAccuracy": "Accuracy",
   "reviewMoves": "Moves",
   "reviewGraph": "Who was winning",
@@ -784,53 +767,16 @@
   "navLearn": "Learn",
   "learnTitle": "Learn",
   "learnSub": "From your first move to checkmate",
-  "lessonCount": "{done} of {total} lessons",
-  "@lessonCount": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "lessonTasks": "{n} tasks",
-  "@lessonTasks": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "lessonStart": "Start lesson",
-  "learnNext": "Up next",
-  "taskProgress": "Task {n} of {total}",
-  "@taskProgress": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "learnWrong": "Not quite. Try again.",
-  "learnNotBest": "That is not the most valuable capture.",
   "learnStalemate": "That is stalemate, a draw. Find the checkmate.",
   "learnWellDone": "Well done!",
   "lessonDone": "Lesson complete!",
   "lessonNext": "Next lesson",
-  "lessonAll": "All lessons",
   "lessonPlayGame": "Play a game",
   "learnHint": "Hint",
   "learnAllDone": "You finished every lesson. Time to play!",
   "pieceKing": "king",
-  "pieceQueen": "queen",
-  "pieceRook": "rook",
-  "pieceBishop": "bishop",
-  "pieceKnight": "knight",
   "piecePawn": "pawn",
   "taskCollectOne": "Move the {piece} to the star",
   "@taskCollectOne": {
@@ -895,7 +841,6 @@
     }
   },
   "summitLabel": "SUMMIT",
-  "learnStartTip": "START",
   "learnUpNext": "UP NEXT · LESSON {n}",
   "@learnUpNext": {
     "placeholders": {
@@ -930,7 +875,6 @@
   "lessonBackToMap": "Back to the map",
   "learnCoachDone": "That is it! Tap Continue.",
   "lessonPerfect": "Perfect lesson!",
-  "learnGo": "Start",
   "onbLearn": "Learn from zero",
   "onbLearnSub": "Short lessons from the first move to checkmate",
   "onbCoachHi": "Salam! I'm Bahar. Let's set Küşt up for you.",
@@ -955,8 +899,6 @@
       }
     }
   },
-  "homeBannerLine": "Time to improve your chess",
-  "noClock": "No clock",
   "yourName": "Your name",
   "defaultPlayerName": "Player",
   "saveName": "Save",

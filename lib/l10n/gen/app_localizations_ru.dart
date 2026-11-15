@@ -178,11 +178,6 @@ class AppL10nRu extends AppL10n {
   String get youResigned => 'Вы сдались.';
 
   @override
-  String endCheckmateWon(String name) {
-    return 'Победа матом: $name.';
-  }
-
-  @override
   String get endStalemate => 'Ничья: пат.';
 
   @override
@@ -1024,10 +1019,6 @@ class AppL10nRu extends AppL10n {
   String get onbTitle => 'Шахматы, которые помогают расти';
 
   @override
-  String get onbIntro =>
-      'Играйте с ботами своего уровня, тренируйтесь на задачах и пересматривайте партии, чтобы учиться на них.';
-
-  @override
   String get onbPlayBots => 'Играйте с ботами';
 
   @override
@@ -1239,11 +1230,6 @@ class AppL10nRu extends AppL10n {
   String get reviewButton => 'Разбор';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Анализ партии… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Точность';
 
   @override
@@ -1291,31 +1277,10 @@ class AppL10nRu extends AppL10n {
   String get learnSub => 'От первого хода до мата';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done из $total уроков';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n заданий';
-  }
-
-  @override
   String get lessonStart => 'Начать урок';
 
   @override
-  String get learnNext => 'Дальше';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Задание $n из $total';
-  }
-
-  @override
   String get learnWrong => 'Не совсем. Попробуйте ещё.';
-
-  @override
-  String get learnNotBest => 'Это не самое ценное взятие.';
 
   @override
   String get learnStalemate => 'Это пат, ничья. Найдите мат.';
@@ -1328,9 +1293,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get lessonNext => 'Следующий урок';
-
-  @override
-  String get lessonAll => 'Все уроки';
 
   @override
   String get lessonPlayGame => 'Сыграть партию';
@@ -1494,9 +1456,6 @@ class AppL10nRu extends AppL10n {
   String get summitLabel => 'ВЕРШИНА';
 
   @override
-  String get learnStartTip => 'НАЧАТЬ';
-
-  @override
   String learnUpNext(int n) {
     return 'ДАЛЕЕ · УРОК $n';
   }
@@ -1533,9 +1492,6 @@ class AppL10nRu extends AppL10n {
   String get lessonPerfect => 'Идеальный урок!';
 
   @override
-  String get learnGo => 'Начать';
-
-  @override
   String get onbLearn => 'Учитесь с нуля';
 
   @override
@@ -1569,9 +1525,6 @@ class AppL10nRu extends AppL10n {
   String lessonLockedOpen(int n) {
     return 'Открыть урок $n';
   }
-
-  @override
-  String get homeBannerLine => 'Пора играть лучше';
 
   @override
   String get yourName => 'Ваше имя';

@@ -178,11 +178,6 @@ class AppL10nEn extends AppL10n {
   String get youResigned => 'You resigned.';
 
   @override
-  String endCheckmateWon(String name) {
-    return '$name won by checkmate.';
-  }
-
-  @override
   String get endStalemate => 'Game drawn by stalemate.';
 
   @override
@@ -1022,10 +1017,6 @@ class AppL10nEn extends AppL10n {
   String get onbTitle => 'Chess that helps you improve';
 
   @override
-  String get onbIntro =>
-      'Play bots at your level, train with puzzles and replay your games to learn from them.';
-
-  @override
   String get onbPlayBots => 'Play bots';
 
   @override
@@ -1234,11 +1225,6 @@ class AppL10nEn extends AppL10n {
   String get reviewButton => 'Review';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Analyzing the game… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Accuracy';
 
   @override
@@ -1286,31 +1272,10 @@ class AppL10nEn extends AppL10n {
   String get learnSub => 'From your first move to checkmate';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done of $total lessons';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n tasks';
-  }
-
-  @override
   String get lessonStart => 'Start lesson';
 
   @override
-  String get learnNext => 'Up next';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Task $n of $total';
-  }
-
-  @override
   String get learnWrong => 'Not quite. Try again.';
-
-  @override
-  String get learnNotBest => 'That is not the most valuable capture.';
 
   @override
   String get learnStalemate => 'That is stalemate, a draw. Find the checkmate.';
@@ -1323,9 +1288,6 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get lessonNext => 'Next lesson';
-
-  @override
-  String get lessonAll => 'All lessons';
 
   @override
   String get lessonPlayGame => 'Play a game';
@@ -1488,9 +1450,6 @@ class AppL10nEn extends AppL10n {
   String get summitLabel => 'SUMMIT';
 
   @override
-  String get learnStartTip => 'START';
-
-  @override
   String learnUpNext(int n) {
     return 'UP NEXT · LESSON $n';
   }
@@ -1527,9 +1486,6 @@ class AppL10nEn extends AppL10n {
   String get lessonPerfect => 'Perfect lesson!';
 
   @override
-  String get learnGo => 'Start';
-
-  @override
   String get onbLearn => 'Learn from zero';
 
   @override
@@ -1563,9 +1519,6 @@ class AppL10nEn extends AppL10n {
   String lessonLockedOpen(int n) {
     return 'Open lesson $n';
   }
-
-  @override
-  String get homeBannerLine => 'Time to improve your chess';
 
   @override
   String get yourName => 'Your name';
