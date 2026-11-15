@@ -3,6 +3,7 @@ import 'package:dartchess/dartchess.dart';
 import 'package:kust/features/game/chess/accuracy.dart';
 import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/castling.dart';
 
 /// UCI text for [move] as the engine wants it: castling is the king's two
 /// step (`e1g1`), not dartchess' king-takes-rook.
@@ -13,13 +14,7 @@ String engineUci(NormalMove move, Position before) {
   if (piece?.role == Role.king &&
       target != null &&
       target.color == piece!.color) {
-    to = switch (move.to) {
-      Square.h1 => Square.g1,
-      Square.a1 => Square.c1,
-      Square.h8 => Square.g8,
-      Square.a8 => Square.c8,
-      _ => move.to,
-    };
+    to = castlingDisplaySquare(move.to);
   }
   final promotion = switch (move.promotion) {
     Role.queen => 'q',

@@ -107,9 +107,7 @@ void main() {
     expect(find.text("That's the move!"), findsOneWidget);
   });
 
-  testWidgets('a bad move stays and another try is allowed', (
-    tester,
-  ) async {
+  testWidgets('a bad move stays and another try is allowed', (tester) async {
     await _open(tester);
     await _drag(tester, 'a2', 'a3');
     expect(find.text('Not quite. Try again.'), findsOneWidget);

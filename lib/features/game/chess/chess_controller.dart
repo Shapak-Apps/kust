@@ -25,6 +25,7 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/features/game/chess/castling.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -880,7 +881,7 @@ class ChessController extends Notifier<GameState> {
         piece.role == Role.king &&
         target != null &&
         target.color == piece.color) {
-      to = _castlingDisplaySquare(to);
+      to = castlingDisplaySquare(to);
     }
     final promotion = move.promotion == null
         ? ''
@@ -2030,7 +2031,7 @@ class ChessController extends Notifier<GameState> {
               dest == Square.a8);
 
       if (isCastling) {
-        displaySquares.add(_castlingDisplaySquare(dest));
+        displaySquares.add(castlingDisplaySquare(dest));
         // The rook itself is a target too when castling on the rook is on.
         if (AppSettings.instance.castleOnRook.value) displaySquares.add(dest);
       } else {
@@ -2331,14 +2332,6 @@ class ChessController extends Notifier<GameState> {
 
     final rank = rankOf(to);
     return rank == 0 || rank == 7;
-  }
-
-  Square _castlingDisplaySquare(Square target) {
-    if (target == Square.h1) return Square.g1;
-    if (target == Square.a1) return Square.c1;
-    if (target == Square.h8) return Square.g8;
-    if (target == Square.a8) return Square.c8;
-    return target;
   }
 
   GameStatus _statusFor(Position position, int repetitions) {
