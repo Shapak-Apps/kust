@@ -1635,4 +1635,22 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get campTacticsSub => 'Win pieces with clever moves';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get usernameRule => '3–20 letters, digits or _';
+
+  @override
+  String get bio => 'About you';
+
+  @override
+  String get choosePhoto => 'Choose photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
 }

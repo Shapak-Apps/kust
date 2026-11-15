@@ -1,3 +1,5 @@
+import 'dart:io' as io;
+
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -294,7 +296,19 @@ class _PlayScreenState extends State<PlayScreen> {
                 translucent: scrolled,
                 title: 'Küşt',
                 brand: const KustLogo(height: 22),
-                leading: PlayerAvatar(name: name),
+                leading: Semantics(
+                  button: true,
+                  label: context.t.profile,
+                  child: Pressable(
+                    onTap: () => context.push('/profile'),
+                    child: PlayerAvatar(
+                      name: name,
+                      photo: AppStorage.instance.photoPath == null
+                          ? null
+                          : FileImage(io.File(AppStorage.instance.photoPath!)),
+                    ),
+                  ),
+                ),
                 trailing: [
                   KustIconButton(
                     icon: Icons.tune_rounded,

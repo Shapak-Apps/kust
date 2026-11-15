@@ -2978,6 +2978,42 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Win pieces with clever moves'**
   String get campTacticsSub;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @usernameRule.
+  ///
+  /// In en, this message translates to:
+  /// **'3–20 letters, digits or _'**
+  String get usernameRule;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'About you'**
+  String get bio;
+
+  /// No description provided for @choosePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get choosePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

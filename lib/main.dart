@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
@@ -47,6 +48,11 @@ Future<void> _start() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
   await AppStorage.init();
+  try {
+    AppStorage.filesDir = (await getApplicationSupportDirectory()).path;
+  } catch (e, st) {
+    ErrorLog.record(e, st);
+  }
   try {
     await AppSettings.instance.load();
   } catch (e, st) {

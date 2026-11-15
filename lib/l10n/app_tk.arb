@@ -479,5 +479,11 @@
   "lessonPatternsTitle": "Şahmat nagyşlary",
   "lessonPatternsIntro": "Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň.",
   "campTacticsTitle": "Taktika",
-  "campTacticsSub": "Akylly göçümler bilen çöp utuň"
+  "campTacticsSub": "Akylly göçümler bilen çöp utuň",
+  "profile": "Profil",
+  "username": "Ulanyjy ady",
+  "usernameRule": "3–20 latyn harpy, san ýa-da _",
+  "bio": "Özüňiz barada",
+  "choosePhoto": "Surat saýla",
+  "removePhoto": "Suraty aýyr"
 }

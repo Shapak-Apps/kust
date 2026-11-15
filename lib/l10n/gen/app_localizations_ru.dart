@@ -1642,4 +1642,22 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get campTacticsSub => 'Выигрывайте фигуры хитрыми ходами';
+
+  @override
+  String get profile => 'Профиль';
+
+  @override
+  String get username => 'Имя пользователя';
+
+  @override
+  String get usernameRule => '3–20 латинских букв, цифр или _';
+
+  @override
+  String get bio => 'О себе';
+
+  @override
+  String get choosePhoto => 'Выбрать фото';
+
+  @override
+  String get removePhoto => 'Удалить фото';
 }

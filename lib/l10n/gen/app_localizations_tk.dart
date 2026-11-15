@@ -1641,4 +1641,22 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get campTacticsSub => 'Akylly göçümler bilen çöp utuň';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get username => 'Ulanyjy ady';
+
+  @override
+  String get usernameRule => '3–20 latyn harpy, san ýa-da _';
+
+  @override
+  String get bio => 'Özüňiz barada';
+
+  @override
+  String get choosePhoto => 'Surat saýla';
+
+  @override
+  String get removePhoto => 'Suraty aýyr';
 }
