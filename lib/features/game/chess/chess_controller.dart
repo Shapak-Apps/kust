@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' show Random;
 
 import 'package:dartchess/dartchess.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,6 +14,8 @@ import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/core/storage/live_game_store.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -22,6 +25,7 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/pick_opponent_modal.dart';
+import 'package:kust/features/game/chess/castling.dart';
 
 const String kStartFen =
     'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -385,6 +389,15 @@ class GameState {
   }
 }
 
+/// How far the bot's own score must move between two of its turns for it to
+/// react to the player's move, in centipawns.
+@visibleForTesting
+const int kBotSwingCp = 300;
+
+/// Scores this large are mates: no swing is read from them.
+@visibleForTesting
+const int kBotSwingMateCp = 50000;
+
 class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
@@ -486,6 +499,14 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(paused: true, clearSelection: true);
   }
 
+  /// Sets the running clocks, so tests can make a flag fall in moments.
+  @visibleForTesting
+  void debugSetClocks({Duration? white, Duration? black}) {
+    if (white != null) _whiteClock = white;
+    if (black != null) _blackClock = black;
+    _lastTick = DateTime.now();
+  }
+
   /// Starts the clocks again where they stopped.
   void resumeClock() {
     if (!state.paused) return;
@@ -571,6 +592,9 @@ class ChessController extends Notifier<GameState> {
   void _flagFell(Side fellSide) {
     if (_isDisposed) return;
     _stopClock();
+    // A bot still thinking has nothing left to play.
+    _moveRequestId++;
+    _engine.stopThinking();
 
     // FIDE 6.9: if the other side cannot mate by any series of moves (a
     // lone king, say), running out of time is a draw.
@@ -811,7 +835,10 @@ class ChessController extends Notifier<GameState> {
     _suggesting = true;
     final String uci;
     try {
-      uci = await _engine.evaluateBestHint(fen);
+      uci = await _engine.evaluateBestHint(
+        fen,
+        isStale: () => _isDisposed || id != _suggestId,
+      );
     } catch (_) {
       return;
     } finally {
@@ -854,7 +881,7 @@ class ChessController extends Notifier<GameState> {
         piece.role == Role.king &&
         target != null &&
         target.color == piece.color) {
-      to = _castlingDisplaySquare(to);
+      to = castlingDisplaySquare(to);
     }
     final promotion = move.promotion == null
         ? ''
@@ -882,10 +909,11 @@ class ChessController extends Notifier<GameState> {
 
       state = state.copyWith(feedbackAnalyzing: true);
 
-      var analysis = await _engine.analyzeMove(
+      var analysis = await AnalysisCache.instance.wrap(_engine.analyzeMove)(
         beforeFen: beforePos.fen,
         playedUci: playedUci,
         afterFen: afterPos.fen,
+        thinkTime: kAnalysisThinkTime,
         isStale: () => _isDisposed || epoch != _feedbackEpoch,
       );
 
@@ -921,6 +949,14 @@ class ChessController extends Notifier<GameState> {
         if (deeper != null) {
           analysis = deeper;
           quality = rate(deeper);
+          // The deeper look is the better rating: Review and Replay show it
+          // too, so the label never changes between screens.
+          unawaited(
+            AnalysisCache.instance.put(
+              AnalysisCache.keyFor(beforePos.fen, playedUci),
+              deeper,
+            ),
+          );
         }
       }
       if (moveIndex >= state.moves.length) return;
@@ -967,7 +1003,8 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  final Random _chatRandom = Random();
+  @visibleForTesting
+  Random chatRandom = Random();
   int _lastRemarkPly = -100;
 
   /// Now and then the bot comments on a move of yours that was very good or
@@ -980,13 +1017,43 @@ class ChessController extends Notifier<GameState> {
       MoveQuality.blunder => BotMoment.blunder,
       _ => null,
     };
-    if (moment == null || moveIndex - _lastRemarkPly < 6) return;
-    if (_chatRandom.nextDouble() > 0.7) return;
+    if (moment == null) return;
+    _remark(moveIndex, moment);
+  }
+
+  /// The bot says something about the player's move at [moveIndex], not
+  /// every time and never twice within a few moves.
+  void _remark(int moveIndex, BotMoment moment) {
+    if (moveIndex - _lastRemarkPly < 6) return;
+    if (chatRandom.nextDouble() > 0.7) return;
     _lastRemarkPly = moveIndex;
     state = state.copyWith(
       botMoment: moment,
       botMomentSeq: state.botMomentSeq + 1,
     );
+  }
+
+  /// The bot's own best score (its point of view) the last time it moved.
+  int? _lastBotBestCp;
+
+  /// Judges the player's last move from what the bot's search already says,
+  /// when no move rating runs (rated games): if the position got much better
+  /// for the bot than it expected after its own move, that was a blunder; if
+  /// much worse, a strong move. Costs no extra search.
+  void _remarkFromSwing(int bestCp) {
+    final before = _lastBotBestCp;
+    _lastBotBestCp = bestCp;
+    if (before == null) return;
+    if (state.practiceMode && state.moveFeedbackEnabled) return;
+    if (before.abs() >= kBotSwingMateCp || bestCp.abs() >= kBotSwingMateCp) {
+      return;
+    }
+    final swing = bestCp - before;
+    if (swing >= kBotSwingCp) {
+      _remark(state.moves.length - 1, BotMoment.blunder);
+    } else if (swing <= -kBotSwingCp) {
+      _remark(state.moves.length - 1, BotMoment.brilliant);
+    }
   }
 
   String _promotionChar(Role role) {
@@ -1033,6 +1100,7 @@ class ChessController extends Notifier<GameState> {
     _resetFeedbackQueue();
     _brilliantThisGame = false;
     _lastRemarkPly = -100;
+    _lastBotBestCp = null;
     _policy = BotPolicy(
       elo: bot.elo,
       seed: DateTime.now().microsecondsSinceEpoch,
@@ -1079,6 +1147,124 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
+  /// Picks up a game saved by [LiveGameStore]: the moves are played again
+  /// from the start position, the clocks are set to what they showed, and the
+  /// bot moves if it is its turn. Returns false when the saved game cannot be
+  /// replayed (the saved moves do not fit the rules, or the game is over).
+  Future<bool> resumeGame(LiveGame saved, {Bot? bot}) async {
+    if (!saved.isLocal && bot == null) return false;
+
+    Position position = Chess.fromSetup(Setup.parseFen(kStartFen));
+    final history = <Position>[];
+    final moves = <MoveRecord>[];
+    for (final uci in saved.uciMoves) {
+      final NormalMove move;
+      try {
+        move = NormalMove.fromUci(uci);
+      } catch (_) {
+        return false;
+      }
+      if (!position.isLegal(move)) return false;
+      final capturedSquare = _capturedSquareFor(position, move);
+      final next = position.play(move);
+      moves.add(
+        MoveRecord(
+          side: position.turn,
+          san: moveToSan(
+            before: position,
+            move: move,
+            after: next,
+            capturedSquare: capturedSquare,
+          ),
+          move: move,
+          capturedPiece: capturedSquare == null
+              ? null
+              : position.board.pieceAt(capturedSquare),
+        ),
+      );
+      history.add(position);
+      position = next;
+    }
+    _rebuildRepetitions(history, position);
+    final repetitions = _repCounts[_repKey(position)] ?? 1;
+    if (_statusFor(position, repetitions) != GameStatus.playing) {
+      unawaited(LiveGameStore.instance.clear());
+      return false;
+    }
+
+    _moveRequestId++;
+    _evalRequestId++;
+    _accuracyEpoch++;
+    _resetFeedbackQueue();
+    _brilliantThisGame = false;
+    _lastRemarkPly = -100;
+    _lastBotBestCp = null;
+    if (bot != null) {
+      _policy = BotPolicy(
+        elo: bot.elo,
+        seed: DateTime.now().microsecondsSinceEpoch,
+      );
+    }
+
+    final timeControl = saved.baseMinutes == null
+        ? null
+        : TimeControl(
+            baseMinutes: saved.baseMinutes!,
+            incrementSeconds: saved.incrementSeconds,
+          );
+    _initClocks(timeControl);
+    if (timeControl != null) {
+      _whiteClock = Duration(milliseconds: saved.whiteMs);
+      _blackClock = Duration(milliseconds: saved.blackMs);
+    }
+    final playerSide = saved.playerIsWhite ? Side.white : Side.black;
+    final last = moves.last.move;
+
+    state = GameState(
+      position: position,
+      history: history,
+      moves: moves,
+      mode: saved.isLocal ? GameMode.local : GameMode.bot,
+      bot: saved.isLocal ? null : bot,
+      playerSide: saved.isLocal ? Side.white : playerSide,
+      timeControl: timeControl,
+      whiteTimeLeft: TimeControl.display(_whiteClock),
+      blackTimeLeft: TimeControl.display(_blackClock),
+      practiceMode: saved.isLocal || saved.practice,
+      lastMove: last,
+      moveSquares: [last.from, last.to],
+      lastMoveInstant: true,
+      evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
+      showBestEnabled: state.showBestEnabled,
+      status: GameStatus.playing,
+    );
+    unawaited(_loadEvalEnabled());
+
+    if (saved.isLocal) {
+      // Two people at one phone: wait until they are ready.
+      if (timeControl != null) pauseClock();
+      return true;
+    }
+    unawaited(
+      _engine
+          .start()
+          .then((_) {
+            if (_isDisposed) return;
+            _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+            if (state.position.turn != playerSide) {
+              _requestBotMove();
+            } else {
+              unawaited(_refreshSuggestion());
+            }
+          })
+          .catchError((Object _) {
+            if (!_isDisposed) state = state.copyWith(engineFailed: true);
+          }),
+    );
+    return true;
+  }
+
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _moveRequestId++;
     _evalRequestId++;
@@ -1086,6 +1272,7 @@ class ChessController extends Notifier<GameState> {
     _resetFeedbackQueue();
     _brilliantThisGame = false;
     _lastRemarkPly = -100;
+    _lastBotBestCp = null;
     _initClocks(timeControl);
 
     final base = timeControl?.base ?? Duration.zero;
@@ -1408,6 +1595,7 @@ class ChessController extends Notifier<GameState> {
   /// Calls the game off before it has really started: nothing is recorded.
   void abort() {
     if (!state.canAbort) return;
+    unawaited(LiveGameStore.instance.clear());
     _moveRequestId++;
     _engine.stopThinking();
     _stopClock();
@@ -1579,10 +1767,6 @@ class ChessController extends Notifier<GameState> {
     state = state.copyWith(clearSelection: true);
   }
 
-  void stopEngineWork() {
-    _engine.stopThinking();
-  }
-
   /// Tries to bring the engine back after [GameState.engineFailed].
   Future<void> retryEngine() async {
     if (state.mode != GameMode.bot || state.status != GameStatus.playing) {
@@ -1610,10 +1794,45 @@ class ChessController extends Notifier<GameState> {
       // Outside the notification so state can be updated afterwards.
       scheduleMicrotask(() => _recordFinishedGame(next));
     }
+    _keepLiveGame(previous, next);
+  }
+
+  /// Keeps the game in progress on disk, so it can be continued after the
+  /// app was closed. Written after each move, cleared when the game ends.
+  void _keepLiveGame(GameState previous, GameState next) {
+    if (next.status == GameStatus.loading) return;
+    final store = LiveGameStore.instance;
+    if (next.status != GameStatus.playing || next.moves.isEmpty) {
+      if (previous.status == GameStatus.playing || previous.moves.isNotEmpty) {
+        unawaited(store.clear());
+      }
+      return;
+    }
+    if (next.moves.length == previous.moves.length) return;
+    if (next.moves.length < 2) return;
+    final tc = next.timeControl;
+    unawaited(
+      store.save(
+        LiveGame(
+          isLocal: next.mode == GameMode.local,
+          botId: next.bot?.id,
+          playerIsWhite: next.playerSide == Side.white,
+          practice: next.practiceMode,
+          uciMoves: [for (final m in next.moves) m.move.uci],
+          savedAt: DateTime.now().millisecondsSinceEpoch,
+          baseMinutes: tc?.baseMinutes,
+          incrementSeconds: tc?.incrementSeconds ?? 0,
+          whiteMs: next.whiteTimeLeft.inMilliseconds,
+          blackMs: next.blackTimeLeft.inMilliseconds,
+        ),
+      ),
+    );
   }
 
   Future<void> _recordFinishedGame(GameState game) async {
-    if (_isDisposed || game.moves.isEmpty) return;
+    // Not tied to this controller staying alive: a finished game is saved
+    // even if the screen was left in the same moment.
+    if (game.moves.isEmpty) return;
     final isLocal = game.mode == GameMode.local;
 
     final String result;
@@ -1641,21 +1860,22 @@ class ChessController extends Notifier<GameState> {
     }
 
     int? ratingChange;
+    double? ratedScore;
     final bot = game.bot;
     if (!isLocal && !game.practiceMode && bot != null) {
-      final score = result == GameRecord.win
+      ratedScore = result == GameRecord.win
           ? 1.0
           : result == GameRecord.draw
           ? 0.5
           : 0.0;
-      ratingChange = await PlayerRatingStore.instance.record(
+      ratingChange = PlayerRatingStore.instance.changeFor(
         opponent: bot.elo,
-        score: score,
+        score: ratedScore,
       );
-      if (_isDisposed) return;
-      state = state.copyWith(ratingChange: ratingChange);
     }
 
+    // The game is saved first: whatever happens to this controller next, a
+    // finished game is never missing from the history.
     final tc = game.timeControl;
     final recordId = DateTime.now().microsecondsSinceEpoch.toString();
     await GameHistoryStore.instance.add(
@@ -1678,6 +1898,15 @@ class ChessController extends Notifier<GameState> {
             : '${tc.baseMinutes}+${tc.incrementSeconds}',
       ),
     );
+    if (ratedScore != null && bot != null) {
+      await PlayerRatingStore.instance.record(
+        opponent: bot.elo,
+        score: ratedScore,
+      );
+    }
+    if (!_isDisposed && ratingChange != null) {
+      state = state.copyWith(ratingChange: ratingChange);
+    }
 
     if (!_isDisposed) state = state.copyWith(savedGameId: recordId);
 
@@ -1697,7 +1926,7 @@ class ChessController extends Notifier<GameState> {
       );
       if (_brilliantThisGame) unawaited(AchievementTracker.brilliantMove());
     }
-    if (!isLocal) unawaited(_computeAccuracy(game, recordId));
+    if (!isLocal && !_isDisposed) unawaited(_computeAccuracy(game, recordId));
   }
 
   /// Most player moves analyzed per game, to keep the wait short.
@@ -1752,7 +1981,10 @@ class ChessController extends Notifier<GameState> {
 
     final String uci;
     try {
-      uci = await _engine.evaluateBestHint(state.position.fen);
+      uci = await _engine.evaluateBestHint(
+        state.position.fen,
+        isStale: () => _isDisposed || requestId != _moveRequestId,
+      );
     } catch (_) {
       if (!_isDisposed && requestId == _moveRequestId) {
         state = state.copyWith(isHintThinking: false, engineFailed: true);
@@ -1799,7 +2031,7 @@ class ChessController extends Notifier<GameState> {
               dest == Square.a8);
 
       if (isCastling) {
-        displaySquares.add(_castlingDisplaySquare(dest));
+        displaySquares.add(castlingDisplaySquare(dest));
         // The rook itself is a target too when castling on the rook is on.
         if (AppSettings.instance.castleOnRook.value) displaySquares.add(dest);
       } else {
@@ -1948,6 +2180,7 @@ class ChessController extends Notifier<GameState> {
         depth: policy.depth,
         thinkTime: policy.thinkTime,
       );
+      if (candidates.isNotEmpty) _remarkFromSwing(candidates.first.cp);
       uci = candidates.isEmpty
           ? '(none)'
           : policy.pick(
@@ -2099,14 +2332,6 @@ class ChessController extends Notifier<GameState> {
 
     final rank = rankOf(to);
     return rank == 0 || rank == 7;
-  }
-
-  Square _castlingDisplaySquare(Square target) {
-    if (target == Square.h1) return Square.g1;
-    if (target == Square.a1) return Square.c1;
-    if (target == Square.h8) return Square.g8;
-    if (target == Square.a8) return Square.c8;
-    return target;
   }
 
   GameStatus _statusFor(Position position, int repetitions) {

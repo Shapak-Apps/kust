@@ -178,11 +178,6 @@ class AppL10nRu extends AppL10n {
   String get youResigned => 'Вы сдались.';
 
   @override
-  String endCheckmateWon(String name) {
-    return 'Победа матом: $name.';
-  }
-
-  @override
   String get endStalemate => 'Ничья: пат.';
 
   @override
@@ -362,6 +357,9 @@ class AppL10nRu extends AppL10n {
   String get qGood => 'Хороший';
 
   @override
+  String get qBook => 'Теория';
+
+  @override
   String get qInaccuracy => 'Неточность';
 
   @override
@@ -386,6 +384,11 @@ class AppL10nRu extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · лучший ход';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · теоретический ход';
   }
 
   @override
@@ -1024,33 +1027,6 @@ class AppL10nRu extends AppL10n {
   String get onbTitle => 'Шахматы, которые помогают расти';
 
   @override
-  String get onbIntro =>
-      'Играйте с ботами своего уровня, тренируйтесь на задачах и пересматривайте партии, чтобы учиться на них.';
-
-  @override
-  String get onbPlayBots => 'Играйте с ботами';
-
-  @override
-  String get onbPlayBotsSub => 'От 400 до 2000 Elo или передайте телефон другу';
-
-  @override
-  String get onbSolve => 'Решайте задачи';
-
-  @override
-  String get onbSolveSub => 'Короткая тактика с подсказками и рейтингом';
-
-  @override
-  String get onbReview => 'Разбирайте партии';
-
-  @override
-  String get onbReviewSub =>
-      'Каждая завершённая партия сохраняется для просмотра';
-
-  @override
-  String get onbNoAccount =>
-      'Аккаунт не нужен. Ваши партии и прогресс хранятся на этом устройстве.';
-
-  @override
   String get onbHowStrong => 'Насколько вы сильны?';
 
   @override
@@ -1081,14 +1057,6 @@ class AppL10nRu extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'Я играю всерьёз и могу участвовать в турнирах.';
-
-  @override
-  String get onbAllSet => 'Всё готово';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Ваш начальный рейтинг — $rating.\nПервая партия уже в одном касании.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1239,11 +1207,6 @@ class AppL10nRu extends AppL10n {
   String get reviewButton => 'Разбор';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Анализ партии… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Точность';
 
   @override
@@ -1291,31 +1254,10 @@ class AppL10nRu extends AppL10n {
   String get learnSub => 'От первого хода до мата';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done из $total уроков';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n заданий';
-  }
-
-  @override
   String get lessonStart => 'Начать урок';
 
   @override
-  String get learnNext => 'Дальше';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Задание $n из $total';
-  }
-
-  @override
   String get learnWrong => 'Не совсем. Попробуйте ещё.';
-
-  @override
-  String get learnNotBest => 'Это не самое ценное взятие.';
 
   @override
   String get learnStalemate => 'Это пат, ничья. Найдите мат.';
@@ -1328,9 +1270,6 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get lessonNext => 'Следующий урок';
-
-  @override
-  String get lessonAll => 'Все уроки';
 
   @override
   String get lessonPlayGame => 'Сыграть партию';
@@ -1494,9 +1433,6 @@ class AppL10nRu extends AppL10n {
   String get summitLabel => 'ВЕРШИНА';
 
   @override
-  String get learnStartTip => 'НАЧАТЬ';
-
-  @override
   String learnUpNext(int n) {
     return 'ДАЛЕЕ · УРОК $n';
   }
@@ -1533,27 +1469,154 @@ class AppL10nRu extends AppL10n {
   String get lessonPerfect => 'Идеальный урок!';
 
   @override
-  String get learnGo => 'Начать';
-
-  @override
-  String get onbLearn => 'Учитесь с нуля';
-
-  @override
-  String get onbLearnSub => 'Короткие уроки от первого хода до мата';
-
-  @override
-  String get onbCoachHi => 'Салам! Я Бахар. Давайте настроим Küşt для вас.';
-
-  @override
-  String get onbCoachLevel =>
-      'Расскажите, как вы играете, и я подберу соперников.';
-
-  @override
-  String get onbCoachReady => 'Отлично! Ваша доска готова.';
-
-  @override
   String get onbStartLesson => 'Начать первый урок';
 
   @override
-  String get onbRatingLabel => 'НАЧАЛЬНЫЙ РЕЙТИНГ';
+  String lessonLocked(int n) {
+    return 'Сначала пройдите урок $n.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Каждый урок опирается на предыдущий.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return 'Открыть урок $n';
+  }
+
+  @override
+  String get yourName => 'Ваше имя';
+
+  @override
+  String get defaultPlayerName => 'Игрок';
+
+  @override
+  String get saveName => 'Сохранить';
+
+  @override
+  String get continueGame => 'Продолжить партию';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · ход $n';
+  }
+
+  @override
+  String get retryTitle => 'Как нужно было сыграть?';
+
+  @override
+  String get retryRight => 'Верный ход!';
+
+  @override
+  String get retryWrong => 'Не совсем. Попробуйте ещё.';
+
+  @override
+  String get retryShow => 'Показать ответ';
+
+  @override
+  String get retryTry => 'Ещё раз';
+
+  @override
+  String get retryNoPosition => 'Этот ход нельзя показать.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Анализируем вашу партию';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return 'Проверяем ход $n из $total';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Точность сравнивает каждый ваш ход с лучшим ходом движка.';
+
+  @override
+  String get reviewTip2 =>
+      'Зевок отдаёт много за один ход. Ищите их в первую очередь.';
+
+  @override
+  String get reviewTip3 =>
+      'Нажмите кнопку повтора у ключевого момента, чтобы сыграть позицию заново.';
+
+  @override
+  String get reviewTip4 =>
+      'Блестящие ходы редки: это жертва, с которой согласен движок.';
+
+  @override
+  String get reviewTip5 =>
+      'Проанализированная партия в следующий раз откроется сразу.';
+
+  @override
+  String get sendErrorReport => 'Отправить отчёт об ошибках';
+
+  @override
+  String get taskFork => 'Вилка: нападите на две фигуры одним ходом';
+
+  @override
+  String get taskPin => 'Свяжите фигуру с её королём';
+
+  @override
+  String get taskSkewer => 'Объявите шах и выиграйте фигуру за королём';
+
+  @override
+  String get lessonForkTitle => 'Вилка';
+
+  @override
+  String get lessonForkIntro =>
+      'Вилка — нападение сразу на две фигуры. Соперник спасёт только одну, а вторую вы заберёте. Лучше всех вилки ставят кони.';
+
+  @override
+  String get lessonPinTitle => 'Связка';
+
+  @override
+  String get lessonPinIntro =>
+      'Связанная фигура не может ходить: иначе её королю будет шах. Свяжите фигуру, а потом нападите на неё ещё раз, чтобы выиграть её.';
+
+  @override
+  String get lessonSkewerTitle => 'Линейный удар';
+
+  @override
+  String get lessonSkewerIntro =>
+      'Линейный удар — это связка наоборот: вы объявляете шах, король уходит, и вы забираете фигуру за ним.';
+
+  @override
+  String get lessonPatternsTitle => 'Типовые маты';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Сильные шахматисты узнают маты по рисунку: спёртый мат конём, ферзь вплотную к королю, ладья и конь вместе. Найдите мат в один ход.';
+
+  @override
+  String get campTacticsTitle => 'Тактика';
+
+  @override
+  String get campTacticsSub => 'Выигрывайте фигуры хитрыми ходами';
+
+  @override
+  String get profile => 'Профиль';
+
+  @override
+  String get username => 'Имя пользователя';
+
+  @override
+  String get usernameRule => '3–20 латинских букв, цифр или _';
+
+  @override
+  String get bio => 'О себе';
+
+  @override
+  String get choosePhoto => 'Выбрать фото';
+
+  @override
+  String get removePhoto => 'Удалить фото';
+
+  @override
+  String get onbNameTitle => 'Как вас называть?';
+
+  @override
+  String get onbNameSub => 'Это можно поменять позже в профиле.';
+
+  @override
+  String get editProfile => 'Изменить профиль';
 }

@@ -6,6 +6,15 @@ class TimeControl {
   final int baseMinutes;
   final int incrementSeconds;
 
+  @override
+  bool operator ==(Object other) =>
+      other is TimeControl &&
+      other.baseMinutes == baseMinutes &&
+      other.incrementSeconds == incrementSeconds;
+
+  @override
+  int get hashCode => Object.hash(baseMinutes, incrementSeconds);
+
   Duration get base => Duration(minutes: baseMinutes);
   Duration get increment => Duration(seconds: incrementSeconds);
 

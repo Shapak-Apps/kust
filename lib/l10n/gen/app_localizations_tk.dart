@@ -102,7 +102,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get engineCouldNotStart =>
-      'Şahmat motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň.';
+      'Küşt motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň.';
 
   @override
   String get botsNotSupported =>
@@ -176,11 +176,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get youResigned => 'Siz boýnuňyza aldyňyz.';
-
-  @override
-  String endCheckmateWon(String name) {
-    return '$name şahmat bilen ýeňdi.';
-  }
 
   @override
   String get endStalemate => 'Pat sebäpli deňe deň.';
@@ -362,6 +357,9 @@ class AppL10nTk extends AppL10n {
   String get qGood => 'Gowy';
 
   @override
+  String get qBook => 'Teoriýa';
+
+  @override
   String get qInaccuracy => 'Gowşak';
 
   @override
@@ -386,6 +384,11 @@ class AppL10nTk extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · takyk göçüm';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · teoriýa göçümi';
   }
 
   @override
@@ -1022,35 +1025,7 @@ class AppL10nTk extends AppL10n {
   String get onbSkip => 'Häzirlikçe geçiň';
 
   @override
-  String get onbTitle => 'Gowulaşmaga kömek edýän şahmat';
-
-  @override
-  String get onbIntro =>
-      'Derejeňize laýyk botlar bilen oýnaň, meseleler bilen türgenleşiň we oýunlaryňyzy gaýtadan görüp, olardan öwreniň.';
-
-  @override
-  String get onbPlayBots => 'Botlar bilen oýnaň';
-
-  @override
-  String get onbPlayBotsSub =>
-      '400-den 2000 Elo çenli ýa-da telefony dostuňyza beriň';
-
-  @override
-  String get onbSolve => 'Meseleleri çözüň';
-
-  @override
-  String get onbSolveSub => 'Kömekli we reýtingli gysga taktikalar';
-
-  @override
-  String get onbReview => 'Oýunlaryňyzy gaýtadan görüň';
-
-  @override
-  String get onbReviewSub =>
-      'Her gutarylan oýun gaýtadan görmek üçin saklanýar';
-
-  @override
-  String get onbNoAccount =>
-      'Akkaunt gerek däl. Oýunlaryňyz we ösüşiňiz şu enjamda saklanýar.';
+  String get onbTitle => 'Gowulaşmaga kömek edýän küşt';
 
   @override
   String get onbHowStrong => 'Güýjüňiz nähili?';
@@ -1063,7 +1038,7 @@ class AppL10nTk extends AppL10n {
   String get lvlBeginner => 'Başlangyç';
 
   @override
-  String get lvlBeginnerD => 'Men entek şahmat öwrenip başladym.';
+  String get lvlBeginnerD => 'Men entek küşt öwrenip başladym.';
 
   @override
   String get lvlIntermediate => 'Orta';
@@ -1085,14 +1060,6 @@ class AppL10nTk extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'Men çynlakaý oýnaýaryn we ýaryşlara gatnaşyp bilerin.';
-
-  @override
-  String get onbAllSet => 'Hemme zat taýýar';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Başlangyç reýtingiňiz $rating.\nIlkinji oýnuňyz bir basyş uzaklykda.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1240,11 +1207,6 @@ class AppL10nTk extends AppL10n {
   String get reviewButton => 'Seljerme';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Oýun seljerilýär… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Takyklyk';
 
   @override
@@ -1292,31 +1254,10 @@ class AppL10nTk extends AppL10n {
   String get learnSub => 'Ilkinji göçümden şahmada çenli';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done/$total sapak';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n tabşyryk';
-  }
-
-  @override
   String get lessonStart => 'Sapagy başla';
 
   @override
-  String get learnNext => 'Indiki';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Tabşyryk $n/$total';
-  }
-
-  @override
   String get learnWrong => 'Bolmady. Ýene synanyşyň.';
-
-  @override
-  String get learnNotBest => 'Bu iň gymmat çöpi almak däl.';
 
   @override
   String get learnStalemate => 'Bu pat, deňe deň. Şahmady tapyň.';
@@ -1329,9 +1270,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get lessonNext => 'Indiki sapak';
-
-  @override
-  String get lessonAll => 'Ähli sapaklar';
 
   @override
   String get lessonPlayGame => 'Oýun oýnaň';
@@ -1471,7 +1409,7 @@ class AppL10nTk extends AppL10n {
   String get campPiecesTitle => 'Çöpler';
 
   @override
-  String get campPiecesSub => 'Her çöpüň nähili göçýändigini öwreniň';
+  String get campPiecesSub => 'Her çöp nähili göçýär';
 
   @override
   String get campRulesTitle => 'Düzgünler';
@@ -1492,9 +1430,6 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get summitLabel => 'DEPE';
-
-  @override
-  String get learnStartTip => 'BAŞLA';
 
   @override
   String learnUpNext(int n) {
@@ -1533,27 +1468,153 @@ class AppL10nTk extends AppL10n {
   String get lessonPerfect => 'Kemsiz sapak!';
 
   @override
-  String get learnGo => 'Başla';
-
-  @override
-  String get onbLearn => 'Noldan öwreniň';
-
-  @override
-  String get onbLearnSub => 'Ilkinji göçümden şahmada çenli gysga sapaklar';
-
-  @override
-  String get onbCoachHi => 'Salam! Men Bahar. Geliň, Küşti size görä sazlalyň.';
-
-  @override
-  String get onbCoachLevel =>
-      'Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.';
-
-  @override
-  String get onbCoachReady => 'Ajaýyp! Tagtaňyz taýyn.';
-
-  @override
   String get onbStartLesson => 'Ilkinji sapagy başla';
 
   @override
-  String get onbRatingLabel => 'BAŞLANGYÇ REÝTING';
+  String lessonLocked(int n) {
+    return 'Ilki $n-nji sapagy tamamlaň.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Her sapak öňküsine daýanýar.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return '$n-nji sapagy aç';
+  }
+
+  @override
+  String get yourName => 'Adyňyz';
+
+  @override
+  String get defaultPlayerName => 'Oýunçy';
+
+  @override
+  String get saveName => 'Ýatda sakla';
+
+  @override
+  String get continueGame => 'Oýny dowam et';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · $n-nji göçüm';
+  }
+
+  @override
+  String get retryTitle => 'Näme göçmelidiňiz?';
+
+  @override
+  String get retryRight => 'Dogry göçüm!';
+
+  @override
+  String get retryWrong => 'Doly däl. Ýene synanyşyň.';
+
+  @override
+  String get retryShow => 'Jogaby görkez';
+
+  @override
+  String get retryTry => 'Täzeden synanyş';
+
+  @override
+  String get retryNoPosition => 'Bu göçümi görkezip bolmaýar.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Oýnuňyz seljerilýär';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return '$total göçümiň $n-njisi barlanýar';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Takyklyk her göçümiňizi motoryň iň gowy göçümi bilen deňeşdirýär.';
+
+  @override
+  String get reviewTip2 =>
+      'Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň.';
+
+  @override
+  String get reviewTip3 =>
+      'Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň.';
+
+  @override
+  String get reviewTip4 =>
+      'Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany.';
+
+  @override
+  String get reviewTip5 => 'Seljerilen oýun indiki gezek derrew açylýar.';
+
+  @override
+  String get sendErrorReport => 'Ýalňyşlyk hasabatyny iber';
+
+  @override
+  String get taskFork => 'Çatal: bir göçümde iki çöpe hüjüm ediň';
+
+  @override
+  String get taskPin => 'Çöpi öz şasyna baglaň';
+
+  @override
+  String get taskSkewer => 'Şaha şah beriň we arkasyndaky çöpi utuň';
+
+  @override
+  String get lessonForkTitle => 'Çatal';
+
+  @override
+  String get lessonForkIntro =>
+      'Çatal bir wagtda iki çöpe hüjüm edýär. Garşydaş diňe birini halas edip bilýär, beýlekisini siz alýarsyňyz. Atlar çatalyň ussatlary.';
+
+  @override
+  String get lessonPinTitle => 'Baglama';
+
+  @override
+  String get lessonPinIntro =>
+      'Baglanan çöp ýöräp bilmeýär, sebäbi arkasyndaky şa şah astynda galar. Çöpi baglaň, soň ony utmak üçin oňa ýene hüjüm ediň.';
+
+  @override
+  String get lessonSkewerTitle => 'Şiş';
+
+  @override
+  String get lessonSkewerIntro =>
+      'Şiş tersine baglama: şaha şah berýärsiňiz, ol çetleşmeli bolýar, siz bolsa arkasyndaky çöpi alýarsyňyz.';
+
+  @override
+  String get lessonPatternsTitle => 'Şahmat nagyşlary';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň.';
+
+  @override
+  String get campTacticsTitle => 'Taktika';
+
+  @override
+  String get campTacticsSub => 'Akylly göçümler bilen çöp utuň';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get username => 'Ulanyjy ady';
+
+  @override
+  String get usernameRule => '3–20 latyn harpy, san ýa-da _';
+
+  @override
+  String get bio => 'Özüňiz barada';
+
+  @override
+  String get choosePhoto => 'Surat saýla';
+
+  @override
+  String get removePhoto => 'Suraty aýyr';
+
+  @override
+  String get onbNameTitle => 'Size näme diýeli?';
+
+  @override
+  String get onbNameSub => 'Muny soňra profiliňizde üýtgedip bilersiňiz.';
+
+  @override
+  String get editProfile => 'Profili üýtget';
 }

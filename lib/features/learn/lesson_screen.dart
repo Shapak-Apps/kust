@@ -15,6 +15,8 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/kust_top_bar.dart' show kMinTap;
+import 'package:kust/ui/motion.dart';
 
 /// The guide who explains every lesson.
 const String _coachImage = 'assets/bots/Bahar.webp';
@@ -205,76 +207,89 @@ class _LessonScreenState extends State<LessonScreen> {
       _Note.stalemate => (t.learnStalemate, const Color(0xFFFF8A80)),
       _Note.done => (t.learnCoachDone, const Color(0xFF9EE7C1)),
     };
-    return Column(
+    // The room for the Continue panel is kept all the time, and the panel
+    // slides into it: nothing on the board moves when a task is done.
+    return Stack(
       children: [
-        _TopBar(
-          count: lesson.tasks.length,
-          at: _step,
-          solved: _solved,
-          onClose: _close,
-          onHint: _solved ? null : _hint,
+        Column(
+          children: [
+            _TopBar(
+              count: lesson.tasks.length,
+              at: _step,
+              solved: _solved,
+              onClose: _close,
+              onHint: _solved ? null : _hint,
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, box) {
+                  // The coach and the board sit together in the middle of the
+                  // room left between the top bar and the bottom.
+                  const coach = 112.0;
+                  final side = math.min(box.maxWidth, box.maxHeight - coach);
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                          child: _Coach(
+                            title: taskPrompt(t, task),
+                            note: note,
+                            noteColor: noteColor,
+                          ),
+                        ),
+                        SizedBox(
+                          width: side,
+                          height: side,
+                          child: Stack(
+                            children: [
+                              PuzzleBoard(
+                                position: runner.position,
+                                flipped: false,
+                                interactive: !_solved,
+                                onMove: _onMove,
+                                lastMove: _lastMove,
+                                hintFrom: _hintFrom,
+                                hintTo: _hintTo,
+                                slide: _slide,
+                                slideKey: _slideKey,
+                              ),
+                              IgnorePointer(
+                                child: _Marks(
+                                  squares: runner.remaining,
+                                  starred: task.starred,
+                                ),
+                              ),
+                              if (_solved && landed != null)
+                                IgnorePointer(
+                                  child: _DoneBadge(square: landed),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: _panelRoom),
+          ],
         ),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, box) {
-              // The coach and the board sit together in the middle of the
-              // room left between the top bar and the bottom.
-              const coach = 112.0;
-              final side = math.min(box.maxWidth, box.maxHeight - coach);
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                      child: _Coach(
-                        title: taskPrompt(t, task),
-                        note: note,
-                        noteColor: noteColor,
-                      ),
-                    ),
-                    SizedBox(
-                      width: side,
-                      height: side,
-                      child: Stack(
-                        children: [
-                          PuzzleBoard(
-                            position: runner.position,
-                            flipped: false,
-                            interactive: !_solved,
-                            onMove: _onMove,
-                            lastMove: _lastMove,
-                            hintFrom: _hintFrom,
-                            hintTo: _hintTo,
-                            slide: _slide,
-                            slideKey: _slideKey,
-                          ),
-                          IgnorePointer(
-                            child: _Marks(
-                              squares: runner.remaining,
-                              starred: task.starred,
-                            ),
-                          ),
-                          if (_solved && landed != null)
-                            IgnorePointer(child: _DoneBadge(square: landed)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedSlide(
+            offset: _solved ? Offset.zero : const Offset(0, 1.1),
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+            child: _DonePanel(
+              last: _step == lesson.tasks.length - 1,
+              onContinue: _solved ? () => _go(_step + 1) : null,
+            ),
           ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          child: _solved
-              ? _DonePanel(
-                  last: _step == lesson.tasks.length - 1,
-                  onContinue: () => _go(_step + 1),
-                )
-              : const SizedBox(width: double.infinity, height: 12),
         ),
       ],
     );
@@ -313,7 +328,7 @@ class _TopBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: TweenAnimationBuilder<double>(
                 tween: Tween(end: done / count),
-                duration: const Duration(milliseconds: 400),
+                duration: motion(context, const Duration(milliseconds: 400)),
                 curve: Curves.easeOutCubic,
                 builder: (context, v, _) => Stack(
                   children: [
@@ -349,20 +364,25 @@ class _TopBar extends StatelessWidget {
             child: Pressable(
               onTap: onHint,
               haptic: true,
-              child: Opacity(
-                opacity: onHint == null ? 0.35 : 1,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _gold.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _gold.withValues(alpha: 0.5)),
-                  ),
-                  child: const Icon(
-                    Icons.lightbulb_rounded,
-                    color: _gold,
-                    size: 22,
+              child: SizedBox.square(
+                dimension: kMinTap,
+                child: Center(
+                  child: Opacity(
+                    opacity: onHint == null ? 0.35 : 1,
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _gold.withValues(alpha: 0.14),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+                      ),
+                      child: const Icon(
+                        Icons.lightbulb_rounded,
+                        color: _gold,
+                        size: 22,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -376,6 +396,9 @@ class _TopBar extends StatelessWidget {
 
 /// The coach with the task in a speech bubble, and a note under it after a
 /// move: what went wrong, or that it is done.
+/// Height kept free under the board for the Continue panel.
+const double _panelRoom = 146;
+
 class _Coach extends StatelessWidget {
   const _Coach({required this.title, this.note, this.noteColor});
 
@@ -413,11 +436,13 @@ class _Coach extends StatelessWidget {
                 14,
                 12,
               ),
-              child: AnimatedSize(
-                duration: const Duration(milliseconds: 180),
-                alignment: Alignment.topLeft,
+              // Always room for the note, so the board below never moves
+              // when one appears.
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 84),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
@@ -455,7 +480,7 @@ class _DonePanel extends StatelessWidget {
   const _DonePanel({required this.last, required this.onContinue});
 
   final bool last;
-  final VoidCallback onContinue;
+  final VoidCallback? onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -520,7 +545,7 @@ class _DoneBadge extends StatelessWidget {
               height: cell * 0.56,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 380),
+                duration: motion(context, const Duration(milliseconds: 380)),
                 curve: Curves.easeOutBack,
                 builder: (context, v, child) =>
                     Transform.scale(scale: v, child: child),
@@ -900,7 +925,11 @@ class _PopStarState extends State<_PopStar>
     super.initState();
     _t = Timer(widget.delay, () {
       if (!mounted) return;
-      _c.forward();
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _c.value = 1;
+      } else {
+        _c.forward();
+      }
       if (widget.on) SoundService.instance.playSfx('move.wav');
     });
   }

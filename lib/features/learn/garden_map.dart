@@ -1,9 +1,12 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
+import 'package:kust/features/learn/garden_art.dart';
 import 'package:kust/features/learn/lessons.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/l10n/app_locale.dart';
 
 /// Colours of the garden the lessons are laid out in.
@@ -40,8 +43,8 @@ class LearnMapLayout {
   static const double campGap = 118;
   static const double headRoom = 250;
 
-  /// How far right each tile stands, in half tile widths.
-  static const List<int> _run = [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1, 0];
+  /// How far right each tile stands, in half tile widths; it repeats.
+  static const List<int> _run = [0, 1, 2, 3, 2, 1];
 
   double get height =>
       topInset +
@@ -58,7 +61,7 @@ class LearnMapLayout {
     for (final camp in kCamps.skip(1)) {
       if (i >= camp.first) y -= campGap - step;
     }
-    return Offset(_x0 + _run[i] * tileW / 2, y);
+    return Offset(_x0 + _run[i % _run.length] * tileW / 2, y);
   }
 
   /// Halfway between the last tile of the camp before and [camp]'s first.
@@ -80,7 +83,11 @@ class LearnMapPainter extends CustomPainter {
     required this.done,
     required this.next,
     required this.stars,
+    this.pixelRatio = 1,
   });
+
+  /// The screen's pixel ratio, for the cached image of the map.
+  final double pixelRatio;
 
   final LearnMapLayout layout;
   final Set<String> done;
@@ -91,7 +98,20 @@ class LearnMapPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final key =
+        '${size.width}x${size.height}@$pixelRatio|$next|'
+        '${(done.toList()..sort()).join(',')}|$stars';
+    final art = _MapArt.of(key, size, pixelRatio, _paintAll);
+    if (art == null) {
+      _paintAll(canvas, size);
+    } else {
+      art.draw(canvas, size);
+    }
+  }
+
+  void _paintAll(Canvas canvas, Size size) {
     _ground(canvas, size);
+    _trail(canvas);
     final items = <(double, void Function())>[];
     _addDecor(canvas, items);
     for (var i = 0; i < layout.count; i++) {
@@ -119,6 +139,45 @@ class LearnMapPainter extends CustomPainter {
             ..lineTo(x - w / 2, y)
             ..close(),
           light,
+        );
+      }
+    }
+    GardenArt.groundDetail(canvas, size, 11);
+  }
+
+  // ---------------------------------------------------------------- trail
+
+  /// Stepping stones from each lesson to the next: sandy where the way has
+  /// been walked, grey moss ahead.
+  void _trail(Canvas canvas) {
+    const keep = LearnMapLayout.tileW * 0.5;
+    for (var i = 0; i < layout.count - 1; i++) {
+      final a = layout.tile(i) + const Offset(0, LearnMapLayout.depth / 2);
+      final b = layout.tile(i + 1) + const Offset(0, LearnMapLayout.depth / 2);
+      final walked = i < next || next < 0;
+      final fill = walked ? const Color(0xFFE7D7A8) : const Color(0xFF6F806A);
+      final edge = walked ? const Color(0xFFB7A271) : const Color(0xFF4E5D49);
+      final length = (b - a).distance;
+      final count = (length / 20).floor();
+      for (var k = 1; k < count; k++) {
+        final at = Offset.lerp(a, b, k / count)!;
+        if ((at - a).distance < keep || (at - b).distance < keep) continue;
+        // A little wobble, the same every time.
+        final wobble = ((i * 7 + k * 13) % 5 - 2) * 1.2;
+        final stone = Rect.fromCenter(
+          center: at + Offset(wobble, 0),
+          width: 15,
+          height: 8,
+        );
+        canvas.drawOval(stone.shift(const Offset(0, 2)), Paint()..color = edge);
+        canvas.drawOval(stone, Paint()..color = fill);
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: stone.center - const Offset(2, 1.2),
+            width: 6,
+            height: 2.4,
+          ),
+          Paint()..color = Colors.white.withValues(alpha: walked ? 0.55 : 0.2),
         );
       }
     }
@@ -172,16 +231,30 @@ class LearnMapPainter extends CustomPainter {
             const Color(0xFF333E2F),
           );
 
+    if (isNext) {
+      // A warm glow on the ground around the lesson to play next.
+      final glow = Rect.fromCenter(
+        center: c + const Offset(0, d * 0.7),
+        width: w * 1.9,
+        height: h * 1.9,
+      );
+      canvas.drawOval(
+        glow,
+        Paint()
+          ..shader = const RadialGradient(
+            colors: [Color(0x80FFD45C), Color(0x30FFD45C), Color(0x00FFD45C)],
+            stops: [0, 0.5, 1],
+          ).createShader(glow),
+      );
+    }
+
     // A soft shadow on the ground.
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: c + Offset(6, d + 10),
-        width: w * 0.95,
-        height: h * 0.7,
-      ),
-      Paint()
-        ..color = const Color(0x40000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    GardenArt.shadow(
+      canvas,
+      c + Offset(-2, d + 8),
+      w * 1.05,
+      h * 0.8,
+      opacity: 0.42,
     );
 
     final face = _diamond(c, w, h);
@@ -210,7 +283,21 @@ class LearnMapPainter extends CustomPainter {
       }
     }
 
-    canvas.drawPath(face, Paint()..color = top);
+    // Lit from the upper left, like the pieces standing on it.
+    canvas.drawPath(
+      face,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(top, Colors.white, 0.28)!,
+            top,
+            Color.lerp(top, Colors.black, 0.1)!,
+          ],
+          stops: const [0, 0.5, 1],
+        ).createShader(bounds),
+    );
     for (final k in [0.74, 0.48]) {
       canvas.drawPath(
         _diamond(c, w * k, h * k),
@@ -264,7 +351,30 @@ class LearnMapPainter extends CustomPainter {
       canvas.scale(1, 0.72);
       tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
       canvas.restore();
+      _lock(canvas, c + Offset(tp.width / 2 + 9, 3));
     }
+  }
+
+  /// A small padlock beside a locked lesson's number.
+  static void _lock(Canvas canvas, Offset c) {
+    const color = Color(0xFF4C5948);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: c + const Offset(0, 2), width: 11, height: 8),
+        const Radius.circular(2),
+      ),
+      Paint()..color = color,
+    );
+    canvas.drawArc(
+      Rect.fromCenter(center: c - const Offset(0, 1.6), width: 7, height: 8),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..color = color,
+    );
   }
 
   static Path _starPath(Offset c, double r) {
@@ -304,375 +414,149 @@ class LearnMapPainter extends CustomPainter {
     void add(double at, void Function(Canvas) draw) =>
         items.add((at, () => draw(c)));
 
+    // The camp at the foot of the garden.
     final foot = y(0);
-    add(foot + 92, (cv) => _tent(cv, Offset(w * 0.8, foot + 92)));
-    add(foot + 82, (cv) => _bush(cv, Offset(w * 0.14, foot + 82), 1));
-    _flowers(c, Offset(w * 0.58, foot + 66), 7, 1);
-    add(foot + 8, (cv) => _tree(cv, Offset(w * 0.8, foot + 8), 1.05));
-    _flowers(c, Offset(w * 0.66, foot - 40), 5, 2);
+    add(foot + 96, (cv) => GardenArt.tent(cv, Offset(w * 0.79, foot + 96)));
+    add(
+      foot + 118,
+      (cv) => GardenArt.campfire(cv, Offset(w * 0.55, foot + 118), 1),
+    );
+    add(
+      foot + 112,
+      (cv) => GardenArt.log(cv, Offset(w * 0.37, foot + 116), 0.8),
+    );
+    add(
+      foot + 86,
+      (cv) => GardenArt.bush(
+        cv,
+        Offset(w * 0.12, foot + 86),
+        1,
+        berries: GardenArt.pinkBerries,
+      ),
+    );
+    GardenArt.meadow(c, Offset(w * 0.56, foot + 64), 7, 1);
+    add(
+      foot + 10,
+      (cv) => GardenArt.tree(cv, Offset(w * 0.81, foot + 10), 1.05),
+    );
+    add(
+      foot + 14,
+      (cv) => GardenArt.mushrooms(cv, Offset(w * 0.64, foot + 18), 1),
+    );
+    GardenArt.meadow(c, Offset(w * 0.66, foot - 40), 5, 2);
 
-    add(y(1), (cv) => _rock(cv, Offset(w * 0.07, y(1) + 10), 0.9));
-    add(y(2) + 20, (cv) => _bush(cv, Offset(w * 0.93, y(2) + 20), 0.9));
-    add(y(3) + 30, (cv) => _pond(cv, Offset(w * 0.2, y(3) + 6), 0.85));
-    add(y(4) + 6, (cv) => _rock(cv, Offset(w * 0.92, y(4) + 6), 0.75));
-    add(y(5) + 4, (cv) => _tree(cv, Offset(w * 0.09, y(5) + 4), 0.8));
-    _flowers(c, Offset(w * 0.9, y(5) - 20), 5, 3);
+    // Camp 1.
+    add(
+      y(1) + 10,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.07, y(1) + 10), 0.9, moss: true),
+    );
+    add(
+      y(1) + 22,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.15, y(1) + 22), 0.5),
+    );
+    add(
+      y(2) + 20,
+      (cv) => GardenArt.bush(cv, Offset(w * 0.93, y(2) + 20), 0.9),
+    );
+    add(y(3) + 30, (cv) => GardenArt.pond(cv, Offset(w * 0.2, y(3) + 6), 0.85));
+    add(
+      y(4) + 6,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.92, y(4) + 6), 0.75, moss: true),
+    );
+    add(y(4) - 30, (cv) => GardenArt.pine(cv, Offset(w * 0.9, y(4) - 30), 0.8));
+    add(
+      y(5) + 4,
+      (cv) => GardenArt.tree(cv, Offset(w * 0.09, y(5) + 4), 0.8, fruit: false),
+    );
+    GardenArt.meadow(c, Offset(w * 0.88, y(5) - 20), 5, 3, spread: 28);
 
+    // Camp 2.
     final camp2 = layout.campY(kCamps[1]);
     add(camp2 + 26, (cv) => _pedestal(cv, Offset(w * 0.83, camp2 + 26)));
-    add(y(6) + 16, (cv) => _tree(cv, Offset(w * 0.8, y(6) + 16), 1.1));
-    add(y(7) + 14, (cv) => _bush(cv, Offset(w * 0.94, y(7) + 14), 0.8));
-    _flowers(c, Offset(w * 0.1, y(7)), 6, 4);
-    add(y(8) + 8, (cv) => _rock(cv, Offset(w * 0.08, y(8) + 8), 1));
+    add(
+      camp2 + 40,
+      (cv) => GardenArt.mushrooms(cv, Offset(w * 0.12, camp2 + 40), 0.9),
+    );
+    add(y(6) + 16, (cv) => GardenArt.tree(cv, Offset(w * 0.8, y(6) + 16), 1.1));
+    add(
+      y(7) + 14,
+      (cv) => GardenArt.bush(
+        cv,
+        Offset(w * 0.94, y(7) + 14),
+        0.8,
+        berries: GardenArt.blueBerries,
+      ),
+    );
+    GardenArt.meadow(c, Offset(w * 0.1, y(7)), 6, 4, spread: 30);
+    add(
+      y(8) + 8,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.08, y(8) + 8), 1, moss: true),
+    );
+    add(y(8) - 24, (cv) => GardenArt.pine(cv, Offset(w * 0.9, y(8) - 24), 0.9));
 
+    // Camp 3.
     final camp3 = layout.campY(kCamps[2]);
     add(camp3 + 26, (cv) => _pedestal(cv, Offset(w * 0.17, camp3 + 26)));
-    add(y(9) + 26, (cv) => _tree(cv, Offset(w * 0.14, y(9) + 26), 0.95));
-    add(y(10) + 10, (cv) => _tree(cv, Offset(w * 0.06, y(10) + 10), 0.7));
-    _flowers(c, Offset(w * 0.86, y(10) + 30), 6, 5);
+    add(
+      camp3 + 34,
+      (cv) => GardenArt.log(cv, Offset(w * 0.86, camp3 + 34), 0.8),
+    );
+    add(y(9) + 26, (cv) => GardenArt.pine(cv, Offset(w * 0.1, y(9) + 26), 1));
+    add(
+      y(10) + 10,
+      (cv) => GardenArt.tree(cv, Offset(w * 0.06, y(10) + 10), 0.7),
+    );
+    GardenArt.meadow(c, Offset(w * 0.86, y(10) + 30), 6, 5, spread: 28);
+
+    // Camp 4.
+    final camp4 = layout.campY(kCamps[3]);
+    add(camp4 + 26, (cv) => _pedestal(cv, Offset(w * 0.83, camp4 + 26)));
+    add(
+      camp4 + 40,
+      (cv) => GardenArt.bush(
+        cv,
+        Offset(w * 0.1, camp4 + 40),
+        0.9,
+        berries: GardenArt.pinkBerries,
+      ),
+    );
+    add(
+      y(12) + 4,
+      (cv) => GardenArt.pine(cv, Offset(w * 0.92, y(12) + 4), 0.9),
+    );
+    add(
+      y(11) + 12,
+      (cv) => GardenArt.rock(cv, Offset(w * 0.08, y(11) + 12), 0.9, moss: true),
+    );
+    GardenArt.meadow(c, Offset(w * 0.88, y(13)), 6, 7, spread: 28);
+    add(y(13) + 6, (cv) => GardenArt.tree(cv, Offset(w * 0.1, y(13) + 6), 0.8));
 
     final top = layout.summit;
     add(top.dy + 40, (cv) => _podium(cv, top + const Offset(0, 40)));
-    add(top.dy - 10, (cv) => _tree(cv, Offset(w * 0.12, top.dy - 10), 0.8));
-    add(top.dy + 4, (cv) => _tree(cv, Offset(w * 0.9, top.dy + 4), 0.9));
-  }
-
-  static void _shadow(Canvas canvas, Offset base, double w, double h) {
-    canvas.drawOval(
-      Rect.fromCenter(center: base + Offset(w * 0.12, 0), width: w, height: h),
-      Paint()
-        ..color = const Color(0x38000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    add(
+      top.dy - 10,
+      (cv) => GardenArt.pine(cv, Offset(w * 0.12, top.dy - 10), 0.9),
     );
-  }
-
-  static void _blob(
-    Canvas canvas,
-    Offset base,
-    double s,
-    List<(double, double, double)> circles,
-    Color color,
-  ) {
-    final paint = Paint()..color = color;
-    for (final (x, y, r) in circles) {
-      canvas.drawCircle(base + Offset(x * s, y * s), r * s, paint);
-    }
-  }
-
-  static void _tree(Canvas canvas, Offset base, double s) {
-    _shadow(canvas, base, 86 * s, 24 * s);
-    final trunk = Rect.fromLTWH(
-      base.dx - 7 * s,
-      base.dy - 46 * s,
-      14 * s,
-      48 * s,
+    add(
+      top.dy + 4,
+      (cv) => GardenArt.tree(cv, Offset(w * 0.9, top.dy + 4), 0.9),
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(trunk, Radius.circular(4 * s)),
-      Paint()..color = const Color(0xFF7A4B22),
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(base.dx - 7 * s, base.dy - 46 * s, 6 * s, 48 * s),
-      Paint()..color = const Color(0xFF94602F),
-    );
-    const shape = [
-      (0.0, -80.0, 36.0),
-      (-28.0, -64.0, 26.0),
-      (28.0, -66.0, 27.0),
-      (-12.0, -108.0, 28.0),
-      (16.0, -104.0, 26.0),
-    ];
-    _blob(
-      canvas,
-      base + Offset(3 * s, 5 * s),
-      s,
-      shape,
-      const Color(0xFF2F6A26),
-    );
-    _blob(canvas, base, s, shape, const Color(0xFF4E9A3A));
-    _blob(canvas, base, s, const [
-      (-10.0, -112.0, 18.0),
-      (-30.0, -72.0, 15.0),
-      (-6.0, -86.0, 20.0),
-    ], const Color(0xFF68B54C));
-    _blob(canvas, base, s, const [
-      (-14.0, -118.0, 8.0),
-      (-34.0, -78.0, 6.0),
-    ], const Color(0xFF8ACB6A));
-    final apple = Paint()..color = const Color(0xFFD94B3F);
-    for (final (x, y) in const [
-      (18.0, -84.0),
-      (-20.0, -96.0),
-      (6.0, -64.0),
-      (30.0, -100.0),
-    ]) {
-      canvas.drawCircle(base + Offset(x * s, y * s), 3.2 * s, apple);
-    }
-  }
-
-  static void _bush(Canvas canvas, Offset base, double s) {
-    _shadow(canvas, base, 70 * s, 18 * s);
-    const shape = [
-      (-16.0, -14.0, 17.0),
-      (12.0, -16.0, 19.0),
-      (0.0, -28.0, 18.0),
-    ];
-    _blob(
-      canvas,
-      base + Offset(2 * s, 3 * s),
-      s,
-      shape,
-      const Color(0xFF2F6A26),
-    );
-    _blob(canvas, base, s, shape, const Color(0xFF4E9A3A));
-    _blob(canvas, base, s, const [
-      (-6.0, -32.0, 10.0),
-      (-20.0, -18.0, 8.0),
-    ], const Color(0xFF68B54C));
-  }
-
-  static void _rock(Canvas canvas, Offset base, double s) {
-    _shadow(canvas, base, 54 * s, 14 * s);
-    final body = Path()
-      ..moveTo(base.dx - 24 * s, base.dy)
-      ..lineTo(base.dx - 18 * s, base.dy - 20 * s)
-      ..lineTo(base.dx - 2 * s, base.dy - 28 * s)
-      ..lineTo(base.dx + 18 * s, base.dy - 20 * s)
-      ..lineTo(base.dx + 24 * s, base.dy - 2 * s)
-      ..close();
-    canvas.drawPath(body, Paint()..color = const Color(0xFF9DA3AA));
-    final lit = Path()
-      ..moveTo(base.dx - 18 * s, base.dy - 20 * s)
-      ..lineTo(base.dx - 2 * s, base.dy - 28 * s)
-      ..lineTo(base.dx + 18 * s, base.dy - 20 * s)
-      ..lineTo(base.dx + 2 * s, base.dy - 12 * s)
-      ..close();
-    canvas.drawPath(lit, Paint()..color = const Color(0xFFD3D7DC));
-  }
-
-  static void _flowers(Canvas canvas, Offset c, int n, int seed) {
-    final r = math.Random(seed);
-    for (var k = 0; k < n; k++) {
-      final p = c + Offset(r.nextDouble() * 60 - 30, r.nextDouble() * 30 - 15);
-      final petal = Paint()
-        ..color = r.nextBool()
-            ? const Color(0xFFF7F3E8)
-            : const Color(0xFFFFD34D);
-      for (var a = 0; a < 5; a++) {
-        final ang = a * 2 * math.pi / 5;
-        canvas.drawCircle(
-          p + Offset(math.cos(ang) * 3, math.sin(ang) * 2.2),
-          2.2,
-          petal,
-        );
-      }
-      canvas.drawCircle(p, 1.6, Paint()..color = const Color(0xFFE59A2E));
-    }
-  }
-
-  static void _pond(Canvas canvas, Offset c, double s) {
-    Path blob(double k) => Path()
-      ..moveTo(c.dx - 70 * s * k, c.dy)
-      ..cubicTo(
-        c.dx - 72 * s * k,
-        c.dy - 34 * s * k,
-        c.dx - 10 * s * k,
-        c.dy - 44 * s * k,
-        c.dx + 30 * s * k,
-        c.dy - 30 * s * k,
-      )
-      ..cubicTo(
-        c.dx + 74 * s * k,
-        c.dy - 18 * s * k,
-        c.dx + 72 * s * k,
-        c.dy + 28 * s * k,
-        c.dx + 20 * s * k,
-        c.dy + 34 * s * k,
-      )
-      ..cubicTo(
-        c.dx - 30 * s * k,
-        c.dy + 40 * s * k,
-        c.dx - 68 * s * k,
-        c.dy + 26 * s * k,
-        c.dx - 70 * s * k,
-        c.dy,
-      )
-      ..close();
-    canvas.drawPath(blob(1.12), Paint()..color = const Color(0xFF3F7F33));
-    canvas.drawPath(blob(1.0), Paint()..color = const Color(0xFF2C74C4));
-    canvas.drawPath(blob(0.86), Paint()..color = const Color(0xFF3F92E3));
-    final wave = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0x8CBFE3FF);
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: c + Offset(-20 * s, -8 * s),
-        width: 24 * s,
-        height: 8 * s,
-      ),
-      math.pi,
-      math.pi * 0.8,
-      false,
-      wave,
-    );
-    canvas.drawArc(
-      Rect.fromCenter(
-        center: c + Offset(16 * s, 12 * s),
-        width: 20 * s,
-        height: 7 * s,
-      ),
-      math.pi,
-      math.pi * 0.8,
-      false,
-      wave,
-    );
-    for (final (x, y, r) in const [
-      (28.0, -10.0, 13.0),
-      (-40.0, 10.0, 10.0),
-      (4.0, 22.0, 8.0),
-    ]) {
-      final at = c + Offset(x * s, y * s);
-      canvas.drawArc(
-        Rect.fromCenter(center: at, width: r * 2 * s, height: r * 1.3 * s),
-        0.5,
-        2 * math.pi - 0.9,
-        true,
-        Paint()..color = const Color(0xFF58A848),
-      );
-    }
-    final petal = Paint()..color = const Color(0xFFF06A8A);
-    final at = c + Offset(30 * s, -14 * s);
-    for (var a = 0; a < 6; a++) {
-      final ang = a * math.pi / 3;
-      canvas.drawCircle(
-        at + Offset(math.cos(ang) * 4 * s, math.sin(ang) * 3 * s),
-        3.2 * s,
-        petal,
-      );
-    }
-    canvas.drawCircle(at, 2.4 * s, Paint()..color = const Color(0xFFFFD34D));
-    // Reeds along the back edge.
-    final reed = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..color = const Color(0xFF6DB34E);
-    for (var k = 0; k < 7; k++) {
-      final x = c.dx - 54 * s + k * 9 * s;
-      final yb = c.dy - 30 * s + (k - 3).abs() * 3 * s;
-      canvas.drawLine(
-        Offset(x, yb),
-        Offset(x - 3 + k % 3 * 3, yb - 16 * s - k % 2 * 6 * s),
-        reed,
-      );
-    }
-  }
-
-  static void _tent(Canvas canvas, Offset base) {
-    _shadow(canvas, base, 92, 22);
-    final left = Path()
-      ..moveTo(base.dx - 40, base.dy)
-      ..lineTo(base.dx, base.dy - 56)
-      ..lineTo(base.dx + 4, base.dy)
-      ..close();
-    final right = Path()
-      ..moveTo(base.dx + 4, base.dy)
-      ..lineTo(base.dx, base.dy - 56)
-      ..lineTo(base.dx + 40, base.dy - 6)
-      ..close();
-    canvas.drawPath(left, Paint()..color = const Color(0xFFF08A3C));
-    canvas.drawPath(right, Paint()..color = const Color(0xFFC9662A));
-    canvas.drawPath(
-      Path()
-        ..moveTo(base.dx - 14, base.dy)
-        ..lineTo(base.dx - 2, base.dy - 30)
-        ..lineTo(base.dx + 2, base.dy)
-        ..close(),
-      Paint()..color = const Color(0xFF5A2E14),
-    );
-    canvas.drawLine(
-      Offset(base.dx, base.dy - 56),
-      Offset(base.dx, base.dy - 68),
-      Paint()
-        ..strokeWidth = 3
-        ..color = const Color(0xFF6B4A2F),
-    );
-  }
-
-  static void _box(
-    Canvas canvas,
-    Offset base,
-    double w,
-    double h,
-    double tall,
-    Color top,
-    Color left,
-    Color right,
-  ) {
-    final topFace = Path()
-      ..moveTo(base.dx, base.dy - tall - h)
-      ..lineTo(base.dx + w / 2, base.dy - tall - h / 2)
-      ..lineTo(base.dx, base.dy - tall)
-      ..lineTo(base.dx - w / 2, base.dy - tall - h / 2)
-      ..close();
-    final leftFace = Path()
-      ..moveTo(base.dx - w / 2, base.dy - tall - h / 2)
-      ..lineTo(base.dx, base.dy - tall)
-      ..lineTo(base.dx, base.dy)
-      ..lineTo(base.dx - w / 2, base.dy - h / 2)
-      ..close();
-    final rightFace = Path()
-      ..moveTo(base.dx + w / 2, base.dy - tall - h / 2)
-      ..lineTo(base.dx, base.dy - tall)
-      ..lineTo(base.dx, base.dy)
-      ..lineTo(base.dx + w / 2, base.dy - h / 2)
-      ..close();
-    canvas.drawPath(leftFace, Paint()..color = left);
-    canvas.drawPath(rightFace, Paint()..color = right);
-    canvas.drawPath(topFace, Paint()..color = top);
+    GardenArt.meadow(c, top + const Offset(0, 74), 8, 6, spread: 60);
   }
 
   /// A stone pedestal; its statue is drawn on top as a picture.
   static void _pedestal(Canvas canvas, Offset base) {
-    _shadow(canvas, base, 96, 26);
-    _box(
-      canvas,
-      base,
-      76,
-      40,
-      24,
-      const Color(0xFFE2DED5),
-      const Color(0xFFBDB7AB),
-      const Color(0xFF9C968A),
-    );
+    GardenArt.shadow(canvas, base, 104, 30);
+    GardenArt.block(canvas, base, 76, 40, 24);
   }
 
   /// The summit: a wide two-step podium with a flag.
   static void _podium(Canvas canvas, Offset base) {
-    _shadow(canvas, base, 170, 40);
-    _box(
-      canvas,
-      base,
-      150,
-      80,
-      18,
-      const Color(0xFFE2DED5),
-      const Color(0xFFBDB7AB),
-      const Color(0xFF9C968A),
-    );
-    _box(
-      canvas,
-      base - const Offset(0, 18),
-      96,
-      52,
-      18,
-      const Color(0xFFF0ECE4),
-      const Color(0xFFCBC5B9),
-      const Color(0xFFAAA498),
-    );
-    final pole = Offset(base.dx + 44, base.dy - 46);
+    GardenArt.shadow(canvas, base, 180, 46);
+    GardenArt.block(canvas, base, 150, 80, 18);
+    GardenArt.block(canvas, base - const Offset(0, 18), 96, 52, 18);
+    // On the lower step, clear of the king in the middle.
+    final pole = Offset(base.dx + 58, base.dy - 52);
     canvas.drawLine(
       pole,
       pole - const Offset(0, 74),
@@ -681,25 +565,34 @@ class LearnMapPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..color = const Color(0xFFEDEDED),
     );
+    final flag = Path()
+      ..moveTo(pole.dx + 1, pole.dy - 74)
+      ..quadraticBezierTo(
+        pole.dx + 22,
+        pole.dy - 80,
+        pole.dx + 42,
+        pole.dy - 70,
+      )
+      ..lineTo(pole.dx + 42, pole.dy - 48)
+      ..quadraticBezierTo(pole.dx + 22, pole.dy - 58, pole.dx + 1, pole.dy - 52)
+      ..close();
     canvas.drawPath(
-      Path()
-        ..moveTo(pole.dx + 1, pole.dy - 74)
-        ..quadraticBezierTo(
-          pole.dx + 22,
-          pole.dy - 80,
-          pole.dx + 42,
-          pole.dy - 70,
-        )
-        ..lineTo(pole.dx + 42, pole.dy - 48)
-        ..quadraticBezierTo(
-          pole.dx + 22,
-          pole.dy - 58,
-          pole.dx + 1,
-          pole.dy - 52,
-        )
-        ..close(),
-      Paint()..color = const Color(0xFF1E8C4E),
+      flag,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFF34B36A), Color(0xFF16703D)],
+        ).createShader(flag.getBounds()),
     );
+    final star = Path();
+    final mid = Offset(pole.dx + 21, pole.dy - 65);
+    for (var i = 0; i < 10; i++) {
+      final r = i.isEven ? 8.0 : 3.4;
+      final a = -math.pi / 2 + i * math.pi / 5;
+      final p = mid + Offset(math.cos(a) * r, math.sin(a) * r);
+      i == 0 ? star.moveTo(p.dx, p.dy) : star.lineTo(p.dx, p.dy);
+    }
+    star.close();
+    canvas.drawPath(star, Paint()..color = Colors.white);
   }
 
   @override
@@ -708,7 +601,94 @@ class LearnMapPainter extends CustomPainter {
       old.layout.height != layout.height ||
       old.next != next ||
       old.done.length != done.length ||
-      old.stars.toString() != stars.toString();
+      old.stars.toString() != stars.toString() ||
+      old.pixelRatio != pixelRatio;
+}
+
+/// The painted map turned into images, in bands short enough for any GPU,
+/// so scrolling the map only copies pixels instead of drawing every tree,
+/// pebble and flower again on each frame.
+class _MapArt {
+  _MapArt._(this._key, this._bands);
+
+  final String _key;
+  final List<(double top, double height, ui.Image image)> _bands;
+
+  double _ratio = 1;
+
+  static _MapArt? _current;
+
+  /// Highest pixel ratio the images are made at, to keep memory in check.
+  static const double _maxRatio = 2.5;
+  static const double _band = 1024;
+
+  static _MapArt? of(
+    String key,
+    Size size,
+    double pixelRatio,
+    void Function(Canvas, Size) paint,
+  ) {
+    final current = _current;
+    if (current != null && current._key == key) return current;
+    final ratio = pixelRatio.clamp(1.0, _maxRatio);
+    final recorder = ui.PictureRecorder();
+    paint(Canvas(recorder), size);
+    final picture = recorder.endRecording();
+    final bands = <(double, double, ui.Image)>[];
+    try {
+      for (var top = 0.0; top < size.height; top += _band) {
+        final height = math.min(_band, size.height - top);
+        // A few rows more than drawn, so smoothing never samples past the
+        // edge and no seam shows between bands.
+        final padded = math.min(height + 4, size.height - top);
+        final bandRecorder = ui.PictureRecorder();
+        Canvas(bandRecorder)
+          ..scale(ratio)
+          ..translate(0, -top)
+          ..drawPicture(picture);
+        final bandPicture = bandRecorder.endRecording();
+        bands.add((
+          top,
+          height,
+          bandPicture.toImageSync(
+            (size.width * ratio).ceil(),
+            (padded * ratio).ceil(),
+          ),
+        ));
+        bandPicture.dispose();
+      }
+    } catch (_) {
+      for (final (_, _, image) in bands) {
+        image.dispose();
+      }
+      picture.dispose();
+      return null;
+    }
+    picture.dispose();
+    current?._dispose();
+    return _current = _MapArt._(key, bands).._ratio = ratio;
+  }
+
+  void draw(Canvas canvas, Size size) {
+    final paint = Paint()..filterQuality = FilterQuality.medium;
+    for (final (top, height, image) in _bands) {
+      // Each band reaches a pixel into the next one, so their soft edges
+      // overlap the same picture instead of letting the ground show through.
+      final drawn = math.min(height + 1, image.height / _ratio);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), drawn * _ratio),
+        Rect.fromLTWH(0, top, size.width, drawn),
+        paint,
+      );
+    }
+  }
+
+  void _dispose() {
+    for (final (_, _, image) in _bands) {
+      image.dispose();
+    }
+  }
 }
 
 /// The Learn map: the garden picture, the statues, the piece standing on the
@@ -761,6 +741,7 @@ class LearnMap extends StatelessWidget {
                         done: done,
                         next: next,
                         stars: stars,
+                        pixelRatio: MediaQuery.devicePixelRatioOf(context),
                       ),
                     ),
                   ),
@@ -774,7 +755,12 @@ class LearnMap extends StatelessWidget {
                     Role.queen,
                     66,
                   ),
-                  statue(layout.summit + const Offset(-10, 28), Role.king, 128),
+                  statue(
+                    Offset(w * 0.83, layout.campY(kCamps[3]) + 26),
+                    Role.knight,
+                    64,
+                  ),
+                  statue(layout.summit + const Offset(0, 28), Role.king, 128),
                   for (final camp in kCamps.skip(1)) _sign(context, camp, t),
                   if (next >= 0) _piece(next),
                 ],
@@ -816,7 +802,7 @@ class LearnMap extends StatelessWidget {
       top: c.dy - 176,
       width: 64,
       height: 78,
-      child: RepaintBoundary(child: _Marker(image: coachImage)),
+      child: _Marker(image: coachImage),
     );
   }
 
@@ -859,12 +845,17 @@ class LearnMap extends StatelessWidget {
       top: c.dy - LearnMapLayout.tileH / 2 - 20,
       width: LearnMapLayout.tileW,
       height: LearnMapLayout.tileH + LearnMapLayout.depth + 20,
-      child: Semantics(
-        button: true,
-        label: '${i + 1}',
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => onOpen(lesson),
+      child: Builder(
+        builder: (context) => Semantics(
+          button: true,
+          label: '${context.t.lessonLabel(i + 1)}, ${lesson.title(context.t)}',
+          excludeSemantics: true,
+          child: Pressable(
+            scale: 0.96,
+            haptic: true,
+            onTap: () => onOpen(lesson),
+            child: const SizedBox.expand(),
+          ),
         ),
       ),
     );
@@ -886,7 +877,19 @@ class _MarkerState extends State<_Marker> with SingleTickerProviderStateMixin {
   late final AnimationController _bob = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Still when the system asks for less motion.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _bob.stop();
+      _bob.value = 0;
+    } else if (!_bob.isAnimating) {
+      _bob.repeat();
+    }
+  }
 
   @override
   void dispose() {
@@ -896,38 +899,41 @@ class _MarkerState extends State<_Marker> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final card = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x66000000),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(11),
-            child: ColoredBox(
-              color: const Color(0xFF2B7553),
-              child: Image.asset(
-                widget.image,
-                fit: BoxFit.cover,
-                cacheWidth: 180,
+    // Painted once: the bob only moves this layer.
+    final card = RepaintBoundary(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x66000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: ColoredBox(
+                color: const Color(0xFF2B7553),
+                child: Image.asset(
+                  widget.image,
+                  fit: BoxFit.cover,
+                  cacheWidth: 180,
+                ),
               ),
             ),
           ),
-        ),
-        CustomPaint(size: const Size(16, 9), painter: _Tail()),
-      ],
+          CustomPaint(size: const Size(16, 9), painter: _Tail()),
+        ],
+      ),
     );
     return AnimatedBuilder(
       animation: _bob,

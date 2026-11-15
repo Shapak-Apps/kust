@@ -6,6 +6,7 @@ import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
@@ -352,6 +353,31 @@ void main() {
 
     expect(find.byType(EvaluationBar), findsNothing);
     expect(find.text('Evaluation is unavailable right now'), findsOneWidget);
+  });
+
+  // Last: the book stays loaded for the rest of the file.
+  testWidgets('opening moves are Book, under the opening\'s name', (
+    tester,
+  ) async {
+    await tester.runAsync(openingBook);
+    Future<MoveAnalysis?> analyzer({
+      required String beforeFen,
+      required String playedUci,
+      required String afterFen,
+      required Duration thinkTime,
+      bool Function()? isStale,
+    }) async => const MoveAnalysis(bestUci: 'd2d4', bestCp: 40, playedCp: -200);
+
+    await tester.pumpWidget(_app(analyzer: analyzer));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+    final badge = tester.widget<MoveFeedbackBadge>(
+      find.byType(MoveFeedbackBadge),
+    );
+    expect(badge.feedback.quality, MoveQuality.book);
+    expect(find.byType(MoveArrow), findsNothing);
+    expect(find.text("King's Pawn Game"), findsOneWidget);
   });
 }
 

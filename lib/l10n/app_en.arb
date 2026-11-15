@@ -87,14 +87,6 @@
   "gameDrawn": "The game ended in a draw.",
   "gameEndedOnTime": "The game ended on time.",
   "youResigned": "You resigned.",
-  "endCheckmateWon": "{name} won by checkmate.",
-  "@endCheckmateWon": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "endStalemate": "Game drawn by stalemate.",
   "endFiftyMove": "Game drawn by 50-move rule.",
   "endInsufficient": "Game drawn due to insufficient material.",
@@ -208,6 +200,7 @@
   "qBest": "Best move",
   "qExcellent": "Excellent",
   "qGood": "Good",
+  "qBook": "Book",
   "qInaccuracy": "Inaccuracy",
   "qMistake": "Mistake",
   "qMiss": "Miss",
@@ -230,6 +223,14 @@
   },
   "bannerBest": "{played} · best move",
   "@bannerBest": {
+    "placeholders": {
+      "played": {
+        "type": "String"
+      }
+    }
+  },
+  "bannerBook": "{played} · book move",
+  "@bannerBook": {
     "placeholders": {
       "played": {
         "type": "String"
@@ -667,14 +668,6 @@
   "onbStartPlaying": "Start playing",
   "onbSkip": "Skip for now",
   "onbTitle": "Chess that helps you improve",
-  "onbIntro": "Play bots at your level, train with puzzles and replay your games to learn from them.",
-  "onbPlayBots": "Play bots",
-  "onbPlayBotsSub": "From 400 to 2000 Elo, or pass the phone to a friend",
-  "onbSolve": "Solve puzzles",
-  "onbSolveSub": "Short tactics with hints and a rating",
-  "onbReview": "Review your games",
-  "onbReviewSub": "Every finished game is saved for replay",
-  "onbNoAccount": "No account needed. Your games and progress stay on this device.",
   "onbHowStrong": "How strong are you?",
   "onbHowStrongSub": "This sets your starting rating. It adjusts as you play, so don’t overthink it.",
   "lvlBeginner": "Beginner",
@@ -685,15 +678,6 @@
   "lvlAdvancedD": "I understand strategy and complex positions.",
   "lvlCompetitive": "Competitive",
   "lvlCompetitiveD": "I play seriously and may compete in tournaments.",
-  "onbAllSet": "You’re all set",
-  "onbStartingRating": "Your starting rating is {rating}.\nYour first game is one tap away.",
-  "@onbStartingRating": {
-    "placeholders": {
-      "rating": {
-        "type": "int"
-      }
-    }
-  },
   "streakDays": "{count, plural, =1{1 day} other{{count} days}}",
   "@streakDays": {
     "placeholders": {
@@ -748,14 +732,6 @@
   "botChatSub": "Bots comment on the game",
   "reviewTitle": "Game review",
   "reviewButton": "Review",
-  "reviewAnalyzing": "Analyzing the game… {percent}%",
-  "@reviewAnalyzing": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "reviewAccuracy": "Accuracy",
   "reviewMoves": "Moves",
   "reviewGraph": "Who was winning",
@@ -784,53 +760,16 @@
   "navLearn": "Learn",
   "learnTitle": "Learn",
   "learnSub": "From your first move to checkmate",
-  "lessonCount": "{done} of {total} lessons",
-  "@lessonCount": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "lessonTasks": "{n} tasks",
-  "@lessonTasks": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
   "lessonStart": "Start lesson",
-  "learnNext": "Up next",
-  "taskProgress": "Task {n} of {total}",
-  "@taskProgress": {
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "learnWrong": "Not quite. Try again.",
-  "learnNotBest": "That is not the most valuable capture.",
   "learnStalemate": "That is stalemate, a draw. Find the checkmate.",
   "learnWellDone": "Well done!",
   "lessonDone": "Lesson complete!",
   "lessonNext": "Next lesson",
-  "lessonAll": "All lessons",
   "lessonPlayGame": "Play a game",
   "learnHint": "Hint",
   "learnAllDone": "You finished every lesson. Time to play!",
   "pieceKing": "king",
-  "pieceQueen": "queen",
-  "pieceRook": "rook",
-  "pieceBishop": "bishop",
-  "pieceKnight": "knight",
   "piecePawn": "pawn",
   "taskCollectOne": "Move the {piece} to the star",
   "@taskCollectOne": {
@@ -895,7 +834,6 @@
     }
   },
   "summitLabel": "SUMMIT",
-  "learnStartTip": "START",
   "learnUpNext": "UP NEXT · LESSON {n}",
   "@learnUpNext": {
     "placeholders": {
@@ -930,12 +868,83 @@
   "lessonBackToMap": "Back to the map",
   "learnCoachDone": "That is it! Tap Continue.",
   "lessonPerfect": "Perfect lesson!",
-  "learnGo": "Start",
-  "onbLearn": "Learn from zero",
-  "onbLearnSub": "Short lessons from the first move to checkmate",
-  "onbCoachHi": "Salam! I'm Bahar. Let's set Küşt up for you.",
-  "onbCoachLevel": "Tell me how you play, and I'll pick fair opponents.",
-  "onbCoachReady": "Great! Your board is ready.",
   "onbStartLesson": "Start the first lesson",
-  "onbRatingLabel": "STARTING RATING"
+  "lessonLocked": "Finish lesson {n} first.",
+  "@lessonLocked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonLockedHint": "Each lesson builds on the one before it.",
+  "lessonLockedOpen": "Open lesson {n}",
+  "@lessonLockedOpen": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "yourName": "Your name",
+  "defaultPlayerName": "Player",
+  "saveName": "Save",
+  "continueGame": "Continue your game",
+  "continueGameSub": "{who} · move {n}",
+  "@continueGameSub": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "retryTitle": "What should you have played?",
+  "retryRight": "That's the move!",
+  "retryWrong": "Not quite. Try again.",
+  "retryShow": "Show answer",
+  "retryTry": "Try again",
+  "retryNoPosition": "This move cannot be shown.",
+  "reviewAnalyzingTitle": "Analyzing your game",
+  "reviewCheckingMove": "Checking move {n} of {total}",
+  "reviewTip1": "Accuracy compares each of your moves with the engine's best move.",
+  "reviewTip2": "A blunder gives away a lot in one move. Look for those first.",
+  "reviewTip3": "Tap the replay button on a key moment to try that position again.",
+  "reviewTip4": "Brilliant moves are rare: a sacrifice the engine agrees with.",
+  "reviewTip5": "Once analyzed, a game opens instantly next time.",
+  "@reviewCheckingMove": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sendErrorReport": "Send error report",
+  "taskFork": "Fork: attack two pieces with one move",
+  "taskPin": "Pin a piece to its king",
+  "taskSkewer": "Check the king and win the piece behind it",
+  "lessonForkTitle": "The fork",
+  "lessonForkIntro": "A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork.",
+  "lessonPinTitle": "The pin",
+  "lessonPinIntro": "A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it.",
+  "lessonSkewerTitle": "The skewer",
+  "lessonSkewerIntro": "A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it.",
+  "lessonPatternsTitle": "Mate patterns",
+  "lessonPatternsIntro": "Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.",
+  "campTacticsTitle": "Tactics",
+  "campTacticsSub": "Win pieces with clever moves",
+  "profile": "Profile",
+  "username": "Username",
+  "usernameRule": "3–20 letters, digits or _",
+  "bio": "About you",
+  "choosePhoto": "Choose photo",
+  "removePhoto": "Remove photo",
+  "onbNameTitle": "What should we call you?",
+  "onbNameSub": "You can change these later in your profile.",
+  "editProfile": "Edit profile"
 }

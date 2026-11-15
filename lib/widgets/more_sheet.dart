@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
+import 'package:kust/core/error_log.dart';
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
+import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
@@ -134,7 +138,9 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setHaptics,
           ),
         ),
+        if (AppStorage.isReady) const _ProfileRow(),
         const _LanguagePicker(),
+        const _ReportRow(),
       ],
     );
   }
@@ -401,6 +407,85 @@ class _LanguagePicker extends StatelessWidget {
                   style: k.body.copyWith(color: k.muted),
                 ),
                 const SizedBox(width: 2),
+                Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Your name": shown on the home screen, changed in a small sheet.
+/// Shares the error log, so a player can send it to us by any app.
+class _ReportRow extends StatelessWidget {
+  const _ReportRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Pressable(
+      onTap: () => SharePlus.instance.share(
+        ShareParams(text: ErrorLog.report(), subject: 'Küşt error report'),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 28),
+          child: Row(
+            children: [
+              Icon(Icons.bug_report_outlined, size: 22, color: k.muted),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  context.t.sendErrorReport,
+                  style: k.body.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The player's profile: their name, and the way into the profile screen.
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder(
+      valueListenable: AppStorage.instance.nameListenable(),
+      builder: (context, _, _) => Pressable(
+        onTap: () => context.push('/profile'),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 28),
+            child: Row(
+              children: [
+                Icon(Icons.person_outline_rounded, size: 22, color: k.muted),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    context.t.profile,
+                    style: k.body.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    AppStorage.instance.displayName(context.t),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(color: k.muted),
+                  ),
+                ),
+                const SizedBox(width: 4),
                 Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
               ],
             ),

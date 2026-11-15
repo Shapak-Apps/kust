@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/features/play/bot_time_row.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/play/practice_mode_checkbox.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -17,12 +19,18 @@ class PickSideModal extends StatefulWidget {
   const PickSideModal({super.key, required this.bot, required this.onPlay});
 
   final Bot bot;
-  final void Function(Side side, bool practiceMode) onPlay;
+  final void Function(Side side, bool practiceMode, TimeControl? timeControl)
+  onPlay;
 
   static Future<void> show(
     BuildContext context, {
     required Bot bot,
-    required void Function(Side side, bool practiceMode) onPlay,
+    required void Function(
+      Side side,
+      bool practiceMode,
+      TimeControl? timeControl,
+    )
+    onPlay,
   }) {
     return showKustSheet<void>(
       context,
@@ -37,6 +45,7 @@ class PickSideModal extends StatefulWidget {
 class _PickSideModalState extends State<PickSideModal> {
   Side? _side; // null = random
   bool _practice = false;
+  TimeControl? _time;
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +115,8 @@ class _PickSideModalState extends State<PickSideModal> {
           selected: _side == null,
           onTap: () => setState(() => _side = null),
         ),
+        const SizedBox(height: 16),
+        BotTimeRow(value: _time, onChanged: (v) => setState(() => _time = v)),
         const SizedBox(height: 8),
         PracticeModeCheckbox(
           value: _practice,
@@ -118,7 +129,7 @@ class _PickSideModalState extends State<PickSideModal> {
             final side =
                 _side ?? (Random().nextBool() ? Side.white : Side.black);
             Navigator.of(context).pop();
-            widget.onPlay(side, _practice);
+            widget.onPlay(side, _practice, _time);
           },
         ),
       ],

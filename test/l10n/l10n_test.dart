@@ -136,10 +136,16 @@ void main() {
       await tester.pumpAndSettle();
       final texts = lang == 'ru'
           ? 'Шахматы, которые помогают расти'
-          : 'Gowulaşmaga kömek edýän şahmat';
+          : 'Gowulaşmaga kömek edýän küşt';
       expect(find.text(texts), findsOneWidget);
       expect(tester.takeException(), isNull);
-      // Through the steps: the level cards, then the last page.
+      // Through the steps: name and username, then the level cards.
+      await tester.tap(find.text(lang == 'ru' ? 'Начать' : 'Başlaň'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).at(0), 'Aýna');
+      await tester.enterText(find.byType(TextField).at(1), 'ayna');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
       await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -147,8 +153,6 @@ void main() {
       await tester.ensureVisible(level);
       await tester.pumpAndSettle();
       await tester.tap(level);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
@@ -196,5 +200,15 @@ void main() {
     expect(AppSettings.instance.language.value, 'ru');
     expect(find.text('Язык'), findsOneWidget); // the sheet follows at once
     expect(tester.takeException(), isNull);
+  });
+
+  test('Turkmen says küşt for chess and şahmat only for checkmate', () {
+    final arb = File('lib/l10n/app_tk.arb').readAsStringSync();
+    final strings = jsonDecode(arb) as Map<String, dynamic>;
+    for (final key in ['onbTitle', 'lvlBeginnerD', 'engineCouldNotStart']) {
+      final text = strings[key] as String;
+      expect(text.toLowerCase(), contains('küşt'), reason: key);
+      expect(text.toLowerCase(), isNot(contains('şahmat')), reason: key);
+    }
   });
 }

@@ -1,9 +1,5 @@
-import 'dart:io' as io;
-import 'dart:ui' show ImageByteFormat;
-
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +11,7 @@ import 'package:kust/features/review/review_screen.dart';
 import 'package:kust/theme.dart';
 
 const _uci = [
-  'e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'g8f6', 'f3g5', 'd7d5', //
+  'e2e4', 'e7e5', 'g1f3', 'b8c6', 'a2a3', 'g8f6', 'f3g5', 'd7d5', //
   'e4d5', 'f6d5', 'g5f7', 'e8f7', 'd1f3', 'f7e6',
 ];
 
@@ -42,7 +38,7 @@ GameRecord _record({bool local = false}) {
   );
 }
 
-/// Every move is fine except ply 3 (White's Ng5?, a blunder) and ply 8 (Black's
+/// The opening leaves theory with 3.a3. Every move is fine except ply 3 (White's Ng5?, a blunder) and ply 8 (Black's
 /// ...d5, best by far).
 Future<MoveAnalysis?> _fake({
   required String beforeFen,
@@ -93,6 +89,16 @@ void main() {
     expect(data.worst(Side.black), isEmpty);
     expect(data.accuracy(Side.white)!, lessThan(data.accuracy(Side.black)!));
     expect(data.counts(Side.white)[MoveQuality.blunder], 1);
+
+    // 1.e4 e5 2.Nf3 Nc6 is theory; 3.a3 leaves it.
+    expect(data.moves.take(5).map((m) => m.quality == MoveQuality.book), [
+      true,
+      true,
+      true,
+      true,
+      false,
+    ]);
+    expect(data.opening!.en, "King's Knight Opening: Normal Variation");
   });
 
   test('stops quietly when stale', () async {
@@ -125,15 +131,15 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      RepaintBoundary(
-        key: const ValueKey('shot'),
-        child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
-      ),
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
     );
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
-    await tester.pump(const Duration(milliseconds: 100));
+    // The loader may first run its ring up to 100 %.
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
     expect(find.text('Game review'), findsOneWidget);
     expect(find.text('You'), findsWidgets);
@@ -141,17 +147,10 @@ void main() {
     expect(find.text('Blunder'), findsWidgets);
     expect(find.textContaining('Best was d3'), findsOneWidget);
     expect(find.text('Open replay'), findsOneWidget);
-
-    final shot = tester.firstRenderObject(
-      find.byKey(const ValueKey('shot')),
-    ) as RenderRepaintBoundary;
-    final image = await tester.runAsync(() => shot.toImage());
-    final bytes = await tester.runAsync(
-      () => image!.toByteData(format: ImageByteFormat.png),
+    expect(
+      find.text("King's Knight Opening: Normal Variation"),
+      findsOneWidget,
     );
-    io.File(
-      '/tmp/claude-1000/-home-merdan-projects-kust/760b9389-a422-43b3-b398-cd8c57ce1199/scratchpad/review.png',
-    ).writeAsBytesSync(bytes!.buffer.asUint8List());
 
     await tester.tap(find.textContaining('Best was d3'));
     await tester.pumpAndSettle();

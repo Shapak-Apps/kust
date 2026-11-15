@@ -10,6 +10,7 @@ import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/features/play/bot_voice.dart';
@@ -20,6 +21,7 @@ import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/game/more_floating_menu.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -46,6 +48,7 @@ class GameScreen extends ConsumerStatefulWidget {
     this.isLocal = false,
     this.timeControl,
     this.practiceMode = false,
+    this.resume,
   });
 
   final Bot? bot;
@@ -53,6 +56,9 @@ class GameScreen extends ConsumerStatefulWidget {
   final bool isLocal;
   final TimeControl? timeControl;
   final bool practiceMode;
+
+  /// A saved game to continue instead of starting a new one.
+  final LiveGame? resume;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -73,13 +79,22 @@ class _GameScreenState extends ConsumerState<GameScreen>
     SoundService.instance.warmUp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
-      if (widget.isLocal) {
+      final saved = widget.resume;
+      if (saved != null) {
+        controller.resumeGame(saved, bot: widget.bot).then((ok) {
+          if (ok || !mounted) return;
+          // A game that cannot be replayed is dropped.
+          LiveGameStore.instance.clear();
+          context.go('/play');
+        });
+      } else if (widget.isLocal) {
         controller.startLocalGame(timeControl: widget.timeControl);
       } else {
         controller.startGame(
           widget.bot!,
           playerSide: widget.playerSide,
           practiceMode: widget.practiceMode,
+          timeControl: widget.timeControl,
         );
       }
     });
@@ -94,8 +109,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
-    if (lifecycle == AppLifecycleState.paused) {
-      ref.read(chessControllerProvider.notifier).stopEngineWork();
+    if (lifecycle == AppLifecycleState.hidden ||
+        lifecycle == AppLifecycleState.paused) {
+      // A call or a notification must not cost a player their time. (The
+      // engine looks after itself: it stops and picks the search up again.)
+      ref.read(chessControllerProvider.notifier).pauseClock();
     }
   }
 
@@ -315,6 +333,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               widget.bot!,
               playerSide: widget.playerSide,
               practiceMode: widget.practiceMode,
+              timeControl: widget.timeControl,
             );
           }
         },
@@ -500,6 +519,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ),
                       ),
                     const _HistorySlot(),
+                    const _OpeningSlot(),
                     if (screen.practice && screen.feedback)
                       const SizedBox(
                         height: 24,
@@ -716,6 +736,35 @@ class _HistorySlot extends ConsumerWidget {
       ],
       // The move on the board: the latest, or the one being reviewed.
       selected: data.cursor,
+    );
+  }
+}
+
+/// The opening the game is in. Always one line tall, so the board never
+/// moves when a name appears or goes.
+class _OpeningSlot extends ConsumerWidget {
+  const _OpeningSlot();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final history = ref.watch(chessControllerProvider.select((g) => g.history));
+    final book = loadedOpeningBook;
+    final opening = book == null ? null : openingOf(book, history);
+    return SizedBox(
+      height: 22,
+      child: opening == null
+          ? null
+          : Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  opening.nameIn(context.t),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.k.caption,
+                ),
+              ),
+            ),
     );
   }
 }

@@ -35,8 +35,16 @@ class _Engine implements ChessEngine {
   @override
   void stopThinking() {}
 
+  /// While set, a suggestion waits here like one queued behind a search.
+  Completer<void>? hintGate;
+
   @override
-  Future<String> evaluateBestHint(String fen) async {
+  Future<String> evaluateBestHint(
+    String fen, {
+    bool Function()? isStale,
+  }) async {
+    if (hintGate != null) await hintGate!.future;
+    if (isStale != null && isStale()) return '(none)';
     asked.add(fen);
     return hints.removeAt(0);
   }
@@ -118,6 +126,52 @@ void main() {
     // Switched off: the arrow goes and stays away.
     await c.setShowBestEnabled(false);
     await tester.pump();
+    expect(c.state.suggestSquares, isEmpty);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 31));
+  });
+
+  testWidgets('a suggestion still waiting when you move is never searched', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    SoundService.instance.soundEnabled = false;
+    addTearDown(() => SoundService.instance.soundEnabled = true);
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final engine = _Engine(hints: ['d2d4', 'c2c4'], botMoves: ['d7d5'])
+      ..hintGate = Completer<void>();
+    final container = ProviderContainer(
+      overrides: [chessEngineProvider.overrideWithValue(engine)],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: appTheme,
+          home: const Scaffold(body: Center(child: ChessBoard())),
+        ),
+      ),
+    );
+    final c = container.read(chessControllerProvider.notifier);
+    await c.startGame(
+      kInternationalBots.first,
+      playerSide: Side.white,
+      practiceMode: true,
+    );
+    await tester.pump();
+
+    // The first suggestion is still queued when the player moves.
+    c.selectSquare(Square.e2);
+    c.selectSquare(Square.e4);
+    await tester.pump();
+    engine.hintGate!.complete();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(engine.asked, isEmpty);
     expect(c.state.suggestSquares, isEmpty);
 
     await tester.pumpWidget(const SizedBox());

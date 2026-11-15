@@ -39,6 +39,42 @@ void main() {
     }
   });
 
+  test('each tactic is real, and only its key move counts', () {
+    for (final lesson in kLessons) {
+      for (final task in lesson.tasks.where((t) => t.solution != null)) {
+        final runner = TaskRunner(task);
+        final before = runner.position;
+        final move = _m(task.solution!);
+        final piece = before.board.pieceAt(move.from)!;
+        final after = before.play(move);
+        final hit =
+            attacks(piece, move.to, after.board.occupied) &
+            after.board.bySide(Side.black);
+        final pinned = after.board
+            .bySide(Side.black)
+            .squares
+            .any(
+              (sq) =>
+                  after.board.roleAt(sq) != Role.king &&
+                  (after.legalMoves[sq]?.isEmpty ?? true),
+            );
+        switch (task.kind) {
+          case TaskKind.fork:
+            expect(hit.size, greaterThanOrEqualTo(2), reason: task.fen);
+          case TaskKind.pin:
+            expect(pinned, isTrue, reason: task.fen);
+          default:
+            expect(after.isCheck, isTrue, reason: task.fen);
+        }
+        expect(runner.apply(move), TaskStep.done, reason: task.fen);
+      }
+    }
+    final fork = TaskRunner(
+      kLessons.firstWhere((l) => l.id == 'fork').tasks[0],
+    );
+    expect(fork.apply(_m('b5d6')), TaskStep.wrong); // check, but no fork
+  });
+
   test('the star tasks need every star, in any order', () {
     final runner = TaskRunner(kLessons[1].tasks[1]); // rook to a5 and e5
     expect(runner.apply(_m('a1a5')), TaskStep.progress);

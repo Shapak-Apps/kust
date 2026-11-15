@@ -60,6 +60,8 @@ class GameResultContent extends StatelessWidget {
         const SizedBox(height: 4),
         if (onReview != null) _ReviewButton(onReview: onReview!),
         Row(
+          // Tops level: the green button's lip hangs below the row.
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: KustButton(

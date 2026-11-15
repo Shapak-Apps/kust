@@ -28,7 +28,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `youPlayAsWhite` | You play as White | Siz Ak bilen oýnaýarsyňyz |
 | `youPlayAsBlack` | You play as Black | Siz Gara bilen oýnaýarsyňyz |
 | `engineUnavailable` | Engine unavailable | Motor elýeterli däl |
-| `engineCouldNotStart` | The chess engine could not start. Try again, or play on this device with a friend. | Şahmat motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň. |
+| `engineCouldNotStart` | The chess engine could not start. Try again, or play on this device with a friend. | Küşt motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň. |
 | `botsNotSupported` | Playing against bots is not supported on this device. | Botlar bilen oýnamak bu enjamda goldanylmaýar. |
 | `playLocallyInstead` | Play locally instead | Şu enjamda oýnaň |
 | `abortSubtitle` | The game will end without a result. | Oýun netijesiz gutarar. |
@@ -43,7 +43,6 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `gameDrawn` | The game ended in a draw. | Oýun deňe deň gutardy. |
 | `gameEndedOnTime` | The game ended on time. | Oýun wagt boýunça gutardy. |
 | `youResigned` | You resigned. | Siz boýnuňyza aldyňyz. |
-| `endCheckmateWon` | {name} won by checkmate. | {name} şahmat bilen ýeňdi. |
 | `endStalemate` | Game drawn by stalemate. | Pat sebäpli deňe deň. |
 | `endFiftyMove` | Game drawn by 50-move rule. | 50 göçüm düzgüni boýunça deňe deň. |
 | `endInsufficient` | Game drawn due to insufficient material. | Material ýeterlik däl, deňe deň. |
@@ -278,8 +277,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `onbGetStarted` | Get started | Başlaň |
 | `onbStartPlaying` | Start playing | Oýnamaga başlaň |
 | `onbSkip` | Skip for now | Häzirlikçe geçiň |
-| `onbTitle` | Chess that helps you improve | Gowulaşmaga kömek edýän şahmat |
-| `onbIntro` | Play bots at your level, train with puzzles and replay your games to learn from them. | Derejeňize laýyk botlar bilen oýnaň, meseleler bilen türgenleşiň we oýunlaryňyzy gaýtadan görüp, olardan öwreniň. |
+| `onbTitle` | Chess that helps you improve | Gowulaşmaga kömek edýän küşt |
 | `onbPlayBots` | Play bots | Botlar bilen oýnaň |
 | `onbPlayBotsSub` | From 400 to 2000 Elo, or pass the phone to a friend | 400-den 2000 Elo çenli ýa-da telefony dostuňyza beriň |
 | `onbSolve` | Solve puzzles | Meseleleri çözüň |
@@ -290,7 +288,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `onbHowStrong` | How strong are you? | Güýjüňiz nähili? |
 | `onbHowStrongSub` | This sets your starting rating. It adjusts as you play, so don’t overthink it. | Bu başlangyç reýtingiňizi kesgitleýär. Ol oýnadygyňyzça üýtgeýär, şonuň üçin köp pikir etmäň. |
 | `lvlBeginner` | Beginner | Başlangyç |
-| `lvlBeginnerD` | I’m just getting started with chess. | Men entek şahmat öwrenip başladym. |
+| `lvlBeginnerD` | I’m just getting started with chess. | Men entek küşt öwrenip başladym. |
 | `lvlIntermediate` | Intermediate | Orta |
 | `lvlIntermediateD` | I know the basics and play regularly. | Men esaslary bilýärin we yzygiderli oýnaýaryn. |
 | `lvlAdvanced` | Advanced | Ösen |
@@ -320,8 +318,98 @@ All Turkmen strings of the Learn tab are unreviewed: `navLearn`, `learn*`, `less
 
 ## Learn redesign
 
-Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnStartTip`, `learnGo` (Başla), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
+Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel` ({n}-NJI LAGER), `summitLabel` (DEPE), `learnUpNext`, `lessonLabel`, `lessonMinutes`, `learnSummitDone`, `lessonMistakes`, `lessonHintsUsed`, `lessonTasksDone`, `lessonBackToMap`, `learnCoachDone`, `lessonPerfect`.
 
 ## Onboarding redesign
 
 Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachReady`, `onbStartLesson`, `onbRatingLabel`.
+
+## Learn: locked lessons (audit 3.5)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `lessonLocked` | Finish lesson {n} first. | Ilki {n}-nji sapagy tamamlaň. |
+| `lessonLockedHint` | Each lesson builds on the one before it. | Her sapak öňküsine daýanýar. |
+| `lessonLockedOpen` | Open lesson {n} | {n}-nji sapagy aç |
+
+## Home banner (audit 3.6)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+
+## Timed bot games (audit 4.2)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `noClock` | No clock | Sagatsyz |
+
+## Player name (audit 4.10)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `yourName` | Your name | Adyňyz |
+| `defaultPlayerName` | Player | Oýunçy |
+| `saveName` | Save | Ýatda sakla |
+
+## Continue a game (audit 4.3)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `continueGame` | Continue your game | Oýny dowam et |
+| `continueGameSub` | {who} · move {n} | {who} · {n}-nji göçüm |
+
+## Try again on a mistake (audit 4.6)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `retryTitle` | What should you have played? | Näme göçmelidiňiz? |
+| `retryRight` | That's the move! | Dogry göçüm! |
+| `retryWrong` | Not quite. Try again. | Doly däl. Ýene synanyşyň. |
+| `retryShow` | Show answer | Jogaby görkez |
+| `retryTry` | Try again | Täzeden synanyş |
+| `retryNoPosition` | This move cannot be shown. | Bu göçümi görkezip bolmaýar. |
+
+## Analysis loading screen
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `reviewAnalyzingTitle` | Analyzing your game | Oýnuňyz seljerilýär |
+| `reviewCheckingMove` | Checking move {n} of {total} | {total} göçümiň {n}-njisi barlanýar |
+| `reviewTip1` | Accuracy compares each of your moves with the engine's best move. | Takyklyk her göçümiňizi motoryň iň gowy göçümi bilen deňeşdirýär. |
+| `reviewTip2` | A blunder gives away a lot in one move. Look for those first. | Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň. |
+| `reviewTip3` | Tap the replay button on a key moment to try that position again. | Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň. |
+| `reviewTip4` | Brilliant moves are rare: a sacrifice the engine agrees with. | Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany. |
+| `reviewTip5` | Once analyzed, a game opens instantly next time. | Seljerilen oýun indiki gezek derrew açylýar. |
+
+## Book moves and opening names
+
+Opening names are shown in Russian in the Turkmen app (owner's choice); the Russian names are drafts in `tools/openings/ru_names.tsv`.
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `qBook` | Book | Teoriýa |
+| `bannerBook` | {played} · book move | {played} · teoriýa göçümi |
+
+## Error report
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `sendErrorReport` | Send error report | Ýalňyşlyk hasabatyny iber |
+
+## Tactics camp and mate patterns
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `taskFork` | Fork: attack two pieces with one move | Çatal: bir göçümde iki çöpe hüjüm ediň |
+| `taskPin` | Pin a piece to its king | Çöpi öz şasyna baglaň |
+| `taskSkewer` | Check the king and win the piece behind it | Şaha şah beriň we arkasyndaky çöpi utuň |
+| `lessonForkTitle` | The fork | Çatal |
+| `lessonForkIntro` | A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork. | Çatal bir wagtda iki çöpe hüjüm edýär. Garşydaş diňe birini halas edip bilýär, beýlekisini siz alýarsyňyz. Atlar çatalyň ussatlary. |
+| `lessonPinTitle` | The pin | Baglama |
+| `lessonPinIntro` | A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it. | Baglanan çöp ýöräp bilmeýär, sebäbi arkasyndaky şa şah astynda galar. Çöpi baglaň, soň ony utmak üçin oňa ýene hüjüm ediň. |
+| `lessonSkewerTitle` | The skewer | Şiş |
+| `lessonSkewerIntro` | A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it. | Şiş tersine baglama: şaha şah berýärsiňiz, ol çetleşmeli bolýar, siz bolsa arkasyndaky çöpi alýarsyňyz. |
+| `lessonPatternsTitle` | Mate patterns | Şahmat nagyşlary |
+| `lessonPatternsIntro` | Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move. | Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň. |
+| `campTacticsTitle` | Tactics | Taktika |
+| `campTacticsSub` | Win pieces with clever moves | Akylly göçümler bilen çöp utuň |

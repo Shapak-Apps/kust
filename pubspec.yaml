@@ -25,6 +25,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.3
+  image_picker: ^1.2.4
 
 dependency_overrides:
   stockfish:
@@ -40,8 +41,16 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  remove_alpha_ios: true
   image_path: "assets/icons/android-icon-background.png"
+  web:
+    generate: true
+    background_color: "#FFBB00"
+    theme_color: "#FFBB00"
+  macos:
+    generate: true
+    image_path: "docs/logo/kit/macos-icon.png"
 
   adaptive_icon_background: "#FFBB00"
   adaptive_icon_foreground: "assets/icons/android-icon-foreground.png"
@@ -49,8 +58,10 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#FFBB00"
   color_dark: "#FFBB00"
-  image: "assets/icons/splash.png"
-  image_dark: "assets/icons/splash.png"
+  # iOS and Android before 12 show this at 512 pt; its K is 104 pt, as big
+  # as Android 12 draws splash.png's K, where the animation starts.
+  image: "assets/icons/splash-small.png"
+  image_dark: "assets/icons/splash-small.png"
 
   android_12:
     color: "#FFBB00"
@@ -74,4 +85,5 @@ flutter:
     - assets/pieces/learn/
     - assets/sounds/
     - assets/puzzles/
+    - assets/openings/
     - assets/engine/

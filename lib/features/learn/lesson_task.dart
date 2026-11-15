@@ -29,6 +29,11 @@ enum TaskKind {
   /// empty square.
   enPassant,
   promote,
+
+  /// Play the one move in [LessonTask.solution] that wins with a tactic.
+  fork,
+  pin,
+  skewer,
 }
 
 /// One exercise on the board, always played by White from [fen].
@@ -38,6 +43,7 @@ class LessonTask {
     required this.kind,
     this.targets = const {},
     this.piece,
+    this.solution,
   });
 
   final String fen;
@@ -48,6 +54,9 @@ class LessonTask {
 
   /// The piece to move, for the prompt of [TaskKind.collect].
   final Role? piece;
+
+  /// The key move of a tactic, in UCI ("b5c7").
+  final String? solution;
 
   /// Whether the targets are drawn as stars (empty squares) rather than
   /// marks on pieces.
@@ -170,6 +179,12 @@ class TaskRunner {
             : TaskStep.wrong;
       case TaskKind.promote:
         return move.promotion != null ? finish(TaskStep.done) : TaskStep.wrong;
+      case TaskKind.fork:
+      case TaskKind.pin:
+      case TaskKind.skewer:
+        return move.uci == task.solution
+            ? finish(TaskStep.done)
+            : TaskStep.wrong;
     }
   }
 

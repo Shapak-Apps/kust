@@ -1,3 +1,5 @@
+import 'dart:io' as io;
+
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/features/achievements/achievements_card.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/live_game_store.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/bot_card.dart';
@@ -14,6 +19,7 @@ import 'package:kust/features/play/pick_time_modal.dart';
 import 'package:kust/features/play/play_mode_modal.dart';
 import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -119,10 +125,41 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  /// Picks up the saved game, with the bot it was played against.
+  void _continueGame(LiveGame saved) {
+    Bot? bot;
+    if (!saved.isLocal) {
+      for (final b in [...kInternationalBots, ...kTkmBots]) {
+        if (b.id == saved.botId) bot = b;
+      }
+      if (bot == null) {
+        LiveGameStore.instance.clear();
+        return;
+      }
+    }
+    final base = saved.baseMinutes;
+    context.go(
+      '/game',
+      extra: GameArgs(
+        bot: bot,
+        playerSide: saved.playerIsWhite ? Side.white : Side.black,
+        isLocal: saved.isLocal,
+        practiceMode: saved.practice,
+        timeControl: base == null
+            ? null
+            : TimeControl(
+                baseMinutes: base,
+                incrementSeconds: saved.incrementSeconds,
+              ),
+        resume: saved,
+      ),
+    );
+  }
+
   void _startGame() {
     PickOpponentModal.show(
       context,
-      onPlay: (bot, side, practiceMode) {
+      onPlay: (bot, side, practiceMode, timeControl) {
         if (!mounted) return;
 
         context.go(
@@ -131,6 +168,7 @@ class _PlayScreenState extends State<PlayScreen> {
             bot: bot,
             playerSide: side,
             practiceMode: practiceMode,
+            timeControl: timeControl,
           ),
         );
       },
@@ -141,7 +179,7 @@ class _PlayScreenState extends State<PlayScreen> {
     PickSideModal.show(
       context,
       bot: bot,
-      onPlay: (side, practiceMode) {
+      onPlay: (side, practiceMode, timeControl) {
         if (!mounted) return;
         context.go(
           '/game',
@@ -149,6 +187,7 @@ class _PlayScreenState extends State<PlayScreen> {
             bot: bot,
             playerSide: side,
             practiceMode: practiceMode,
+            timeControl: timeControl,
           ),
         );
       },
@@ -158,8 +197,16 @@ class _PlayScreenState extends State<PlayScreen> {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final name = AppStorage.instance.guestName;
+    return ValueListenableBuilder(
+      valueListenable: AppStorage.instance.nameListenable(),
+      builder: (context, _, _) {
+        final name = AppStorage.instance.displayName(context.t);
+        return _page(context, k, name);
+      },
+    );
+  }
 
+  Widget _page(BuildContext context, KustTokens k, String name) {
     return ColoredBox(
       color: k.bg,
       child: Stack(
@@ -195,6 +242,9 @@ class _PlayScreenState extends State<PlayScreen> {
                         ),
                       ),
                     ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _ContinueCard(onContinue: _continueGame),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -246,7 +296,19 @@ class _PlayScreenState extends State<PlayScreen> {
                 translucent: scrolled,
                 title: 'Küşt',
                 brand: const KustLogo(height: 22),
-                leading: PlayerAvatar(name: name),
+                leading: Semantics(
+                  button: true,
+                  label: context.t.profile,
+                  child: Pressable(
+                    onTap: () => context.push('/profile'),
+                    child: PlayerAvatar(
+                      name: name,
+                      photo: AppStorage.instance.photoPath == null
+                          ? null
+                          : FileImage(io.File(AppStorage.instance.photoPath!)),
+                    ),
+                  ),
+                ),
                 trailing: [
                   KustIconButton(
                     icon: Icons.tune_rounded,
@@ -281,6 +343,94 @@ class _PlayScreenState extends State<PlayScreen> {
   }
 }
 
+/// "Continue your game": shown while a game was left unfinished.
+class _ContinueCard extends StatelessWidget {
+  const _ContinueCard({required this.onContinue});
+
+  final void Function(LiveGame game) onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final listenable = LiveGameStore.instance.listenable();
+    if (listenable == null) return const SizedBox.shrink();
+    return ValueListenableBuilder(
+      valueListenable: listenable,
+      builder: (context, _, _) {
+        final game = LiveGameStore.instance.get();
+        if (game == null) return const SizedBox.shrink();
+        final k = context.k;
+        final t = context.t;
+        Bot? bot;
+        for (final b in [...kInternationalBots, ...kTkmBots]) {
+          if (b.id == game.botId) bot = b;
+        }
+        if (!game.isLocal && bot == null) return const SizedBox.shrink();
+        final who = game.isLocal ? t.passAndPlay : t.vsBot(bot!.name);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Pressable(
+            onTap: () => onContinue(game),
+            haptic: true,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: k.surface,
+                borderRadius: BorderRadius.circular(KustSpace.rLarge),
+                border: Border.all(color: KustButton3D.face, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                    child: bot == null
+                        ? SizedBox.square(
+                            dimension: 48,
+                            child: Icon(Icons.people_alt_rounded, color: k.ink),
+                          )
+                        : Image.asset(
+                            bot.imagePath,
+                            width: 48,
+                            height: 48,
+                            cacheWidth: 144,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.continueGame,
+                          style: k.body.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          t.continueGameSub(
+                            who,
+                            (game.uciMoves.length + 1) ~/ 2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: k.caption,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: KustButton3D.face,
+                    size: 36,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _HeroCard extends StatelessWidget {
   const _HeroCard({required this.name, required this.onPlay});
 
@@ -297,8 +447,9 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: k.accent,
+        color: k.surface,
         borderRadius: BorderRadius.circular(KustSpace.rLarge),
+        border: Border.all(color: k.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,15 +457,12 @@ class _HeroCard extends StatelessWidget {
           Text(
             context.t.helloName(name),
             style: k.caption.copyWith(
-              color: k.accentInk.withValues(alpha: 0.7),
+              color: k.muted,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            context.t.readyForGame,
-            style: k.title.copyWith(color: k.accentInk),
-          ),
+          Text(context.t.readyForGame, style: k.title),
           const SizedBox(height: 4),
           ValueListenableBuilder(
             valueListenable: AppStorage.instance.botProgressListenable(),
@@ -326,38 +474,16 @@ class _HeroCard extends StatelessWidget {
                   AppStorage.instance.beatenBotIds.length,
                   total,
                 ),
-                style: k.body.copyWith(
-                  color: k.accentInk.withValues(alpha: 0.7),
-                ),
+                style: k.body.copyWith(color: k.muted),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          GestureDetector(
+          KustButton3D(
+            label: context.t.playAGame,
+            icon: Icons.play_arrow_rounded,
+            expand: true,
             onTap: onPlay,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              height: 52,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: k.accentInk,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.play_arrow_rounded, color: k.accent),
-                  const SizedBox(width: 6),
-                  Text(
-                    context.t.playAGame,
-                    style: k.body.copyWith(
-                      color: k.accent,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),

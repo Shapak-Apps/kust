@@ -4,12 +4,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
+import 'package:kust/core/error_log.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/svg_precache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/router.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +27,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 bool get _shouldWarmUpEngine => !kDebugMode;
 
 Future<void> main() async {
+  await runZonedGuarded(_start, ErrorLog.record);
+}
+
+Future<void> _start() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (d) {
+    FlutterError.presentError(d);
+    ErrorLog.record(d.exception, d.stack);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    ErrorLog.record(error, stack);
+    return true;
+  };
+  await ErrorLog.init();
   // Touch events are lined up with the frames, so a dragged piece moves
   // smoothly even when the screen runs faster than the touch panel reports.
   GestureBinding.instance.resamplingEnabled = true;
@@ -32,12 +48,22 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await Hive.initFlutter();
   await AppStorage.init();
-  await AppSettings.instance.load();
+  try {
+    AppStorage.filesDir = (await getApplicationSupportDirectory()).path;
+  } catch (e, st) {
+    ErrorLog.record(e, st);
+  }
+  try {
+    await AppSettings.instance.load();
+  } catch (e, st) {
+    ErrorLog.record(e, st);
+  }
   if (_shouldWarmUpEngine) {
     ChessEngine.instance.warmUp();
   }
   SoundService.instance.warmUp();
   unawaited(precacheGameSvgs());
+  unawaited(openingBook());
   final prefs = await SharedPreferences.getInstance();
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);

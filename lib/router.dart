@@ -1,5 +1,6 @@
 import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_screen.dart';
+import 'package:kust/features/review/retry_screen.dart';
 import 'package:kust/features/review/review_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/play_screen.dart';
+import 'package:kust/features/profile/profile_screen.dart';
 import 'package:kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/history/replay_screen.dart';
@@ -35,6 +37,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             playerSide: args.playerSide,
             timeControl: args.timeControl,
             practiceMode: args.practiceMode,
+            resume: args.resume,
           );
         },
       ),
@@ -54,6 +57,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       ),
 
       GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
         path: '/history/:id',
         builder: (context, state) => ReplayScreen(
           gameId: state.pathParameters['id']!,
@@ -69,6 +77,13 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         path: '/review/:id',
         builder: (context, state) =>
             ReviewScreen(gameId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/review/:id/retry/:ply',
+        builder: (context, state) => RetryScreen(
+          gameId: state.pathParameters['id']!,
+          ply: int.tryParse(state.pathParameters['ply']!) ?? 0,
+        ),
       ),
 
       ShellRoute(

@@ -22,6 +22,7 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/feedback_glow.dart';
 import 'package:kust/features/game/move_feedback_badge.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/features/game/chess/castling.dart';
 
 const Color kHighlight = Color(0x77FFBB00);
 const Color kLastMoveHighlight = Color(0x40FFBB00);
@@ -44,14 +45,6 @@ Square? _checkedKing(Position position) {
     }
   }
   return null;
-}
-
-Square _castlingDisplaySquare(Square target) {
-  if (target == Square.h1) return Square.g1;
-  if (target == Square.a1) return Square.c1;
-  if (target == Square.h8) return Square.g8;
-  if (target == Square.a8) return Square.c8;
-  return target;
 }
 
 bool _isCornerSquare(Square s) {
@@ -98,13 +91,13 @@ class _BoardView {
       }
       if (lastPlayerIndex != null) {
         final record = g.moves[lastPlayerIndex];
-        final landed = _castlingDisplaySquare(record.move.to);
+        final landed = castlingDisplaySquare(record.move.to);
         // Once the piece is taken the rating no longer belongs to the square.
         final stillThere =
             g.displayPosition.board.pieceAt(landed)?.color == record.side;
         if (g.moveFeedbackEnabled && record.feedback != null && stillThere) {
           feedback = record.feedback;
-          square = _castlingDisplaySquare(record.move.to);
+          square = castlingDisplaySquare(record.move.to);
           index = lastPlayerIndex;
         }
       }
@@ -550,12 +543,12 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
         (move.from == Square.e1 || move.from == Square.e8) &&
         _isCornerSquare(move.to) &&
         (forward
-                    ? shown.pieceAt(_castlingDisplaySquare(move.to))
+                    ? shown.pieceAt(castlingDisplaySquare(move.to))
                     : shown.pieceAt(move.from))
                 ?.role ==
             Role.king;
     if (castling) {
-      end = _castlingDisplaySquare(move.to);
+      end = castlingDisplaySquare(move.to);
       rookFrom = move.to;
       rookTo = _rookCastledSquare(move.to);
     }
@@ -627,12 +620,12 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
           Square? rookTo;
           Piece? rook;
           if (isForwardCastling) {
-            visualTo = _castlingDisplaySquare(move.to);
+            visualTo = castlingDisplaySquare(move.to);
             rookFrom = move.to;
             rookTo = _rookCastledSquare(move.to);
             rook = next.position.board.pieceAt(rookTo);
           } else if (isReverseCastling) {
-            visualFrom = _castlingDisplaySquare(move.from);
+            visualFrom = castlingDisplaySquare(move.from);
             rookFrom = _rookCastledSquare(move.from);
             rookTo = move.from;
             rook = next.position.board.pieceAt(rookTo);

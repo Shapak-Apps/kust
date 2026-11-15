@@ -4,10 +4,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/review/analysis_loader.dart';
 import 'package:kust/features/review/game_review.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -17,20 +19,6 @@ import 'package:kust/ui/tokens.dart';
 
 /// Finished reviews, kept while the app runs so reopening one is instant.
 final Map<String, GameReviewData> _reviewCache = {};
-
-Future<MoveAnalysis?> _engineAnalyze({
-  required String beforeFen,
-  required String playedUci,
-  required String afterFen,
-  required Duration thinkTime,
-  bool Function()? isStale,
-}) => ChessEngine.instance.analyzeMove(
-  beforeFen: beforeFen,
-  playedUci: playedUci,
-  afterFen: afterFen,
-  thinkTime: thinkTime,
-  isStale: isStale,
-);
 
 /// What happened in a game: accuracy of both sides, who was winning when,
 /// how many moves of each rating, and the few moves worth learning from.
@@ -59,7 +47,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
 
   GameReviewData? _data;
-  int _percent = 0;
+  int _done = 0;
+  int _total = 0;
+
+  /// Results waiting for the loader to finish its run to 100 %.
+  GameReviewData? _pending;
   bool _failed = false;
   bool _running = false;
   bool _disposed = false;
@@ -85,22 +77,36 @@ class _ReviewScreenState extends State<ReviewScreen> {
     setState(() {
       _running = true;
       _failed = false;
-      _percent = 0;
+      _done = 0;
+      _total = 0;
     });
+    final started = DateTime.now();
     try {
       final data = await reviewGame(
         game,
-        analyze: widget.analyzer ?? _engineAnalyze,
+        analyze: widget.analyzer ?? sharedMoveAnalyzer,
         onProgress: (done, total) {
           if (_disposed) return;
-          setState(() => _percent = (done * 100 / total).floor());
+          setState(() {
+            _done = done;
+            _total = total;
+          });
         },
         isStale: () => _disposed,
       );
       if (_disposed) return;
       if (data != null) _reviewCache[widget.gameId] = data;
+      // Already rated (or very short): straight to the results. Otherwise
+      // the loader first runs up to 100 %.
+      final quick =
+          DateTime.now().difference(started) <
+          const Duration(milliseconds: 400);
       setState(() {
-        _data = data;
+        if (data == null || quick) {
+          _data = data;
+        } else {
+          _pending = data;
+        }
         _failed = data == null;
         _running = false;
       });
@@ -112,6 +118,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
       });
     }
   }
+
+  void _retry(int ply) => context.push('/review/${widget.gameId}/retry/$ply');
 
   void _openReplay([int ply = 0]) {
     final suffix = ply > 0 ? '?ply=$ply' : '';
@@ -146,12 +154,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Widget _body(BuildContext context, GameRecord? game) {
-    final k = context.k;
     if (game == null) return _Message(context.t.gameNotFound);
     if (!_canRate) return _Message(context.t.reviewNoEngine);
     final data = _data;
     if (data != null) {
-      return _ReviewBody(game: game, data: data, onOpen: _openReplay);
+      return _ReviewBody(
+        game: game,
+        data: data,
+        onOpen: _openReplay,
+        onRetry: _retry,
+      );
     }
     if (_failed) {
       return _Message(
@@ -163,26 +175,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
             : KustButton(label: context.t.retry, expand: false, onTap: _run),
       );
     }
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: _percent / 100,
-                minHeight: 8,
-                backgroundColor: k.line,
-                color: k.accent,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(context.t.reviewAnalyzing(_percent), style: k.body),
-          ],
-        ),
-      ),
+    return AnalysisLoader(
+      done: _done,
+      total: _total,
+      finished: _pending != null,
+      onFinished: () => setState(() {
+        _data = _pending;
+        _pending = null;
+      }),
     );
   }
 }
@@ -222,11 +222,13 @@ class _ReviewBody extends StatelessWidget {
     required this.game,
     required this.data,
     required this.onOpen,
+    required this.onRetry,
   });
 
   final GameRecord game;
   final GameReviewData data;
   final void Function([int ply]) onOpen;
+  final ValueChanged<int> onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -270,6 +272,16 @@ class _ReviewBody extends StatelessWidget {
           ],
         ),
         Center(child: Text(t.reviewAccuracy, style: k.caption)),
+        if (data.opening case final opening?) ...[
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const _QualityDot(quality: MoveQuality.book, size: 26),
+              const SizedBox(width: 10),
+              Expanded(child: Text(opening.nameIn(t), style: k.body)),
+            ],
+          ),
+        ],
         const SizedBox(height: 28),
         Text(t.reviewGraph, style: k.caption),
         const SizedBox(height: 10),
@@ -293,7 +305,11 @@ class _ReviewBody extends StatelessWidget {
         else
           for (var i = 0; i < learn.length; i++) ...[
             if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
-            _KeyMoment(move: learn[i], onTap: () => onOpen(learn[i].ply)),
+            _KeyMoment(
+              move: learn[i],
+              onTap: () => onOpen(learn[i].ply),
+              onRetry: () => onRetry(learn[i].ply),
+            ),
           ],
         const SizedBox(height: 28),
         KustButton(
@@ -561,10 +577,15 @@ class _QualityDot extends StatelessWidget {
 }
 
 class _KeyMoment extends StatelessWidget {
-  const _KeyMoment({required this.move, required this.onTap});
+  const _KeyMoment({
+    required this.move,
+    required this.onTap,
+    required this.onRetry,
+  });
 
   final ReviewedMove move;
   final VoidCallback onTap;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -596,6 +617,30 @@ class _KeyMoment extends StatelessWidget {
                 ],
               ),
             ),
+            Semantics(
+              button: true,
+              label: t.retryTry,
+              excludeSemantics: true,
+              child: Pressable(
+                onTap: onRetry,
+                haptic: true,
+                child: SizedBox.square(
+                  dimension: 48,
+                  child: Center(
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: k.line, width: 1.5),
+                      ),
+                      child: Icon(Icons.replay_rounded, size: 20, color: k.ink),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
             Icon(Icons.chevron_right_rounded, color: k.muted),
           ],
         ),

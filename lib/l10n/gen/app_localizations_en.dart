@@ -178,11 +178,6 @@ class AppL10nEn extends AppL10n {
   String get youResigned => 'You resigned.';
 
   @override
-  String endCheckmateWon(String name) {
-    return '$name won by checkmate.';
-  }
-
-  @override
   String get endStalemate => 'Game drawn by stalemate.';
 
   @override
@@ -363,6 +358,9 @@ class AppL10nEn extends AppL10n {
   String get qGood => 'Good';
 
   @override
+  String get qBook => 'Book';
+
+  @override
   String get qInaccuracy => 'Inaccuracy';
 
   @override
@@ -387,6 +385,11 @@ class AppL10nEn extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · best move';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · book move';
   }
 
   @override
@@ -1022,33 +1025,6 @@ class AppL10nEn extends AppL10n {
   String get onbTitle => 'Chess that helps you improve';
 
   @override
-  String get onbIntro =>
-      'Play bots at your level, train with puzzles and replay your games to learn from them.';
-
-  @override
-  String get onbPlayBots => 'Play bots';
-
-  @override
-  String get onbPlayBotsSub =>
-      'From 400 to 2000 Elo, or pass the phone to a friend';
-
-  @override
-  String get onbSolve => 'Solve puzzles';
-
-  @override
-  String get onbSolveSub => 'Short tactics with hints and a rating';
-
-  @override
-  String get onbReview => 'Review your games';
-
-  @override
-  String get onbReviewSub => 'Every finished game is saved for replay';
-
-  @override
-  String get onbNoAccount =>
-      'No account needed. Your games and progress stay on this device.';
-
-  @override
   String get onbHowStrong => 'How strong are you?';
 
   @override
@@ -1079,14 +1055,6 @@ class AppL10nEn extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'I play seriously and may compete in tournaments.';
-
-  @override
-  String get onbAllSet => 'You’re all set';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Your starting rating is $rating.\nYour first game is one tap away.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1234,11 +1202,6 @@ class AppL10nEn extends AppL10n {
   String get reviewButton => 'Review';
 
   @override
-  String reviewAnalyzing(int percent) {
-    return 'Analyzing the game… $percent%';
-  }
-
-  @override
   String get reviewAccuracy => 'Accuracy';
 
   @override
@@ -1286,31 +1249,10 @@ class AppL10nEn extends AppL10n {
   String get learnSub => 'From your first move to checkmate';
 
   @override
-  String lessonCount(int done, int total) {
-    return '$done of $total lessons';
-  }
-
-  @override
-  String lessonTasks(int n) {
-    return '$n tasks';
-  }
-
-  @override
   String get lessonStart => 'Start lesson';
 
   @override
-  String get learnNext => 'Up next';
-
-  @override
-  String taskProgress(int n, int total) {
-    return 'Task $n of $total';
-  }
-
-  @override
   String get learnWrong => 'Not quite. Try again.';
-
-  @override
-  String get learnNotBest => 'That is not the most valuable capture.';
 
   @override
   String get learnStalemate => 'That is stalemate, a draw. Find the checkmate.';
@@ -1323,9 +1265,6 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get lessonNext => 'Next lesson';
-
-  @override
-  String get lessonAll => 'All lessons';
 
   @override
   String get lessonPlayGame => 'Play a game';
@@ -1488,9 +1427,6 @@ class AppL10nEn extends AppL10n {
   String get summitLabel => 'SUMMIT';
 
   @override
-  String get learnStartTip => 'START';
-
-  @override
   String learnUpNext(int n) {
     return 'UP NEXT · LESSON $n';
   }
@@ -1527,27 +1463,153 @@ class AppL10nEn extends AppL10n {
   String get lessonPerfect => 'Perfect lesson!';
 
   @override
-  String get learnGo => 'Start';
-
-  @override
-  String get onbLearn => 'Learn from zero';
-
-  @override
-  String get onbLearnSub => 'Short lessons from the first move to checkmate';
-
-  @override
-  String get onbCoachHi => 'Salam! I\'m Bahar. Let\'s set Küşt up for you.';
-
-  @override
-  String get onbCoachLevel =>
-      'Tell me how you play, and I\'ll pick fair opponents.';
-
-  @override
-  String get onbCoachReady => 'Great! Your board is ready.';
-
-  @override
   String get onbStartLesson => 'Start the first lesson';
 
   @override
-  String get onbRatingLabel => 'STARTING RATING';
+  String lessonLocked(int n) {
+    return 'Finish lesson $n first.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Each lesson builds on the one before it.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return 'Open lesson $n';
+  }
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get defaultPlayerName => 'Player';
+
+  @override
+  String get saveName => 'Save';
+
+  @override
+  String get continueGame => 'Continue your game';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · move $n';
+  }
+
+  @override
+  String get retryTitle => 'What should you have played?';
+
+  @override
+  String get retryRight => 'That\'s the move!';
+
+  @override
+  String get retryWrong => 'Not quite. Try again.';
+
+  @override
+  String get retryShow => 'Show answer';
+
+  @override
+  String get retryTry => 'Try again';
+
+  @override
+  String get retryNoPosition => 'This move cannot be shown.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Analyzing your game';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return 'Checking move $n of $total';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Accuracy compares each of your moves with the engine\'s best move.';
+
+  @override
+  String get reviewTip2 =>
+      'A blunder gives away a lot in one move. Look for those first.';
+
+  @override
+  String get reviewTip3 =>
+      'Tap the replay button on a key moment to try that position again.';
+
+  @override
+  String get reviewTip4 =>
+      'Brilliant moves are rare: a sacrifice the engine agrees with.';
+
+  @override
+  String get reviewTip5 => 'Once analyzed, a game opens instantly next time.';
+
+  @override
+  String get sendErrorReport => 'Send error report';
+
+  @override
+  String get taskFork => 'Fork: attack two pieces with one move';
+
+  @override
+  String get taskPin => 'Pin a piece to its king';
+
+  @override
+  String get taskSkewer => 'Check the king and win the piece behind it';
+
+  @override
+  String get lessonForkTitle => 'The fork';
+
+  @override
+  String get lessonForkIntro =>
+      'A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork.';
+
+  @override
+  String get lessonPinTitle => 'The pin';
+
+  @override
+  String get lessonPinIntro =>
+      'A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it.';
+
+  @override
+  String get lessonSkewerTitle => 'The skewer';
+
+  @override
+  String get lessonSkewerIntro =>
+      'A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it.';
+
+  @override
+  String get lessonPatternsTitle => 'Mate patterns';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.';
+
+  @override
+  String get campTacticsTitle => 'Tactics';
+
+  @override
+  String get campTacticsSub => 'Win pieces with clever moves';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get usernameRule => '3–20 letters, digits or _';
+
+  @override
+  String get bio => 'About you';
+
+  @override
+  String get choosePhoto => 'Choose photo';
+
+  @override
+  String get removePhoto => 'Remove photo';
+
+  @override
+  String get onbNameTitle => 'What should we call you?';
+
+  @override
+  String get onbNameSub => 'You can change these later in your profile.';
+
+  @override
+  String get editProfile => 'Edit profile';
 }

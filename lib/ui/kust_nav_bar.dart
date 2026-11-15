@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/motion.dart';
 
 const double _barHeight = 62;
 
@@ -38,7 +39,9 @@ class KustNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = isDark ? const Color(0xFF0E0D0C) : k.bg;
+    // As on Spotify: see-through at the top, about 70 % at the bottom, so
+    // the page shows through the bar as it scrolls under it.
+    final base = isDark ? const Color(0xFF121110) : k.bg;
     return RepaintBoundary(
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -47,16 +50,17 @@ class KustNavBar extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               base.withValues(alpha: 0),
-              base.withValues(alpha: 0.9),
-              base.withValues(alpha: 0.98),
+              base.withValues(alpha: 0.5),
+              base.withValues(alpha: 0.66),
+              base.withValues(alpha: 0.74),
             ],
-            stops: const [0, 0.32, 1],
+            stops: const [0, 0.4, 0.7, 1],
           ),
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.only(top: 18),
+            padding: const EdgeInsets.only(top: 22),
             child: SizedBox(
               height: _barHeight,
               child: Row(
@@ -102,7 +106,7 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final on = dark ? Colors.white : k.ink;
-    final off = dark ? const Color(0xFFA7A39B) : const Color(0xFF6E6C66);
+    final off = dark ? const Color(0xFFB4B0A8) : const Color(0xFF6E6C66);
     final color = selected ? on : off;
 
     return Semantics(
@@ -120,7 +124,7 @@ class _NavButton extends StatelessWidget {
             TweenAnimationBuilder<double>(
               key: ValueKey(selected),
               tween: Tween(begin: selected ? 0.78 : 1, end: 1),
-              duration: const Duration(milliseconds: 360),
+              duration: motion(context, const Duration(milliseconds: 360)),
               curve: Curves.elasticOut,
               builder: (context, v, child) =>
                   Transform.scale(scale: v, child: child),

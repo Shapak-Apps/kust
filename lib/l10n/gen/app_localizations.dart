@@ -411,12 +411,6 @@ abstract class AppL10n {
   /// **'You resigned.'**
   String get youResigned;
 
-  /// No description provided for @endCheckmateWon.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} won by checkmate.'**
-  String endCheckmateWon(String name);
-
   /// No description provided for @endStalemate.
   ///
   /// In en, this message translates to:
@@ -741,6 +735,12 @@ abstract class AppL10n {
   /// **'Good'**
   String get qGood;
 
+  /// No description provided for @qBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get qBook;
+
   /// No description provided for @qInaccuracy.
   ///
   /// In en, this message translates to:
@@ -782,6 +782,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'{played} · best move'**
   String bannerBest(String played);
+
+  /// No description provided for @bannerBook.
+  ///
+  /// In en, this message translates to:
+  /// **'{played} · book move'**
+  String bannerBook(String played);
 
   /// No description provided for @bannerExcellent.
   ///
@@ -1905,54 +1911,6 @@ abstract class AppL10n {
   /// **'Chess that helps you improve'**
   String get onbTitle;
 
-  /// No description provided for @onbIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Play bots at your level, train with puzzles and replay your games to learn from them.'**
-  String get onbIntro;
-
-  /// No description provided for @onbPlayBots.
-  ///
-  /// In en, this message translates to:
-  /// **'Play bots'**
-  String get onbPlayBots;
-
-  /// No description provided for @onbPlayBotsSub.
-  ///
-  /// In en, this message translates to:
-  /// **'From 400 to 2000 Elo, or pass the phone to a friend'**
-  String get onbPlayBotsSub;
-
-  /// No description provided for @onbSolve.
-  ///
-  /// In en, this message translates to:
-  /// **'Solve puzzles'**
-  String get onbSolve;
-
-  /// No description provided for @onbSolveSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Short tactics with hints and a rating'**
-  String get onbSolveSub;
-
-  /// No description provided for @onbReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Review your games'**
-  String get onbReview;
-
-  /// No description provided for @onbReviewSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Every finished game is saved for replay'**
-  String get onbReviewSub;
-
-  /// No description provided for @onbNoAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'No account needed. Your games and progress stay on this device.'**
-  String get onbNoAccount;
-
   /// No description provided for @onbHowStrong.
   ///
   /// In en, this message translates to:
@@ -2012,18 +1970,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'I play seriously and may compete in tournaments.'**
   String get lvlCompetitiveD;
-
-  /// No description provided for @onbAllSet.
-  ///
-  /// In en, this message translates to:
-  /// **'You’re all set'**
-  String get onbAllSet;
-
-  /// No description provided for @onbStartingRating.
-  ///
-  /// In en, this message translates to:
-  /// **'Your starting rating is {rating}.\nYour first game is one tap away.'**
-  String onbStartingRating(int rating);
 
   /// No description provided for @streakDays.
   ///
@@ -2265,12 +2211,6 @@ abstract class AppL10n {
   /// **'Review'**
   String get reviewButton;
 
-  /// No description provided for @reviewAnalyzing.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyzing the game… {percent}%'**
-  String reviewAnalyzing(int percent);
-
   /// No description provided for @reviewAccuracy.
   ///
   /// In en, this message translates to:
@@ -2355,47 +2295,17 @@ abstract class AppL10n {
   /// **'From your first move to checkmate'**
   String get learnSub;
 
-  /// No description provided for @lessonCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{done} of {total} lessons'**
-  String lessonCount(int done, int total);
-
-  /// No description provided for @lessonTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'{n} tasks'**
-  String lessonTasks(int n);
-
   /// No description provided for @lessonStart.
   ///
   /// In en, this message translates to:
   /// **'Start lesson'**
   String get lessonStart;
 
-  /// No description provided for @learnNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Up next'**
-  String get learnNext;
-
-  /// No description provided for @taskProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Task {n} of {total}'**
-  String taskProgress(int n, int total);
-
   /// No description provided for @learnWrong.
   ///
   /// In en, this message translates to:
   /// **'Not quite. Try again.'**
   String get learnWrong;
-
-  /// No description provided for @learnNotBest.
-  ///
-  /// In en, this message translates to:
-  /// **'That is not the most valuable capture.'**
-  String get learnNotBest;
 
   /// No description provided for @learnStalemate.
   ///
@@ -2420,12 +2330,6 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Next lesson'**
   String get lessonNext;
-
-  /// No description provided for @lessonAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All lessons'**
-  String get lessonAll;
 
   /// No description provided for @lessonPlayGame.
   ///
@@ -2709,12 +2613,6 @@ abstract class AppL10n {
   /// **'SUMMIT'**
   String get summitLabel;
 
-  /// No description provided for @learnStartTip.
-  ///
-  /// In en, this message translates to:
-  /// **'START'**
-  String get learnStartTip;
-
   /// No description provided for @learnUpNext.
   ///
   /// In en, this message translates to:
@@ -2775,53 +2673,275 @@ abstract class AppL10n {
   /// **'Perfect lesson!'**
   String get lessonPerfect;
 
-  /// No description provided for @learnGo.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get learnGo;
-
-  /// No description provided for @onbLearn.
-  ///
-  /// In en, this message translates to:
-  /// **'Learn from zero'**
-  String get onbLearn;
-
-  /// No description provided for @onbLearnSub.
-  ///
-  /// In en, this message translates to:
-  /// **'Short lessons from the first move to checkmate'**
-  String get onbLearnSub;
-
-  /// No description provided for @onbCoachHi.
-  ///
-  /// In en, this message translates to:
-  /// **'Salam! I\'m Bahar. Let\'s set Küşt up for you.'**
-  String get onbCoachHi;
-
-  /// No description provided for @onbCoachLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'Tell me how you play, and I\'ll pick fair opponents.'**
-  String get onbCoachLevel;
-
-  /// No description provided for @onbCoachReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Great! Your board is ready.'**
-  String get onbCoachReady;
-
   /// No description provided for @onbStartLesson.
   ///
   /// In en, this message translates to:
   /// **'Start the first lesson'**
   String get onbStartLesson;
 
-  /// No description provided for @onbRatingLabel.
+  /// No description provided for @lessonLocked.
   ///
   /// In en, this message translates to:
-  /// **'STARTING RATING'**
-  String get onbRatingLabel;
+  /// **'Finish lesson {n} first.'**
+  String lessonLocked(int n);
+
+  /// No description provided for @lessonLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each lesson builds on the one before it.'**
+  String get lessonLockedHint;
+
+  /// No description provided for @lessonLockedOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open lesson {n}'**
+  String lessonLockedOpen(int n);
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get yourName;
+
+  /// No description provided for @defaultPlayerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get defaultPlayerName;
+
+  /// No description provided for @saveName.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveName;
+
+  /// No description provided for @continueGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue your game'**
+  String get continueGame;
+
+  /// No description provided for @continueGameSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} · move {n}'**
+  String continueGameSub(String who, int n);
+
+  /// No description provided for @retryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should you have played?'**
+  String get retryTitle;
+
+  /// No description provided for @retryRight.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s the move!'**
+  String get retryRight;
+
+  /// No description provided for @retryWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Try again.'**
+  String get retryWrong;
+
+  /// No description provided for @retryShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show answer'**
+  String get retryShow;
+
+  /// No description provided for @retryTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retryTry;
+
+  /// No description provided for @retryNoPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'This move cannot be shown.'**
+  String get retryNoPosition;
+
+  /// No description provided for @reviewAnalyzingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your game'**
+  String get reviewAnalyzingTitle;
+
+  /// No description provided for @reviewCheckingMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking move {n} of {total}'**
+  String reviewCheckingMove(int n, int total);
+
+  /// No description provided for @reviewTip1.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy compares each of your moves with the engine\'s best move.'**
+  String get reviewTip1;
+
+  /// No description provided for @reviewTip2.
+  ///
+  /// In en, this message translates to:
+  /// **'A blunder gives away a lot in one move. Look for those first.'**
+  String get reviewTip2;
+
+  /// No description provided for @reviewTip3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the replay button on a key moment to try that position again.'**
+  String get reviewTip3;
+
+  /// No description provided for @reviewTip4.
+  ///
+  /// In en, this message translates to:
+  /// **'Brilliant moves are rare: a sacrifice the engine agrees with.'**
+  String get reviewTip4;
+
+  /// No description provided for @reviewTip5.
+  ///
+  /// In en, this message translates to:
+  /// **'Once analyzed, a game opens instantly next time.'**
+  String get reviewTip5;
+
+  /// No description provided for @sendErrorReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Send error report'**
+  String get sendErrorReport;
+
+  /// No description provided for @taskFork.
+  ///
+  /// In en, this message translates to:
+  /// **'Fork: attack two pieces with one move'**
+  String get taskFork;
+
+  /// No description provided for @taskPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin a piece to its king'**
+  String get taskPin;
+
+  /// No description provided for @taskSkewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the king and win the piece behind it'**
+  String get taskSkewer;
+
+  /// No description provided for @lessonForkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The fork'**
+  String get lessonForkTitle;
+
+  /// No description provided for @lessonForkIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork.'**
+  String get lessonForkIntro;
+
+  /// No description provided for @lessonPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The pin'**
+  String get lessonPinTitle;
+
+  /// No description provided for @lessonPinIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it.'**
+  String get lessonPinIntro;
+
+  /// No description provided for @lessonSkewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The skewer'**
+  String get lessonSkewerTitle;
+
+  /// No description provided for @lessonSkewerIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it.'**
+  String get lessonSkewerIntro;
+
+  /// No description provided for @lessonPatternsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mate patterns'**
+  String get lessonPatternsTitle;
+
+  /// No description provided for @lessonPatternsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.'**
+  String get lessonPatternsIntro;
+
+  /// No description provided for @campTacticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tactics'**
+  String get campTacticsTitle;
+
+  /// No description provided for @campTacticsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Win pieces with clever moves'**
+  String get campTacticsSub;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @usernameRule.
+  ///
+  /// In en, this message translates to:
+  /// **'3–20 letters, digits or _'**
+  String get usernameRule;
+
+  /// No description provided for @bio.
+  ///
+  /// In en, this message translates to:
+  /// **'About you'**
+  String get bio;
+
+  /// No description provided for @choosePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get choosePhoto;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhoto;
+
+  /// No description provided for @onbNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should we call you?'**
+  String get onbNameTitle;
+
+  /// No description provided for @onbNameSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change these later in your profile.'**
+  String get onbNameSub;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfile;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

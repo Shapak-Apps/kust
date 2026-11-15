@@ -1,8 +1,4 @@
-import 'dart:io' as io;
-import 'dart:ui' show ImageByteFormat;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,9 +9,6 @@ import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_screen.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/theme.dart';
-
-const _shots =
-    '/tmp/claude-1000/-home-merdan-projects-kust/760b9389-a422-43b3-b398-cd8c57ce1199/scratchpad';
 
 Future<void> _drag(WidgetTester tester, String from, String to) async {
   final rect = tester.getRect(find.byType(PuzzleBoard));
@@ -36,22 +29,33 @@ Future<void> _drag(WidgetTester tester, String from, String to) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-Future<void> _shot(WidgetTester tester, String name) async {
-  final boundary = tester.firstRenderObject(
-    find.byKey(const ValueKey('shot')),
-  ) as RenderRepaintBoundary;
-  final image = await tester.runAsync(() => boundary.toImage());
-  final bytes = await tester.runAsync(
-    () => image!.toByteData(format: ImageByteFormat.png),
-  );
-  io.File('$_shots/$name.png').writeAsBytesSync(bytes!.buffer.asUint8List());
-}
-
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     SoundService.instance.soundEnabled = false;
     LearnProgress.instance.done.value = const {};
+  });
+
+  testWidgets('the coach marker stands still when animations are off', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    for (final off in [true, false]) {
+      final router = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const LearnScreen())],
+      );
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(disableAnimations: off),
+          child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(tester.hasRunningAnimations, !off, reason: 'disabled: $off');
+    }
   });
 
   testWidgets('the Learn tab lists the lessons and marks the next one', (
@@ -70,34 +74,65 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      RepaintBoundary(
-        key: const ValueKey('shot'),
-        child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
-      ),
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
     );
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('The pawn'), findsWidgets);
     expect(find.textContaining('Checkmate'), findsWidgets);
-    expect(find.text('0 / 33'), findsOneWidget);
+    expect(find.text('0 / 45'), findsOneWidget);
     expect(find.text('Learn how every piece moves'), findsOneWidget);
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );
     await tester.pump(const Duration(milliseconds: 100));
-    await _shot(tester, 'learn');
     // With a few lessons done their tiles turn green with their stars.
     await LearnProgress.instance.complete('pawn', stars: 3);
     await LearnProgress.instance.complete('rook', stars: 2);
     await LearnProgress.instance.complete('bishop', stars: 3);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('8 / 33'), findsOneWidget);
-    await _shot(tester, 'learn_done');
+    expect(find.text('8 / 45'), findsOneWidget);
     LearnProgress.instance.done.value = const {};
     await tester.pump(const Duration(milliseconds: 100));
 
     await tester.tap(find.text('The pawn').first);
     await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('lesson pawn'), findsOneWidget);
+  });
+
+  testWidgets('a lesson ahead of the next one is locked, with a way on', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const LearnScreen()),
+        GoRoute(
+          path: '/lesson/:id',
+          builder: (_, s) => Text('lesson ${s.pathParameters['id']}'),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final ahead = find.bySemanticsLabel(RegExp('^LESSON 3,'));
+    expect(ahead, findsOneWidget);
+    await tester.tap(ahead, warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Finish lesson 1 first.'), findsOneWidget);
+    expect(find.text('lesson rook'), findsNothing);
+
+    await tester.tap(find.text('Open lesson 1'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('lesson pawn'), findsOneWidget);
   });
 
@@ -114,34 +149,31 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      RepaintBoundary(
-        key: const ValueKey('shot'),
-        child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
-      ),
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
     );
     await tester.pumpAndSettle();
     expect(find.text('Start lesson'), findsOneWidget);
-    await _shot(tester, 'lesson_intro');
 
     await tester.tap(find.text('Start lesson'));
     await tester.pumpAndSettle();
     expect(find.text('Move the pawn to the star'), findsOneWidget);
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
-    await _shot(tester, 'lesson_task');
 
     // A move that is not the task: the pawn goes one square, the star stays.
+    final board = tester.getRect(find.byType(PuzzleBoard));
     await _drag(tester, 'e2', 'e3');
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     await _drag(tester, 'e3', 'e4');
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.star_rounded), findsNothing);
-    expect(find.text('Well done!'), findsOneWidget);
-    await _shot(tester, 'lesson_solved');
+    expect(find.text('Well done!').hitTestable(), findsOneWidget);
+    // The panel and the coach's note do not push the board around.
+    expect(tester.getRect(find.byType(PuzzleBoard)), board);
 
     // Continue moves on to the next task.
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('Well done!'), findsNothing);
+    expect(find.text('Well done!').hitTestable(), findsNothing);
     expect(find.text('Move the pawn to the star'), findsOneWidget);
   });
 
@@ -164,13 +196,9 @@ void completeTests() {
       ],
     );
     await tester.pumpWidget(
-      RepaintBoundary(
-        key: const ValueKey('shot'),
-        child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
-      ),
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
     );
     await tester.pumpAndSettle();
-    await _shot(tester, 'lesson_intro');
     await tester.tap(find.text('Start lesson'));
     await tester.pumpAndSettle();
     for (final (a, b) in [('e1', 'e2'), ('e2', 'd3'), ('d3', 'c4')]) {
@@ -189,6 +217,5 @@ void completeTests() {
     expect(LearnProgress.instance.starsOf('king'), 3);
     expect(find.byIcon(Icons.star_rounded), findsNWidgets(3));
     await tester.pump(const Duration(seconds: 1));
-    await _shot(tester, 'lesson_complete');
   });
 }

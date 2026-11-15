@@ -10,11 +10,13 @@ import 'package:hive_ce/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_record.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/game_export.dart';
+import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/theme.dart';
 
@@ -55,6 +57,7 @@ void main() {
 
   // A finished game is saved to the history.
   setUp(() async {
+    LiveGameStore.enabled = false;
     dir = await Directory.systemTemp.createTemp('kust_local_review');
     Hive.init(dir.path);
     await Hive.openBox(AppStorage.historyBoxName);
@@ -62,6 +65,7 @@ void main() {
   });
 
   tearDown(() async {
+    LiveGameStore.enabled = true;
     await Hive.close();
     await dir.delete(recursive: true);
   });
@@ -163,6 +167,48 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 200));
     expect(c.state.whiteTimeLeft, lessThan(frozen));
+    await _finish(tester);
+  });
+
+  testWidgets('hiding the app pauses a timed local game', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    SoundService.instance.soundEnabled = false;
+    addTearDown(() => SoundService.instance.soundEnabled = true);
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: appTheme,
+          home: const GameScreen(
+            playerSide: Side.white,
+            isLocal: true,
+            timeControl: TimeControl(baseMinutes: 5),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+    final c = container.read(chessControllerProvider.notifier);
+    expect(c.state.canPause, isTrue);
+    expect(c.state.paused, isFalse);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pump();
+    expect(c.state.paused, isTrue);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    // The break stays until the player taps to go on.
+    expect(c.state.paused, isTrue);
     await _finish(tester);
   });
 

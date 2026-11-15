@@ -8,7 +8,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:stockfish/stockfish.dart';
 
 import 'package:kust/features/game/chess/bot_policy.dart';
+import 'package:kust/features/game/chess/interruption_gate.dart';
 import 'package:kust/features/game/chess/nnue_store.dart';
+
+/// How long a move may be searched when it is rated. One value for every
+/// screen, so they all give the same rating (a search also ends at
+/// [ChessEngine.analysisDepth]).
+const Duration kAnalysisThinkTime = Duration(milliseconds: 500);
 
 const _nnueBig = 'nn-c288c895ea92.nnue';
 const _nnueSmall = 'nn-37f18f62d772.nnue';
@@ -80,6 +86,7 @@ class ChessEngine {
   static final ChessEngine instance = ChessEngine._();
 
   AppLifecycleListener? _lifecycle;
+  final InterruptionGate _gate = InterruptionGate();
 
   static const int _mateCp = 100000;
   static final RegExp _scoreRe = RegExp(r'score (cp|mate) (-?\d+)');
@@ -113,7 +120,11 @@ class ChessEngine {
   bool get isReady => _ready;
 
   Future<T> _run<T>(Future<T> Function() op) {
-    final result = _chain.then((_) => op());
+    // Nothing starts while the app is hidden.
+    final result = _chain.then((_) async {
+      await _gate.whenShown();
+      return op();
+    });
     _chain = result.then((_) {}, onError: (_) {});
     return result;
   }
@@ -183,8 +194,23 @@ class ChessEngine {
 
     _ready = true;
     readyNotifier.value = true;
-    // Nothing searches while the app is in the background.
-    _lifecycle ??= AppLifecycleListener(onHide: stopThinking);
+    // Nothing searches while the app is in the background, and a search the
+    // app was hidden during is not trusted: it is run again on return.
+    _lifecycle ??= AppLifecycleListener(onStateChange: _onLifecycle);
+  }
+
+  void _onLifecycle(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        if (_gate.hidden) return;
+        _gate.hide();
+        stopThinking();
+      case AppLifecycleState.resumed:
+      case AppLifecycleState.inactive:
+        _gate.show();
+    }
   }
 
   void _onLine(String line) {
@@ -237,7 +263,9 @@ class ChessEngine {
   }) {
     return _run(() async {
       if (!_ready) await start();
-      final top = await _searchTop(fen, thinkTime, lines, depth: depth);
+      final top = await _gate.retrying(
+        () => _searchTop(fen, thinkTime, lines, depth: depth),
+      );
       return [for (final line in top) CandidateMove(line.uci, line.cp)];
     });
   }
@@ -255,12 +283,18 @@ class ChessEngine {
 
   /// Waits for `bestmove`. If the engine goes silent it is torn down so the
   /// next call starts a fresh process instead of hanging forever.
+  ///
+  /// Throws [SearchInterruptedException] if the app was hidden meanwhile: the
+  /// search was stopped early. Call it right after sending `go`.
   Future<String> _waitForBestMove(Duration thinkTime) async {
+    final epoch = _gate.epoch;
     try {
-      return await _waitForLine(
+      final line = await _waitForLine(
         (line) => line.startsWith('bestmove '),
         timeout: thinkTime + _responseGrace,
       );
+      _gate.check(epoch);
+      return line;
     } on TimeoutException {
       _teardown();
       throw const EngineUnavailableException('The engine stopped responding');
@@ -275,7 +309,9 @@ class ChessEngine {
     return _run<EvalScore?>(() async {
       if (isStale != null && isStale()) return null;
       if (!_ready) await start();
-      return _atFullStrength<EvalScore?>(() => _evaluate(fen, thinkTime));
+      return _atFullStrength<EvalScore?>(
+        () => _gate.retrying(() => _evaluate(fen, thinkTime)),
+      );
     });
   }
 
@@ -294,11 +330,15 @@ class ChessEngine {
     return score.mate ? EvalScore(mate: whiteValue) : EvalScore(cp: whiteValue);
   }
 
-  Future<String> evaluateBestHint(String fen) {
+  Future<String> evaluateBestHint(String fen, {bool Function()? isStale}) {
     return _run<String>(() async {
+      // Queued behind another search and no longer wanted: skip it.
+      if (isStale != null && isStale()) return '(none)';
       if (!_ready) await start();
       return _atFullStrength<String>(
-        () => _search(fen, const Duration(milliseconds: 1000)),
+        () => _gate.retrying(
+          () => _search(fen, const Duration(milliseconds: 1000)),
+        ),
       );
     });
   }
@@ -320,49 +360,51 @@ class ChessEngine {
     required String afterFen,
     // Long enough for both searches to reach [analysisDepth] on most
     // phones, so the two scores come from the same depth.
-    Duration thinkTime = const Duration(milliseconds: 700),
+    Duration thinkTime = kAnalysisThinkTime,
     int depth = analysisDepth,
     bool Function()? isStale,
   }) {
     return _run<MoveAnalysis?>(() async {
       if (isStale != null && isStale()) return null;
       if (!_ready) await start();
-      return _atFullStrength<MoveAnalysis?>(() async {
-        final top = await _searchTop(beforeFen, thinkTime, 2, depth: depth);
-        if (top.isEmpty) return null;
+      return _atFullStrength<MoveAnalysis?>(
+        () => _gate.retrying(() async {
+          final top = await _searchTop(beforeFen, thinkTime, 2, depth: depth);
+          if (top.isEmpty) return null;
 
-        final best = top.first;
-        final secondBestCp = top.length > 1 ? top[1].cp : null;
+          final best = top.first;
+          final secondBestCp = top.length > 1 ? top[1].cp : null;
 
-        final knownPlayedCp = _cpForUci(top, playedUci);
-        final int playedCp;
-        if (knownPlayedCp != null) {
-          playedCp = knownPlayedCp;
-        } else {
-          if (isStale != null && isStale()) return null;
-          final only = await _searchTop(
-            beforeFen,
-            thinkTime,
-            1,
-            depth: depth,
-            searchMove: playedUci,
-          );
-          if (only.isNotEmpty && only.first.uci == playedUci) {
-            playedCp = only.first.cp;
+          final knownPlayedCp = _cpForUci(top, playedUci);
+          final int playedCp;
+          if (knownPlayedCp != null) {
+            playedCp = knownPlayedCp;
           } else {
-            final reply = await _searchScored(afterFen, thinkTime);
-            if (reply == null) return null;
-            playedCp = -reply.cp;
+            if (isStale != null && isStale()) return null;
+            final only = await _searchTop(
+              beforeFen,
+              thinkTime,
+              1,
+              depth: depth,
+              searchMove: playedUci,
+            );
+            if (only.isNotEmpty && only.first.uci == playedUci) {
+              playedCp = only.first.cp;
+            } else {
+              final reply = await _searchScored(afterFen, thinkTime);
+              if (reply == null) return null;
+              playedCp = -reply.cp;
+            }
           }
-        }
 
-        return MoveAnalysis(
-          bestUci: best.uci,
-          bestCp: best.cp,
-          playedCp: playedCp,
-          secondBestCp: secondBestCp,
-        );
-      });
+          return MoveAnalysis(
+            bestUci: best.uci,
+            bestCp: best.cp,
+            playedCp: playedCp,
+            secondBestCp: secondBestCp,
+          );
+        }),
+      );
     });
   }
 
@@ -421,7 +463,13 @@ class ChessEngine {
     _send('position fen $fen');
     _send(goCommand(thinkTime, depth: depth, searchMove: searchMove));
 
-    final line = await _waitForBestMove(thinkTime);
+    final String line;
+    try {
+      line = await _waitForBestMove(thinkTime);
+    } on SearchInterruptedException {
+      _send('setoption name MultiPV value 1');
+      rethrow;
+    }
     _send('setoption name MultiPV value 1');
 
     final parts = line.split(' ');

@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
+import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/play/bot_card.dart';
+import 'package:kust/features/play/bot_time_row.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/features/play/bot_voice.dart';
 import 'package:kust/features/play/bots.dart';
@@ -18,11 +20,23 @@ export 'package:kust/features/play/bots.dart';
 class PickOpponentModal extends StatefulWidget {
   const PickOpponentModal({super.key, required this.onPlay});
 
-  final void Function(Bot bot, Side side, bool practiceMode) onPlay;
+  final void Function(
+    Bot bot,
+    Side side,
+    bool practiceMode,
+    TimeControl? timeControl,
+  )
+  onPlay;
 
   static Future<void> show(
     BuildContext context, {
-    required void Function(Bot bot, Side side, bool practiceMode) onPlay,
+    required void Function(
+      Bot bot,
+      Side side,
+      bool practiceMode,
+      TimeControl? timeControl,
+    )
+    onPlay,
   }) {
     return showKustSheet<void>(
       context,
@@ -38,6 +52,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
   Bot? _bot;
   Side? _side; // null = random
   bool _practice = false;
+  TimeControl? _time;
 
   Widget _grid(List<Bot> bots) {
     return GridView(
@@ -66,7 +81,7 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
     if (bot == null) return;
     final side = _side ?? (Random().nextBool() ? Side.white : Side.black);
     Navigator.of(context).pop();
-    widget.onPlay(bot, side, _practice);
+    widget.onPlay(bot, side, _practice, _time);
   }
 
   @override
@@ -94,6 +109,8 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
           },
           onChanged: (v) => setState(() => _side = v),
         ),
+        const SizedBox(height: 16),
+        BotTimeRow(value: _time, onChanged: (v) => setState(() => _time = v)),
         const SizedBox(height: 8),
         PracticeModeCheckbox(
           value: _practice,
