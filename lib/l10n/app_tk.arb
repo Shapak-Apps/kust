@@ -457,5 +457,9 @@
   "onbCoachLevel": "Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.",
   "onbCoachReady": "Ajaýyp! Tagtaňyz taýyn.",
   "onbStartLesson": "Ilkinji sapagy başla",
-  "onbRatingLabel": "BAŞLANGYÇ REÝTING"
+  "onbRatingLabel": "BAŞLANGYÇ REÝTING",
+  "lessonLocked": "Ilki {n}-nji sapagy tamamlaň.",
+  "lessonLockedHint": "Her sapak öňküsine daýanýar.",
+  "lessonLockedOpen": "{n}-nji sapagy aç",
+  "homeBannerLine": "Küşt oýnuňyzy gowulandyrmagyň wagty"
 }

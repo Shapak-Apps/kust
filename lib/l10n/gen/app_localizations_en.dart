@@ -1550,4 +1550,20 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get onbRatingLabel => 'STARTING RATING';
+
+  @override
+  String lessonLocked(int n) {
+    return 'Finish lesson $n first.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Each lesson builds on the one before it.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return 'Open lesson $n';
+  }
+
+  @override
+  String get homeBannerLine => 'Time to improve your chess';
 }

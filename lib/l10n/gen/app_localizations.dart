@@ -2822,6 +2822,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'STARTING RATING'**
   String get onbRatingLabel;
+
+  /// No description provided for @lessonLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish lesson {n} first.'**
+  String lessonLocked(int n);
+
+  /// No description provided for @lessonLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each lesson builds on the one before it.'**
+  String get lessonLockedHint;
+
+  /// No description provided for @lessonLockedOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open lesson {n}'**
+  String lessonLockedOpen(int n);
+
+  /// No description provided for @homeBannerLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to improve your chess'**
+  String get homeBannerLine;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
