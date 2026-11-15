@@ -56,4 +56,18 @@ void main() {
     expect(ErrorLog.entries.length, ErrorLog.capacity);
     expect(ErrorLog.entries.last, 'e${ErrorLog.capacity + 4}');
   });
+
+  test('a data version is written, and existing data is kept', () async {
+    final user = await Hive.openBox(AppStorage.userBoxName);
+    await user.put('player_rating', 1337);
+    await user.close();
+
+    await AppStorage.init();
+    expect(Hive.box(AppStorage.userBoxName).get('schema'), 1);
+    expect(Hive.box(AppStorage.userBoxName).get('player_rating'), 1337);
+
+    // Opened again, it stays as it is.
+    await AppStorage.init();
+    expect(Hive.box(AppStorage.userBoxName).get('schema'), 1);
+  });
 }

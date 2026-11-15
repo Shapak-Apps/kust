@@ -43,6 +43,23 @@ class AppStorage {
     await _openSafe(historyBoxName);
     await _openSafe(analysisBoxName);
     await instance._ensureGuest();
+    await instance._migrate();
+  }
+
+  static const String _schemaKey = 'schema';
+
+  /// The version of what is stored. Raise it, and add a case to [_migrate],
+  /// when a stored shape changes.
+  static const int schemaVersion = 1;
+
+  Future<void> _migrate() async {
+    final stored = _user.get(_schemaKey);
+    var from = stored is int ? stored : 0;
+    while (from < schemaVersion) {
+      // No migrations yet: version 1 is the first marked state.
+      from++;
+    }
+    if (stored != from) await _user.put(_schemaKey, from);
   }
 
   /// Opens a box; replaced in tests to simulate an unreadable file.
