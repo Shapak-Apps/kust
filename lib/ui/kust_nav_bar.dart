@@ -39,9 +39,9 @@ class KustNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // A touch lighter than the page, so the bar reads as a surface rather
-    // than a shadow over what scrolls under it.
-    final base = isDark ? const Color(0xFF262321) : k.bg;
+    // As on Spotify: see-through at the top, about 70 % at the bottom, so
+    // the page shows through the bar as it scrolls under it.
+    final base = isDark ? const Color(0xFF121110) : k.bg;
     return RepaintBoundary(
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -50,16 +50,17 @@ class KustNavBar extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               base.withValues(alpha: 0),
-              base.withValues(alpha: 0.82),
-              base.withValues(alpha: 0.96),
+              base.withValues(alpha: 0.5),
+              base.withValues(alpha: 0.66),
+              base.withValues(alpha: 0.74),
             ],
-            stops: const [0, 0.22, 1],
+            stops: const [0, 0.4, 0.7, 1],
           ),
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 22),
             child: SizedBox(
               height: _barHeight,
               child: Row(
