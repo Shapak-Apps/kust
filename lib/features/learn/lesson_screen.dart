@@ -15,6 +15,7 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/motion.dart';
 
 /// The guide who explains every lesson.
 const String _coachImage = 'assets/bots/Bahar.webp';
@@ -313,7 +314,7 @@ class _TopBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: TweenAnimationBuilder<double>(
                 tween: Tween(end: done / count),
-                duration: const Duration(milliseconds: 400),
+                duration: motion(context, const Duration(milliseconds: 400)),
                 curve: Curves.easeOutCubic,
                 builder: (context, v, _) => Stack(
                   children: [
@@ -520,7 +521,7 @@ class _DoneBadge extends StatelessWidget {
               height: cell * 0.56,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 380),
+                duration: motion(context, const Duration(milliseconds: 380)),
                 curve: Curves.easeOutBack,
                 builder: (context, v, child) =>
                     Transform.scale(scale: v, child: child),
@@ -900,7 +901,11 @@ class _PopStarState extends State<_PopStar>
     super.initState();
     _t = Timer(widget.delay, () {
       if (!mounted) return;
-      _c.forward();
+      if (MediaQuery.disableAnimationsOf(context)) {
+        _c.value = 1;
+      } else {
+        _c.forward();
+      }
       if (widget.on) SoundService.instance.playSfx('move.wav');
     });
   }
