@@ -94,9 +94,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
-    if (lifecycle == AppLifecycleState.paused) {
-      ref.read(chessControllerProvider.notifier).stopEngineWork();
+    final controller = ref.read(chessControllerProvider.notifier);
+    if (lifecycle == AppLifecycleState.hidden ||
+        lifecycle == AppLifecycleState.paused) {
+      // A call or a notification must not cost a player their time.
+      controller.pauseClock();
     }
+    if (lifecycle == AppLifecycleState.paused) controller.stopEngineWork();
   }
 
   void _showGameStartModal(dynamic playerSide) {

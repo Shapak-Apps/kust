@@ -294,8 +294,10 @@ class ChessEngine {
     return score.mate ? EvalScore(mate: whiteValue) : EvalScore(cp: whiteValue);
   }
 
-  Future<String> evaluateBestHint(String fen) {
+  Future<String> evaluateBestHint(String fen, {bool Function()? isStale}) {
     return _run<String>(() async {
+      // Queued behind another search and no longer wanted: skip it.
+      if (isStale != null && isStale()) return '(none)';
       if (!_ready) await start();
       return _atFullStrength<String>(
         () => _search(fen, const Duration(milliseconds: 1000)),
