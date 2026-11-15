@@ -1,7 +1,75 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 135" width="100" height="135"><defs>
-<linearGradient id="b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".28" stop-color="#F4ECD8"/><stop offset=".62" stop-color="#D3C6A8"/><stop offset="1" stop-color="#9A8D70"/></linearGradient>
-<linearGradient id="t" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4D9BF"/></linearGradient>
-<radialGradient id="s" cx=".34" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#EFE6D0"/><stop offset="1" stop-color="#A89B7E"/></radialGradient>
-<linearGradient id="k" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#E9DFC6"/><stop offset="1" stop-color="#A89B7E"/></linearGradient>
-<radialGradient id="g" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".38"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
-</defs><ellipse cx="54" cy="128" rx="40" ry="9" fill="url(#g)"/><path d="M12.0 112.0 L12.0 122.0 A38.0 8.5 0 0 0 88.0 122.0 L88.0 112.0 Z" fill="url(#b)"/><ellipse cx="50.0" cy="112.0" rx="38.0" ry="8.5" fill="url(#t)"/><path d="M21.0 102.0 L19.0 112.0 A31.0 7.3 0 0 0 81.0 112.0 L79.0 102.0 Z" fill="url(#b)"/><ellipse cx="50.0" cy="102.0" rx="29.0" ry="6.8" fill="url(#t)"/><path d="M29.0 54.0 L25.0 102.0 A25.0 6.0 0 0 0 75.0 102.0 L71.0 54.0 Z" fill="url(#b)"/><ellipse cx="50.0" cy="54.0" rx="21.0" ry="5.0" fill="url(#t)"/><path d="M21.0 36.0 L28.0 54.0 A22.0 4.9 0 0 0 72.0 54.0 L79.0 36.0 Z" fill="url(#b)"/><ellipse cx="50.0" cy="36.0" rx="29.0" ry="6.5" fill="url(#t)"/><path d="M26.3 18.0 L26.3 36.0 A5.8 2.0 0 0 0 37.9 36.0 L37.9 18.0 Z" fill="url(#b)"/><ellipse cx="32.1" cy="18.0" rx="5.8" ry="2.0" fill="url(#t)"/><path d="M37.9 18.0 L37.9 36.0 A5.8 2.0 0 0 0 49.5 36.0 L49.5 18.0 Z" fill="url(#b)"/><ellipse cx="43.7" cy="18.0" rx="5.8" ry="2.0" fill="url(#t)"/><path d="M50.5 18.0 L50.5 36.0 A5.8 2.0 0 0 0 62.1 36.0 L62.1 18.0 Z" fill="url(#b)"/><ellipse cx="56.3" cy="18.0" rx="5.8" ry="2.0" fill="url(#t)"/><path d="M62.0 18.0 L62.0 36.0 A5.8 2.0 0 0 0 73.6 36.0 L73.6 18.0 Z" fill="url(#b)"/><ellipse cx="67.8" cy="18.0" rx="5.8" ry="2.0" fill="url(#t)"/></svg>
+<linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#B3A586"/><stop offset=".07" stop-color="#E9DFC8"/>
+<stop offset=".26" stop-color="#FFFFFF"/><stop offset=".42" stop-color="#F6EFDF"/>
+<stop offset=".7" stop-color="#D9CCAE"/><stop offset=".9" stop-color="#A89A7B"/>
+<stop offset=".97" stop-color="#C2B496"/><stop offset="1" stop-color="#9C8E70"/>
+</linearGradient>
+<linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F3EBDA"/>
+<stop offset="1" stop-color="#D6C9AB"/>
+</linearGradient>
+<linearGradient id="hole" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#7A6D52"/><stop offset="1" stop-color="#B7A98A"/>
+</linearGradient>
+<radialGradient id="ball" cx=".36" cy=".3" r=".75">
+<stop offset="0" stop-color="#FFFFFF"/><stop offset=".35" stop-color="#F7F0E1"/>
+<stop offset=".75" stop-color="#D3C6A7"/><stop offset="1" stop-color="#9E9072"/>
+</radialGradient>
+<radialGradient id="ao" cx=".5" cy=".5" r=".5">
+<stop offset="0" stop-color="#3A2F1E" stop-opacity=".42"/>
+<stop offset="1" stop-color="#3A2F1E" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="floor" cx=".5" cy=".5" r=".5">
+<stop offset="0" stop-color="#000" stop-opacity=".42"/>
+<stop offset=".6" stop-color="#000" stop-opacity=".16"/>
+<stop offset="1" stop-color="#000" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="spec" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#fff" stop-opacity="0"/>
+<stop offset=".3" stop-color="#fff" stop-opacity=".9"/>
+<stop offset=".8" stop-color="#fff" stop-opacity=".55"/>
+<stop offset="1" stop-color="#fff" stop-opacity="0"/>
+</linearGradient>
+<linearGradient id="horse" x1="0" y1="0" x2="1" y2=".25">
+<stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#F7F0E0"/>
+<stop offset=".62" stop-color="#DACDB0"/><stop offset=".86" stop-color="#AE9F80"/>
+<stop offset="1" stop-color="#C9BB9C"/>
+</linearGradient>
+<linearGradient id="shade" x1="1" y1="0" x2="0" y2="0">
+<stop offset="0" stop-color="#5E5038" stop-opacity=".45"/>
+<stop offset="1" stop-color="#5E5038" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<ellipse cx="53" cy="124" rx="44" ry="10" fill="url(#floor)"/>
+<path d="M12.0 112.0 C11.9 112.8 11.4 115.3 11.4 117.0 C11.4 118.7 11.9 121.2 12.0 122.0 A38.0 8.4 0 0 0 88.0 122.0 C88.1 121.2 88.6 118.7 88.6 117.0 C88.6 115.3 88.1 112.8 88.0 112.0 A38.0 8.4 0 0 0 12.0 112.0 Z" fill="url(#body)"/>
+<rect x="30.0" y="114.0" width="2.4" height="7.0" rx="1.2" fill="url(#spec)"/>
+<ellipse cx="50.0" cy="112.0" rx="38.0" ry="8.4" fill="url(#top)"/>
+<ellipse cx="51.0" cy="112.6" rx="38.0" ry="9.9" fill="url(#ao)"/>
+<path d="M20.0 103.0 C19.6 103.7 18.2 105.5 17.5 107.0 C16.8 108.5 16.2 111.2 16.0 112.0 A34.0 7.5 0 0 0 84.0 112.0 C83.8 111.2 83.2 108.5 82.5 107.0 C81.8 105.5 80.4 103.7 80.0 103.0 A30.0 6.6 0 0 0 20.0 103.0 Z" fill="url(#body)"/>
+<rect x="34.0" y="105.0" width="2.4" height="6.0" rx="1.2" fill="url(#spec)"/>
+<ellipse cx="50.0" cy="103.0" rx="30.0" ry="6.6" fill="url(#top)"/>
+<ellipse cx="51.0" cy="103.6" rx="30.0" ry="8.1" fill="url(#ao)"/>
+<path d="M26.0 96.0 C25.8 96.5 24.8 97.8 24.5 99.0 C24.2 100.2 24.1 102.3 24.0 103.0 A26.0 5.7 0 0 0 76.0 103.0 C75.9 102.3 75.8 100.2 75.5 99.0 C75.2 97.8 74.2 96.5 74.0 96.0 A24.0 5.3 0 0 0 26.0 96.0 Z" fill="url(#body)"/>
+<ellipse cx="50.0" cy="96.0" rx="24.0" ry="5.3" fill="url(#top)"/>
+<ellipse cx="51.0" cy="96.6" rx="27.0" ry="7.5" fill="url(#ao)"/>
+<path d="M31.0 50.0 C31.2 52.7 32.1 60.7 32.0 66.0 C31.9 71.3 31.3 77.0 30.5 82.0 C29.7 87.0 27.6 93.7 27.0 96.0 A23.0 5.1 0 0 0 73.0 96.0 C72.4 93.7 70.3 87.0 69.5 82.0 C68.7 77.0 68.1 71.3 68.0 66.0 C67.9 60.7 68.8 52.7 69.0 50.0 A19.0 4.2 0 0 0 31.0 50.0 Z" fill="url(#body)"/>
+<rect x="40.0" y="52.0" width="2.4" height="43.0" rx="1.2" fill="url(#spec)"/>
+<ellipse cx="50.0" cy="50.0" rx="19.0" ry="4.2" fill="url(#top)"/>
+<ellipse cx="51.0" cy="50.6" rx="27.5" ry="7.6" fill="url(#ao)"/>
+<path d="M28.0 44.0 C27.6 44.5 25.8 46.0 25.5 47.0 C25.2 48.0 26.3 49.5 26.5 50.0 A23.5 5.2 0 0 0 73.5 50.0 C73.7 49.5 74.8 48.0 74.5 47.0 C74.2 46.0 72.4 44.5 72.0 44.0 A22.0 4.8 0 0 0 28.0 44.0 Z" fill="url(#body)"/>
+<ellipse cx="50.0" cy="44.0" rx="22.0" ry="4.8" fill="url(#top)"/>
+<ellipse cx="51.0" cy="44.6" rx="29.5" ry="8.0" fill="url(#ao)"/>
+<path d="M23.0 26.0 C23.1 27.5 23.2 32.0 23.5 35.0 C23.8 38.0 24.3 42.5 24.5 44.0 A25.5 5.6 0 0 0 75.5 44.0 C75.7 42.5 76.2 38.0 76.5 35.0 C76.8 32.0 76.9 27.5 77.0 26.0 A27.0 5.9 0 0 0 23.0 26.0 Z" fill="url(#body)"/>
+<rect x="36.2" y="28.0" width="2.4" height="15.0" rx="1.2" fill="url(#spec)"/>
+<ellipse cx="50.0" cy="26.0" rx="27.0" ry="5.9" fill="url(#top)"/>
+<ellipse cx="50.0" cy="26" rx="21" ry="4.6" fill="url(#hole)"/>
+<path d="M24.5 16 L24.5 27.5 Q29.2 29 34.0 27.5 L34.0 16 Z" fill="url(#body)"/>
+<rect x="24.5" y="14.2" width="9.5" height="3.4" rx="1.4" fill="url(#top)"/>
+<path d="M38.5 16 L38.5 27.5 Q43.2 29 48.0 27.5 L48.0 16 Z" fill="url(#body)"/>
+<rect x="38.5" y="14.2" width="9.5" height="3.4" rx="1.4" fill="url(#top)"/>
+<path d="M52.5 16 L52.5 27.5 Q57.2 29 62.0 27.5 L62.0 16 Z" fill="url(#body)"/>
+<rect x="52.5" y="14.2" width="9.5" height="3.4" rx="1.4" fill="url(#top)"/>
+<path d="M66.5 16 L66.5 27.5 Q71.2 29 76.0 27.5 L76.0 16 Z" fill="url(#body)"/>
+<rect x="66.5" y="14.2" width="9.5" height="3.4" rx="1.4" fill="url(#top)"/>
+<rect x="30" y="31" width="2.4" height="11" rx="1.2" fill="url(#spec)"/></svg>
