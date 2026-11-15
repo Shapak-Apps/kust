@@ -21,12 +21,12 @@ void main() {
     expect(find.byType(KustSymbol), findsOneWidget);
     // The K starts the size it is on the native splash, centred.
     final k = tester.getRect(find.byType(KustSymbol));
-    expect(k.height, KustSplash.startHeight);
+    expect(k.height, SplashArt.startHeight);
     expect(k.center.dy, closeTo(844 / 2, 0.5));
 
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(KustSymbol), findsOneWidget);
-    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 700));
     expect(find.byType(KustSymbol), findsNothing);
     expect(find.text('app'), findsOneWidget);
   });

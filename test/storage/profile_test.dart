@@ -102,4 +102,20 @@ void main() {
     expect(find.text('@kust_fan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('with no username yet, the profile opens to pick one', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appDarkTheme,
+        supportedLocales: kSupportedLocales,
+        localizationsDelegates: kLocalizationDelegates,
+        home: const ProfileScreen(),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Edit profile'), findsOneWidget); // the title
+    expect(find.byType(TextField), findsNWidgets(3));
+  });
 }
