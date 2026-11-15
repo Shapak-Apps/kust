@@ -40,8 +40,16 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  remove_alpha_ios: true
   image_path: "assets/icons/android-icon-background.png"
+  web:
+    generate: true
+    background_color: "#FFBB00"
+    theme_color: "#FFBB00"
+  macos:
+    generate: true
+    image_path: "docs/logo/kit/macos-icon.png"
 
   adaptive_icon_background: "#FFBB00"
   adaptive_icon_foreground: "assets/icons/android-icon-foreground.png"
