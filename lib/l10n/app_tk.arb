@@ -461,5 +461,6 @@
   "lessonLocked": "Ilki {n}-nji sapagy tamamlaň.",
   "lessonLockedHint": "Her sapak öňküsine daýanýar.",
   "lessonLockedOpen": "{n}-nji sapagy aç",
-  "homeBannerLine": "Küşt oýnuňyzy gowulandyrmagyň wagty"
+  "homeBannerLine": "Küşt oýnuňyzy gowulandyrmagyň wagty",
+  "noClock": "Sagatsyz"
 }

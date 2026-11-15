@@ -461,5 +461,6 @@
   "lessonLocked": "Сначала пройдите урок {n}.",
   "lessonLockedHint": "Каждый урок опирается на предыдущий.",
   "lessonLockedOpen": "Открыть урок {n}",
-  "homeBannerLine": "Пора играть лучше"
+  "homeBannerLine": "Пора играть лучше",
+  "noClock": "Без часов"
 }

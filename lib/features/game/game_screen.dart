@@ -80,6 +80,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           widget.bot!,
           playerSide: widget.playerSide,
           practiceMode: widget.practiceMode,
+          timeControl: widget.timeControl,
         );
       }
     });
@@ -318,6 +319,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               widget.bot!,
               playerSide: widget.playerSide,
               practiceMode: widget.practiceMode,
+              timeControl: widget.timeControl,
             );
           }
         },

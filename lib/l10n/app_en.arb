@@ -955,5 +955,6 @@
       }
     }
   },
-  "homeBannerLine": "Time to improve your chess"
+  "homeBannerLine": "Time to improve your chess",
+  "noClock": "No clock"
 }

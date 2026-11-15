@@ -60,11 +60,13 @@ Future<ChessController> _start(
     // A clock needs a real timer to run in a test.
     await tester.runAsync(() => c.startLocalGame(timeControl: timeControl));
   } else {
-    await c.startGame(
-      kInternationalBots.first,
-      playerSide: side,
-      practiceMode: practice,
-      timeControl: timeControl,
+    await tester.runAsync(
+      () => c.startGame(
+        kInternationalBots.first,
+        playerSide: side,
+        practiceMode: practice,
+        timeControl: timeControl,
+      ),
     );
   }
   await tester.pump();
@@ -226,6 +228,65 @@ void main() {
     expect(c.state.endReason, EndReason.timeNoMate);
     expect(_saved().result, GameRecord.draw);
     await _finish(tester);
+  });
+
+  group('timed games against a bot', () {
+    const clock = TimeControl(baseMinutes: 5);
+
+    Future<void> flag(
+      WidgetTester tester,
+      ChessController c, {
+      Duration? white,
+      Duration? black,
+    }) async {
+      await tester.runAsync(() async {
+        c.debugSetClocks(white: white, black: black);
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      });
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
+    testWidgets('your flag falling loses the game and costs rating', (
+      tester,
+    ) async {
+      final c = await _start(tester, local: false, timeControl: clock);
+      _stage(c, kStartFen);
+      final before = PlayerRatingStore.instance.rating;
+      await flag(tester, c, white: const Duration(milliseconds: 30));
+      expect(c.state.status, GameStatus.timeout);
+      expect(c.state.flagFell, Side.white);
+      expect(_saved().result, GameRecord.loss);
+      expect(PlayerRatingStore.instance.rating, lessThan(before));
+      await _finish(tester);
+    });
+
+    testWidgets('the bot flagging wins the game and beats the bot', (
+      tester,
+    ) async {
+      final c = await _start(tester, local: false, timeControl: clock);
+      _stage(c, 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1');
+      await flag(tester, c, black: const Duration(milliseconds: 30));
+      expect(c.state.status, GameStatus.timeout);
+      expect(c.state.flagFell, Side.black);
+      expect(c.state.isBotThinking, isFalse);
+      expect(_saved().result, GameRecord.win);
+      expect(
+        AppStorage.instance.isBotBeaten(kInternationalBots.first.id),
+        isTrue,
+      );
+      await _finish(tester);
+    });
+
+    testWidgets('running out of time against a lone king is a draw', (
+      tester,
+    ) async {
+      final c = await _start(tester, local: false, timeControl: clock);
+      _stage(c, kingRookVsKing);
+      await flag(tester, c, white: const Duration(milliseconds: 30));
+      expect(c.state.endReason, EndReason.timeNoMate);
+      expect(_saved().result, GameRecord.draw);
+      await _finish(tester);
+    });
   });
 
   testWidgets('resigning a bot game loses it and costs rating', (tester) async {

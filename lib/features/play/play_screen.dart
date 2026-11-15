@@ -124,7 +124,7 @@ class _PlayScreenState extends State<PlayScreen> {
   void _startGame() {
     PickOpponentModal.show(
       context,
-      onPlay: (bot, side, practiceMode) {
+      onPlay: (bot, side, practiceMode, timeControl) {
         if (!mounted) return;
 
         context.go(
@@ -133,6 +133,7 @@ class _PlayScreenState extends State<PlayScreen> {
             bot: bot,
             playerSide: side,
             practiceMode: practiceMode,
+            timeControl: timeControl,
           ),
         );
       },
@@ -143,7 +144,7 @@ class _PlayScreenState extends State<PlayScreen> {
     PickSideModal.show(
       context,
       bot: bot,
-      onPlay: (side, practiceMode) {
+      onPlay: (side, practiceMode, timeControl) {
         if (!mounted) return;
         context.go(
           '/game',
@@ -151,6 +152,7 @@ class _PlayScreenState extends State<PlayScreen> {
             bot: bot,
             playerSide: side,
             practiceMode: practiceMode,
+            timeControl: timeControl,
           ),
         );
       },
