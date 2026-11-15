@@ -93,6 +93,7 @@ class LearnMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     _ground(canvas, size);
+    _trail(canvas);
     final items = <(double, void Function())>[];
     _addDecor(canvas, items);
     for (var i = 0; i < layout.count; i++) {
@@ -120,6 +121,44 @@ class LearnMapPainter extends CustomPainter {
             ..lineTo(x - w / 2, y)
             ..close(),
           light,
+        );
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- trail
+
+  /// Stepping stones from each lesson to the next: sandy where the way has
+  /// been walked, grey moss ahead.
+  void _trail(Canvas canvas) {
+    const keep = LearnMapLayout.tileW * 0.5;
+    for (var i = 0; i < layout.count - 1; i++) {
+      final a = layout.tile(i) + const Offset(0, LearnMapLayout.depth / 2);
+      final b = layout.tile(i + 1) + const Offset(0, LearnMapLayout.depth / 2);
+      final walked = i < next || next < 0;
+      final fill = walked ? const Color(0xFFE7D7A8) : const Color(0xFF6F806A);
+      final edge = walked ? const Color(0xFFB7A271) : const Color(0xFF4E5D49);
+      final length = (b - a).distance;
+      final count = (length / 20).floor();
+      for (var k = 1; k < count; k++) {
+        final at = Offset.lerp(a, b, k / count)!;
+        if ((at - a).distance < keep || (at - b).distance < keep) continue;
+        // A little wobble, the same every time.
+        final wobble = ((i * 7 + k * 13) % 5 - 2) * 1.2;
+        final stone = Rect.fromCenter(
+          center: at + Offset(wobble, 0),
+          width: 15,
+          height: 8,
+        );
+        canvas.drawOval(stone.shift(const Offset(0, 2)), Paint()..color = edge);
+        canvas.drawOval(stone, Paint()..color = fill);
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: stone.center - const Offset(2, 1.2),
+            width: 6,
+            height: 2.4,
+          ),
+          Paint()..color = Colors.white.withValues(alpha: walked ? 0.55 : 0.2),
         );
       }
     }
@@ -173,6 +212,23 @@ class LearnMapPainter extends CustomPainter {
             const Color(0xFF333E2F),
           );
 
+    if (isNext) {
+      // A warm glow on the ground around the lesson to play next.
+      final glow = Rect.fromCenter(
+        center: c + const Offset(0, d * 0.7),
+        width: w * 1.9,
+        height: h * 1.9,
+      );
+      canvas.drawOval(
+        glow,
+        Paint()
+          ..shader = const RadialGradient(
+            colors: [Color(0x80FFD45C), Color(0x30FFD45C), Color(0x00FFD45C)],
+            stops: [0, 0.5, 1],
+          ).createShader(glow),
+      );
+    }
+
     // A soft shadow on the ground.
     canvas.drawOval(
       Rect.fromCenter(
@@ -211,7 +267,21 @@ class LearnMapPainter extends CustomPainter {
       }
     }
 
-    canvas.drawPath(face, Paint()..color = top);
+    // Lit from the upper left, like the pieces standing on it.
+    canvas.drawPath(
+      face,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(top, Colors.white, 0.28)!,
+            top,
+            Color.lerp(top, Colors.black, 0.1)!,
+          ],
+          stops: const [0, 0.5, 1],
+        ).createShader(bounds),
+    );
     for (final k in [0.74, 0.48]) {
       canvas.drawPath(
         _diamond(c, w * k, h * k),
@@ -265,7 +335,30 @@ class LearnMapPainter extends CustomPainter {
       canvas.scale(1, 0.72);
       tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
       canvas.restore();
+      _lock(canvas, c + Offset(tp.width / 2 + 9, 3));
     }
+  }
+
+  /// A small padlock beside a locked lesson's number.
+  static void _lock(Canvas canvas, Offset c) {
+    const color = Color(0xFF4C5948);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: c + const Offset(0, 2), width: 11, height: 8),
+        const Radius.circular(2),
+      ),
+      Paint()..color = color,
+    );
+    canvas.drawArc(
+      Rect.fromCenter(center: c - const Offset(0, 1.6), width: 7, height: 8),
+      math.pi,
+      math.pi,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..color = color,
+    );
   }
 
   static Path _starPath(Offset c, double r) {
