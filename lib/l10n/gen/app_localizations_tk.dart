@@ -1556,4 +1556,20 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get onbRatingLabel => 'BAŞLANGYÇ REÝTING';
+
+  @override
+  String lessonLocked(int n) {
+    return 'Ilki $n-nji sapagy tamamlaň.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Her sapak öňküsine daýanýar.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return '$n-nji sapagy aç';
+  }
+
+  @override
+  String get homeBannerLine => 'Küşt oýnuňyzy gowulandyrmagyň wagty';
 }

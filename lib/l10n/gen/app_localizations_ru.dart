@@ -1556,4 +1556,20 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get onbRatingLabel => 'НАЧАЛЬНЫЙ РЕЙТИНГ';
+
+  @override
+  String lessonLocked(int n) {
+    return 'Сначала пройдите урок $n.';
+  }
+
+  @override
+  String get lessonLockedHint => 'Каждый урок опирается на предыдущий.';
+
+  @override
+  String lessonLockedOpen(int n) {
+    return 'Открыть урок $n';
+  }
+
+  @override
+  String get homeBannerLine => 'Пора играть лучше';
 }

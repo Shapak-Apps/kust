@@ -4,6 +4,7 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
 import 'package:kust/features/learn/lessons.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/l10n/app_locale.dart';
 
 /// Colours of the garden the lessons are laid out in.
@@ -859,12 +860,17 @@ class LearnMap extends StatelessWidget {
       top: c.dy - LearnMapLayout.tileH / 2 - 20,
       width: LearnMapLayout.tileW,
       height: LearnMapLayout.tileH + LearnMapLayout.depth + 20,
-      child: Semantics(
-        button: true,
-        label: '${i + 1}',
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => onOpen(lesson),
+      child: Builder(
+        builder: (context) => Semantics(
+          button: true,
+          label: '${context.t.lessonLabel(i + 1)}, ${lesson.title(context.t)}',
+          excludeSemantics: true,
+          child: Pressable(
+            scale: 0.96,
+            haptic: true,
+            onTap: () => onOpen(lesson),
+            child: const SizedBox.expand(),
+          ),
         ),
       ),
     );

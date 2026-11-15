@@ -325,3 +325,17 @@ Unreviewed: `camp*` (Çöpler, Düzgünler, Şahmat and their lines), `campLabel
 ## Onboarding redesign
 
 Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachReady`, `onbStartLesson`, `onbRatingLabel`.
+
+## Learn: locked lessons (audit 3.5)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `lessonLocked` | Finish lesson {n} first. | Ilki {n}-nji sapagy tamamlaň. |
+| `lessonLockedHint` | Each lesson builds on the one before it. | Her sapak öňküsine daýanýar. |
+| `lessonLockedOpen` | Open lesson {n} | {n}-nji sapagy aç |
+
+## Home banner (audit 3.6)
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `homeBannerLine` | Time to improve your chess | Küşt oýnuňyzy gowulandyrmagyň wagty |

@@ -7,6 +7,7 @@ import 'package:kust/features/learn/garden_map.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_button_3d.dart';
+import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 
 /// The Learn tab: a garden map with a raised tile for every lesson, from
@@ -58,7 +59,46 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  void _open(Lesson lesson) => context.push('/lesson/${lesson.id}');
+  void _open(Lesson lesson) {
+    final done = LearnProgress.instance.done.value;
+    final index = kLessons.indexOf(lesson);
+    final next = kLessons.indexWhere((l) => !done.contains(l.id));
+    if (next >= 0 && index > next) {
+      _showLocked(next);
+      return;
+    }
+    context.push('/lesson/${lesson.id}');
+  }
+
+  /// A lesson ahead of the one you are on: say so, and offer the next one.
+  void _showLocked(int next) {
+    showKustSheet<bool>(
+      context,
+      builder: (sheet) {
+        final t = sheet.t;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              KustSheetHeader(
+                title: t.lessonLocked(next + 1),
+                subtitle: t.lessonLockedHint,
+              ),
+              KustButton3D(
+                label: t.lessonLockedOpen(next + 1),
+                expand: true,
+                onTap: () => Navigator.of(sheet).pop(true),
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((open) {
+      if (open == true && mounted) context.push('/lesson/${kLessons[next].id}');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

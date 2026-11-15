@@ -457,5 +457,9 @@
   "onbCoachLevel": "Расскажите, как вы играете, и я подберу соперников.",
   "onbCoachReady": "Отлично! Ваша доска готова.",
   "onbStartLesson": "Начать первый урок",
-  "onbRatingLabel": "НАЧАЛЬНЫЙ РЕЙТИНГ"
+  "onbRatingLabel": "НАЧАЛЬНЫЙ РЕЙТИНГ",
+  "lessonLocked": "Сначала пройдите урок {n}.",
+  "lessonLockedHint": "Каждый урок опирается на предыдущий.",
+  "lessonLockedOpen": "Открыть урок {n}",
+  "homeBannerLine": "Пора играть лучше"
 }

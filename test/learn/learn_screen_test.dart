@@ -123,6 +123,42 @@ void main() {
     expect(find.text('lesson pawn'), findsOneWidget);
   });
 
+  testWidgets('a lesson ahead of the next one is locked, with a way on', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const LearnScreen()),
+        GoRoute(
+          path: '/lesson/:id',
+          builder: (_, s) => Text('lesson ${s.pathParameters['id']}'),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(theme: appDarkTheme, routerConfig: router),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final ahead = find.bySemanticsLabel(RegExp('^LESSON 3,'));
+    expect(ahead, findsOneWidget);
+    await tester.tap(ahead, warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Finish lesson 1 first.'), findsOneWidget);
+    expect(find.text('lesson rook'), findsNothing);
+
+    await tester.tap(find.text('Open lesson 1'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('lesson pawn'), findsOneWidget);
+  });
+
   testWidgets('a lesson runs from its introduction to its end', (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1;

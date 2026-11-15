@@ -937,5 +937,23 @@
   "onbCoachLevel": "Tell me how you play, and I'll pick fair opponents.",
   "onbCoachReady": "Great! Your board is ready.",
   "onbStartLesson": "Start the first lesson",
-  "onbRatingLabel": "STARTING RATING"
+  "onbRatingLabel": "STARTING RATING",
+  "lessonLocked": "Finish lesson {n} first.",
+  "@lessonLocked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lessonLockedHint": "Each lesson builds on the one before it.",
+  "lessonLockedOpen": "Open lesson {n}",
+  "@lessonLockedOpen": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeBannerLine": "Time to improve your chess"
 }
