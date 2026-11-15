@@ -2,6 +2,8 @@ import 'package:dartchess/dartchess.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/accuracy.dart';
+import 'package:kust/features/game/chess/chess_engine.dart'
+    show kAnalysisThinkTime;
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/history/replay_positions.dart';
@@ -99,7 +101,7 @@ const int kReviewMaxPlies = 160;
 Future<GameReviewData?> reviewGame(
   GameRecord game, {
   required MoveAnalyzer analyze,
-  Duration thinkTime = const Duration(milliseconds: 200),
+  Duration thinkTime = kAnalysisThinkTime,
   void Function(int done, int total)? onProgress,
   bool Function()? isStale,
 }) async {

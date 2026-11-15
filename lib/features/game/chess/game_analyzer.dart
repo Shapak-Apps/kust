@@ -1,6 +1,7 @@
 import 'package:dartchess/dartchess.dart';
 
 import 'package:kust/features/game/chess/accuracy.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 
 /// UCI text for [move] as the engine wants it: castling is the king's two
@@ -85,29 +86,11 @@ typedef MoveAnalyzer = Future<MoveAnalysis?> Function({
 
 /// Rates a game's moves against the engine's best move.
 class GameAnalyzer {
-  GameAnalyzer({
-    MoveAnalyzer? analyze,
-    this.thinkTime = const Duration(milliseconds: 250),
-  }) : _analyze = analyze ?? _engineAnalyze;
+  GameAnalyzer({MoveAnalyzer? analyze, this.thinkTime = kAnalysisThinkTime})
+    : _analyze = analyze ?? sharedMoveAnalyzer;
 
   final MoveAnalyzer _analyze;
   final Duration thinkTime;
-
-  static Future<MoveAnalysis?> _engineAnalyze({
-    required String beforeFen,
-    required String playedUci,
-    required String afterFen,
-    required Duration thinkTime,
-    bool Function()? isStale,
-  }) {
-    return ChessEngine.instance.analyzeMove(
-      beforeFen: beforeFen,
-      playedUci: playedUci,
-      afterFen: afterFen,
-      thinkTime: thinkTime,
-      isStale: isStale,
-    );
-  }
 
   /// Average accuracy over [jobs], or null when [isStale] turned true or no
   /// move could be rated. [onProgress] is told how many jobs are done.

@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -17,20 +18,6 @@ import 'package:kust/ui/tokens.dart';
 
 /// Finished reviews, kept while the app runs so reopening one is instant.
 final Map<String, GameReviewData> _reviewCache = {};
-
-Future<MoveAnalysis?> _engineAnalyze({
-  required String beforeFen,
-  required String playedUci,
-  required String afterFen,
-  required Duration thinkTime,
-  bool Function()? isStale,
-}) => ChessEngine.instance.analyzeMove(
-  beforeFen: beforeFen,
-  playedUci: playedUci,
-  afterFen: afterFen,
-  thinkTime: thinkTime,
-  isStale: isStale,
-);
 
 /// What happened in a game: accuracy of both sides, who was winning when,
 /// how many moves of each rating, and the few moves worth learning from.
@@ -90,7 +77,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     try {
       final data = await reviewGame(
         game,
-        analyze: widget.analyzer ?? _engineAnalyze,
+        analyze: widget.analyzer ?? sharedMoveAnalyzer,
         onProgress: (done, total) {
           if (_disposed) return;
           setState(() => _percent = (done * 100 / total).floor());
