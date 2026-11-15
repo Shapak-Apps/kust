@@ -1,6 +1,5 @@
 // The tests set the controller's state directly to stage a position.
 // ignore_for_file: invalid_use_of_protected_member
-import 'dart:async';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
-import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/premoves.dart';
@@ -18,50 +16,9 @@ import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/theme.dart';
 
-/// An engine that answers each bot request with the next of [replies],
-/// once [release] completes the pending one.
-class _FakeEngine implements ChessEngine {
-  _FakeEngine(this.replies);
+import '../support/fake_engine.dart';
 
-  final List<String> replies;
-  Completer<void>? _gate;
-
-  /// Lets the bot's current search finish.
-  void release() => _gate?.complete();
-
-  @override
-  Future<void> start() async {}
-
-  @override
-  void setSkillLevel(int level, {int? uciElo}) {}
-
-  @override
-  void stopThinking() {}
-
-  @override
-  Future<List<CandidateMove>> candidateMoves(
-    String fen, {
-    required int lines,
-    required int depth,
-    required Duration thinkTime,
-  }) async {
-    _gate = Completer<void>();
-    await _gate!.future;
-    return [CandidateMove(replies.removeAt(0), 0)];
-  }
-
-  @override
-  Future<EvalScore?> evaluateFen(
-    String fen, {
-    Duration thinkTime = const Duration(milliseconds: 250),
-    bool Function()? isStale,
-  }) async => null;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-Future<(ChessController, _FakeEngine)> _game(
+Future<(ChessController, FakeEngine)> _game(
   WidgetTester tester,
   List<String> replies, {
   Side side = Side.white,
@@ -72,7 +29,7 @@ Future<(ChessController, _FakeEngine)> _game(
   tester.view.physicalSize = const Size(400, 800);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final engine = _FakeEngine(replies);
+  final engine = FakeEngine(replies);
   final container = ProviderContainer(
     overrides: [chessEngineProvider.overrideWithValue(engine)],
   );
@@ -106,7 +63,7 @@ Future<void> _afterE4(WidgetTester tester, ChessController c) async {
 }
 
 /// Lets the bot's reply land and any premove follow.
-Future<void> _reply(WidgetTester tester, _FakeEngine engine) async {
+Future<void> _reply(WidgetTester tester, FakeEngine engine) async {
   engine.release();
   await tester.pump(const Duration(milliseconds: 500));
   await tester.pump(const Duration(milliseconds: 50));
