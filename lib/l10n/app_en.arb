@@ -668,13 +668,6 @@
   "onbStartPlaying": "Start playing",
   "onbSkip": "Skip for now",
   "onbTitle": "Chess that helps you improve",
-  "onbPlayBots": "Play bots",
-  "onbPlayBotsSub": "From 400 to 2000 Elo, or pass the phone to a friend",
-  "onbSolve": "Solve puzzles",
-  "onbSolveSub": "Short tactics with hints and a rating",
-  "onbReview": "Review your games",
-  "onbReviewSub": "Every finished game is saved for replay",
-  "onbNoAccount": "No account needed. Your games and progress stay on this device.",
   "onbHowStrong": "How strong are you?",
   "onbHowStrongSub": "This sets your starting rating. It adjusts as you play, so don’t overthink it.",
   "lvlBeginner": "Beginner",
@@ -685,15 +678,6 @@
   "lvlAdvancedD": "I understand strategy and complex positions.",
   "lvlCompetitive": "Competitive",
   "lvlCompetitiveD": "I play seriously and may compete in tournaments.",
-  "onbAllSet": "You’re all set",
-  "onbStartingRating": "Your starting rating is {rating}.\nYour first game is one tap away.",
-  "@onbStartingRating": {
-    "placeholders": {
-      "rating": {
-        "type": "int"
-      }
-    }
-  },
   "streakDays": "{count, plural, =1{1 day} other{{count} days}}",
   "@streakDays": {
     "placeholders": {
@@ -884,13 +868,7 @@
   "lessonBackToMap": "Back to the map",
   "learnCoachDone": "That is it! Tap Continue.",
   "lessonPerfect": "Perfect lesson!",
-  "onbLearn": "Learn from zero",
-  "onbLearnSub": "Short lessons from the first move to checkmate",
-  "onbCoachHi": "Salam! I'm Bahar. Let's set Küşt up for you.",
-  "onbCoachLevel": "Tell me how you play, and I'll pick fair opponents.",
-  "onbCoachReady": "Great! Your board is ready.",
   "onbStartLesson": "Start the first lesson",
-  "onbRatingLabel": "STARTING RATING",
   "lessonLocked": "Finish lesson {n} first.",
   "@lessonLocked": {
     "placeholders": {
@@ -965,5 +943,8 @@
   "usernameRule": "3–20 letters, digits or _",
   "bio": "About you",
   "choosePhoto": "Choose photo",
-  "removePhoto": "Remove photo"
+  "removePhoto": "Remove photo",
+  "onbNameTitle": "What should we call you?",
+  "onbNameSub": "You can change these later in your profile.",
+  "editProfile": "Edit profile"
 }

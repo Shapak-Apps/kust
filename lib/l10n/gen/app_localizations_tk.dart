@@ -1028,30 +1028,6 @@ class AppL10nTk extends AppL10n {
   String get onbTitle => 'Gowulaşmaga kömek edýän küşt';
 
   @override
-  String get onbPlayBots => 'Botlar bilen oýnaň';
-
-  @override
-  String get onbPlayBotsSub =>
-      '400-den 2000 Elo çenli ýa-da telefony dostuňyza beriň';
-
-  @override
-  String get onbSolve => 'Meseleleri çözüň';
-
-  @override
-  String get onbSolveSub => 'Kömekli we reýtingli gysga taktikalar';
-
-  @override
-  String get onbReview => 'Oýunlaryňyzy gaýtadan görüň';
-
-  @override
-  String get onbReviewSub =>
-      'Her gutarylan oýun gaýtadan görmek üçin saklanýar';
-
-  @override
-  String get onbNoAccount =>
-      'Akkaunt gerek däl. Oýunlaryňyz we ösüşiňiz şu enjamda saklanýar.';
-
-  @override
   String get onbHowStrong => 'Güýjüňiz nähili?';
 
   @override
@@ -1084,14 +1060,6 @@ class AppL10nTk extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'Men çynlakaý oýnaýaryn we ýaryşlara gatnaşyp bilerin.';
-
-  @override
-  String get onbAllSet => 'Hemme zat taýýar';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Başlangyç reýtingiňiz $rating.\nIlkinji oýnuňyz bir basyş uzaklykda.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1500,26 +1468,7 @@ class AppL10nTk extends AppL10n {
   String get lessonPerfect => 'Kemsiz sapak!';
 
   @override
-  String get onbLearn => 'Noldan öwreniň';
-
-  @override
-  String get onbLearnSub => 'Ilkinji göçümden şahmada çenli gysga sapaklar';
-
-  @override
-  String get onbCoachHi => 'Salam! Men Bahar. Geliň, Küşti size görä sazlalyň.';
-
-  @override
-  String get onbCoachLevel =>
-      'Nähili oýnaýandygyňyzy aýdyň, men size laýyk garşydaş saýlaryn.';
-
-  @override
-  String get onbCoachReady => 'Ajaýyp! Tagtaňyz taýyn.';
-
-  @override
   String get onbStartLesson => 'Ilkinji sapagy başla';
-
-  @override
-  String get onbRatingLabel => 'BAŞLANGYÇ REÝTING';
 
   @override
   String lessonLocked(int n) {
@@ -1659,4 +1608,13 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get removePhoto => 'Suraty aýyr';
+
+  @override
+  String get onbNameTitle => 'Size näme diýeli?';
+
+  @override
+  String get onbNameSub => 'Muny soňra profiliňizde üýtgedip bilersiňiz.';
+
+  @override
+  String get editProfile => 'Profili üýtget';
 }

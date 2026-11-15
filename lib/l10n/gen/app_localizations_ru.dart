@@ -1027,29 +1027,6 @@ class AppL10nRu extends AppL10n {
   String get onbTitle => 'Шахматы, которые помогают расти';
 
   @override
-  String get onbPlayBots => 'Играйте с ботами';
-
-  @override
-  String get onbPlayBotsSub => 'От 400 до 2000 Elo или передайте телефон другу';
-
-  @override
-  String get onbSolve => 'Решайте задачи';
-
-  @override
-  String get onbSolveSub => 'Короткая тактика с подсказками и рейтингом';
-
-  @override
-  String get onbReview => 'Разбирайте партии';
-
-  @override
-  String get onbReviewSub =>
-      'Каждая завершённая партия сохраняется для просмотра';
-
-  @override
-  String get onbNoAccount =>
-      'Аккаунт не нужен. Ваши партии и прогресс хранятся на этом устройстве.';
-
-  @override
   String get onbHowStrong => 'Насколько вы сильны?';
 
   @override
@@ -1080,14 +1057,6 @@ class AppL10nRu extends AppL10n {
   @override
   String get lvlCompetitiveD =>
       'Я играю всерьёз и могу участвовать в турнирах.';
-
-  @override
-  String get onbAllSet => 'Всё готово';
-
-  @override
-  String onbStartingRating(int rating) {
-    return 'Ваш начальный рейтинг — $rating.\nПервая партия уже в одном касании.';
-  }
 
   @override
   String streakDays(int count) {
@@ -1500,26 +1469,7 @@ class AppL10nRu extends AppL10n {
   String get lessonPerfect => 'Идеальный урок!';
 
   @override
-  String get onbLearn => 'Учитесь с нуля';
-
-  @override
-  String get onbLearnSub => 'Короткие уроки от первого хода до мата';
-
-  @override
-  String get onbCoachHi => 'Салам! Я Бахар. Давайте настроим Küşt для вас.';
-
-  @override
-  String get onbCoachLevel =>
-      'Расскажите, как вы играете, и я подберу соперников.';
-
-  @override
-  String get onbCoachReady => 'Отлично! Ваша доска готова.';
-
-  @override
   String get onbStartLesson => 'Начать первый урок';
-
-  @override
-  String get onbRatingLabel => 'НАЧАЛЬНЫЙ РЕЙТИНГ';
 
   @override
   String lessonLocked(int n) {
@@ -1660,4 +1610,13 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get removePhoto => 'Удалить фото';
+
+  @override
+  String get onbNameTitle => 'Как вас называть?';
+
+  @override
+  String get onbNameSub => 'Это можно поменять позже в профиле.';
+
+  @override
+  String get editProfile => 'Изменить профиль';
 }

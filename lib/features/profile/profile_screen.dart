@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -11,12 +10,13 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
+import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// The player's profile: photo, name, username and a few words about them.
-/// Kept on the device.
+/// The player's profile: photo, name, username and a few words about them,
+/// with an edit mode for changing them. Kept on the device.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -26,11 +26,10 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _store = AppStorage.instance;
-  late final _name = TextEditingController(
-    text: _store.displayName(AppText.now),
-  );
-  late final _username = TextEditingController(text: _store.username ?? '');
-  late final _bio = TextEditingController(text: _store.bio);
+  final _name = TextEditingController();
+  final _username = TextEditingController();
+  final _bio = TextEditingController();
+  bool _editing = false;
 
   @override
   void initState() {
@@ -51,9 +50,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool get _valid =>
       _name.text.trim().isNotEmpty &&
-      AppStorage.usernamePattern.hasMatch(_username.text.trim().toLowerCase());
+      AppStorage.usernamePattern.hasMatch(_username.text.trim());
 
   void _back() => context.canPop() ? context.pop() : context.go('/play');
+
+  void _edit() {
+    _name.text = _store.displayName(context.t);
+    _username.text = _store.username ?? '';
+    _bio.text = _store.bio;
+    setState(() => _editing = true);
+  }
 
   Future<void> _save() async {
     final saved = await _store.saveProfile(
@@ -61,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       username: _username.text,
       bio: _bio.text,
     );
-    if (saved && mounted) _back();
+    if (saved && mounted) setState(() => _editing = false);
   }
 
   Future<void> _pickPhoto() async {
@@ -81,125 +87,120 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return Scaffold(
-      backgroundColor: k.bg,
-      body: Column(
-        children: [
-          FeltHeader(title: context.t.profile, onBack: _back),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-              children: [
-                ValueListenableBuilder(
-                  valueListenable: _store.nameListenable(),
-                  builder: (context, _, _) => _photo(context, k),
-                ),
-                const SizedBox(height: 24),
-                KustSectionLabel(context.t.yourName),
-                _field(
-                  k,
-                  _name,
-                  maxLength: AppStorage.maxNameLength,
-                  capitalization: TextCapitalization.words,
-                ),
-                const SizedBox(height: 16),
-                KustSectionLabel(context.t.username),
-                _field(
-                  k,
-                  _username,
-                  maxLength: 20,
-                  prefix: '@',
-                  helper: context.t.usernameRule,
-                  formatters: [
-                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z0-9_]')),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                KustSectionLabel(context.t.bio),
-                _field(
-                  k,
-                  _bio,
-                  maxLength: AppStorage.maxBioLength,
-                  maxLines: 4,
-                  capitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 24),
-                KustButton(
-                  label: context.t.saveName,
-                  onTap: _valid ? _save : null,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _photo(BuildContext context, KustTokens k) {
-    final path = _store.photoPath;
-    return Column(
-      children: [
-        Pressable(
-          onTap: _pickPhoto,
-          child: PlayerAvatar(
-            size: 104,
-            name: _store.displayName(context.t),
-            photo: path == null ? null : FileImage(File(path)),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return PopScope(
+      // Back while editing leaves the edit, not the screen.
+      canPop: !_editing,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _editing = false);
+      },
+      child: Scaffold(
+        backgroundColor: k.bg,
+        body: Column(
           children: [
-            TextButton(
-              onPressed: _pickPhoto,
-              child: Text(context.t.choosePhoto),
+            FeltHeader(
+              title: _editing ? context.t.editProfile : context.t.profile,
+              onBack: _editing ? () => setState(() => _editing = false) : _back,
             ),
-            if (path != null)
-              TextButton(
-                onPressed: () => _store.setPhoto(null),
-                child: Text(
-                  context.t.removePhoto,
-                  style: TextStyle(color: k.muted),
+            Expanded(
+              child: ValueListenableBuilder(
+                valueListenable: _store.profileListenable(),
+                builder: (context, _, _) => ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                  children: _editing ? _form(context, k) : _view(context, k),
                 ),
               ),
+            ),
           ],
-        ),
-      ],
-    );
-  }
-
-  Widget _field(
-    KustTokens k,
-    TextEditingController controller, {
-    required int maxLength,
-    int maxLines = 1,
-    String? prefix,
-    String? helper,
-    TextCapitalization capitalization = TextCapitalization.none,
-    List<TextInputFormatter>? formatters,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLength: maxLength,
-      maxLines: maxLines,
-      minLines: 1,
-      textCapitalization: capitalization,
-      inputFormatters: formatters,
-      autocorrect: prefix == null,
-      style: k.body,
-      decoration: InputDecoration(
-        counterText: '',
-        prefixText: prefix,
-        helperText: helper,
-        filled: true,
-        fillColor: k.surfaceAlt,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          borderSide: BorderSide.none,
         ),
       ),
     );
+  }
+
+  Widget _avatar(BuildContext context) {
+    final path = _store.photoPath;
+    return PlayerAvatar(
+      size: 104,
+      name: _store.displayName(context.t),
+      photo: path == null ? null : FileImage(File(path)),
+    );
+  }
+
+  List<Widget> _view(BuildContext context, KustTokens k) {
+    final username = _store.username;
+    final bio = _store.bio;
+    return [
+      Center(child: _avatar(context)),
+      const SizedBox(height: 16),
+      Text(
+        _store.displayName(context.t),
+        textAlign: TextAlign.center,
+        style: k.title,
+      ),
+      if (username != null) ...[
+        const SizedBox(height: 4),
+        Text(
+          '@$username',
+          textAlign: TextAlign.center,
+          style: k.body.copyWith(color: k.muted),
+        ),
+      ],
+      if (bio.isNotEmpty) ...[
+        const SizedBox(height: 16),
+        Text(bio, textAlign: TextAlign.center, style: k.body),
+      ],
+      const SizedBox(height: 24),
+      KustButton(
+        label: context.t.editProfile,
+        icon: Icons.edit_outlined,
+        style: KustButtonStyle.outline,
+        onTap: _edit,
+      ),
+    ];
+  }
+
+  List<Widget> _form(BuildContext context, KustTokens k) {
+    return [
+      Center(
+        child: Pressable(onTap: _pickPhoto, child: _avatar(context)),
+      ),
+      const SizedBox(height: 8),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextButton(onPressed: _pickPhoto, child: Text(context.t.choosePhoto)),
+          if (_store.photoPath != null)
+            TextButton(
+              onPressed: () => _store.setPhoto(null),
+              child: Text(
+                context.t.removePhoto,
+                style: TextStyle(color: k.muted),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 24),
+      KustSectionLabel(context.t.yourName),
+      KustTextField(
+        controller: _name,
+        maxLength: AppStorage.maxNameLength,
+        capitalization: TextCapitalization.words,
+      ),
+      const SizedBox(height: 16),
+      KustSectionLabel(context.t.username),
+      KustTextField.username(
+        controller: _username,
+        helper: context.t.usernameRule,
+      ),
+      const SizedBox(height: 16),
+      KustSectionLabel(context.t.bio),
+      KustTextField(
+        controller: _bio,
+        maxLength: AppStorage.maxBioLength,
+        maxLines: 4,
+        capitalization: TextCapitalization.sentences,
+      ),
+      const SizedBox(height: 24),
+      KustButton(label: context.t.saveName, onTap: _valid ? _save : null),
+    ];
   }
 }

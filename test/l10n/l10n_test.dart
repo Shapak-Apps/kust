@@ -139,7 +139,13 @@ void main() {
           : 'Gowulaşmaga kömek edýän küşt';
       expect(find.text(texts), findsOneWidget);
       expect(tester.takeException(), isNull);
-      // Through the steps: the level cards, then the last page.
+      // Through the steps: name and username, then the level cards.
+      await tester.tap(find.text(lang == 'ru' ? 'Начать' : 'Başlaň'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).at(0), 'Aýna');
+      await tester.enterText(find.byType(TextField).at(1), 'ayna');
+      await tester.pump();
+      expect(tester.takeException(), isNull);
       await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -147,8 +153,6 @@ void main() {
       await tester.ensureVisible(level);
       await tester.pumpAndSettle();
       await tester.tap(level);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(KustButton3D).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     });
