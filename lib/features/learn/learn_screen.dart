@@ -172,10 +172,7 @@ class _LearnScreenState extends State<LearnScreen> {
                             stars: progress.totalStars,
                             maxStars: kLessons.length * 3,
                             camp: camp,
-                            campDone: [
-                              for (var i = camp.first; i <= camp.last; i++)
-                                if (done.contains(kLessons[i].id)) i,
-                            ].length,
+                            doneIds: done,
                           ),
                         ),
                         Positioned(
@@ -206,14 +203,14 @@ class _Header extends StatelessWidget {
     required this.stars,
     required this.maxStars,
     required this.camp,
-    required this.campDone,
+    required this.doneIds,
   });
 
   final double top;
   final int stars;
   final int maxStars;
   final Camp camp;
-  final int campDone;
+  final Set<String> doneIds;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +286,7 @@ class _Header extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _CampBanner(camp: camp, done: campDone),
+          _CampBanner(camp: camp, done: doneIds),
         ],
       ),
     );
@@ -300,88 +297,113 @@ class _CampBanner extends StatelessWidget {
   const _CampBanner({required this.camp, required this.done});
 
   final Camp camp;
-  final int done;
+
+  /// The lessons finished so far, by id.
+  final Set<String> done;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final next = kLessons.indexWhere((l) => !done.contains(l.id));
+    final count = [
+      for (var i = camp.first; i <= camp.last; i++)
+        if (done.contains(kLessons[i].id)) i,
+    ].length;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF17694A), Color(0xFF0F4A33)],
-        ),
+        color: const Color(0xE60D1A13),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x803CB77C)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: const BoxDecoration(
-              color: Color(0xFF0B3325),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              camp.isSummit ? Icons.flag_rounded : Icons.cabin_rounded,
-              color: const Color(0xFFBFF0D6),
-              size: 22,
-            ),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        '${camp.label(t)} · ${camp.title(t).toUpperCase()}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                          color: Color(0xFF9EE7C1),
-                        ),
+                    Text(
+                      '${camp.label(t)} · ${camp.title(t)}'.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                        color: Color(0xFF8FB8A0),
                       ),
                     ),
+                    const SizedBox(height: 3),
                     Text(
-                      '$done/${camp.length}',
+                      camp.subtitle(t),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFBFF0D6),
+                        fontSize: 16,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: Color(0xFFF4F1EA),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  camp.subtitle(t),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$count',
+                      style: const TextStyle(color: Color(0xFFF4F1EA)),
+                    ),
+                    TextSpan(
+                      text: '/${camp.length}',
+                      style: const TextStyle(color: Color(0xFF6F8F7D)),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    value: done / camp.length,
-                    minHeight: 4,
-                    backgroundColor: const Color(0xFF0B3325),
-                    color: const Color(0xFF3CB77C),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 11),
+          // One step per lesson of the camp.
+          Row(
+            children: [
+              for (var i = camp.first; i <= camp.last; i++) ...[
+                if (i > camp.first) const SizedBox(width: 5),
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 5,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3),
+                      color: done.contains(kLessons[i].id)
+                          ? const Color(0xFF4CC283)
+                          : i == next
+                          ? const Color(0xFFF5C344)
+                          : const Color(0x1FFFFFFF),
+                    ),
                   ),
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),
