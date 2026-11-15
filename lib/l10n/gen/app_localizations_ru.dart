@@ -1572,4 +1572,13 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get homeBannerLine => 'Пора играть лучше';
+
+  @override
+  String get yourName => 'Ваше имя';
+
+  @override
+  String get defaultPlayerName => 'Игрок';
+
+  @override
+  String get saveName => 'Сохранить';
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 class AppStorage {
   AppStorage._();
@@ -74,6 +75,29 @@ class AppStorage {
   String get guestId => _user.get(_guestIdKey, defaultValue: 'guest') as String;
   String get guestName =>
       _user.get(_guestNameKey, defaultValue: 'Guest') as String;
+
+  /// Whether the storage has been opened (it is not in some widget tests).
+  static bool get isReady => Hive.isBoxOpen(userBoxName);
+
+  static const int maxNameLength = 16;
+
+  /// The name to show: the one the player chose, or "Player" in the app's
+  /// language while it is still one of the random guest names.
+  String displayName(AppL10n t) =>
+      _guestNames.contains(guestName) ? t.defaultPlayerName : guestName;
+
+  /// Saves the player's name (trimmed, at most [maxNameLength] characters).
+  /// An empty name is ignored.
+  Future<void> setGuestName(String name) async {
+    final value = name.trim();
+    if (value.isEmpty) return;
+    await _user.put(
+      _guestNameKey,
+      value.length > maxNameLength ? value.substring(0, maxNameLength) : value,
+    );
+  }
+
+  ValueListenable nameListenable() => _user.listenable(keys: [_guestNameKey]);
 
   ValueListenable botProgressListenable() => _bots.listenable();
 

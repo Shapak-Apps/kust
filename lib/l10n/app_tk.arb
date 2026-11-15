@@ -462,5 +462,8 @@
   "lessonLockedHint": "Her sapak öňküsine daýanýar.",
   "lessonLockedOpen": "{n}-nji sapagy aç",
   "homeBannerLine": "Küşt oýnuňyzy gowulandyrmagyň wagty",
-  "noClock": "Sagatsyz"
+  "noClock": "Sagatsyz",
+  "yourName": "Adyňyz",
+  "defaultPlayerName": "Oýunçy",
+  "saveName": "Ýatda sakla"
 }

@@ -1572,4 +1572,13 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get homeBannerLine => 'Küşt oýnuňyzy gowulandyrmagyň wagty';
+
+  @override
+  String get yourName => 'Adyňyz';
+
+  @override
+  String get defaultPlayerName => 'Oýunçy';
+
+  @override
+  String get saveName => 'Ýatda sakla';
 }
