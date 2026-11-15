@@ -387,6 +387,15 @@ class GameState {
   }
 }
 
+/// How far the bot's own score must move between two of its turns for it to
+/// react to the player's move, in centipawns.
+@visibleForTesting
+const int kBotSwingCp = 300;
+
+/// Scores this large are mates: no swing is read from them.
+@visibleForTesting
+const int kBotSwingMateCp = 50000;
+
 class ChessController extends Notifier<GameState> {
   int _moveRequestId = 0;
   int _evalRequestId = 0;
@@ -989,7 +998,8 @@ class ChessController extends Notifier<GameState> {
     }
   }
 
-  final Random _chatRandom = Random();
+  @visibleForTesting
+  Random chatRandom = Random();
   int _lastRemarkPly = -100;
 
   /// Now and then the bot comments on a move of yours that was very good or
@@ -1002,13 +1012,43 @@ class ChessController extends Notifier<GameState> {
       MoveQuality.blunder => BotMoment.blunder,
       _ => null,
     };
-    if (moment == null || moveIndex - _lastRemarkPly < 6) return;
-    if (_chatRandom.nextDouble() > 0.7) return;
+    if (moment == null) return;
+    _remark(moveIndex, moment);
+  }
+
+  /// The bot says something about the player's move at [moveIndex], not
+  /// every time and never twice within a few moves.
+  void _remark(int moveIndex, BotMoment moment) {
+    if (moveIndex - _lastRemarkPly < 6) return;
+    if (chatRandom.nextDouble() > 0.7) return;
     _lastRemarkPly = moveIndex;
     state = state.copyWith(
       botMoment: moment,
       botMomentSeq: state.botMomentSeq + 1,
     );
+  }
+
+  /// The bot's own best score (its point of view) the last time it moved.
+  int? _lastBotBestCp;
+
+  /// Judges the player's last move from what the bot's search already says,
+  /// when no move rating runs (rated games): if the position got much better
+  /// for the bot than it expected after its own move, that was a blunder; if
+  /// much worse, a strong move. Costs no extra search.
+  void _remarkFromSwing(int bestCp) {
+    final before = _lastBotBestCp;
+    _lastBotBestCp = bestCp;
+    if (before == null) return;
+    if (state.practiceMode && state.moveFeedbackEnabled) return;
+    if (before.abs() >= kBotSwingMateCp || bestCp.abs() >= kBotSwingMateCp) {
+      return;
+    }
+    final swing = bestCp - before;
+    if (swing >= kBotSwingCp) {
+      _remark(state.moves.length - 1, BotMoment.blunder);
+    } else if (swing <= -kBotSwingCp) {
+      _remark(state.moves.length - 1, BotMoment.brilliant);
+    }
   }
 
   String _promotionChar(Role role) {
@@ -1055,6 +1095,7 @@ class ChessController extends Notifier<GameState> {
     _resetFeedbackQueue();
     _brilliantThisGame = false;
     _lastRemarkPly = -100;
+    _lastBotBestCp = null;
     _policy = BotPolicy(
       elo: bot.elo,
       seed: DateTime.now().microsecondsSinceEpoch,
@@ -1108,6 +1149,7 @@ class ChessController extends Notifier<GameState> {
     _resetFeedbackQueue();
     _brilliantThisGame = false;
     _lastRemarkPly = -100;
+    _lastBotBestCp = null;
     _initClocks(timeControl);
 
     final base = timeControl?.base ?? Duration.zero;
@@ -1981,6 +2023,7 @@ class ChessController extends Notifier<GameState> {
         depth: policy.depth,
         thinkTime: policy.thinkTime,
       );
+      if (candidates.isNotEmpty) _remarkFromSwing(candidates.first.cp);
       uci = candidates.isEmpty
           ? '(none)'
           : policy.pick(
