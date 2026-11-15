@@ -10,6 +10,7 @@ import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/play_screen.dart';
+import 'package:kust/features/profile/profile_screen.dart';
 import 'package:kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/history/replay_screen.dart';
@@ -53,6 +54,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       GoRoute(
         path: '/achievements',
         builder: (context, state) => const AchievementsScreen(),
+      ),
+
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
 
       GoRoute(

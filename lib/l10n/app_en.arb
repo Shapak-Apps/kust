@@ -959,5 +959,11 @@
   "lessonPatternsTitle": "Mate patterns",
   "lessonPatternsIntro": "Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.",
   "campTacticsTitle": "Tactics",
-  "campTacticsSub": "Win pieces with clever moves"
+  "campTacticsSub": "Win pieces with clever moves",
+  "profile": "Profile",
+  "username": "Username",
+  "usernameRule": "3–20 letters, digits or _",
+  "bio": "About you",
+  "choosePhoto": "Choose photo",
+  "removePhoto": "Remove photo"
 }
