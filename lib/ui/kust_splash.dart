@@ -156,12 +156,8 @@ class SplashArt extends StatelessWidget {
             child: Stack(
               alignment: Alignment.topLeft,
               children: [
-                Positioned(
-                  left: boxLeft,
-                  top: boxTop,
-                  child: layer('assets/images/wordmark_letters.svg', ink),
-                ),
-                // The dots and the tail, white on gold, drop in last.
+                // The dots and the tail, white on gold, drop in last,
+                // behind the letters so the ş stays whole, as in KustLogo.
                 Positioned(
                   left: boxLeft,
                   top: boxTop - (1 - drop) * 60 * u,
@@ -172,6 +168,11 @@ class SplashArt extends StatelessWidget {
                       Colors.white,
                     ),
                   ),
+                ),
+                Positioned(
+                  left: boxLeft,
+                  top: boxTop,
+                  child: layer('assets/images/wordmark_letters.svg', ink),
                 ),
               ],
             ),
