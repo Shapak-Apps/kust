@@ -145,6 +145,24 @@ class _LearnScreenState extends State<LearnScreen> {
                             coachImage: 'assets/bots/Bahar.webp',
                           ),
                         ),
+                        // Soft shade along the sides, for depth.
+                        const Positioned.fill(
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0x33000000),
+                                    Color(0x00000000),
+                                    Color(0x00000000),
+                                    Color(0x33000000),
+                                  ],
+                                  stops: [0, 0.16, 0.84, 1],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                         Positioned(
                           left: 0,
                           right: 0,
