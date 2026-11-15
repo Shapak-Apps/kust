@@ -36,6 +36,7 @@ GameRecord _record() {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late Directory dir;
   late Box<dynamic> box;
   late AnalysisCache cache;

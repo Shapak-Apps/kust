@@ -6,6 +6,7 @@ import 'package:kust/features/game/chess/chess_engine.dart'
     show kAnalysisThinkTime;
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/history/replay_positions.dart';
 
 /// One move of a reviewed game, rated.
@@ -45,9 +46,12 @@ class ReviewedMove {
 
 /// A whole game, rated move by move for both sides.
 class GameReviewData {
-  GameReviewData(this.moves);
+  GameReviewData(this.moves, {this.opening});
 
   final List<ReviewedMove> moves;
+
+  /// The last named opening the game went through.
+  final Opening? opening;
 
   Iterable<ReviewedMove> by(Side side) => moves.where((m) => m.side == side);
 
@@ -106,6 +110,7 @@ Future<GameReviewData?> reviewGame(
   bool Function()? isStale,
 }) async {
   final replay = replayPositions(game.uciMoves);
+  final book = await openingBook();
   final total = (replay.moves.length - 1).clamp(0, kReviewMaxPlies);
   final moves = <ReviewedMove>[];
 
@@ -127,15 +132,17 @@ Future<GameReviewData?> reviewGame(
     onProgress?.call(i + 1, total);
     if (a == null) continue;
 
-    final quality = classifyPlayedMove(
-      before: before,
-      after: after,
-      move: move,
-      bestCp: a.bestCp,
-      playedCp: a.playedCp,
-      secondBestCp: a.secondBestCp,
-      isBest: a.bestUci == uci,
-    );
+    final quality = isBookMove(book, replay.positions, i + 1)
+        ? MoveQuality.book
+        : classifyPlayedMove(
+            before: before,
+            after: after,
+            move: move,
+            bestCp: a.bestCp,
+            playedCp: a.playedCp,
+            secondBestCp: a.secondBestCp,
+            isBest: a.bestUci == uci,
+          );
     final mover = before.turn;
     final win = winPercent(a.playedCp);
     String bestSan = '';
@@ -169,5 +176,7 @@ Future<GameReviewData?> reviewGame(
       ),
     );
   }
-  return moves.isEmpty ? null : GameReviewData(moves);
+  return moves.isEmpty
+      ? null
+      : GameReviewData(moves, opening: openingOf(book, replay.positions));
 }

@@ -11,6 +11,7 @@ import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/move_sounds.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
@@ -144,15 +145,18 @@ class _ReplayScreenState extends State<ReplayScreen> {
         isStale: () => !mounted,
       );
       if (!mounted || analysis == null) return;
-      final quality = classifyPlayedMove(
-        before: before,
-        after: after,
-        move: move,
-        bestCp: analysis.bestCp,
-        playedCp: analysis.playedCp,
-        secondBestCp: analysis.secondBestCp,
-        isBest: analysis.bestUci == playedUci,
-      );
+      final book = loadedOpeningBook;
+      final quality = book != null && isBookMove(book, _replay.positions, ply)
+          ? MoveQuality.book
+          : classifyPlayedMove(
+              before: before,
+              after: after,
+              move: move,
+              bestCp: analysis.bestCp,
+              playedCp: analysis.playedCp,
+              secondBestCp: analysis.secondBestCp,
+              isBest: analysis.bestUci == playedUci,
+            );
       final best = analysis.bestUci;
       final bestFrom = Square.parse(best.substring(0, 2));
       final bestTo = Square.parse(best.substring(2, 4));
@@ -408,6 +412,18 @@ class _ReplayScreenState extends State<ReplayScreen> {
             selected: _ply,
             onTap: _go,
           ),
+          if (loadedOpeningBook case final book?)
+            if (openingOf(book, _replay.positions.take(_ply + 1))
+                case final opening?)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Text(
+                  opening.nameIn(context.t),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: k.caption,
+                ),
+              ),
           if (_evalOn)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -522,6 +538,7 @@ class _Review {
 
   bool get isBest =>
       quality == MoveQuality.best ||
+      quality == MoveQuality.book ||
       quality == MoveQuality.brilliant ||
       quality == MoveQuality.great;
 }

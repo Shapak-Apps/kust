@@ -12,6 +12,7 @@ const Color kMoveGreat = Color(0xFF5C8BB0);
 const Color kMoveBest = Color(0xFF81B64C);
 const Color kMoveExcellent = Color(0xFF96BC4B);
 const Color kMoveGood = Color(0xFF95AF8A);
+const Color kMoveBook = Color(0xFFA88865);
 const Color kMoveInaccuracy = Color(0xFFF7C631);
 const Color kMoveMistake = Color(0xFFFFA459);
 const Color kMoveMiss = Color(0xFFFF7769);
@@ -36,6 +37,9 @@ enum MoveQuality {
   best,
   excellent,
   good,
+
+  /// Known opening theory.
+  book,
   inaccuracy,
   mistake,
   miss,
@@ -52,6 +56,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.best => t.qBest,
     MoveQuality.excellent => t.qExcellent,
     MoveQuality.good => t.qGood,
+    MoveQuality.book => t.qBook,
     MoveQuality.inaccuracy => t.qInaccuracy,
     MoveQuality.mistake => t.qMistake,
     MoveQuality.miss => t.qMiss,
@@ -64,6 +69,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.best => 'assets/icons/moves/best.svg',
     MoveQuality.excellent => 'assets/icons/moves/good.svg',
     MoveQuality.good => 'assets/icons/moves/check.svg',
+    MoveQuality.book => 'assets/icons/moves/book.svg',
     MoveQuality.inaccuracy => 'assets/icons/moves/inaccuracy.svg',
     MoveQuality.mistake => 'assets/icons/moves/mistake.svg',
     MoveQuality.miss => 'assets/icons/moves/miss.svg',
@@ -76,6 +82,7 @@ extension MoveQualityStyle on MoveQuality {
     MoveQuality.best => kMoveBest,
     MoveQuality.excellent => kMoveExcellent,
     MoveQuality.good => kMoveGood,
+    MoveQuality.book => kMoveBook,
     MoveQuality.inaccuracy => kMoveInaccuracy,
     MoveQuality.mistake => kMoveMistake,
     MoveQuality.miss => kMoveMiss,
@@ -122,6 +129,7 @@ class MoveFeedback {
     MoveQuality.best => t.bannerBest(playedSan),
     MoveQuality.excellent => t.bannerExcellent(playedSan, bestSan),
     MoveQuality.good => t.bannerGood(playedSan, bestSan),
+    MoveQuality.book => t.bannerBook(playedSan),
     MoveQuality.inaccuracy => t.bannerInaccuracy(playedSan, bestSan),
     MoveQuality.mistake => t.bannerMistake(playedSan, bestSan),
     MoveQuality.miss => t.bannerMiss(playedSan, bestSan),

@@ -357,6 +357,9 @@ class AppL10nTk extends AppL10n {
   String get qGood => 'Gowy';
 
   @override
+  String get qBook => 'Teoriýa';
+
+  @override
   String get qInaccuracy => 'Gowşak';
 
   @override
@@ -381,6 +384,11 @@ class AppL10nTk extends AppL10n {
   @override
   String bannerBest(String played) {
     return '$played · takyk göçüm';
+  }
+
+  @override
+  String bannerBook(String played) {
+    return '$played · teoriýa göçümi';
   }
 
   @override

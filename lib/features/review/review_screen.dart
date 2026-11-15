@@ -272,6 +272,16 @@ class _ReviewBody extends StatelessWidget {
           ],
         ),
         Center(child: Text(t.reviewAccuracy, style: k.caption)),
+        if (data.opening case final opening?) ...[
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const _QualityDot(quality: MoveQuality.book, size: 26),
+              const SizedBox(width: 10),
+              Expanded(child: Text(opening.nameIn(t), style: k.body)),
+            ],
+          ),
+        ],
         const SizedBox(height: 28),
         Text(t.reviewGraph, style: k.caption),
         const SizedBox(height: 10),

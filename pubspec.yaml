@@ -74,4 +74,5 @@ flutter:
     - assets/pieces/learn/
     - assets/sounds/
     - assets/puzzles/
+    - assets/openings/
     - assets/engine/

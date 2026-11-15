@@ -11,6 +11,7 @@ import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/game/chess/board/svg_precache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/router.dart';
 import 'package:flutter/foundation.dart';
@@ -55,6 +56,7 @@ Future<void> _start() async {
   }
   SoundService.instance.warmUp();
   unawaited(precacheGameSvgs());
+  unawaited(openingBook());
   final prefs = await SharedPreferences.getInstance();
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);
