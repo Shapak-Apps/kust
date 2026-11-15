@@ -14,6 +14,7 @@ import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -894,10 +895,11 @@ class ChessController extends Notifier<GameState> {
 
       state = state.copyWith(feedbackAnalyzing: true);
 
-      var analysis = await _engine.analyzeMove(
+      var analysis = await AnalysisCache.instance.wrap(_engine.analyzeMove)(
         beforeFen: beforePos.fen,
         playedUci: playedUci,
         afterFen: afterPos.fen,
+        thinkTime: kAnalysisThinkTime,
         isStale: () => _isDisposed || epoch != _feedbackEpoch,
       );
 
@@ -933,6 +935,14 @@ class ChessController extends Notifier<GameState> {
         if (deeper != null) {
           analysis = deeper;
           quality = rate(deeper);
+          // The deeper look is the better rating: Review and Replay show it
+          // too, so the label never changes between screens.
+          unawaited(
+            AnalysisCache.instance.put(
+              AnalysisCache.keyFor(beforePos.fen, playedUci),
+              deeper,
+            ),
+          );
         }
       }
       if (moveIndex >= state.moves.length) return;

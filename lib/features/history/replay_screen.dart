@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
+import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -134,12 +135,12 @@ class _ReplayScreenState extends State<ReplayScreen> {
     final after = _replay.positions[ply];
     final playedUci = engineUci(move, before);
     try {
-      final analyze = widget.analyzer ?? _engineAnalyze;
+      final analyze = widget.analyzer ?? sharedMoveAnalyzer;
       final analysis = await analyze(
         beforeFen: before.fen,
         playedUci: playedUci,
         afterFen: after.fen,
-        thinkTime: const Duration(milliseconds: 400),
+        thinkTime: kAnalysisThinkTime,
         isStale: () => !mounted,
       );
       if (!mounted || analysis == null) return;
@@ -168,20 +169,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
       _reviewing.remove(ply);
     }
   }
-
-  static Future<MoveAnalysis?> _engineAnalyze({
-    required String beforeFen,
-    required String playedUci,
-    required String afterFen,
-    required Duration thinkTime,
-    bool Function()? isStale,
-  }) => ChessEngine.instance.analyzeMove(
-    beforeFen: beforeFen,
-    playedUci: playedUci,
-    afterFen: afterFen,
-    thinkTime: thinkTime,
-    isStale: isStale,
-  );
 
   /// Where the piece of the move at [ply] ended up: the king's square for
   /// castling, which is stored as the king taking its rook.

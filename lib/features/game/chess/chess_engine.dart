@@ -11,6 +11,11 @@ import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/features/game/chess/interruption_gate.dart';
 import 'package:kust/features/game/chess/nnue_store.dart';
 
+/// How long a move may be searched when it is rated. One value for every
+/// screen, so they all give the same rating (a search also ends at
+/// [ChessEngine.analysisDepth]).
+const Duration kAnalysisThinkTime = Duration(milliseconds: 500);
+
 const _nnueBig = 'nn-c288c895ea92.nnue';
 const _nnueSmall = 'nn-37f18f62d772.nnue';
 
@@ -355,7 +360,7 @@ class ChessEngine {
     required String afterFen,
     // Long enough for both searches to reach [analysisDepth] on most
     // phones, so the two scores come from the same depth.
-    Duration thinkTime = const Duration(milliseconds: 700),
+    Duration thinkTime = kAnalysisThinkTime,
     int depth = analysisDepth,
     bool Function()? isStale,
   }) {

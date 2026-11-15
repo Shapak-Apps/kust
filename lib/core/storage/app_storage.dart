@@ -12,6 +12,7 @@ class AppStorage {
   static const String botProgressBoxName = 'bot_progress';
   static const String puzzleBoxName = 'puzzle_progress';
   static const String historyBoxName = 'game_history';
+  static const String analysisBoxName = 'move_analysis';
 
   static const String _guestIdKey = 'guest_id';
   static const String _guestNameKey = 'guest_name';
@@ -39,6 +40,7 @@ class AppStorage {
     await _openSafe(botProgressBoxName);
     await _openSafe(puzzleBoxName);
     await _openSafe(historyBoxName);
+    await _openSafe(analysisBoxName);
     await instance._ensureGuest();
   }
 
