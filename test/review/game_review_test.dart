@@ -133,7 +133,10 @@ void main() {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );
-    await tester.pump(const Duration(milliseconds: 100));
+    // The loader may first run its ring up to 100 %.
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
 
     expect(find.text('Game review'), findsOneWidget);
     expect(find.text('You'), findsWidgets);

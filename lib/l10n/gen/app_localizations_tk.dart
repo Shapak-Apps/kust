@@ -1607,4 +1607,31 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get retryNoPosition => 'Bu göçümi görkezip bolmaýar.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Oýnuňyz seljerilýär';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return '$total göçümiň $n-njisi barlanýar';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Takyklyk her göçümiňizi motoryň iň gowy göçümi bilen deňeşdirýär.';
+
+  @override
+  String get reviewTip2 =>
+      'Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň.';
+
+  @override
+  String get reviewTip3 =>
+      'Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň.';
+
+  @override
+  String get reviewTip4 =>
+      'Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany.';
+
+  @override
+  String get reviewTip5 => 'Seljerilen oýun indiki gezek derrew açylýar.';
 }

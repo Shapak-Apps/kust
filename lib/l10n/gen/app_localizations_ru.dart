@@ -1607,4 +1607,32 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get retryNoPosition => 'Этот ход нельзя показать.';
+
+  @override
+  String get reviewAnalyzingTitle => 'Анализируем вашу партию';
+
+  @override
+  String reviewCheckingMove(int n, int total) {
+    return 'Проверяем ход $n из $total';
+  }
+
+  @override
+  String get reviewTip1 =>
+      'Точность сравнивает каждый ваш ход с лучшим ходом движка.';
+
+  @override
+  String get reviewTip2 =>
+      'Зевок отдаёт много за один ход. Ищите их в первую очередь.';
+
+  @override
+  String get reviewTip3 =>
+      'Нажмите кнопку повтора у ключевого момента, чтобы сыграть позицию заново.';
+
+  @override
+  String get reviewTip4 =>
+      'Блестящие ходы редки: это жертва, с которой согласен движок.';
+
+  @override
+  String get reviewTip5 =>
+      'Проанализированная партия в следующий раз откроется сразу.';
 }

@@ -977,5 +977,22 @@
   "retryWrong": "Not quite. Try again.",
   "retryShow": "Show answer",
   "retryTry": "Try again",
-  "retryNoPosition": "This move cannot be shown."
+  "retryNoPosition": "This move cannot be shown.",
+  "reviewAnalyzingTitle": "Analyzing your game",
+  "reviewCheckingMove": "Checking move {n} of {total}",
+  "reviewTip1": "Accuracy compares each of your moves with the engine's best move.",
+  "reviewTip2": "A blunder gives away a lot in one move. Look for those first.",
+  "reviewTip3": "Tap the replay button on a key moment to try that position again.",
+  "reviewTip4": "Brilliant moves are rare: a sacrifice the engine agrees with.",
+  "reviewTip5": "Once analyzed, a game opens instantly next time.",
+  "@reviewCheckingMove": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  }
 }

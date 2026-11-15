@@ -2912,6 +2912,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'This move cannot be shown.'**
   String get retryNoPosition;
+
+  /// No description provided for @reviewAnalyzingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your game'**
+  String get reviewAnalyzingTitle;
+
+  /// No description provided for @reviewCheckingMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking move {n} of {total}'**
+  String reviewCheckingMove(int n, int total);
+
+  /// No description provided for @reviewTip1.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy compares each of your moves with the engine\'s best move.'**
+  String get reviewTip1;
+
+  /// No description provided for @reviewTip2.
+  ///
+  /// In en, this message translates to:
+  /// **'A blunder gives away a lot in one move. Look for those first.'**
+  String get reviewTip2;
+
+  /// No description provided for @reviewTip3.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the replay button on a key moment to try that position again.'**
+  String get reviewTip3;
+
+  /// No description provided for @reviewTip4.
+  ///
+  /// In en, this message translates to:
+  /// **'Brilliant moves are rare: a sacrifice the engine agrees with.'**
+  String get reviewTip4;
+
+  /// No description provided for @reviewTip5.
+  ///
+  /// In en, this message translates to:
+  /// **'Once analyzed, a game opens instantly next time.'**
+  String get reviewTip5;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -371,3 +371,15 @@ Unreviewed: `onbLearn`, `onbLearnSub`, `onbCoachHi`, `onbCoachLevel`, `onbCoachR
 | `retryShow` | Show answer | Jogaby görkez |
 | `retryTry` | Try again | Täzeden synanyş |
 | `retryNoPosition` | This move cannot be shown. | Bu göçümi görkezip bolmaýar. |
+
+## Analysis loading screen
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `reviewAnalyzingTitle` | Analyzing your game | Oýnuňyz seljerilýär |
+| `reviewCheckingMove` | Checking move {n} of {total} | {total} göçümiň {n}-njisi barlanýar |
+| `reviewTip1` | Accuracy compares each of your moves with the engine's best move. | Takyklyk her göçümiňizi motoryň iň gowy göçümi bilen deňeşdirýär. |
+| `reviewTip2` | A blunder gives away a lot in one move. Look for those first. | Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň. |
+| `reviewTip3` | Tap the replay button on a key moment to try that position again. | Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň. |
+| `reviewTip4` | Brilliant moves are rare: a sacrifice the engine agrees with. | Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany. |
+| `reviewTip5` | Once analyzed, a game opens instantly next time. | Seljerilen oýun indiki gezek derrew açylýar. |

@@ -9,6 +9,7 @@ import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/review/analysis_loader.dart';
 import 'package:kust/features/review/game_review.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -46,7 +47,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
 
   GameReviewData? _data;
-  int _percent = 0;
+  int _done = 0;
+  int _total = 0;
+
+  /// Results waiting for the loader to finish its run to 100 %.
+  GameReviewData? _pending;
   bool _failed = false;
   bool _running = false;
   bool _disposed = false;
@@ -72,22 +77,36 @@ class _ReviewScreenState extends State<ReviewScreen> {
     setState(() {
       _running = true;
       _failed = false;
-      _percent = 0;
+      _done = 0;
+      _total = 0;
     });
+    final started = DateTime.now();
     try {
       final data = await reviewGame(
         game,
         analyze: widget.analyzer ?? sharedMoveAnalyzer,
         onProgress: (done, total) {
           if (_disposed) return;
-          setState(() => _percent = (done * 100 / total).floor());
+          setState(() {
+            _done = done;
+            _total = total;
+          });
         },
         isStale: () => _disposed,
       );
       if (_disposed) return;
       if (data != null) _reviewCache[widget.gameId] = data;
+      // Already rated (or very short): straight to the results. Otherwise
+      // the loader first runs up to 100 %.
+      final quick =
+          DateTime.now().difference(started) <
+          const Duration(milliseconds: 400);
       setState(() {
-        _data = data;
+        if (data == null || quick) {
+          _data = data;
+        } else {
+          _pending = data;
+        }
         _failed = data == null;
         _running = false;
       });
@@ -135,7 +154,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Widget _body(BuildContext context, GameRecord? game) {
-    final k = context.k;
     if (game == null) return _Message(context.t.gameNotFound);
     if (!_canRate) return _Message(context.t.reviewNoEngine);
     final data = _data;
@@ -157,26 +175,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
             : KustButton(label: context.t.retry, expand: false, onTap: _run),
       );
     }
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: _percent / 100,
-                minHeight: 8,
-                backgroundColor: k.line,
-                color: k.accent,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(context.t.reviewAnalyzing(_percent), style: k.body),
-          ],
-        ),
-      ),
+    return AnalysisLoader(
+      done: _done,
+      total: _total,
+      finished: _pending != null,
+      onFinished: () => setState(() {
+        _data = _pending;
+        _pending = null;
+      }),
     );
   }
 }
