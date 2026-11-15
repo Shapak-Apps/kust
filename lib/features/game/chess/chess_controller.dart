@@ -820,7 +820,10 @@ class ChessController extends Notifier<GameState> {
     _suggesting = true;
     final String uci;
     try {
-      uci = await _engine.evaluateBestHint(fen);
+      uci = await _engine.evaluateBestHint(
+        fen,
+        isStale: () => _isDisposed || id != _suggestId,
+      );
     } catch (_) {
       return;
     } finally {
@@ -1773,7 +1776,10 @@ class ChessController extends Notifier<GameState> {
 
     final String uci;
     try {
-      uci = await _engine.evaluateBestHint(state.position.fen);
+      uci = await _engine.evaluateBestHint(
+        state.position.fen,
+        isStale: () => _isDisposed || requestId != _moveRequestId,
+      );
     } catch (_) {
       if (!_isDisposed && requestId == _moveRequestId) {
         state = state.copyWith(isHintThinking: false, engineFailed: true);

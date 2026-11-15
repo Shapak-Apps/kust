@@ -43,7 +43,10 @@ class FakeEngine implements ChessEngine {
   }) async => null;
 
   @override
-  Future<String> evaluateBestHint(String fen) async => '(none)';
+  Future<String> evaluateBestHint(
+    String fen, {
+    bool Function()? isStale,
+  }) async => '(none)';
 
   @override
   Future<MoveAnalysis?> analyzeMove({
