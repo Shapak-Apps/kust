@@ -33,6 +33,10 @@ class Lesson {
     'check' => t.lessonCheckTitle,
     'special' => t.lessonSpecialTitle,
     'mate' => t.lessonMateTitle,
+    'fork' => t.lessonForkTitle,
+    'pin' => t.lessonPinTitle,
+    'skewer' => t.lessonSkewerTitle,
+    'patterns' => t.lessonPatternsTitle,
     _ => t.lessonFirstMatesTitle,
   };
 
@@ -47,6 +51,10 @@ class Lesson {
     'check' => t.lessonCheckIntro,
     'special' => t.lessonSpecialIntro,
     'mate' => t.lessonMateIntro,
+    'fork' => t.lessonForkIntro,
+    'pin' => t.lessonPinIntro,
+    'skewer' => t.lessonSkewerIntro,
+    'patterns' => t.lessonPatternsIntro,
     _ => t.lessonFirstMatesIntro,
   };
 }
@@ -76,13 +84,16 @@ String taskPrompt(AppL10n t, LessonTask task) => switch (task.kind) {
   TaskKind.castleQueen => t.taskCastleQueen,
   TaskKind.enPassant => t.taskEnPassant,
   TaskKind.promote => t.taskPromote,
+  TaskKind.fork => t.taskFork,
+  TaskKind.pin => t.taskPin,
+  TaskKind.skewer => t.taskSkewer,
 };
 
 Set<Square> _sq(String names) => {
   for (final n in names.split(' ')) Square.fromName(n),
 };
 
-/// The lessons, from the first pawn move to simple checkmates. White always
+/// The lessons, from the first pawn move to tactics and checkmates. White always
 /// plays, from the bottom of the board.
 final List<Lesson> kLessons = [
   Lesson(
@@ -278,6 +289,59 @@ final List<Lesson> kLessons = [
     ],
   ),
   Lesson(
+    id: 'fork',
+    icon: Icons.call_split_rounded,
+    tasks: [
+      LessonTask(
+        fen: 'r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1',
+        kind: TaskKind.fork,
+        solution: 'b5c7',
+      ),
+      LessonTask(
+        fen: '7k/8/8/2n1n3/8/3P4/8/K7 w - - 0 1',
+        kind: TaskKind.fork,
+        solution: 'd3d4',
+      ),
+      LessonTask(
+        fen: 'r7/7k/8/8/8/8/8/4Q1K1 w - - 0 1',
+        kind: TaskKind.fork,
+        solution: 'e1e4',
+      ),
+    ],
+  ),
+  Lesson(
+    id: 'pin',
+    icon: Icons.push_pin_outlined,
+    tasks: [
+      LessonTask(
+        fen: '4k3/8/2n5/8/8/8/8/5BK1 w - - 0 1',
+        kind: TaskKind.pin,
+        solution: 'f1b5',
+      ),
+      LessonTask(
+        fen: '4k3/8/8/4n3/8/8/8/R5K1 w - - 0 1',
+        kind: TaskKind.pin,
+        solution: 'a1e1',
+      ),
+    ],
+  ),
+  Lesson(
+    id: 'skewer',
+    icon: Icons.arrow_right_alt_rounded,
+    tasks: [
+      LessonTask(
+        fen: '4q3/8/8/4k3/8/8/7K/R7 w - - 0 1',
+        kind: TaskKind.skewer,
+        solution: 'a1e1',
+      ),
+      LessonTask(
+        fen: 'q7/8/2k5/8/8/8/8/1B4K1 w - - 0 1',
+        kind: TaskKind.skewer,
+        solution: 'b1e4',
+      ),
+    ],
+  ),
+  Lesson(
     id: 'mate',
     icon: Icons.flag_outlined,
     tasks: [
@@ -292,6 +356,15 @@ final List<Lesson> kLessons = [
       LessonTask(fen: '6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1', kind: TaskKind.mate),
       LessonTask(fen: '7k/R7/8/8/8/8/8/1R5K w - - 0 1', kind: TaskKind.mate),
       LessonTask(fen: '7k/8/6K1/8/8/8/8/2Q5 w - - 0 1', kind: TaskKind.mate),
+    ],
+  ),
+  Lesson(
+    id: 'patterns',
+    icon: Icons.grid_view_rounded,
+    tasks: [
+      LessonTask(fen: '6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1', kind: TaskKind.mate),
+      LessonTask(fen: '7k/Q7/6K1/8/8/8/8/8 w - - 0 1', kind: TaskKind.mate),
+      LessonTask(fen: '7k/R7/5N2/8/8/8/8/6K1 w - - 0 1', kind: TaskKind.mate),
     ],
   ),
 ];
@@ -313,12 +386,14 @@ class Camp {
   String title(AppL10n t) => switch (id) {
     'pieces' => t.campPiecesTitle,
     'rules' => t.campRulesTitle,
+    'tactics' => t.campTacticsTitle,
     _ => t.campMateTitle,
   };
 
   String subtitle(AppL10n t) => switch (id) {
     'pieces' => t.campPiecesSub,
     'rules' => t.campRulesSub,
+    'tactics' => t.campTacticsSub,
     _ => t.campMateSub,
   };
 
@@ -333,7 +408,8 @@ class Camp {
 const List<Camp> kCamps = [
   Camp(id: 'pieces', first: 0, last: 5),
   Camp(id: 'rules', first: 6, last: 8),
-  Camp(id: 'mate', first: 9, last: 10),
+  Camp(id: 'tactics', first: 9, last: 11),
+  Camp(id: 'mate', first: 12, last: 14),
 ];
 
 /// The turned-ivory 3D picture of a piece, as used on the Learn map and in

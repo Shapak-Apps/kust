@@ -80,7 +80,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('The pawn'), findsWidgets);
     expect(find.textContaining('Checkmate'), findsWidgets);
-    expect(find.text('0 / 33'), findsOneWidget);
+    expect(find.text('0 / 45'), findsOneWidget);
     expect(find.text('Learn how every piece moves'), findsOneWidget);
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
@@ -91,7 +91,7 @@ void main() {
     await LearnProgress.instance.complete('rook', stars: 2);
     await LearnProgress.instance.complete('bishop', stars: 3);
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('8 / 33'), findsOneWidget);
+    expect(find.text('8 / 45'), findsOneWidget);
     LearnProgress.instance.done.value = const {};
     await tester.pump(const Duration(milliseconds: 100));
 

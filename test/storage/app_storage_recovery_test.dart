@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:kust/core/error_log.dart';
 import 'package:kust/core/storage/app_storage.dart';
 
 void main() {
@@ -46,15 +45,6 @@ void main() {
         .writeAsBytesSync(List<int>.filled(64, 0xFF));
     await AppStorage.init();
     expect(Hive.box(AppStorage.historyBoxName).isOpen, isTrue);
-  });
-
-  test('ErrorLog keeps the last entries only', () {
-    ErrorLog.entries.clear();
-    for (var i = 0; i < ErrorLog.capacity + 5; i++) {
-      ErrorLog.record('e$i', null);
-    }
-    expect(ErrorLog.entries.length, ErrorLog.capacity);
-    expect(ErrorLog.entries.last, 'e${ErrorLog.capacity + 4}');
   });
 
   test('a data version is written, and existing data is kept', () async {

@@ -1589,4 +1589,50 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get reviewTip5 => 'Once analyzed, a game opens instantly next time.';
+
+  @override
+  String get sendErrorReport => 'Send error report';
+
+  @override
+  String get taskFork => 'Fork: attack two pieces with one move';
+
+  @override
+  String get taskPin => 'Pin a piece to its king';
+
+  @override
+  String get taskSkewer => 'Check the king and win the piece behind it';
+
+  @override
+  String get lessonForkTitle => 'The fork';
+
+  @override
+  String get lessonForkIntro =>
+      'A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork.';
+
+  @override
+  String get lessonPinTitle => 'The pin';
+
+  @override
+  String get lessonPinIntro =>
+      'A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it.';
+
+  @override
+  String get lessonSkewerTitle => 'The skewer';
+
+  @override
+  String get lessonSkewerIntro =>
+      'A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it.';
+
+  @override
+  String get lessonPatternsTitle => 'Mate patterns';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.';
+
+  @override
+  String get campTacticsTitle => 'Tactics';
+
+  @override
+  String get campTacticsSub => 'Win pieces with clever moves';
 }

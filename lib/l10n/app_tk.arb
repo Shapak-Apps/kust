@@ -465,5 +465,19 @@
   "reviewTip2": "Uly ýalňyşlyk bir göçümde köp zat ýitirýär. Ilki şolary gözläň.",
   "reviewTip3": "Esasy pursatdaky gaýtalama düwmesine basyp, şol ýagdaýy täzeden synanyşyň.",
   "reviewTip4": "Ajaýyp göçümler seýrek bolýar: motoryň razy bolan gurbany.",
-  "reviewTip5": "Seljerilen oýun indiki gezek derrew açylýar."
+  "reviewTip5": "Seljerilen oýun indiki gezek derrew açylýar.",
+  "sendErrorReport": "Ýalňyşlyk hasabatyny iber",
+  "taskFork": "Çatal: bir göçümde iki çöpe hüjüm ediň",
+  "taskPin": "Çöpi öz şasyna baglaň",
+  "taskSkewer": "Şaha şah beriň we arkasyndaky çöpi utuň",
+  "lessonForkTitle": "Çatal",
+  "lessonForkIntro": "Çatal bir wagtda iki çöpe hüjüm edýär. Garşydaş diňe birini halas edip bilýär, beýlekisini siz alýarsyňyz. Atlar çatalyň ussatlary.",
+  "lessonPinTitle": "Baglama",
+  "lessonPinIntro": "Baglanan çöp ýöräp bilmeýär, sebäbi arkasyndaky şa şah astynda galar. Çöpi baglaň, soň ony utmak üçin oňa ýene hüjüm ediň.",
+  "lessonSkewerTitle": "Şiş",
+  "lessonSkewerIntro": "Şiş tersine baglama: şaha şah berýärsiňiz, ol çetleşmeli bolýar, siz bolsa arkasyndaky çöpi alýarsyňyz.",
+  "lessonPatternsTitle": "Şahmat nagyşlary",
+  "lessonPatternsIntro": "Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň.",
+  "campTacticsTitle": "Taktika",
+  "campTacticsSub": "Akylly göçümler bilen çöp utuň"
 }

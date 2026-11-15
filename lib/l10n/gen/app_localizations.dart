@@ -2894,6 +2894,90 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Once analyzed, a game opens instantly next time.'**
   String get reviewTip5;
+
+  /// No description provided for @sendErrorReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Send error report'**
+  String get sendErrorReport;
+
+  /// No description provided for @taskFork.
+  ///
+  /// In en, this message translates to:
+  /// **'Fork: attack two pieces with one move'**
+  String get taskFork;
+
+  /// No description provided for @taskPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin a piece to its king'**
+  String get taskPin;
+
+  /// No description provided for @taskSkewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the king and win the piece behind it'**
+  String get taskSkewer;
+
+  /// No description provided for @lessonForkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The fork'**
+  String get lessonForkTitle;
+
+  /// No description provided for @lessonForkIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A fork attacks two pieces at once. The other side can save only one, so you win the other. Knights are the masters of the fork.'**
+  String get lessonForkIntro;
+
+  /// No description provided for @lessonPinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The pin'**
+  String get lessonPinTitle;
+
+  /// No description provided for @lessonPinIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A pinned piece cannot move, because the king behind it would be in check. Pin a piece, then attack it again to win it.'**
+  String get lessonPinIntro;
+
+  /// No description provided for @lessonSkewerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The skewer'**
+  String get lessonSkewerTitle;
+
+  /// No description provided for @lessonSkewerIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'A skewer is a pin turned around: you check the king, it must step aside, and you take the piece behind it.'**
+  String get lessonSkewerIntro;
+
+  /// No description provided for @lessonPatternsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mate patterns'**
+  String get lessonPatternsTitle;
+
+  /// No description provided for @lessonPatternsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move.'**
+  String get lessonPatternsIntro;
+
+  /// No description provided for @campTacticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tactics'**
+  String get campTacticsTitle;
+
+  /// No description provided for @campTacticsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Win pieces with clever moves'**
+  String get campTacticsSub;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -1596,4 +1596,50 @@ class AppL10nRu extends AppL10n {
   @override
   String get reviewTip5 =>
       'Проанализированная партия в следующий раз откроется сразу.';
+
+  @override
+  String get sendErrorReport => 'Отправить отчёт об ошибках';
+
+  @override
+  String get taskFork => 'Вилка: нападите на две фигуры одним ходом';
+
+  @override
+  String get taskPin => 'Свяжите фигуру с её королём';
+
+  @override
+  String get taskSkewer => 'Объявите шах и выиграйте фигуру за королём';
+
+  @override
+  String get lessonForkTitle => 'Вилка';
+
+  @override
+  String get lessonForkIntro =>
+      'Вилка — нападение сразу на две фигуры. Соперник спасёт только одну, а вторую вы заберёте. Лучше всех вилки ставят кони.';
+
+  @override
+  String get lessonPinTitle => 'Связка';
+
+  @override
+  String get lessonPinIntro =>
+      'Связанная фигура не может ходить: иначе её королю будет шах. Свяжите фигуру, а потом нападите на неё ещё раз, чтобы выиграть её.';
+
+  @override
+  String get lessonSkewerTitle => 'Линейный удар';
+
+  @override
+  String get lessonSkewerIntro =>
+      'Линейный удар — это связка наоборот: вы объявляете шах, король уходит, и вы забираете фигуру за ним.';
+
+  @override
+  String get lessonPatternsTitle => 'Типовые маты';
+
+  @override
+  String get lessonPatternsIntro =>
+      'Сильные шахматисты узнают маты по рисунку: спёртый мат конём, ферзь вплотную к королю, ладья и конь вместе. Найдите мат в один ход.';
+
+  @override
+  String get campTacticsTitle => 'Тактика';
+
+  @override
+  String get campTacticsSub => 'Выигрывайте фигуры хитрыми ходами';
 }
