@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
 enum KustButtonStyle {
+  /// The main action of a screen: the green 3D button.
   primary,
   secondary,
   outline,
@@ -32,6 +34,15 @@ class KustButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (style == KustButtonStyle.primary) {
+      return KustButton3D(
+        label: label,
+        onTap: onTap,
+        expand: expand,
+        icon: icon,
+        height: height,
+      );
+    }
     final k = context.k;
     final enabled = onTap != null;
 
@@ -40,8 +51,7 @@ class KustButton extends StatelessWidget {
     BoxBorder? border;
     switch (style) {
       case KustButtonStyle.primary:
-        bg = enabled ? k.accent : k.surfaceAlt;
-        fg = enabled ? k.accentInk : k.muted;
+        return const SizedBox.shrink(); // drawn by KustButton3D above
       case KustButtonStyle.secondary:
         bg = k.surfaceAlt;
         fg = enabled ? k.ink : k.muted;
