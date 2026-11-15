@@ -136,7 +136,7 @@ void main() {
       await tester.pumpAndSettle();
       final texts = lang == 'ru'
           ? 'Шахматы, которые помогают расти'
-          : 'Gowulaşmaga kömek edýän şahmat';
+          : 'Gowulaşmaga kömek edýän küşt';
       expect(find.text(texts), findsOneWidget);
       expect(tester.takeException(), isNull);
       // Through the steps: the level cards, then the last page.
@@ -196,5 +196,15 @@ void main() {
     expect(AppSettings.instance.language.value, 'ru');
     expect(find.text('Язык'), findsOneWidget); // the sheet follows at once
     expect(tester.takeException(), isNull);
+  });
+
+  test('Turkmen says küşt for chess and şahmat only for checkmate', () {
+    final arb = File('lib/l10n/app_tk.arb').readAsStringSync();
+    final strings = jsonDecode(arb) as Map<String, dynamic>;
+    for (final key in ['onbTitle', 'lvlBeginnerD', 'engineCouldNotStart']) {
+      final text = strings[key] as String;
+      expect(text.toLowerCase(), contains('küşt'), reason: key);
+      expect(text.toLowerCase(), isNot(contains('şahmat')), reason: key);
+    }
   });
 }

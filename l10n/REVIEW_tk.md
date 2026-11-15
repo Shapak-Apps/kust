@@ -28,7 +28,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `youPlayAsWhite` | You play as White | Siz Ak bilen oýnaýarsyňyz |
 | `youPlayAsBlack` | You play as Black | Siz Gara bilen oýnaýarsyňyz |
 | `engineUnavailable` | Engine unavailable | Motor elýeterli däl |
-| `engineCouldNotStart` | The chess engine could not start. Try again, or play on this device with a friend. | Şahmat motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň. |
+| `engineCouldNotStart` | The chess engine could not start. Try again, or play on this device with a friend. | Küşt motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň. |
 | `botsNotSupported` | Playing against bots is not supported on this device. | Botlar bilen oýnamak bu enjamda goldanylmaýar. |
 | `playLocallyInstead` | Play locally instead | Şu enjamda oýnaň |
 | `abortSubtitle` | The game will end without a result. | Oýun netijesiz gutarar. |
@@ -278,7 +278,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `onbGetStarted` | Get started | Başlaň |
 | `onbStartPlaying` | Start playing | Oýnamaga başlaň |
 | `onbSkip` | Skip for now | Häzirlikçe geçiň |
-| `onbTitle` | Chess that helps you improve | Gowulaşmaga kömek edýän şahmat |
+| `onbTitle` | Chess that helps you improve | Gowulaşmaga kömek edýän küşt |
 | `onbIntro` | Play bots at your level, train with puzzles and replay your games to learn from them. | Derejeňize laýyk botlar bilen oýnaň, meseleler bilen türgenleşiň we oýunlaryňyzy gaýtadan görüp, olardan öwreniň. |
 | `onbPlayBots` | Play bots | Botlar bilen oýnaň |
 | `onbPlayBotsSub` | From 400 to 2000 Elo, or pass the phone to a friend | 400-den 2000 Elo çenli ýa-da telefony dostuňyza beriň |
@@ -290,7 +290,7 @@ Every Turkmen text in `lib/l10n/app_tk.arb` that did not come from the glossary 
 | `onbHowStrong` | How strong are you? | Güýjüňiz nähili? |
 | `onbHowStrongSub` | This sets your starting rating. It adjusts as you play, so don’t overthink it. | Bu başlangyç reýtingiňizi kesgitleýär. Ol oýnadygyňyzça üýtgeýär, şonuň üçin köp pikir etmäň. |
 | `lvlBeginner` | Beginner | Başlangyç |
-| `lvlBeginnerD` | I’m just getting started with chess. | Men entek şahmat öwrenip başladym. |
+| `lvlBeginnerD` | I’m just getting started with chess. | Men entek küşt öwrenip başladym. |
 | `lvlIntermediate` | Intermediate | Orta |
 | `lvlIntermediateD` | I know the basics and play regularly. | Men esaslary bilýärin we yzygiderli oýnaýaryn. |
 | `lvlAdvanced` | Advanced | Ösen |

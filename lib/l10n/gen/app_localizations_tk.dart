@@ -102,7 +102,7 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get engineCouldNotStart =>
-      'Şahmat motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň.';
+      'Küşt motory başlamady. Täzeden synanyşyň ýa-da dostuňyz bilen şu enjamda oýnaň.';
 
   @override
   String get botsNotSupported =>
@@ -1022,7 +1022,7 @@ class AppL10nTk extends AppL10n {
   String get onbSkip => 'Häzirlikçe geçiň';
 
   @override
-  String get onbTitle => 'Gowulaşmaga kömek edýän şahmat';
+  String get onbTitle => 'Gowulaşmaga kömek edýän küşt';
 
   @override
   String get onbIntro =>
@@ -1063,7 +1063,7 @@ class AppL10nTk extends AppL10n {
   String get lvlBeginner => 'Başlangyç';
 
   @override
-  String get lvlBeginnerD => 'Men entek şahmat öwrenip başladym.';
+  String get lvlBeginnerD => 'Men entek küşt öwrenip başladym.';
 
   @override
   String get lvlIntermediate => 'Orta';
