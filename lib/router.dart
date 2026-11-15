@@ -1,5 +1,6 @@
 import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_screen.dart';
+import 'package:kust/features/review/retry_screen.dart';
 import 'package:kust/features/review/review_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
@@ -70,6 +71,13 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         path: '/review/:id',
         builder: (context, state) =>
             ReviewScreen(gameId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/review/:id/retry/:ply',
+        builder: (context, state) => RetryScreen(
+          gameId: state.pathParameters['id']!,
+          ply: int.tryParse(state.pathParameters['ply']!) ?? 0,
+        ),
       ),
 
       ShellRoute(

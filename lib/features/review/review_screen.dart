@@ -100,6 +100,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
+  void _retry(int ply) => context.push('/review/${widget.gameId}/retry/$ply');
+
   void _openReplay([int ply = 0]) {
     final suffix = ply > 0 ? '?ply=$ply' : '';
     context.push('/history/${widget.gameId}$suffix');
@@ -138,7 +140,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
     if (!_canRate) return _Message(context.t.reviewNoEngine);
     final data = _data;
     if (data != null) {
-      return _ReviewBody(game: game, data: data, onOpen: _openReplay);
+      return _ReviewBody(
+        game: game,
+        data: data,
+        onOpen: _openReplay,
+        onRetry: _retry,
+      );
     }
     if (_failed) {
       return _Message(
@@ -209,11 +216,13 @@ class _ReviewBody extends StatelessWidget {
     required this.game,
     required this.data,
     required this.onOpen,
+    required this.onRetry,
   });
 
   final GameRecord game;
   final GameReviewData data;
   final void Function([int ply]) onOpen;
+  final ValueChanged<int> onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +289,11 @@ class _ReviewBody extends StatelessWidget {
         else
           for (var i = 0; i < learn.length; i++) ...[
             if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
-            _KeyMoment(move: learn[i], onTap: () => onOpen(learn[i].ply)),
+            _KeyMoment(
+              move: learn[i],
+              onTap: () => onOpen(learn[i].ply),
+              onRetry: () => onRetry(learn[i].ply),
+            ),
           ],
         const SizedBox(height: 28),
         KustButton(
@@ -548,10 +561,15 @@ class _QualityDot extends StatelessWidget {
 }
 
 class _KeyMoment extends StatelessWidget {
-  const _KeyMoment({required this.move, required this.onTap});
+  const _KeyMoment({
+    required this.move,
+    required this.onTap,
+    required this.onRetry,
+  });
 
   final ReviewedMove move;
   final VoidCallback onTap;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -583,6 +601,30 @@ class _KeyMoment extends StatelessWidget {
                 ],
               ),
             ),
+            Semantics(
+              button: true,
+              label: t.retryTry,
+              excludeSemantics: true,
+              child: Pressable(
+                onTap: onRetry,
+                haptic: true,
+                child: SizedBox.square(
+                  dimension: 48,
+                  child: Center(
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: k.line, width: 1.5),
+                      ),
+                      child: Icon(Icons.replay_rounded, size: 20, color: k.ink),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
             Icon(Icons.chevron_right_rounded, color: k.muted),
           ],
         ),

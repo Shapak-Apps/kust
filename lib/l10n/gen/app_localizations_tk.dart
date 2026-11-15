@@ -1589,4 +1589,22 @@ class AppL10nTk extends AppL10n {
   String continueGameSub(String who, int n) {
     return '$who · $n-nji göçüm';
   }
+
+  @override
+  String get retryTitle => 'Näme göçmelidiňiz?';
+
+  @override
+  String get retryRight => 'Dogry göçüm!';
+
+  @override
+  String get retryWrong => 'Doly däl. Ýene synanyşyň.';
+
+  @override
+  String get retryShow => 'Jogaby görkez';
+
+  @override
+  String get retryTry => 'Täzeden synanyş';
+
+  @override
+  String get retryNoPosition => 'Bu göçümi görkezip bolmaýar.';
 }

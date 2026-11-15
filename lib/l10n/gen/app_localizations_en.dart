@@ -1583,4 +1583,22 @@ class AppL10nEn extends AppL10n {
   String continueGameSub(String who, int n) {
     return '$who · move $n';
   }
+
+  @override
+  String get retryTitle => 'What should you have played?';
+
+  @override
+  String get retryRight => 'That\'s the move!';
+
+  @override
+  String get retryWrong => 'Not quite. Try again.';
+
+  @override
+  String get retryShow => 'Show answer';
+
+  @override
+  String get retryTry => 'Try again';
+
+  @override
+  String get retryNoPosition => 'This move cannot be shown.';
 }

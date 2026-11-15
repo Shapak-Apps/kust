@@ -1589,4 +1589,22 @@ class AppL10nRu extends AppL10n {
   String continueGameSub(String who, int n) {
     return '$who · ход $n';
   }
+
+  @override
+  String get retryTitle => 'Как нужно было сыграть?';
+
+  @override
+  String get retryRight => 'Верный ход!';
+
+  @override
+  String get retryWrong => 'Не совсем. Попробуйте ещё.';
+
+  @override
+  String get retryShow => 'Показать ответ';
+
+  @override
+  String get retryTry => 'Ещё раз';
+
+  @override
+  String get retryNoPosition => 'Этот ход нельзя показать.';
 }
