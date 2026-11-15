@@ -15,6 +15,7 @@ import 'package:kust/features/play/pick_time_modal.dart';
 import 'package:kust/features/play/play_mode_modal.dart';
 import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -340,8 +341,9 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: k.accent,
+        color: k.surface,
         borderRadius: BorderRadius.circular(KustSpace.rLarge),
+        border: Border.all(color: k.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,15 +351,12 @@ class _HeroCard extends StatelessWidget {
           Text(
             context.t.helloName(name),
             style: k.caption.copyWith(
-              color: k.accentInk.withValues(alpha: 0.7),
+              color: k.muted,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            context.t.readyForGame,
-            style: k.title.copyWith(color: k.accentInk),
-          ),
+          Text(context.t.readyForGame, style: k.title),
           const SizedBox(height: 4),
           ValueListenableBuilder(
             valueListenable: AppStorage.instance.botProgressListenable(),
@@ -369,38 +368,16 @@ class _HeroCard extends StatelessWidget {
                   AppStorage.instance.beatenBotIds.length,
                   total,
                 ),
-                style: k.body.copyWith(
-                  color: k.accentInk.withValues(alpha: 0.7),
-                ),
+                style: k.body.copyWith(color: k.muted),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          GestureDetector(
+          KustButton3D(
+            label: context.t.playAGame,
+            icon: Icons.play_arrow_rounded,
+            expand: true,
             onTap: onPlay,
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              height: 52,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: k.accentInk,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.play_arrow_rounded, color: k.accent),
-                  const SizedBox(width: 6),
-                  Text(
-                    context.t.playAGame,
-                    style: k.body.copyWith(
-                      color: k.accent,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
