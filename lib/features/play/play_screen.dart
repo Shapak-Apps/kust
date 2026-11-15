@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/features/achievements/achievements_card.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/live_game_store.dart';
+import 'package:kust/features/game/time_control.dart';
+import 'package:kust/ui/pressable.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/learn/lessons.dart' show LearnPiece;
@@ -121,6 +124,37 @@ class _PlayScreenState extends State<PlayScreen> {
     );
   }
 
+  /// Picks up the saved game, with the bot it was played against.
+  void _continueGame(LiveGame saved) {
+    Bot? bot;
+    if (!saved.isLocal) {
+      for (final b in [...kInternationalBots, ...kTkmBots]) {
+        if (b.id == saved.botId) bot = b;
+      }
+      if (bot == null) {
+        LiveGameStore.instance.clear();
+        return;
+      }
+    }
+    final base = saved.baseMinutes;
+    context.go(
+      '/game',
+      extra: GameArgs(
+        bot: bot,
+        playerSide: saved.playerIsWhite ? Side.white : Side.black,
+        isLocal: saved.isLocal,
+        practiceMode: saved.practice,
+        timeControl: base == null
+            ? null
+            : TimeControl(
+                baseMinutes: base,
+                incrementSeconds: saved.incrementSeconds,
+              ),
+        resume: saved,
+      ),
+    );
+  }
+
   void _startGame() {
     PickOpponentModal.show(
       context,
@@ -195,6 +229,9 @@ class _PlayScreenState extends State<PlayScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                     sliver: SliverToBoxAdapter(child: const _HomeBanner()),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _ContinueCard(onContinue: _continueGame),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -277,6 +314,94 @@ class _PlayScreenState extends State<PlayScreen> {
           child: BotCard(bot: bots[i], onTap: () => _startGameWithBot(bots[i])),
         ),
       ),
+    );
+  }
+}
+
+/// "Continue your game": shown while a game was left unfinished.
+class _ContinueCard extends StatelessWidget {
+  const _ContinueCard({required this.onContinue});
+
+  final void Function(LiveGame game) onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final listenable = LiveGameStore.instance.listenable();
+    if (listenable == null) return const SizedBox.shrink();
+    return ValueListenableBuilder(
+      valueListenable: listenable,
+      builder: (context, _, _) {
+        final game = LiveGameStore.instance.get();
+        if (game == null) return const SizedBox.shrink();
+        final k = context.k;
+        final t = context.t;
+        Bot? bot;
+        for (final b in [...kInternationalBots, ...kTkmBots]) {
+          if (b.id == game.botId) bot = b;
+        }
+        if (!game.isLocal && bot == null) return const SizedBox.shrink();
+        final who = game.isLocal ? t.passAndPlay : t.vsBot(bot!.name);
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Pressable(
+            onTap: () => onContinue(game),
+            haptic: true,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: k.surface,
+                borderRadius: BorderRadius.circular(KustSpace.rLarge),
+                border: Border.all(color: KustButton3D.face, width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                    child: bot == null
+                        ? SizedBox.square(
+                            dimension: 48,
+                            child: Icon(Icons.people_alt_rounded, color: k.ink),
+                          )
+                        : Image.asset(
+                            bot.imagePath,
+                            width: 48,
+                            height: 48,
+                            cacheWidth: 144,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.continueGame,
+                          style: k.body.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          t.continueGameSub(
+                            who,
+                            (game.uciMoves.length + 1) ~/ 2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: k.caption,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: KustButton3D.face,
+                    size: 36,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

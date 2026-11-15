@@ -465,5 +465,7 @@
   "noClock": "Sagatsyz",
   "yourName": "Adyňyz",
   "defaultPlayerName": "Oýunçy",
-  "saveName": "Ýatda sakla"
+  "saveName": "Ýatda sakla",
+  "continueGame": "Oýny dowam et",
+  "continueGameSub": "{who} · {n}-nji göçüm"
 }

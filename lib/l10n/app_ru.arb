@@ -465,5 +465,7 @@
   "noClock": "Без часов",
   "yourName": "Ваше имя",
   "defaultPlayerName": "Игрок",
-  "saveName": "Сохранить"
+  "saveName": "Сохранить",
+  "continueGame": "Продолжить партию",
+  "continueGameSub": "{who} · ход {n}"
 }

@@ -2864,6 +2864,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Save'**
   String get saveName;
+
+  /// No description provided for @continueGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue your game'**
+  String get continueGame;
+
+  /// No description provided for @continueGameSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} · move {n}'**
+  String continueGameSub(String who, int n);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

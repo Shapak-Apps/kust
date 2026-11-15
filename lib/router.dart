@@ -35,6 +35,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             playerSide: args.playerSide,
             timeControl: args.timeControl,
             practiceMode: args.practiceMode,
+            resume: args.resume,
           );
         },
       ),

@@ -10,6 +10,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
@@ -128,6 +129,7 @@ void main() {
   late Directory dir;
 
   setUp(() async {
+    LiveGameStore.enabled = false;
     dir = await Directory.systemTemp.createTemp('kust_game_end');
     Hive.init(dir.path);
     await Hive.openBox(AppStorage.historyBoxName);
@@ -137,6 +139,7 @@ void main() {
   });
 
   tearDown(() async {
+    LiveGameStore.enabled = true;
     await Hive.close();
     await dir.delete(recursive: true);
   });

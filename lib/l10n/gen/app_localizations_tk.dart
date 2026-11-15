@@ -1581,4 +1581,12 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get saveName => 'Ýatda sakla';
+
+  @override
+  String get continueGame => 'Oýny dowam et';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · $n-nji göçüm';
+  }
 }

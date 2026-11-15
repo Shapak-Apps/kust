@@ -14,6 +14,7 @@ import 'package:kust/features/game/chess/bot_policy.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/chess_helpers.dart';
@@ -1145,6 +1146,124 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
+  /// Picks up a game saved by [LiveGameStore]: the moves are played again
+  /// from the start position, the clocks are set to what they showed, and the
+  /// bot moves if it is its turn. Returns false when the saved game cannot be
+  /// replayed (the saved moves do not fit the rules, or the game is over).
+  Future<bool> resumeGame(LiveGame saved, {Bot? bot}) async {
+    if (!saved.isLocal && bot == null) return false;
+
+    Position position = Chess.fromSetup(Setup.parseFen(kStartFen));
+    final history = <Position>[];
+    final moves = <MoveRecord>[];
+    for (final uci in saved.uciMoves) {
+      final NormalMove move;
+      try {
+        move = NormalMove.fromUci(uci);
+      } catch (_) {
+        return false;
+      }
+      if (!position.isLegal(move)) return false;
+      final capturedSquare = _capturedSquareFor(position, move);
+      final next = position.play(move);
+      moves.add(
+        MoveRecord(
+          side: position.turn,
+          san: moveToSan(
+            before: position,
+            move: move,
+            after: next,
+            capturedSquare: capturedSquare,
+          ),
+          move: move,
+          capturedPiece: capturedSquare == null
+              ? null
+              : position.board.pieceAt(capturedSquare),
+        ),
+      );
+      history.add(position);
+      position = next;
+    }
+    _rebuildRepetitions(history, position);
+    final repetitions = _repCounts[_repKey(position)] ?? 1;
+    if (_statusFor(position, repetitions) != GameStatus.playing) {
+      unawaited(LiveGameStore.instance.clear());
+      return false;
+    }
+
+    _moveRequestId++;
+    _evalRequestId++;
+    _accuracyEpoch++;
+    _resetFeedbackQueue();
+    _brilliantThisGame = false;
+    _lastRemarkPly = -100;
+    _lastBotBestCp = null;
+    if (bot != null) {
+      _policy = BotPolicy(
+        elo: bot.elo,
+        seed: DateTime.now().microsecondsSinceEpoch,
+      );
+    }
+
+    final timeControl = saved.baseMinutes == null
+        ? null
+        : TimeControl(
+            baseMinutes: saved.baseMinutes!,
+            incrementSeconds: saved.incrementSeconds,
+          );
+    _initClocks(timeControl);
+    if (timeControl != null) {
+      _whiteClock = Duration(milliseconds: saved.whiteMs);
+      _blackClock = Duration(milliseconds: saved.blackMs);
+    }
+    final playerSide = saved.playerIsWhite ? Side.white : Side.black;
+    final last = moves.last.move;
+
+    state = GameState(
+      position: position,
+      history: history,
+      moves: moves,
+      mode: saved.isLocal ? GameMode.local : GameMode.bot,
+      bot: saved.isLocal ? null : bot,
+      playerSide: saved.isLocal ? Side.white : playerSide,
+      timeControl: timeControl,
+      whiteTimeLeft: TimeControl.display(_whiteClock),
+      blackTimeLeft: TimeControl.display(_blackClock),
+      practiceMode: saved.isLocal || saved.practice,
+      lastMove: last,
+      moveSquares: [last.from, last.to],
+      lastMoveInstant: true,
+      evaluationEnabled: state.evaluationEnabled,
+      moveFeedbackEnabled: state.moveFeedbackEnabled,
+      showBestEnabled: state.showBestEnabled,
+      status: GameStatus.playing,
+    );
+    unawaited(_loadEvalEnabled());
+
+    if (saved.isLocal) {
+      // Two people at one phone: wait until they are ready.
+      if (timeControl != null) pauseClock();
+      return true;
+    }
+    unawaited(
+      _engine
+          .start()
+          .then((_) {
+            if (_isDisposed) return;
+            _engine.setSkillLevel(_policy.skillLevel, uciElo: _policy.uciElo);
+            if (state.position.turn != playerSide) {
+              _requestBotMove();
+            } else {
+              unawaited(_refreshSuggestion());
+            }
+          })
+          .catchError((Object _) {
+            if (!_isDisposed) state = state.copyWith(engineFailed: true);
+          }),
+    );
+    return true;
+  }
+
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _moveRequestId++;
     _evalRequestId++;
@@ -1475,6 +1594,7 @@ class ChessController extends Notifier<GameState> {
   /// Calls the game off before it has really started: nothing is recorded.
   void abort() {
     if (!state.canAbort) return;
+    unawaited(LiveGameStore.instance.clear());
     _moveRequestId++;
     _engine.stopThinking();
     _stopClock();
@@ -1673,6 +1793,39 @@ class ChessController extends Notifier<GameState> {
       // Outside the notification so state can be updated afterwards.
       scheduleMicrotask(() => _recordFinishedGame(next));
     }
+    _keepLiveGame(previous, next);
+  }
+
+  /// Keeps the game in progress on disk, so it can be continued after the
+  /// app was closed. Written after each move, cleared when the game ends.
+  void _keepLiveGame(GameState previous, GameState next) {
+    if (next.status == GameStatus.loading) return;
+    final store = LiveGameStore.instance;
+    if (next.status != GameStatus.playing || next.moves.isEmpty) {
+      if (previous.status == GameStatus.playing || previous.moves.isNotEmpty) {
+        unawaited(store.clear());
+      }
+      return;
+    }
+    if (next.moves.length == previous.moves.length) return;
+    if (next.moves.length < 2) return;
+    final tc = next.timeControl;
+    unawaited(
+      store.save(
+        LiveGame(
+          isLocal: next.mode == GameMode.local,
+          botId: next.bot?.id,
+          playerIsWhite: next.playerSide == Side.white,
+          practice: next.practiceMode,
+          uciMoves: [for (final m in next.moves) m.move.uci],
+          savedAt: DateTime.now().millisecondsSinceEpoch,
+          baseMinutes: tc?.baseMinutes,
+          incrementSeconds: tc?.incrementSeconds ?? 0,
+          whiteMs: next.whiteTimeLeft.inMilliseconds,
+          blackMs: next.blackTimeLeft.inMilliseconds,
+        ),
+      ),
+    );
   }
 
   Future<void> _recordFinishedGame(GameState game) async {

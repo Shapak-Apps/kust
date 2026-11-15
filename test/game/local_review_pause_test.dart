@@ -10,6 +10,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_record.dart';
@@ -56,6 +57,7 @@ void main() {
 
   // A finished game is saved to the history.
   setUp(() async {
+    LiveGameStore.enabled = false;
     dir = await Directory.systemTemp.createTemp('kust_local_review');
     Hive.init(dir.path);
     await Hive.openBox(AppStorage.historyBoxName);
@@ -63,6 +65,7 @@ void main() {
   });
 
   tearDown(() async {
+    LiveGameStore.enabled = true;
     await Hive.close();
     await dir.delete(recursive: true);
   });

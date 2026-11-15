@@ -1575,4 +1575,12 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get saveName => 'Save';
+
+  @override
+  String get continueGame => 'Continue your game';
+
+  @override
+  String continueGameSub(String who, int n) {
+    return '$who · move $n';
+  }
 }
