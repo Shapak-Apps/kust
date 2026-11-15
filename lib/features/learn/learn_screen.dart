@@ -304,7 +304,7 @@ class _CampBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   camp.subtitle(t),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 15,
@@ -407,7 +407,7 @@ class _UpNextCard extends StatelessWidget {
                   ),
                   Text(
                     lesson.title(t),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 18,

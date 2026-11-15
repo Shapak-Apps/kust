@@ -139,4 +139,27 @@ void main() {
     expect(find.text('Play'), findsOneWidget);
     expect(find.byType(AppBar), findsNothing);
   });
+
+  testWidgets('icon buttons have a touch target of at least 48 px', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: Scaffold(
+          body: Column(
+            children: [
+              KustIconButton(icon: Icons.tune, onTap: () {}),
+              KustIconButton(icon: Icons.tune, onTap: () {}, plain: true),
+            ],
+          ),
+        ),
+      ),
+    );
+    for (final button in tester.widgetList(find.byType(KustIconButton))) {
+      final size = tester.getSize(find.byWidget(button));
+      expect(size.width, greaterThanOrEqualTo(48));
+      expect(size.height, greaterThanOrEqualTo(48));
+    }
+  });
 }

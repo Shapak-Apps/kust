@@ -76,7 +76,7 @@ class KustTopBar extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                width: 96,
+                width: kMinTap * 2 + 8,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: leading ?? const SizedBox.shrink(),
@@ -109,7 +109,7 @@ class KustTopBar extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 96,
+                width: kMinTap * 2 + 8,
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Row(
@@ -157,6 +157,9 @@ class KustTopBar extends StatelessWidget {
   }
 }
 
+/// The smallest touch target, as the platform guidelines ask.
+const double kMinTap = 48;
+
 /// Round, hairline-bordered icon button used in top bars and toolbars.
 class KustIconButton extends StatelessWidget {
   const KustIconButton({
@@ -192,7 +195,7 @@ class KustIconButton extends StatelessWidget {
           onTap: onTap,
           scale: 0.88,
           child: SizedBox.square(
-            dimension: 44,
+            dimension: kMinTap,
             child: Center(
               child: BoldIcon(
                 icon,
@@ -211,22 +214,28 @@ class KustIconButton extends StatelessWidget {
       child: Pressable(
         onTap: onTap,
         scale: 0.92,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: filled ? k.accent : k.surface,
-            border: filled ? null : Border.all(color: k.line),
-          ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: filled
-                ? k.accentInk
-                : enabled
-                ? k.ink
-                : k.muted.withValues(alpha: 0.5),
+        // The circle keeps its look; the touch area is at least 48 px.
+        child: SizedBox.square(
+          dimension: size < kMinTap ? kMinTap : size,
+          child: Center(
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: filled ? k.accent : k.surface,
+                border: filled ? null : Border.all(color: k.line),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: filled
+                    ? k.accentInk
+                    : enabled
+                    ? k.ink
+                    : k.muted.withValues(alpha: 0.5),
+              ),
+            ),
           ),
         ),
       ),
