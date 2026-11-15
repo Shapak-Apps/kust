@@ -6,9 +6,12 @@ import 'package:kust/features/game/chess/chess_engine.dart';
 /// An engine that answers each bot request with the next of [replies],
 /// once [release] completes the pending one.
 class FakeEngine implements ChessEngine {
-  FakeEngine(this.replies);
+  FakeEngine(this.replies, {List<int>? scores}) : scores = scores ?? [];
 
   final List<String> replies;
+
+  /// The score (centipawns) of each reply; 0 once they run out.
+  final List<int> scores;
   Completer<void>? _gate;
 
   /// Lets the bot's current search finish.
@@ -32,7 +35,12 @@ class FakeEngine implements ChessEngine {
   }) async {
     _gate = Completer<void>();
     await _gate!.future;
-    return [CandidateMove(replies.removeAt(0), 0)];
+    return [
+      CandidateMove(
+        replies.removeAt(0),
+        scores.isEmpty ? 0 : scores.removeAt(0),
+      ),
+    ];
   }
 
   @override
