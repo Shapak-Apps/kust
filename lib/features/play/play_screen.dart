@@ -10,7 +10,6 @@ import 'package:kust/features/game/time_control.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/game_args.dart';
-import 'package:kust/features/learn/lessons.dart' show LearnPiece;
 import 'package:kust/features/play/bot_card.dart';
 import 'package:kust/features/play/pick_opponent_modal.dart';
 import 'package:kust/features/play/pick_side_modal.dart';
@@ -228,7 +227,19 @@ class _PlayScreenState extends State<PlayScreen> {
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    sliver: SliverToBoxAdapter(child: const _HomeBanner()),
+                    sliver: SliverToBoxAdapter(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: Image.asset(
+                            'assets/images/banner.png',
+                            fit: BoxFit.cover,
+                            cacheWidth: 900,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                   SliverToBoxAdapter(
                     child: _ContinueCard(onContinue: _continueGame),
@@ -402,60 +413,6 @@ class _ContinueCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// The line above the play card: drawn, so it reads in every language.
-class _HomeBanner extends StatelessWidget {
-  const _HomeBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 132,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF17694A), Color(0xFF0F4A33)],
-        ),
-        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-        border: Border.all(color: const Color(0x803CB77C)),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: 14,
-            bottom: 0,
-            child: LearnPiece(Role.knight, height: 104),
-          ),
-          Positioned.fill(
-            right: 96,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 0, 12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const KustLogo(height: 18),
-                  const SizedBox(height: 10),
-                  Text(
-                    context.t.homeBannerLine,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      height: 1.2,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

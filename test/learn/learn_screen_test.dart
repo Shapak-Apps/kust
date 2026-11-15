@@ -188,18 +188,21 @@ void main() {
     await _shot(tester, 'lesson_task');
 
     // A move that is not the task: the pawn goes one square, the star stays.
+    final board = tester.getRect(find.byType(PuzzleBoard));
     await _drag(tester, 'e2', 'e3');
     expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     await _drag(tester, 'e3', 'e4');
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.star_rounded), findsNothing);
-    expect(find.text('Well done!'), findsOneWidget);
+    expect(find.text('Well done!').hitTestable(), findsOneWidget);
+    // The panel and the coach's note do not push the board around.
+    expect(tester.getRect(find.byType(PuzzleBoard)), board);
     await _shot(tester, 'lesson_solved');
 
     // Continue moves on to the next task.
     await tester.tap(find.text('Continue'));
     await tester.pumpAndSettle();
-    expect(find.text('Well done!'), findsNothing);
+    expect(find.text('Well done!').hitTestable(), findsNothing);
     expect(find.text('Move the pawn to the star'), findsOneWidget);
   });
 

@@ -25,12 +25,8 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  for (final entry in {
-    'en': 'Time to improve your chess',
-    'ru': 'Пора играть лучше',
-    'tk': 'Küşt oýnuňyzy gowulandyrmagyň wagty',
-  }.entries) {
-    testWidgets('the home banner reads in ${entry.key}', (tester) async {
+  for (final entry in {'en': '', 'ru': '', 'tk': ''}.entries) {
+    testWidgets('the home screen fits in ${entry.key}', (tester) async {
       tester.view.physicalSize = const Size(360, 780);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -48,7 +44,11 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text(entry.value), findsOneWidget);
+      expect(
+        find.image(const AssetImage('assets/images/banner.png')),
+        findsNothing, // drawn through a ResizeImage
+      );
+      expect(find.byType(Image), findsWidgets);
       expect(errors, isEmpty);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

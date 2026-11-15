@@ -39,7 +39,9 @@ class KustNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = isDark ? const Color(0xFF0E0D0C) : k.bg;
+    // A touch lighter than the page, so the bar reads as a surface rather
+    // than a shadow over what scrolls under it.
+    final base = isDark ? const Color(0xFF262321) : k.bg;
     return RepaintBoundary(
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -48,16 +50,16 @@ class KustNavBar extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               base.withValues(alpha: 0),
-              base.withValues(alpha: 0.9),
-              base.withValues(alpha: 0.98),
+              base.withValues(alpha: 0.82),
+              base.withValues(alpha: 0.96),
             ],
-            stops: const [0, 0.32, 1],
+            stops: const [0, 0.22, 1],
           ),
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.only(top: 18),
+            padding: const EdgeInsets.only(top: 12),
             child: SizedBox(
               height: _barHeight,
               child: Row(
@@ -103,7 +105,7 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final on = dark ? Colors.white : k.ink;
-    final off = dark ? const Color(0xFFA7A39B) : const Color(0xFF6E6C66);
+    final off = dark ? const Color(0xFFB4B0A8) : const Color(0xFF6E6C66);
     final color = selected ? on : off;
 
     return Semantics(

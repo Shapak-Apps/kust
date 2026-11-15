@@ -1,6 +1,6 @@
 # Küşt
 
-![Küşt - Improve, Learn moreover Practice your chess](https://raw.githubusercontent.com/Shapak-Apps/kust/main/docs/banner.png)
+![Küşt - Improve, Learn moreover Practice your chess](https://raw.githubusercontent.com/Shapak-Apps/kust/main/assets/images/banner.png)
 
 Küşt means chess in Turkmen. It is an open-source chess app for Android and iOS, built with Flutter, that tries to teach you something every game instead of just beating you.
 
