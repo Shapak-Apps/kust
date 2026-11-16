@@ -226,22 +226,6 @@ class _PlayScreenState extends State<PlayScreen> {
                           KustTopBar.barHeight,
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child: Image.asset(
-                            'assets/images/banner.png',
-                            fit: BoxFit.cover,
-                            cacheWidth: 900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   SliverToBoxAdapter(
                     child: _ContinueCard(onContinue: _continueGame),
                   ),

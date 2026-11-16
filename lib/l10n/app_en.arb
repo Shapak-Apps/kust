@@ -953,5 +953,7 @@
   "games": "Games",
   "gameHistory": "Game history",
   "viewAll": "View all",
-  "qrCode": "QR code"
+  "qrCode": "QR code",
+  "trainSoonSub": "A new way to practise is on its way. Until then, keep sharp with puzzles.",
+  "solvePuzzles": "Solve puzzles"
 }

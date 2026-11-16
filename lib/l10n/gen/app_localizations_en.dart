@@ -1633,4 +1633,11 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get qrCode => 'QR code';
+
+  @override
+  String get trainSoonSub =>
+      'A new way to practise is on its way. Until then, keep sharp with puzzles.';
+
+  @override
+  String get solvePuzzles => 'Solve puzzles';
 }

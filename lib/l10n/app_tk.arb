@@ -480,5 +480,7 @@
   "games": "Oýunlar",
   "gameHistory": "Oýunlarym",
   "viewAll": "Hemmesi",
-  "qrCode": "QR kod"
+  "qrCode": "QR kod",
+  "trainSoonSub": "Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň.",
+  "solvePuzzles": "Mesele çözüň"
 }
