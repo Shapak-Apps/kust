@@ -161,7 +161,11 @@ void main() {
       }),
       [MoveQuality.best, MoveQuality.mistake, MoveQuality.blunder],
     );
-    expect(pickMoveCounts({MoveQuality.book: 6}), isEmpty);
+    // Book moves are shown too, after the good ones.
+    expect(pickMoveCounts({MoveQuality.best: 1, MoveQuality.book: 6}), [
+      MoveQuality.best,
+      MoveQuality.book,
+    ]);
   });
 
   testWidgets('shows the picked ratings in one row', (tester) async {
