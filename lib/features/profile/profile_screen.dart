@@ -548,7 +548,6 @@ class _AchievementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
     return ValueListenableBuilder(
       valueListenable: AchievementStore.instance.listenable(),
       builder: (context, _, _) {
@@ -566,61 +565,24 @@ class _AchievementsSection extends StatelessWidget {
               onViewAll: () => context.push('/achievements'),
             ),
             SizedBox(
-              height: 124,
+              height: 120,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: sorted.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
                 itemBuilder: (context, i) {
                   final a = sorted[i];
-                  final earned = unlocked.containsKey(a.id);
                   return Semantics(
                     label:
                         '${a.titleIn(context.t)}, '
-                        '${earned ? context.t.achEarned : context.t.achNotEarned}',
+                        '${unlocked.containsKey(a.id) ? context.t.achEarned : context.t.achNotEarned}',
                     excludeSemantics: true,
                     child: Pressable(
                       onTap: () => context.push('/achievements'),
-                      child: Container(
-                        width: 104,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: k.surface,
-                          borderRadius: BorderRadius.circular(
-                            KustSpace.rMedium,
-                          ),
-                          border: Border.all(color: earned ? k.accent : k.line),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: earned ? k.accent : k.surfaceAlt,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                earned ? a.icon : Icons.lock_rounded,
-                                color: earned ? k.accentInk : k.muted,
-                                size: 26,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              a.titleIn(context.t),
-                              maxLines: 2,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              style: k.caption.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: earned ? k.ink : k.muted,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: _AchievementBadge(
+                        achievement: a,
+                        earned: unlocked.containsKey(a.id),
                       ),
                     ),
                   );
@@ -630,6 +592,90 @@ class _AchievementsSection extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// One achievement as a badge: gold and glowing once earned; still showing
+/// its picture, faded and with a small lock, until then.
+class _AchievementBadge extends StatelessWidget {
+  const _AchievementBadge({required this.achievement, required this.earned});
+
+  final Achievement achievement;
+  final bool earned;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return SizedBox(
+      width: 80,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: earned ? null : k.surface,
+                  gradient: earned
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [k.accent, const Color(0xFFE08A00)],
+                        )
+                      : null,
+                  border: earned ? null : Border.all(color: k.line),
+                  boxShadow: earned
+                      ? [
+                          BoxShadow(
+                            color: k.accent.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  achievement.icon,
+                  size: 34,
+                  color: earned ? k.accentInk : k.muted.withValues(alpha: 0.45),
+                ),
+              ),
+              if (!earned)
+                Positioned(
+                  right: -4,
+                  bottom: -4,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: k.surfaceAlt,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: k.bg, width: 2),
+                    ),
+                    child: Icon(Icons.lock_rounded, size: 12, color: k.muted),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            achievement.titleIn(context.t),
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: k.caption.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: earned ? k.ink : k.muted,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
