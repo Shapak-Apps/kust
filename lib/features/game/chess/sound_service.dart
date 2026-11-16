@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
+import 'package:kust/core/error_log.dart';
+
 class SoundService {
   SoundService._();
   static final SoundService instance = SoundService._();
@@ -54,22 +56,30 @@ class SoundService {
 
   Future<void> _prepare(String name) async {
     try {
-      final player = AudioPlayer(playerId: 'kust_${name.replaceAll('.', '_')}');
+      // A fresh id each launch: after a hot restart the old players still
+      // exist on the platform side under the old ids.
+      final player = AudioPlayer();
       await player.setPlayerMode(PlayerMode.lowLatency);
       await player.setReleaseMode(ReleaseMode.stop);
       await player.setVolume(1.0);
       try {
         await player.setAudioContext(_noFocusCtx);
       } catch (_) {}
-      await player.setSource(AssetSource('$_prefix$name'));
+      await player
+          .setSource(AssetSource('$_prefix$name'))
+          .timeout(const Duration(seconds: 5));
       _players[name] = player;
-    } catch (_) {}
+    } catch (e, st) {
+      ErrorLog.record(e, st);
+    }
   }
 
   Future<void> _play(String name) async {
     if (!soundEnabled) return;
     try {
       if (!_warmedUp) await warmUp();
+      // One that failed to load gets another try, instead of staying silent.
+      if (_players[name] == null) await _prepare(name);
       final player = _players[name];
       if (player == null) return;
       await player.stop();
