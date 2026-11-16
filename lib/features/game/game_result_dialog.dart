@@ -4,12 +4,12 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -404,16 +404,28 @@ class _MoveCounts extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: k.surface,
+                // A hint of the rating's colour, so each tile glows its own.
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.alphaBlend(
+                      q.color.withValues(alpha: 0.16),
+                      k.surface,
+                    ),
+                    k.surface,
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                border: Border.all(color: q.color.withValues(alpha: 0.35)),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPicture.asset(q.asset, width: 28, height: 28),
-                      const SizedBox(width: 6),
+                      QualityBadge(quality: q, size: 34),
+                      const SizedBox(width: 8),
                       Text(
                         '${counts[q]}',
                         style: k.display.copyWith(
