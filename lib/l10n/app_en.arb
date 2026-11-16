@@ -1023,5 +1023,28 @@
     }
   },
   "toStart": "To the start",
-  "toEnd": "To the end"
+  "toEnd": "To the end",
+  "trainLineProgress": "{name} · move {done} of {total}",
+  "@trainLineProgress": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "trainLineWrong": "Not the line. Play {san}",
+  "@trainLineWrong": {
+    "placeholders": {
+      "san": {
+        "type": "String"
+      }
+    }
+  },
+  "trainLineDone": "Line done! Play on from here."
 }

@@ -10,7 +10,7 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/static_board.dart';
+import 'package:kust/widgets/board_thumbnail.dart';
 
 /// The Train tab: openings, defences, gambits and attacks to learn and to
 /// practise against a bot from the end of one of their lines.
@@ -134,16 +134,13 @@ class _OpeningCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 116,
-                child: StaticBoard(
+                width: 132,
+                child: BoardThumbnail(
                   position: main.positions.last,
                   flipped: opening.side == Side.black,
                   highlight: main.lastSquares,
-                  radius: 6,
-                  shadow: false,
                 ),
               ),
               const SizedBox(width: 12),
@@ -183,17 +180,23 @@ class _OpeningCard extends StatelessWidget {
                       style: k.caption.copyWith(color: k.muted),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      t.trainLines(opening.lines.length),
-                      style: k.caption.copyWith(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Text(
+                          t.trainLines(opening.lines.length),
+                          style: k.caption.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(child: LineProgress(opening: opening)),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    LineProgress(opening: opening),
                     const SizedBox(height: 4),
                     Pressable(
                       onTap: () => practiseLine(context, opening, 0),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

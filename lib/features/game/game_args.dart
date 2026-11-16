@@ -13,9 +13,10 @@ class GameArgs {
   /// A saved game to pick up instead of starting a new one.
   final LiveGame? resume;
 
-  /// [resume] is an opening line from Train: Rematch plays it again
-  /// instead of starting from the first move.
-  final bool fromLine;
+  /// An opening line from Train to drill from the first move, in
+  /// dartchess UCI, and its name for the banner.
+  final List<String>? line;
+  final String? lineName;
 
   const GameArgs({
     this.bot,
@@ -24,6 +25,7 @@ class GameArgs {
     this.timeControl,
     this.practiceMode = false,
     this.resume,
-    this.fromLine = false,
+    this.line,
+    this.lineName,
   });
 }

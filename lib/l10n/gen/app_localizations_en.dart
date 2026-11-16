@@ -1806,4 +1806,17 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get toEnd => 'To the end';
+
+  @override
+  String trainLineProgress(String name, int done, int total) {
+    return '$name · move $done of $total';
+  }
+
+  @override
+  String trainLineWrong(String san) {
+    return 'Not the line. Play $san';
+  }
+
+  @override
+  String get trainLineDone => 'Line done! Play on from here.';
 }

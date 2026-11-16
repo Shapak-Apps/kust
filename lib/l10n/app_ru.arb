@@ -529,5 +529,8 @@
   "trainThirdLine": "Третий вариант",
   "trainOrigin": "Назван в честь: {origin}",
   "toStart": "В начало",
-  "toEnd": "В конец"
+  "toEnd": "В конец",
+  "trainLineProgress": "{name} · ход {done} из {total}",
+  "trainLineWrong": "Не по варианту. Ходите {san}",
+  "trainLineDone": "Вариант пройден! Играйте дальше."
 }
