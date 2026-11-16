@@ -1657,4 +1657,37 @@ class AppL10nRu extends AppL10n {
   @override
   String get logOutSub =>
       'Имя, имя пользователя, описание и фото будут удалены с устройства, и вы будете играть как гость. Партии и прогресс останутся.';
+
+  @override
+  String get youWonTitle => 'Вы победили!';
+
+  @override
+  String get youLostTitle => 'Вы проиграли';
+
+  @override
+  String get byCheckmate => 'матом';
+
+  @override
+  String get byResignation => 'сдачей';
+
+  @override
+  String get byTimeout => 'по времени';
+
+  @override
+  String get byStalemate => 'патом';
+
+  @override
+  String get byRepetition => 'повторением ходов';
+
+  @override
+  String get byFiftyMove => 'по правилу 50 ходов';
+
+  @override
+  String get byInsufficient => 'из-за недостатка материала';
+
+  @override
+  String get byAgreement => 'по соглашению';
+
+  @override
+  String get byTimeNoMate => 'по времени, но мат невозможен';
 }

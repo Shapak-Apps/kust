@@ -1,11 +1,9 @@
-import 'dart:io' as io;
-
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -13,7 +11,9 @@ import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/features/game/chess/board/chess_board.dart'
+    show kLastMoveHighlight;
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
 
@@ -49,8 +49,9 @@ Future<void> showGameResult(
 }
 
 /// The end of a game, full screen: the player's board fading into the page
-/// behind the result, the rating change, both players, what the bot says,
-/// how the player's moves were rated, and Rematch and Review.
+/// behind the result and the rating change, the position the game ended in
+/// as the picture, what the bot says, how the player's moves were rated,
+/// and Rematch and Review.
 class GameResultScreen extends ConsumerWidget {
   const GameResultScreen({
     super.key,
@@ -119,68 +120,62 @@ class GameResultScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // The parts spread down the screen when there is room,
-                  // and scroll when there is not.
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, box) => SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: box.maxHeight - 16,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: k.display.copyWith(
+                            color: Colors.white,
+                            fontSize: 34,
                           ),
-                          child: IntrinsicHeight(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Column(
-                                  children: [
-                                    Text(
-                                      title,
-                                      textAlign: TextAlign.center,
-                                      style: k.display.copyWith(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      message,
-                                      textAlign: TextAlign.center,
-                                      style: k.body.copyWith(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.8,
-                                        ),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    _RatingAndAccuracy(game: game),
-                                  ],
-                                ),
-                                if (game.mode == GameMode.bot &&
-                                    game.bot != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 24),
-                                    child: _Players(game: game),
-                                  ),
-                                if (botQuote != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 24),
-                                    child: BotSays(
-                                      name: botQuote!.name,
-                                      image: botQuote!.image,
-                                      text: botQuote!.text,
-                                    ),
-                                  ),
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 16),
-                                  child: _MoveCounts(game: game),
-                                ),
-                              ],
-                            ),
+                        ),
+                        Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: k.body.copyWith(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _RatingAndAccuracy(game: game),
+                      ],
+                    ),
+                  ),
+                  // The position the game ended in is the picture: it takes
+                  // whatever room the screen has.
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: _FinalBoard(game: game),
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        if (botQuote != null) ...[
+                          BotSays(
+                            name: botQuote!.name,
+                            image: botQuote!.image,
+                            text: botQuote!.text,
+                            light: true,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        _MoveCounts(game: game),
+                      ],
                     ),
                   ),
                   Padding(
@@ -193,7 +188,7 @@ class GameResultScreen extends ConsumerWidget {
                           child: KustButton(
                             label: context.t.rematch,
                             style: canReview
-                                ? KustButtonStyle.outline
+                                ? KustButtonStyle.secondary
                                 : KustButtonStyle.primary,
                             height: 52,
                             onTap: onRematch,
@@ -235,135 +230,116 @@ class _RatingAndAccuracy extends StatelessWidget {
     final k = context.k;
     final change = game.ratingChange;
     final accuracy = game.accuracy;
-    final items = <Widget>[
-      if (change != null)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              '${PlayerRatingStore.instance.rating}',
-              style: k.display.copyWith(color: Colors.white, fontSize: 30),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '${change > 0 ? '+' : ''}$change',
-              style: k.title.copyWith(
-                color: change > 0
-                    ? k.success
-                    : change < 0
-                    ? k.danger
-                    : k.muted,
+    return Column(
+      children: [
+        if (change != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${PlayerRatingStore.instance.rating}',
+                style: k.display.copyWith(color: Colors.white, fontSize: 28),
               ),
+              const SizedBox(width: 6),
+              Text(
+                '${change > 0 ? '+' : ''}$change',
+                style: k.title.copyWith(
+                  color: change > 0
+                      ? k.success
+                      : change < 0
+                      ? k.danger
+                      : k.muted,
+                ),
+              ),
+            ],
+          ),
+        if (accuracy != null)
+          Text(
+            context.t.accuracyValue(accuracy.toStringAsFixed(1)),
+            style: k.caption.copyWith(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
-      if (accuracy != null)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.track_changes_rounded, size: 20, color: k.muted),
-            const SizedBox(width: 6),
-            Text(
-              context.t.accuracyValue(accuracy.toStringAsFixed(1)),
-              style: k.body.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-    ];
-    if (items.isEmpty) return const SizedBox.shrink();
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 20,
-      runSpacing: 8,
-      children: items,
+          ),
+      ],
     );
   }
 }
 
-/// The player and the bot side by side, the winner in gold.
-class _Players extends StatelessWidget {
-  const _Players({required this.game});
+/// The board as the game ended, in the colours and pieces from settings,
+/// the last move marked, seen from the player's side.
+class _FinalBoard extends StatelessWidget {
+  const _FinalBoard({required this.game});
 
   final GameState game;
 
-  Side? get _winner => switch (game.status) {
-    GameStatus.checkmate => game.position.turn.opposite,
-    GameStatus.resigned => game.playerSide.opposite,
-    GameStatus.timeout => game.flagFell?.opposite,
-    _ => null,
-  };
-
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
-    final bot = game.bot!;
-    final winner = _winner;
-    final store = AppStorage.instance;
-    final photo = AppStorage.isReady ? store.photoPath : null;
-
-    Widget player(Widget picture, String name, bool won) => Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: won ? k.accent : Colors.transparent,
-                width: 3,
-              ),
+    final theme = AppSettings.instance.boardTheme.value;
+    final set = AppSettings.instance.pieceSet.value;
+    final flipped = game.mode == GameMode.bot && game.playerSide == Side.black;
+    final board = game.position.board;
+    final marked = game.moveSquares;
+    return ExcludeSemantics(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x66000000),
+              blurRadius: 24,
+              offset: Offset(0, 10),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: picture,
-            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Column(
+            children: [
+              for (var row = 0; row < 8; row++)
+                Expanded(
+                  child: Row(
+                    children: [
+                      for (var col = 0; col < 8; col++)
+                        Expanded(
+                          child: Builder(
+                            builder: (context) {
+                              final square = Square.fromCoords(
+                                File(flipped ? 7 - col : col),
+                                Rank(flipped ? row : 7 - row),
+                              );
+                              final light = (col + row).isEven;
+                              var colour = light ? theme.light : theme.dark;
+                              if (marked.contains(square)) {
+                                colour = Color.alphaBlend(
+                                  kLastMoveHighlight,
+                                  colour,
+                                );
+                              }
+                              final piece = board.pieceAt(square);
+                              return ColoredBox(
+                                color: colour,
+                                child: piece == null
+                                    ? const SizedBox.expand()
+                                    : PieceImage(
+                                        set.asset(
+                                          piece.color == Side.white ? 'w' : 'b',
+                                          piece.role.uppercaseLetter,
+                                        ),
+                                      ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: k.body.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ],
+        ),
       ),
-    );
-
-    final you = AppStorage.isReady ? store.displayName(context.t) : '';
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        player(
-          PlayerAvatar(
-            size: 68,
-            name: you,
-            photo: photo == null ? null : FileImage(io.File(photo)),
-          ),
-          you,
-          winner == game.playerSide,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 28),
-          child: Text(
-            'vs',
-            style: k.body.copyWith(color: k.muted, fontWeight: FontWeight.w800),
-          ),
-        ),
-        player(
-          Image.asset(
-            bot.imagePath,
-            width: 68,
-            height: 68,
-            cacheWidth: 204,
-            fit: BoxFit.cover,
-          ),
-          bot.name,
-          winner == game.playerSide.opposite,
-        ),
-      ],
     );
   }
 }
@@ -404,20 +380,8 @@ class _MoveCounts extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                // A hint of the rating's colour, so each tile glows its own.
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color.alphaBlend(
-                      q.color.withValues(alpha: 0.16),
-                      k.surface,
-                    ),
-                    k.surface,
-                  ],
-                ),
+                color: k.surface,
                 borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                border: Border.all(color: q.color.withValues(alpha: 0.35)),
               ),
               child: Column(
                 children: [

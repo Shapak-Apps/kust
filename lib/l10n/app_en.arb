@@ -958,5 +958,16 @@
   "solvePuzzles": "Solve puzzles",
   "logOut": "Log out",
   "logOutTitle": "Log out?",
-  "logOutSub": "Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay."
+  "logOutSub": "Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.",
+  "youWonTitle": "You won!",
+  "youLostTitle": "You lost",
+  "byCheckmate": "by checkmate",
+  "byResignation": "by resignation",
+  "byTimeout": "on time",
+  "byStalemate": "by stalemate",
+  "byRepetition": "by repetition",
+  "byFiftyMove": "by the 50-move rule",
+  "byInsufficient": "by insufficient material",
+  "byAgreement": "by agreement",
+  "byTimeNoMate": "on time, with no mate possible"
 }

@@ -3014,6 +3014,72 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.'**
   String get logOutSub;
+
+  /// No description provided for @youWonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You won!'**
+  String get youWonTitle;
+
+  /// No description provided for @youLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You lost'**
+  String get youLostTitle;
+
+  /// No description provided for @byCheckmate.
+  ///
+  /// In en, this message translates to:
+  /// **'by checkmate'**
+  String get byCheckmate;
+
+  /// No description provided for @byResignation.
+  ///
+  /// In en, this message translates to:
+  /// **'by resignation'**
+  String get byResignation;
+
+  /// No description provided for @byTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'on time'**
+  String get byTimeout;
+
+  /// No description provided for @byStalemate.
+  ///
+  /// In en, this message translates to:
+  /// **'by stalemate'**
+  String get byStalemate;
+
+  /// No description provided for @byRepetition.
+  ///
+  /// In en, this message translates to:
+  /// **'by repetition'**
+  String get byRepetition;
+
+  /// No description provided for @byFiftyMove.
+  ///
+  /// In en, this message translates to:
+  /// **'by the 50-move rule'**
+  String get byFiftyMove;
+
+  /// No description provided for @byInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'by insufficient material'**
+  String get byInsufficient;
+
+  /// No description provided for @byAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'by agreement'**
+  String get byAgreement;
+
+  /// No description provided for @byTimeNoMate.
+  ///
+  /// In en, this message translates to:
+  /// **'on time, with no mate possible'**
+  String get byTimeNoMate;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -430,3 +430,19 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `logOut` | Log out | Çyk |
 | `logOutTitle` | Log out? | Profilden çykmalymy? |
 | `logOutSub` | Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay. | Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar. |
+
+## Game result headline
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `youWonTitle` | You won! | Siz ýeňdiňiz! |
+| `youLostTitle` | You lost | Siz utuldyňyz |
+| `byCheckmate` | by checkmate | şahmat bilen |
+| `byResignation` | by resignation | boýun alyş bilen |
+| `byTimeout` | on time | wagt boýunça |
+| `byStalemate` | by stalemate | pat bilen |
+| `byRepetition` | by repetition | gaýtalanma bilen |
+| `byFiftyMove` | by the 50-move rule | 50 göçüm düzgüni boýunça |
+| `byInsufficient` | by insufficient material | çöp ýetmezçiligi sebäpli |
+| `byAgreement` | by agreement | ylalaşyk bilen |
+| `byTimeNoMate` | on time, with no mate possible | wagt boýunça, şahmat mümkin däl |

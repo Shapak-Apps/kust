@@ -353,24 +353,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
   /// The title and message of the dialog for a game that has ended, or null
   /// while it goes on.
-  (String, String)? _endDialogTexts(GameState state) {
-    final t = context.t;
-    return switch (state.status) {
-      GameStatus.checkmate => (
-        t.resultCheckmate,
-        wonGameMessage(t, state, state.position.turn.opposite),
-      ),
-      GameStatus.draw => (t.resultDraw, endMessage(t, state)),
-      GameStatus.timeout => (t.resultTimeOut, endMessage(t, state)),
-      GameStatus.resigned => (
-        t.resultGameOver,
-        state.mode == GameMode.local && state.resignedSide != null
-            ? wonGameMessage(t, state, state.resignedSide!.opposite)
-            : t.youResigned,
-      ),
-      GameStatus.playing || GameStatus.loading => null,
-    };
-  }
+  (String, String)? _endDialogTexts(GameState state) =>
+      state.status == GameStatus.playing || state.status == GameStatus.loading
+      ? null
+      : resultHeadline(context.t, state);
 
   void _showEndDialogForState(GameState state) {
     final texts = _endDialogTexts(state);
