@@ -130,9 +130,41 @@ void main() {
     expect(rematch, 1);
   });
 
-  testWidgets('rates moves best first, errors after, skipping zeros', (
-    tester,
-  ) async {
+  test('picks the best two and the worst error, three at most', () {
+    expect(
+      pickMoveCounts({
+        MoveQuality.best: 12,
+        MoveQuality.brilliant: 1,
+        MoveQuality.excellent: 4,
+        MoveQuality.book: 4,
+        MoveQuality.inaccuracy: 2,
+        MoveQuality.blunder: 1,
+      }),
+      [MoveQuality.brilliant, MoveQuality.best, MoveQuality.blunder],
+    );
+    // No errors: the three best.
+    expect(
+      pickMoveCounts({
+        MoveQuality.good: 1,
+        MoveQuality.best: 5,
+        MoveQuality.excellent: 2,
+        MoveQuality.great: 1,
+      }),
+      [MoveQuality.great, MoveQuality.best, MoveQuality.excellent],
+    );
+    // Few good moves: errors fill the rest.
+    expect(
+      pickMoveCounts({
+        MoveQuality.best: 1,
+        MoveQuality.mistake: 2,
+        MoveQuality.blunder: 3,
+      }),
+      [MoveQuality.best, MoveQuality.mistake, MoveQuality.blunder],
+    );
+    expect(pickMoveCounts({MoveQuality.book: 6}), isEmpty);
+  });
+
+  testWidgets('shows the picked ratings in one row', (tester) async {
     await _open(
       tester,
       _state(
@@ -140,27 +172,16 @@ void main() {
           MoveQuality.blunder: 1,
           MoveQuality.best: 12,
           MoveQuality.brilliant: 1,
-          MoveQuality.book: 4,
           MoveQuality.inaccuracy: 2,
         },
       ),
     );
-    final labels = ['Brilliant', 'Best move', 'Inaccuracy', 'Blunder'];
-    for (final l in labels) {
-      expect(find.text(l), findsOneWidget, reason: l);
-    }
-    expect(find.text('Book'), findsNothing);
-    expect(find.text('Great'), findsNothing);
-    final xs = [
-      for (final l in labels.take(3)) tester.getCenter(find.text(l)).dx,
-    ];
-    expect(xs[0], lessThan(xs[1]));
-    expect(xs[1], lessThan(xs[2]));
-    // The fourth wraps to the next row.
-    expect(
-      tester.getCenter(find.text('Blunder')).dy,
-      greaterThan(tester.getCenter(find.text('Brilliant')).dy),
-    );
+    final labels = ['Brilliant', 'Best move', 'Blunder'];
+    final centers = [for (final l in labels) tester.getCenter(find.text(l))];
+    expect(find.text('Inaccuracy'), findsNothing);
+    expect(centers[0].dx, lessThan(centers[1].dx));
+    expect(centers[1].dx, lessThan(centers[2].dx));
+    expect(centers[0].dy, closeTo(centers[2].dy, 1));
   });
 
   testWidgets('says it is analyzing while the moves are rated', (tester) async {
