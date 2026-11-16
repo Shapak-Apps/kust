@@ -101,18 +101,18 @@ class SplashArt extends StatelessWidget {
   static double reachBelowMiddle(double width) =>
       endHeight(width) * (0.5 + (_tailBottom - _kBottom) / _kHeight);
 
-  // The wordmark's SVG units: its box starts at (214, 136) and is 1180 by
-  // 540; the K spans x 221.95 to 543.95 and y 146.5 to 549, the t ends at
-  // about x 1327.74 and the tail of the ş at y 672.05.
-  static const double _kLeft = 221.95 - 214;
+  // The wordmark's SVG units: its box starts at (180, 136) and is 1214 by
+  // 540; the K spans x 187.95 to 509.95 and y 146.5 to 549, the t's bar
+  // ends at x 1390 and the tail of the ş at y 672.05.
+  static const double _kLeft = 187.95 - 180;
   static const double _kTop = 146.5 - 136;
   static const double _kHeight = 402.5;
-  static const double _kRight = 543.95;
+  static const double _kRight = 509.95;
   static const double _kBottom = 549;
   static const double _tailBottom = 672.05;
-  static const double _end = 1327.74;
-  static const double _boxRight = 214 + 1180;
-  static const double _wordWidth = (_end - 221.95) / _kHeight; // in K heights
+  static const double _end = 1390;
+  static const double _boxRight = 180 + 1214;
+  static const double _wordWidth = (_end - 187.95) / _kHeight; // in K heights
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +140,7 @@ class SplashArt extends StatelessWidget {
     final boxTop = top - _kTop * u;
     Widget layer(String asset, Color color) => SvgPicture.asset(
       asset,
-      width: 1180 * u,
+      width: 1214 * u,
       height: 540 * u,
       colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
     );
