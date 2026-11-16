@@ -413,3 +413,83 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `lessonPatternsIntro` | Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move. | Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň. |
 | `campTacticsTitle` | Tactics | Taktika |
 | `campTacticsSub` | Win pieces with clever moves | Akylly göçümler bilen çöp utuň |
+
+## Profile and Train
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `navTrain` | Train | Türgenleşik |
+| `joined` | Joined | Goşulan senesi |
+| `rating` | Rating | Reýting |
+| `games` | Games | Oýunlar |
+| `gameHistory` | Game history | Oýunlarym |
+| `viewAll` | View all | Hemmesi |
+| `qrCode` | QR code | QR kod |
+| `trainSoonSub` | A new way to practise is on its way. Until then, keep sharp with puzzles. | Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň. |
+| `solvePuzzles` | Solve puzzles | Mesele çözüň |
+| `logOut` | Log out | Çyk |
+| `logOutTitle` | Log out? | Profilden çykmalymy? |
+| `logOutSub` | Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay. | Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar. |
+
+## Game result headline
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `youWonTitle` | You won! | Siz ýeňdiňiz! |
+| `youLostTitle` | You lost | Siz utuldyňyz |
+| `byCheckmate` | by checkmate | şahmat bilen |
+| `byResignation` | by resignation | boýun alyş bilen |
+| `byTimeout` | on time | wagt boýunça |
+| `byStalemate` | by stalemate | pat bilen |
+| `byRepetition` | by repetition | gaýtalanma bilen |
+| `byFiftyMove` | by the 50-move rule | 50 göçüm düzgüni boýunça |
+| `byInsufficient` | by insufficient material | çöp ýetmezçiligi sebäpli |
+| `byAgreement` | by agreement | ylalaşyk bilen |
+| `byTimeNoMate` | on time, with no mate possible | wagt boýunça, şahmat mümkin däl |
+
+## Achievement tiers
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `tierCommon` | Common | Adaty |
+| `tierRare` | Rare | Seýrek |
+| `tierMythic` | Mythic | Mifiki |
+
+## Train: openings
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `opItalianD` | Quick development and an early fight for the centre: bishop to c4 aims at f7, then c3 and d3 or d4. Calm on the surface, full of traps underneath. | Çalt ösüş we merkez üçin ir göreş: c4-däki pil f7-ä seredýär, soňra c3 we d3 ýa-da d4. Daşyndan asuda, içi duzaklardan doly. |
+| `opRuyLopezD` | The bishop pins pressure on the knight that guards e5. A slow, rich plan that has been the main road at the top for over a century. | Pil e5-i goraýan ata basyş edýär. Ýuwaş we baý meýilnama, bir asyrdan gowrak ýokary derejede esasy ýol. |
+| `opLondonD` | The same easy setup almost every game: d4, Bf4, e3, Nf3 and c3. Solid, quick to learn, and full of chances to attack the king. | Her oýunda diýen ýaly şol bir ýönekeý gurluş: d4, Pf4, e3, Af3 we c3. Ygtybarly, öwrenmesi aňsat we şa hüjüm etmäge köp mümkinçilik. |
+| `opQueensGambitD` | White offers the c-pawn to pull Black's d-pawn from the centre. If Black takes, White builds a big centre and wins the pawn back. | Ak gara d-peşkasyny merkezden aýyrmak üçin c-peşkasyny hödürleýär. Gara alsa, ak uly merkez gurup, peşkany yzyna alýar. |
+| `opKingsGambitD` | White gives the f-pawn on move two to open the f-file and race for the attack. Wild, risky and a favourite of the Romantic era. | Ak f-liniýany açmak we hüjüme atylmak üçin ikinji göçümde f-peşkasyny berýär. Wagşy, töwekgel, romantik döwrüň söýgülisi. |
+| `opFriedLiverD` | Against the Two Knights, the knight jumps to g5 and then sacrifices itself on f7 to drag the black king into the open. | Iki at goragyna garşy at g5-e böküp, soňra f7-de özüni gurban edýär we gara şany açyk ýere çykarýar. |
+| `opSicilianD` | Black answers 1.e4 with c5 and fights unequally: sharp, double-edged games where Black plays to win, not to draw. | Gara 1.e4-e c5 bilen jogap berýär we deň bolmadyk göreşe girýär: gara deňe-deňlik üçin däl, ýeňiş üçin oýnaýar. |
+| `opFrenchD` | Black builds a solid chain with e6 and d5, lets White take space, then strikes back at the centre with c5. | Gara e6 we d5 bilen berk zynjyr gurýar, aga giňişlik berýär, soňra c5 bilen merkeze urýar. |
+| `opCaroKannD` | Like the French, but the light-squared bishop gets out first. A sound, hard-to-crack defence with a clean pawn structure. | Fransuz goragy ýaly, ýöne ak meýdançaly pil öň çykýar. Ygtybarly, böwsmesi kyn gorag we arassa peşka gurluşy. |
+| `opKingsIndianD` | Black lets White take the whole centre, finishes castling, then hits back with e5 or c5 and often storms the kingside. | Gara bütin merkezi aga berýär, rokirowka edýär, soňra e5 ýa-da c5 bilen urýar we köplenç şa ganatynda hüjüm edýär. |
+| `opScandinavianD` | Black attacks e4 at once with d5. One simple idea, a quick game, and little theory to remember. | Gara d5 bilen derrew e4-e hüjüm edýär. Bir ýönekeý pikir, çalt oýun we az nazaryýet. |
+| `opBudapestD` | Against 1.d4 Nf6 2.c4, Black throws in e5 to free the pieces fast. The pawn usually comes back, with the initiative. | 1.d4 Af6 2.c4-e garşy gara çöpleri çalt boşatmak üçin e5 oýnaýar. Peşka köplenç yzyna gelýär, başlangyç bolsa galýar. |
+| `kindOpening` | Opening | Debýut |
+| `kindDefense` | Defence | Gorag |
+| `kindGambit` | Gambit | Gambit |
+| `kindAttack` | Attack | Hüjüm |
+| `trainAll` | All | Hemmesi |
+| `trainSearch` | Search openings | Debýut gözläň |
+| `trainTryFirst` | Try the first line | Birinji warianty synap görüň |
+| `trainLines` | {count, plural, one{1 line} other{{count} lines}} | {count, plural, other{{count} wariant}} |
+| `trainAsWhite` | As White | Ak bilen |
+| `trainAsBlack` | As Black | Gara bilen |
+| `trainPractise` | Practise vs {name} | {name} bilen oýnaň |
+| `trainNoResults` | No openings match your search. | Hiç zat tapylmady. |
+| `trainMainLine` | Main line | Esasy wariant |
+| `trainSecondLine` | Second line | Ikinji wariant |
+| `trainThirdLine` | Third line | Üçünji wariant |
+| `trainOrigin` | Named after {origin} | Ady: {origin} |
+| `toStart` | To the start | Başyna |
+| `toEnd` | To the end | Soňuna |
+| `trainLineProgress` | {name} · move {done} of {total} | {name} · {done}/{total} göçüm |
+| `trainLineWrong` | Not the line. Play {san} | Wariant boýunça däl. {san} oýnaň |
+| `trainLineDone` | Line done! Play on from here. | Wariant tamam! Indi dowam ediň. |
+| `showBestAfterLine` | Unlocks when you finish the opening line | Debýut wariantyny tamamlanyňyzdan soň açylar |

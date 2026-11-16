@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:kust/features/achievements/achievements_card.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/time_control.dart';
@@ -227,22 +226,6 @@ class _PlayScreenState extends State<PlayScreen> {
                           KustTopBar.barHeight,
                     ),
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 9,
-                          child: Image.asset(
-                            'assets/images/banner.png',
-                            fit: BoxFit.cover,
-                            cacheWidth: 900,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                   SliverToBoxAdapter(
                     child: _ContinueCard(onContinue: _continueGame),
                   ),
@@ -252,18 +235,9 @@ class _PlayScreenState extends State<PlayScreen> {
                       child: _HeroCard(name: name, onPlay: _showPlayChooser),
                     ),
                   ),
-                  // Daily puzzle and achievements, side by side.
                   const SliverPadding(
                     padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: Row(
-                        children: [
-                          Expanded(child: DailyPuzzleCard()),
-                          SizedBox(width: 10),
-                          Expanded(child: AchievementsCard()),
-                        ],
-                      ),
-                    ),
+                    sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
                   ),
                   SliverToBoxAdapter(
                     child: Padding(

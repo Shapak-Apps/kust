@@ -94,6 +94,13 @@ class AppStorage {
   }
 
   String get guestId => _user.get(_guestIdKey, defaultValue: 'guest') as String;
+
+  /// When the player first opened the app, or null if it was not kept.
+  DateTime? get joinedAt {
+    final ms = _user.get(_guestCreatedKey);
+    return ms is int ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+  }
+
   String get guestName =>
       _user.get(_guestNameKey, defaultValue: 'Guest') as String;
 
@@ -163,6 +170,17 @@ class AppStorage {
           : about,
     });
     return true;
+  }
+
+  /// Back to a guest: the photo, username and bio go, and the name becomes
+  /// a guest name again. Games, rating and progress stay.
+  Future<void> logOut() async {
+    await setPhoto(null);
+    await _user.deleteAll([_usernameKey, _bioKey]);
+    await _user.put(
+      _guestNameKey,
+      _guestNames[Random().nextInt(_guestNames.length)],
+    );
   }
 
   /// Copies the picture at [picked] in as the profile photo, or removes the

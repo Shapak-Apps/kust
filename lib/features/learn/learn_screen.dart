@@ -1,3 +1,4 @@
+import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -411,6 +412,17 @@ class _CampBanner extends StatelessWidget {
   }
 }
 
+/// The middle of each Learn piece's drawing, down its 135-high box. The
+/// pieces stand on the box's floor, so a short one like the pawn sits low.
+const Map<Role, double> _pieceMiddle = {
+  Role.pawn: 80,
+  Role.rook: 72.3,
+  Role.knight: 72.8,
+  Role.bishop: 69.9,
+  Role.queen: 68,
+  Role.king: 66.5,
+};
+
 /// The next lesson, ready to start: a ring for the climb so far, its name
 /// and size, and a big green button.
 class _UpNextCard extends StatelessWidget {
@@ -463,7 +475,14 @@ class _UpNextCard extends StatelessWidget {
                     ),
                   ),
                   if (piece != null)
-                    LearnPiece(piece, height: 38)
+                    // Lifted so the drawing, not its box, is centred.
+                    Transform.translate(
+                      offset: Offset(
+                        0,
+                        (67.5 - _pieceMiddle[piece]!) / 135 * 38,
+                      ),
+                      child: LearnPiece(piece, height: 38),
+                    )
                   else
                     Icon(lesson.icon, color: const Color(0xFFF2F0EA)),
                 ],

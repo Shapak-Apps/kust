@@ -1619,4 +1619,215 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get editProfile => 'Изменить профиль';
+
+  @override
+  String get navTrain => 'Тренировка';
+
+  @override
+  String get joined => 'Регистрация';
+
+  @override
+  String get rating => 'Рейтинг';
+
+  @override
+  String get games => 'Партии';
+
+  @override
+  String get gameHistory => 'История партий';
+
+  @override
+  String get viewAll => 'Все';
+
+  @override
+  String get qrCode => 'QR-код';
+
+  @override
+  String get trainSoonSub =>
+      'Новый способ тренироваться скоро появится. А пока держите себя в форме с задачами.';
+
+  @override
+  String get solvePuzzles => 'Решать задачи';
+
+  @override
+  String get logOut => 'Выйти';
+
+  @override
+  String get logOutTitle => 'Выйти из профиля?';
+
+  @override
+  String get logOutSub =>
+      'Имя, имя пользователя, описание и фото будут удалены с устройства, и вы будете играть как гость. Партии и прогресс останутся.';
+
+  @override
+  String get youWonTitle => 'Вы победили!';
+
+  @override
+  String get youLostTitle => 'Вы проиграли';
+
+  @override
+  String get byCheckmate => 'матом';
+
+  @override
+  String get byResignation => 'сдачей';
+
+  @override
+  String get byTimeout => 'по времени';
+
+  @override
+  String get byStalemate => 'патом';
+
+  @override
+  String get byRepetition => 'повторением ходов';
+
+  @override
+  String get byFiftyMove => 'по правилу 50 ходов';
+
+  @override
+  String get byInsufficient => 'из-за недостатка материала';
+
+  @override
+  String get byAgreement => 'по соглашению';
+
+  @override
+  String get byTimeNoMate => 'по времени, но мат невозможен';
+
+  @override
+  String get tierCommon => 'Обычное';
+
+  @override
+  String get tierRare => 'Редкое';
+
+  @override
+  String get tierMythic => 'Мифическое';
+
+  @override
+  String get opItalianD =>
+      'Быстрое развитие и ранняя борьба за центр: слон на c4 смотрит на f7, затем c3 и d3 или d4. Спокойно с виду, полно ловушек внутри.';
+
+  @override
+  String get opRuyLopezD =>
+      'Слон давит на коня, защищающего e5. Медленный и глубокий план, уже больше века главный путь на высшем уровне.';
+
+  @override
+  String get opLondonD =>
+      'Одна и та же простая схема почти в каждой партии: d4, Сf4, e3, Кf3 и c3. Надёжно, легко выучить и много шансов на атаку короля.';
+
+  @override
+  String get opQueensGambitD =>
+      'Белые предлагают пешку c, чтобы увести пешку d чёрных из центра. Если чёрные берут, белые строят большой центр и возвращают пешку.';
+
+  @override
+  String get opKingsGambitD =>
+      'Белые отдают пешку f уже на втором ходу, чтобы открыть линию f и рвануть в атаку. Дико, рискованно, любимец романтической эпохи.';
+
+  @override
+  String get opFriedLiverD =>
+      'Против защиты двух коней конь прыгает на g5, а потом жертвует собой на f7, вытаскивая чёрного короля на открытое место.';
+
+  @override
+  String get opSicilianD =>
+      'Чёрные отвечают на 1.e4 ходом c5 и идут на неравную борьбу: острые партии, где чёрные играют на победу, а не на ничью.';
+
+  @override
+  String get opFrenchD =>
+      'Чёрные строят прочную цепь e6 и d5, отдают белым пространство и затем бьют по центру ходом c5.';
+
+  @override
+  String get opCaroKannD =>
+      'Как французская, но белопольный слон выходит раньше. Надёжная, трудно пробиваемая защита с чистой пешечной структурой.';
+
+  @override
+  String get opKingsIndianD =>
+      'Чёрные отдают белым весь центр, рокируют и затем бьют ходом e5 или c5, часто устраивая штурм на королевском фланге.';
+
+  @override
+  String get opScandinavianD =>
+      'Чёрные сразу атакуют e4 ходом d5. Одна простая идея, быстрая игра и мало теории.';
+
+  @override
+  String get opBudapestD =>
+      'Против 1.d4 Кf6 2.c4 чёрные вставляют e5, чтобы быстро освободить фигуры. Пешка обычно возвращается, а инициатива остаётся.';
+
+  @override
+  String get kindOpening => 'Дебют';
+
+  @override
+  String get kindDefense => 'Защита';
+
+  @override
+  String get kindGambit => 'Гамбит';
+
+  @override
+  String get kindAttack => 'Атака';
+
+  @override
+  String get trainAll => 'Все';
+
+  @override
+  String get trainSearch => 'Поиск дебютов';
+
+  @override
+  String get trainTryFirst => 'Попробовать первый вариант';
+
+  @override
+  String trainLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count вариантов',
+      few: '$count варианта',
+      one: '$count вариант',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trainAsWhite => 'За белых';
+
+  @override
+  String get trainAsBlack => 'За чёрных';
+
+  @override
+  String trainPractise(String name) {
+    return 'Сыграть против $name';
+  }
+
+  @override
+  String get trainNoResults => 'Ничего не найдено.';
+
+  @override
+  String get trainMainLine => 'Главный вариант';
+
+  @override
+  String get trainSecondLine => 'Второй вариант';
+
+  @override
+  String get trainThirdLine => 'Третий вариант';
+
+  @override
+  String trainOrigin(String origin) {
+    return 'Назван в честь: $origin';
+  }
+
+  @override
+  String get toStart => 'В начало';
+
+  @override
+  String get toEnd => 'В конец';
+
+  @override
+  String trainLineProgress(String name, int done, int total) {
+    return '$name · ход $done из $total';
+  }
+
+  @override
+  String trainLineWrong(String san) {
+    return 'Не по варианту. Ходите $san';
+  }
+
+  @override
+  String get trainLineDone => 'Вариант пройден! Играйте дальше.';
+
+  @override
+  String get showBestAfterLine => 'Откроется, когда пройдёте вариант дебюта';
 }

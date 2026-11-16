@@ -79,6 +79,26 @@ Future<Uint8List> boardPng(
   List<Square> highlight = const [],
   int size = 1024,
 }) async {
+  final image = await boardImage(
+    position,
+    flipped: flipped,
+    highlight: highlight,
+    size: size,
+  );
+  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+  image.dispose();
+  return bytes!.buffer.asUint8List();
+}
+
+/// [boardPng] as an image in memory, with the file and rank letters
+/// unless [labels] is false.
+Future<ui.Image> boardImage(
+  Position position, {
+  bool flipped = false,
+  List<Square> highlight = const [],
+  int size = 1024,
+  bool labels = true,
+}) async {
   final square = size / 8;
   final theme = AppSettings.instance.boardTheme.value;
   final recorder = ui.PictureRecorder();
@@ -101,30 +121,32 @@ Future<Uint8List> boardPng(
     canvas.drawRect(originOf(s) & Size(square, square), paint);
   }
 
-  // File letters along the bottom row, rank numbers down the left column,
-  // each in the colour of the other kind of square, as on the board.
-  Color labelOn(int file, int rank) =>
-      (file + rank).isOdd ? theme.dark : theme.light;
-  final bottomRank = flipped ? 7 : 0;
-  final leftFile = flipped ? 7 : 0;
-  for (var i = 0; i < 8; i++) {
-    final file = flipped ? 7 - i : i;
-    final rank = flipped ? i : 7 - i;
-    _label(
-      canvas,
-      String.fromCharCode(97 + file),
-      Offset((i + 1) * square - square * 0.06, size - square * 0.04),
-      square,
-      labelOn(file, bottomRank),
-      alignRight: true,
-    );
-    _label(
-      canvas,
-      '${rank + 1}',
-      Offset(square * 0.05, i * square + square * 0.03),
-      square,
-      labelOn(leftFile, rank),
-    );
+  if (labels) {
+    // File letters along the bottom row, rank numbers down the left column,
+    // each in the colour of the other kind of square, as on the board.
+    Color labelOn(int file, int rank) =>
+        (file + rank).isOdd ? theme.dark : theme.light;
+    final bottomRank = flipped ? 7 : 0;
+    final leftFile = flipped ? 7 : 0;
+    for (var i = 0; i < 8; i++) {
+      final file = flipped ? 7 - i : i;
+      final rank = flipped ? i : 7 - i;
+      _label(
+        canvas,
+        String.fromCharCode(97 + file),
+        Offset((i + 1) * square - square * 0.06, size - square * 0.04),
+        square,
+        labelOn(file, bottomRank),
+        alignRight: true,
+      );
+      _label(
+        canvas,
+        '${rank + 1}',
+        Offset(square * 0.05, i * square + square * 0.03),
+        square,
+        labelOn(leftFile, rank),
+      );
+    }
   }
 
   final inset = square * 0.02;
@@ -138,9 +160,7 @@ Future<Uint8List> boardPng(
   final picture = recorder.endRecording();
   final image = await picture.toImage(size, size);
   picture.dispose();
-  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-  image.dispose();
-  return bytes!.buffer.asUint8List();
+  return image;
 }
 
 void _label(

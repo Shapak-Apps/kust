@@ -2942,6 +2942,366 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Edit profile'**
   String get editProfile;
+
+  /// No description provided for @navTrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Train'**
+  String get navTrain;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @games.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get games;
+
+  /// No description provided for @gameHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Game history'**
+  String get gameHistory;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAll;
+
+  /// No description provided for @qrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code'**
+  String get qrCode;
+
+  /// No description provided for @trainSoonSub.
+  ///
+  /// In en, this message translates to:
+  /// **'A new way to practise is on its way. Until then, keep sharp with puzzles.'**
+  String get trainSoonSub;
+
+  /// No description provided for @solvePuzzles.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve puzzles'**
+  String get solvePuzzles;
+
+  /// No description provided for @logOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logOut;
+
+  /// No description provided for @logOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get logOutTitle;
+
+  /// No description provided for @logOutSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.'**
+  String get logOutSub;
+
+  /// No description provided for @youWonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You won!'**
+  String get youWonTitle;
+
+  /// No description provided for @youLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You lost'**
+  String get youLostTitle;
+
+  /// No description provided for @byCheckmate.
+  ///
+  /// In en, this message translates to:
+  /// **'by checkmate'**
+  String get byCheckmate;
+
+  /// No description provided for @byResignation.
+  ///
+  /// In en, this message translates to:
+  /// **'by resignation'**
+  String get byResignation;
+
+  /// No description provided for @byTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'on time'**
+  String get byTimeout;
+
+  /// No description provided for @byStalemate.
+  ///
+  /// In en, this message translates to:
+  /// **'by stalemate'**
+  String get byStalemate;
+
+  /// No description provided for @byRepetition.
+  ///
+  /// In en, this message translates to:
+  /// **'by repetition'**
+  String get byRepetition;
+
+  /// No description provided for @byFiftyMove.
+  ///
+  /// In en, this message translates to:
+  /// **'by the 50-move rule'**
+  String get byFiftyMove;
+
+  /// No description provided for @byInsufficient.
+  ///
+  /// In en, this message translates to:
+  /// **'by insufficient material'**
+  String get byInsufficient;
+
+  /// No description provided for @byAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'by agreement'**
+  String get byAgreement;
+
+  /// No description provided for @byTimeNoMate.
+  ///
+  /// In en, this message translates to:
+  /// **'on time, with no mate possible'**
+  String get byTimeNoMate;
+
+  /// No description provided for @tierCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get tierCommon;
+
+  /// No description provided for @tierRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get tierRare;
+
+  /// No description provided for @tierMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic'**
+  String get tierMythic;
+
+  /// No description provided for @opItalianD.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick development and an early fight for the centre: bishop to c4 aims at f7, then c3 and d3 or d4. Calm on the surface, full of traps underneath.'**
+  String get opItalianD;
+
+  /// No description provided for @opRuyLopezD.
+  ///
+  /// In en, this message translates to:
+  /// **'The bishop pins pressure on the knight that guards e5. A slow, rich plan that has been the main road at the top for over a century.'**
+  String get opRuyLopezD;
+
+  /// No description provided for @opLondonD.
+  ///
+  /// In en, this message translates to:
+  /// **'The same easy setup almost every game: d4, Bf4, e3, Nf3 and c3. Solid, quick to learn, and full of chances to attack the king.'**
+  String get opLondonD;
+
+  /// No description provided for @opQueensGambitD.
+  ///
+  /// In en, this message translates to:
+  /// **'White offers the c-pawn to pull Black\'s d-pawn from the centre. If Black takes, White builds a big centre and wins the pawn back.'**
+  String get opQueensGambitD;
+
+  /// No description provided for @opKingsGambitD.
+  ///
+  /// In en, this message translates to:
+  /// **'White gives the f-pawn on move two to open the f-file and race for the attack. Wild, risky and a favourite of the Romantic era.'**
+  String get opKingsGambitD;
+
+  /// No description provided for @opFriedLiverD.
+  ///
+  /// In en, this message translates to:
+  /// **'Against the Two Knights, the knight jumps to g5 and then sacrifices itself on f7 to drag the black king into the open.'**
+  String get opFriedLiverD;
+
+  /// No description provided for @opSicilianD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black answers 1.e4 with c5 and fights unequally: sharp, double-edged games where Black plays to win, not to draw.'**
+  String get opSicilianD;
+
+  /// No description provided for @opFrenchD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black builds a solid chain with e6 and d5, lets White take space, then strikes back at the centre with c5.'**
+  String get opFrenchD;
+
+  /// No description provided for @opCaroKannD.
+  ///
+  /// In en, this message translates to:
+  /// **'Like the French, but the light-squared bishop gets out first. A sound, hard-to-crack defence with a clean pawn structure.'**
+  String get opCaroKannD;
+
+  /// No description provided for @opKingsIndianD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black lets White take the whole centre, finishes castling, then hits back with e5 or c5 and often storms the kingside.'**
+  String get opKingsIndianD;
+
+  /// No description provided for @opScandinavianD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black attacks e4 at once with d5. One simple idea, a quick game, and little theory to remember.'**
+  String get opScandinavianD;
+
+  /// No description provided for @opBudapestD.
+  ///
+  /// In en, this message translates to:
+  /// **'Against 1.d4 Nf6 2.c4, Black throws in e5 to free the pieces fast. The pawn usually comes back, with the initiative.'**
+  String get opBudapestD;
+
+  /// No description provided for @kindOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get kindOpening;
+
+  /// No description provided for @kindDefense.
+  ///
+  /// In en, this message translates to:
+  /// **'Defence'**
+  String get kindDefense;
+
+  /// No description provided for @kindGambit.
+  ///
+  /// In en, this message translates to:
+  /// **'Gambit'**
+  String get kindGambit;
+
+  /// No description provided for @kindAttack.
+  ///
+  /// In en, this message translates to:
+  /// **'Attack'**
+  String get kindAttack;
+
+  /// No description provided for @trainAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get trainAll;
+
+  /// No description provided for @trainSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search openings'**
+  String get trainSearch;
+
+  /// No description provided for @trainTryFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Try the first line'**
+  String get trainTryFirst;
+
+  /// No description provided for @trainLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 line} other{{count} lines}}'**
+  String trainLines(int count);
+
+  /// No description provided for @trainAsWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'As White'**
+  String get trainAsWhite;
+
+  /// No description provided for @trainAsBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'As Black'**
+  String get trainAsBlack;
+
+  /// No description provided for @trainPractise.
+  ///
+  /// In en, this message translates to:
+  /// **'Practise vs {name}'**
+  String trainPractise(String name);
+
+  /// No description provided for @trainNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No openings match your search.'**
+  String get trainNoResults;
+
+  /// No description provided for @trainMainLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Main line'**
+  String get trainMainLine;
+
+  /// No description provided for @trainSecondLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Second line'**
+  String get trainSecondLine;
+
+  /// No description provided for @trainThirdLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Third line'**
+  String get trainThirdLine;
+
+  /// No description provided for @trainOrigin.
+  ///
+  /// In en, this message translates to:
+  /// **'Named after {origin}'**
+  String trainOrigin(String origin);
+
+  /// No description provided for @toStart.
+  ///
+  /// In en, this message translates to:
+  /// **'To the start'**
+  String get toStart;
+
+  /// No description provided for @toEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'To the end'**
+  String get toEnd;
+
+  /// No description provided for @trainLineProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · move {done} of {total}'**
+  String trainLineProgress(String name, int done, int total);
+
+  /// No description provided for @trainLineWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the line. Play {san}'**
+  String trainLineWrong(String san);
+
+  /// No description provided for @trainLineDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Line done! Play on from here.'**
+  String get trainLineDone;
+
+  /// No description provided for @showBestAfterLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks when you finish the opening line'**
+  String get showBestAfterLine;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

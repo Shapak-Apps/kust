@@ -30,7 +30,6 @@ import 'package:kust/features/game/end_text.dart';
 import 'package:kust/features/game/game_export.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
-import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
@@ -49,6 +48,9 @@ class GameScreen extends ConsumerStatefulWidget {
     this.timeControl,
     this.practiceMode = false,
     this.resume,
+    this.line,
+    this.lineName,
+    this.onLineDone,
   });
 
   final Bot? bot;
@@ -60,14 +62,20 @@ class GameScreen extends ConsumerStatefulWidget {
   /// A saved game to continue instead of starting a new one.
   final LiveGame? resume;
 
+  /// An opening line from Train to drill from the first move, and its
+  /// name.
+  final List<String>? line;
+  final String? lineName;
+
+  /// Called when the player has played the whole [line].
+  final void Function()? onLineDone;
+
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends ConsumerState<GameScreen>
     with WidgetsBindingObserver {
-  bool _hasDismissedResultDialog = false;
-
   /// The result dialog of a checkmate or a draw waits for the board's
   /// end-of-game show to finish.
   Timer? _endDialogTimer;
@@ -95,6 +103,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           playerSide: widget.playerSide,
           practiceMode: widget.practiceMode,
           timeControl: widget.timeControl,
+          line: widget.line ?? const [],
         );
       }
     });
@@ -313,12 +322,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _showResultDialog(String title, String message) {
-    showKustDialog<void>(
+    showGameResult(
       context,
-      builder: (dialogContext) => GameResultContent(
+      builder: (dialogContext) => GameResultScreen(
         title: title,
         message: message,
         botQuote: _botEndQuote(),
+        onClose: () => Navigator.of(dialogContext).pop(),
+        onShare: _export,
         onReview: (id) {
           Navigator.of(dialogContext).pop();
           context.push('/review/$id');
@@ -334,43 +345,31 @@ class _GameScreenState extends ConsumerState<GameScreen>
               playerSide: widget.playerSide,
               practiceMode: widget.practiceMode,
               timeControl: widget.timeControl,
+              line: widget.line ?? const [],
             );
           }
         },
-        onLobby: () {
-          Navigator.of(dialogContext).pop();
-          context.go('/play');
-        },
       ),
-    ).then((_) {
-      if (mounted) {
-        setState(() {
-          _hasDismissedResultDialog = true;
-        });
-      }
-    });
+    );
+  }
+
+  void _export() {
+    final g = ref.read(chessControllerProvider);
+    showExportSheet(
+      context,
+      position: g.displayPosition,
+      flipped: g.mode == GameMode.bot && g.playerSide == Side.black,
+      pgn: livePgn(g),
+      highlight: g.displayMoveSquares,
+    );
   }
 
   /// The title and message of the dialog for a game that has ended, or null
   /// while it goes on.
-  (String, String)? _endDialogTexts(GameState state) {
-    final t = context.t;
-    return switch (state.status) {
-      GameStatus.checkmate => (
-        t.resultCheckmate,
-        wonGameMessage(t, state, state.position.turn.opposite),
-      ),
-      GameStatus.draw => (t.resultDraw, endMessage(t, state)),
-      GameStatus.timeout => (t.resultTimeOut, endMessage(t, state)),
-      GameStatus.resigned => (
-        t.resultGameOver,
-        state.mode == GameMode.local && state.resignedSide != null
-            ? wonGameMessage(t, state, state.resignedSide!.opposite)
-            : t.youResigned,
-      ),
-      GameStatus.playing || GameStatus.loading => null,
-    };
-  }
+  (String, String)? _endDialogTexts(GameState state) =>
+      state.status == GameStatus.playing || state.status == GameStatus.loading
+      ? null
+      : resultHeadline(context.t, state);
 
   void _showEndDialogForState(GameState state) {
     final texts = _endDialogTexts(state);
@@ -383,12 +382,16 @@ class _GameScreenState extends ConsumerState<GameScreen>
       if (next.engineFailed && previous?.engineFailed != true) {
         _showEngineFailed();
       }
+      if (previous != null && previous.inLine && !next.inLine) {
+        if (next.lineLength > 0 && next.moves.length >= next.lineLength) {
+          widget.onLineDone?.call();
+        }
+      }
       if (previous?.status == next.status) return;
 
       switch (next.status) {
         case GameStatus.playing:
           _endDialogTimer?.cancel();
-          _hasDismissedResultDialog = false;
           _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
@@ -469,18 +472,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   KustIconButton(
                     icon: Icons.ios_share_rounded,
                     label: context.t.exportGame,
-                    onTap: () {
-                      final g = ref.read(chessControllerProvider);
-                      showExportSheet(
-                        context,
-                        position: g.displayPosition,
-                        flipped:
-                            g.mode == GameMode.bot &&
-                            g.playerSide == Side.black,
-                        pgn: livePgn(g),
-                        highlight: g.displayMoveSquares,
-                      );
-                    },
+                    onTap: _export,
                   ),
                 if (screen.canAbort)
                   KustIconButton(
@@ -494,7 +486,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     label: context.t.resign,
                     onTap: _confirmResign,
                   ),
-                if (isFinished && !_hasDismissedResultDialog)
+                if (isFinished)
                   KustIconButton(
                     icon: Icons.emoji_events_outlined,
                     label: context.t.showResult,
@@ -506,6 +498,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ],
             ),
             const _EngineSetupBanner(),
+            if (widget.lineName != null) _LineBanner(name: widget.lineName!),
             Expanded(
               child: SafeArea(
                 top: false,
@@ -1134,6 +1127,62 @@ class _MoveFeedbackLine extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// While an opening line is drilled: its name and how far along it is, the
+/// right move after a wrong one, and a word when it is done.
+class _LineBanner extends ConsumerWidget {
+  const _LineBanner({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final k = context.k;
+    final t = context.t;
+    final s = ref.watch(
+      chessControllerProvider.select(
+        (g) =>
+            (done: g.moves.length, total: g.lineLength, wrong: g.lineExpected),
+      ),
+    );
+    if (s.total == 0) return const SizedBox.shrink();
+    final finished = s.done >= s.total;
+    final (text, colour, icon) = finished
+        ? (t.trainLineDone, k.success, Icons.check_circle_rounded)
+        : s.wrong != null
+        ? (t.trainLineWrong(s.wrong!), k.danger, Icons.close_rounded)
+        : (
+            t.trainLineProgress(name, s.done, s.total),
+            k.ink,
+            Icons.menu_book_rounded,
+          );
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        color: k.surface,
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: colour),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: k.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colour,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

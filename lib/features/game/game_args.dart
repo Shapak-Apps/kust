@@ -13,6 +13,14 @@ class GameArgs {
   /// A saved game to pick up instead of starting a new one.
   final LiveGame? resume;
 
+  /// An opening line from Train to drill from the first move, in
+  /// dartchess UCI, and its name for the banner.
+  final List<String>? line;
+  final String? lineName;
+
+  /// Called when the player has played the whole [line].
+  final void Function()? onLineDone;
+
   const GameArgs({
     this.bot,
     required this.playerSide,
@@ -20,5 +28,8 @@ class GameArgs {
     this.timeControl,
     this.practiceMode = false,
     this.resume,
+    this.line,
+    this.lineName,
+    this.onLineDone,
   });
 }

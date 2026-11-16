@@ -1617,4 +1617,214 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get editProfile => 'Profili üýtget';
+
+  @override
+  String get navTrain => 'Türgenleşik';
+
+  @override
+  String get joined => 'Goşulan senesi';
+
+  @override
+  String get rating => 'Reýting';
+
+  @override
+  String get games => 'Oýunlar';
+
+  @override
+  String get gameHistory => 'Oýunlarym';
+
+  @override
+  String get viewAll => 'Hemmesi';
+
+  @override
+  String get qrCode => 'QR kod';
+
+  @override
+  String get trainSoonSub =>
+      'Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň.';
+
+  @override
+  String get solvePuzzles => 'Mesele çözüň';
+
+  @override
+  String get logOut => 'Çyk';
+
+  @override
+  String get logOutTitle => 'Profilden çykmalymy?';
+
+  @override
+  String get logOutSub =>
+      'Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar.';
+
+  @override
+  String get youWonTitle => 'Siz ýeňdiňiz!';
+
+  @override
+  String get youLostTitle => 'Siz utuldyňyz';
+
+  @override
+  String get byCheckmate => 'şahmat bilen';
+
+  @override
+  String get byResignation => 'boýun alyş bilen';
+
+  @override
+  String get byTimeout => 'wagt boýunça';
+
+  @override
+  String get byStalemate => 'pat bilen';
+
+  @override
+  String get byRepetition => 'gaýtalanma bilen';
+
+  @override
+  String get byFiftyMove => '50 göçüm düzgüni boýunça';
+
+  @override
+  String get byInsufficient => 'çöp ýetmezçiligi sebäpli';
+
+  @override
+  String get byAgreement => 'ylalaşyk bilen';
+
+  @override
+  String get byTimeNoMate => 'wagt boýunça, şahmat mümkin däl';
+
+  @override
+  String get tierCommon => 'Adaty';
+
+  @override
+  String get tierRare => 'Seýrek';
+
+  @override
+  String get tierMythic => 'Mifiki';
+
+  @override
+  String get opItalianD =>
+      'Çalt ösüş we merkez üçin ir göreş: c4-däki pil f7-ä seredýär, soňra c3 we d3 ýa-da d4. Daşyndan asuda, içi duzaklardan doly.';
+
+  @override
+  String get opRuyLopezD =>
+      'Pil e5-i goraýan ata basyş edýär. Ýuwaş we baý meýilnama, bir asyrdan gowrak ýokary derejede esasy ýol.';
+
+  @override
+  String get opLondonD =>
+      'Her oýunda diýen ýaly şol bir ýönekeý gurluş: d4, Pf4, e3, Af3 we c3. Ygtybarly, öwrenmesi aňsat we şa hüjüm etmäge köp mümkinçilik.';
+
+  @override
+  String get opQueensGambitD =>
+      'Ak gara d-peşkasyny merkezden aýyrmak üçin c-peşkasyny hödürleýär. Gara alsa, ak uly merkez gurup, peşkany yzyna alýar.';
+
+  @override
+  String get opKingsGambitD =>
+      'Ak f-liniýany açmak we hüjüme atylmak üçin ikinji göçümde f-peşkasyny berýär. Wagşy, töwekgel, romantik döwrüň söýgülisi.';
+
+  @override
+  String get opFriedLiverD =>
+      'Iki at goragyna garşy at g5-e böküp, soňra f7-de özüni gurban edýär we gara şany açyk ýere çykarýar.';
+
+  @override
+  String get opSicilianD =>
+      'Gara 1.e4-e c5 bilen jogap berýär we deň bolmadyk göreşe girýär: gara deňe-deňlik üçin däl, ýeňiş üçin oýnaýar.';
+
+  @override
+  String get opFrenchD =>
+      'Gara e6 we d5 bilen berk zynjyr gurýar, aga giňişlik berýär, soňra c5 bilen merkeze urýar.';
+
+  @override
+  String get opCaroKannD =>
+      'Fransuz goragy ýaly, ýöne ak meýdançaly pil öň çykýar. Ygtybarly, böwsmesi kyn gorag we arassa peşka gurluşy.';
+
+  @override
+  String get opKingsIndianD =>
+      'Gara bütin merkezi aga berýär, rokirowka edýär, soňra e5 ýa-da c5 bilen urýar we köplenç şa ganatynda hüjüm edýär.';
+
+  @override
+  String get opScandinavianD =>
+      'Gara d5 bilen derrew e4-e hüjüm edýär. Bir ýönekeý pikir, çalt oýun we az nazaryýet.';
+
+  @override
+  String get opBudapestD =>
+      '1.d4 Af6 2.c4-e garşy gara çöpleri çalt boşatmak üçin e5 oýnaýar. Peşka köplenç yzyna gelýär, başlangyç bolsa galýar.';
+
+  @override
+  String get kindOpening => 'Debýut';
+
+  @override
+  String get kindDefense => 'Gorag';
+
+  @override
+  String get kindGambit => 'Gambit';
+
+  @override
+  String get kindAttack => 'Hüjüm';
+
+  @override
+  String get trainAll => 'Hemmesi';
+
+  @override
+  String get trainSearch => 'Debýut gözläň';
+
+  @override
+  String get trainTryFirst => 'Birinji warianty synap görüň';
+
+  @override
+  String trainLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wariant',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trainAsWhite => 'Ak bilen';
+
+  @override
+  String get trainAsBlack => 'Gara bilen';
+
+  @override
+  String trainPractise(String name) {
+    return '$name bilen oýnaň';
+  }
+
+  @override
+  String get trainNoResults => 'Hiç zat tapylmady.';
+
+  @override
+  String get trainMainLine => 'Esasy wariant';
+
+  @override
+  String get trainSecondLine => 'Ikinji wariant';
+
+  @override
+  String get trainThirdLine => 'Üçünji wariant';
+
+  @override
+  String trainOrigin(String origin) {
+    return 'Ady: $origin';
+  }
+
+  @override
+  String get toStart => 'Başyna';
+
+  @override
+  String get toEnd => 'Soňuna';
+
+  @override
+  String trainLineProgress(String name, int done, int total) {
+    return '$name · $done/$total göçüm';
+  }
+
+  @override
+  String trainLineWrong(String san) {
+    return 'Wariant boýunça däl. $san oýnaň';
+  }
+
+  @override
+  String get trainLineDone => 'Wariant tamam! Indi dowam ediň.';
+
+  @override
+  String get showBestAfterLine =>
+      'Debýut wariantyny tamamlanyňyzdan soň açylar';
 }

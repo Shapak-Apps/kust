@@ -65,6 +65,20 @@ void main() {
     expect(File(second).existsSync(), false);
   });
 
+  test('logging out leaves a guest', () async {
+    await store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi');
+    final picked = File('${dir.path}/picked.jpg')..writeAsBytesSync([1]);
+    await store.setPhoto(picked.path);
+    final photo = store.photoPath!;
+
+    await store.logOut();
+    expect(store.username, isNull);
+    expect(store.bio, '');
+    expect(store.photoPath, isNull);
+    expect(File(photo).existsSync(), false);
+    expect(store.guestName, isNot('Ali'));
+  });
+
   testWidgets('the profile shows, and edits in place', (tester) async {
     await tester.runAsync(
       () => store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi'),
@@ -81,8 +95,13 @@ void main() {
     expect(find.text('Ali'), findsOneWidget);
     expect(find.text('@ali'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
+    // The real day the app was first opened, not a stand-in.
+    final now = DateTime.now();
+    expect(find.text('Joined'), findsOneWidget);
+    expect(find.textContaining('${now.year}'), findsWidgets);
+    expect(find.byTooltip('QR code'), findsNothing);
 
-    await tester.tap(find.text('Edit profile'));
+    await tester.tap(find.byTooltip('Edit profile'));
     await tester.pump();
     KustButton save() => tester.widget(
       find.byWidgetPredicate((w) => w is KustButton && w.label == 'Save'),

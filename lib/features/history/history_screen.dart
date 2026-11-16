@@ -5,7 +5,6 @@ import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/history/history_analysis.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
-import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/felt_header.dart';
@@ -54,11 +53,15 @@ class HistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return ColoredBox(
-      color: k.bg,
-      child: Column(
+    return Scaffold(
+      backgroundColor: k.bg,
+      body: Column(
         children: [
-          FeltHeader(title: context.t.navHistory),
+          FeltHeader(
+            title: context.t.gameHistory,
+            onBack: () =>
+                context.canPop() ? context.pop() : context.go('/play'),
+          ),
           Expanded(
             child: ValueListenableBuilder(
               valueListenable: GameHistoryStore.instance.listenable(),
@@ -72,12 +75,12 @@ class HistoryScreen extends StatelessWidget {
                     0,
                     8,
                     0,
-                    KustNavBar.clearance(context),
+                    MediaQuery.paddingOf(context).bottom + 24,
                   ),
                   itemCount: games.length,
                   separatorBuilder: (context, _) =>
                       Divider(height: 1, thickness: 1, color: context.k.line),
-                  itemBuilder: (context, i) => _GameTile(game: games[i]),
+                  itemBuilder: (context, i) => GameTile(game: games[i]),
                 );
               },
             ),
@@ -96,7 +99,7 @@ class _EmptyHistory extends StatelessWidget {
     final k = context.k;
     return Center(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(32, 0, 32, KustNavBar.clearance(context)),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -122,8 +125,10 @@ class _EmptyHistory extends StatelessWidget {
   }
 }
 
-class _GameTile extends StatelessWidget {
-  const _GameTile({required this.game});
+/// One finished game as a row: opponent, result, date and accuracy. Opens
+/// the replay; a long press offers to delete it.
+class GameTile extends StatelessWidget {
+  const GameTile({super.key, required this.game});
 
   final GameRecord game;
 

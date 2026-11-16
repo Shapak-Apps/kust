@@ -22,7 +22,7 @@ class KustLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final box = height * _boxPerCap;
-    final width = box * 1180 / 540;
+    final width = box * 1214 / 540;
     Widget layer(String asset, Color color) => SvgPicture.asset(
       asset,
       width: width,

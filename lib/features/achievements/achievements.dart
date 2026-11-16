@@ -5,10 +5,39 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
 
-/// One achievement: what it is called, how it is earned and its icon.
+/// How hard an achievement is to earn, shown by its colour: green for
+/// common ones most players get, yellow for rare ones that take a
+/// challenge, red for mythic ones only a few reach.
+enum AchievementTier {
+  common(Color(0xFF4CAF50), Colors.white),
+  rare(Color(0xFFFFBB00), Color(0xFF17181A)),
+  mythic(Color(0xFFE5484D), Colors.white);
+
+  const AchievementTier(this.color, this.onColor);
+
+  final Color color;
+
+  /// The icon's colour on [color].
+  final Color onColor;
+
+  String labelIn(AppL10n t) => switch (this) {
+    AchievementTier.common => t.tierCommon,
+    AchievementTier.rare => t.tierRare,
+    AchievementTier.mythic => t.tierMythic,
+  };
+}
+
+/// One achievement: what it is called, how it is earned, its icon and how
+/// rare it is.
 @immutable
 class Achievement {
-  const Achievement(this.id, this.title, this.description, this.icon);
+  const Achievement(
+    this.id,
+    this.title,
+    this.description,
+    this.icon, {
+    this.tier = AchievementTier.common,
+  });
 
   /// The English title and description; shown through [titleIn] and
   /// [descriptionIn], which use the language in use.
@@ -16,6 +45,7 @@ class Achievement {
   final String title;
   final String description;
   final IconData icon;
+  final AchievementTier tier;
 
   String titleIn(AppL10n t) => switch (id) {
     'first_game' => t.ach_first_game_t,
@@ -84,24 +114,28 @@ const List<Achievement> kAchievements = [
     'Lightning',
     'Checkmate a bot in 20 moves or less',
     Icons.bolt_rounded,
+    tier: AchievementTier.rare,
   ),
   Achievement(
     'giant_slayer',
     'Giant slayer',
     'Beat a bot rated 300 or more above you',
     Icons.trending_up_rounded,
+    tier: AchievementTier.mythic,
   ),
   Achievement(
     'three_bots',
     'Rising star',
     'Beat 3 different bots',
     Icons.star_rounded,
+    tier: AchievementTier.rare,
   ),
   Achievement(
     'all_bots',
     'Champion',
     'Beat every bot',
     Icons.workspace_premium_rounded,
+    tier: AchievementTier.mythic,
   ),
   Achievement(
     'marathon',
@@ -114,12 +148,14 @@ const List<Achievement> kAchievements = [
     'Sharpshooter',
     'Play a game with 90% accuracy',
     Icons.gps_fixed_rounded,
+    tier: AchievementTier.mythic,
   ),
   Achievement(
     'brilliant',
     'Brilliant!',
     'Play a brilliant move',
     Icons.auto_awesome_rounded,
+    tier: AchievementTier.mythic,
   ),
   // Puzzles.
   Achievement(
@@ -133,18 +169,21 @@ const List<Achievement> kAchievements = [
     'Knot by knot',
     'Solve 25 puzzles',
     Icons.grid_view_rounded,
+    tier: AchievementTier.rare,
   ),
   Achievement(
     'first_gol',
     'First göl',
     'Weave a whole göl',
     Icons.texture_rounded,
+    tier: AchievementTier.rare,
   ),
   Achievement(
     'whole_carpet',
     'Master weaver',
     'Weave all five göls',
     Icons.auto_fix_high_rounded,
+    tier: AchievementTier.mythic,
   ),
   Achievement(
     'streak_3',
@@ -157,6 +196,7 @@ const List<Achievement> kAchievements = [
     'Week of fire',
     'Solve the daily puzzle 7 days in a row',
     Icons.whatshot_rounded,
+    tier: AchievementTier.rare,
   ),
 ];
 

@@ -12,30 +12,36 @@ String sideName(AppL10n t, GameState g, Side side) {
   return side == g.playerSide ? t.youName : (g.bot?.name ?? t.blackName);
 }
 
-/// Whether [side] is the player in a game against a bot.
-bool _isYou(GameState g, Side side) =>
-    g.mode == GameMode.bot && side == g.playerSide;
-
-/// "You won the game." or "{name} won the game.", for the checkmate dialog.
-String wonGameMessage(AppL10n t, GameState g, Side winner) =>
-    _isYou(g, winner) ? t.youWonGame : t.wonTheGame(sideName(t, g, winner));
-
-/// The message under "Draw" or "Time out" when a game ends that way.
-String endMessage(AppL10n t, GameState g) {
-  if (g.status == GameStatus.timeout) {
-    final loser = g.flagFell;
-    if (loser == null) return t.gameEndedOnTime;
-    final winner = loser.opposite;
-    return _isYou(g, winner)
-        ? t.youWonOnTime
-        : t.endTimeWon(sideName(t, g, winner));
-  }
-  return switch (g.endReason) {
-    EndReason.stalemate => t.endStalemate,
-    EndReason.fiftyMove => t.endFiftyMove,
-    EndReason.insufficientMaterial => t.endInsufficient,
-    EndReason.repetition => t.endRepetition,
-    EndReason.timeNoMate => t.endTimeNoMate,
-    _ => t.gameDrawn,
+/// The result screen's headline and how the game ended: ("You won!",
+/// "by checkmate"), ("Draw", "by stalemate"), or ("White won", "on time")
+/// in pass and play.
+(String, String) resultHeadline(AppL10n t, GameState g) {
+  final Side? winner = switch (g.status) {
+    GameStatus.checkmate => g.position.turn.opposite,
+    GameStatus.resigned =>
+      g.mode == GameMode.local
+          ? g.resignedSide?.opposite
+          : g.playerSide.opposite,
+    GameStatus.timeout => g.flagFell?.opposite,
+    _ => null,
   };
+  final title = winner == null
+      ? t.resultDraw
+      : g.mode == GameMode.local
+      ? (winner == Side.white ? t.resultWhiteWon : t.resultBlackWon)
+      : (winner == g.playerSide ? t.youWonTitle : t.youLostTitle);
+  final how = switch (g.status) {
+    GameStatus.checkmate => t.byCheckmate,
+    GameStatus.resigned => t.byResignation,
+    GameStatus.timeout => winner == null ? t.byTimeNoMate : t.byTimeout,
+    _ => switch (g.endReason) {
+      EndReason.stalemate => t.byStalemate,
+      EndReason.fiftyMove => t.byFiftyMove,
+      EndReason.insufficientMaterial => t.byInsufficient,
+      EndReason.repetition => t.byRepetition,
+      EndReason.timeNoMate => t.byTimeNoMate,
+      _ => t.byAgreement,
+    },
+  };
+  return (title, how);
 }
