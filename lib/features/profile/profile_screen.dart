@@ -149,8 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
-    final top = MediaQuery.paddingOf(context).top;
-    final square = MediaQuery.sizeOf(context).width / 8;
+    final square = MediaQuery.sizeOf(context).width / _BoardBanner.files;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Stack(
@@ -165,8 +164,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Column(
                     children: [
-                      // Both ranks whole, and a little of the third.
-                      _BoardBanner(height: top + square * 2.4),
+                      // Two ranks, the pawns behind the status bar.
+                      _BoardBanner(height: square * 2),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -320,14 +319,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// The first two ranks of the board in the theme and pieces picked in
+/// A corner of the board, five big squares by two, in the theme and pieces
+/// picked in
 /// settings, fading into the page at the bottom.
 class _BoardBanner extends StatelessWidget {
   const _BoardBanner({required this.height});
 
   final double height;
 
-  static const _backRank = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+  /// Squares across: few, so the pieces are big.
+  static const files = 5;
+  static const _backRank = ['R', 'Q', 'K', 'B', 'N'];
 
   @override
   Widget build(BuildContext context) {
@@ -342,15 +344,11 @@ class _BoardBanner extends StatelessWidget {
             valueListenable: s.pieceSet,
             builder: (context, set, _) => LayoutBuilder(
               builder: (context, box) {
-                final sq = box.maxWidth / 8;
-                // Ranks 3, 2 and 1 from the top; rank 3 is cut by the top.
+                final sq = box.maxWidth / files;
+                // Pawns over the back rank, cut at the top if the box is short.
                 Widget square(int file, int rank) {
                   final light = (file + rank).isEven;
-                  final role = rank == 1
-                      ? _backRank[file]
-                      : rank == 2
-                      ? 'P'
-                      : null;
+                  final role = rank == 1 ? _backRank[file] : 'P';
                   return Container(
                     width: sq,
                     height: sq,
@@ -365,11 +363,10 @@ class _BoardBanner extends StatelessWidget {
                               light: light,
                             ),
                           ),
-                        if (role != null)
-                          Padding(
-                            padding: EdgeInsets.all(sq * 0.06),
-                            child: PieceImage(set.asset('w', role)),
-                          ),
+                        Padding(
+                          padding: EdgeInsets.all(sq * 0.06),
+                          child: PieceImage(set.asset('w', role)),
+                        ),
                       ],
                     ),
                   );
@@ -384,10 +381,11 @@ class _BoardBanner extends StatelessWidget {
                         bottom: 0,
                         child: Column(
                           children: [
-                            for (final rank in const [3, 2, 1])
+                            for (final rank in const [2, 1])
                               Row(
                                 children: [
-                                  for (var f = 0; f < 8; f++) square(f, rank),
+                                  for (var f = 0; f < files; f++)
+                                    square(f, rank),
                                 ],
                               ),
                           ],
