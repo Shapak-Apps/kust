@@ -53,6 +53,11 @@ void main() {
     expect(c.state.lineLength, line.san.length);
     expect(c.state.moves, isEmpty);
 
+    // Show best stays off while the line is built.
+    await c.setShowBestEnabled(true);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(c.state.suggestSquares, isEmpty);
+
     // 1.d4 is not the line: refused, and 1.e4 is named and shown.
     c.selectSquare(Square.d2);
     c.selectSquare(Square.d4);

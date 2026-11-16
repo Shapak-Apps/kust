@@ -1827,4 +1827,7 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get trainLineDone => 'Вариант пройден! Играйте дальше.';
+
+  @override
+  String get showBestAfterLine => 'Откроется, когда пройдёте вариант дебюта';
 }

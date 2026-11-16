@@ -219,7 +219,8 @@ class KustSwitch extends StatelessWidget {
   }
 }
 
-/// Label + optional description + switch.
+/// Label + optional description + switch. Without [onChanged] the row is
+/// greyed out and cannot be switched.
 class KustToggleRow extends StatelessWidget {
   const KustToggleRow({
     super.key,
@@ -234,33 +235,40 @@ class KustToggleRow extends StatelessWidget {
   final String? subtitle;
   final IconData? icon;
   final bool value;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 22, color: k.muted),
-            const SizedBox(width: 14),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: k.body.copyWith(fontWeight: FontWeight.w700),
-                ),
-                if (subtitle != null) Text(subtitle!, style: k.caption),
-              ],
+    final enabled = onChanged != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 22, color: k.muted),
+              const SizedBox(width: 14),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: k.body.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  if (subtitle != null) Text(subtitle!, style: k.caption),
+                ],
+              ),
             ),
-          ),
-          KustSwitch(value: value, onChanged: onChanged),
-        ],
+            IgnorePointer(
+              ignoring: !enabled,
+              child: KustSwitch(value: value, onChanged: onChanged ?? (_) {}),
+            ),
+          ],
+        ),
       ),
     );
   }

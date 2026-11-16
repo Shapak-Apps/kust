@@ -3296,6 +3296,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Line done! Play on from here.'**
   String get trainLineDone;
+
+  /// No description provided for @showBestAfterLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlocks when you finish the opening line'**
+  String get showBestAfterLine;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

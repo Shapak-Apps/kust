@@ -492,3 +492,4 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `trainLineProgress` | {name} · move {done} of {total} | {name} · {done}/{total} göçüm |
 | `trainLineWrong` | Not the line. Play {san} | Wariant boýunça däl. {san} oýnaň |
 | `trainLineDone` | Line done! Play on from here. | Wariant tamam! Indi dowam ediň. |
+| `showBestAfterLine` | Unlocks when you finish the opening line | Debýut wariantyny tamamlanyňyzdan soň açylar |

@@ -45,9 +45,13 @@ class MoreFloatingMenu extends ConsumerWidget {
           KustToggleRow(
             icon: Icons.north_east_rounded,
             title: context.t.showBest,
-            subtitle: context.t.showBestSub,
-            value: game.showBestEnabled,
-            onChanged: controller.setShowBestEnabled,
+            // Not while an opening line is drilled: the player builds it
+            // without help.
+            subtitle: game.inLine
+                ? context.t.showBestAfterLine
+                : context.t.showBestSub,
+            value: game.showBestEnabled && !game.inLine,
+            onChanged: game.inLine ? null : controller.setShowBestEnabled,
           ),
       ],
     );

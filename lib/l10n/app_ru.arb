@@ -532,5 +532,6 @@
   "toEnd": "В конец",
   "trainLineProgress": "{name} · ход {done} из {total}",
   "trainLineWrong": "Не по варианту. Ходите {san}",
-  "trainLineDone": "Вариант пройден! Играйте дальше."
+  "trainLineDone": "Вариант пройден! Играйте дальше.",
+  "showBestAfterLine": "Откроется, когда пройдёте вариант дебюта"
 }

@@ -1819,4 +1819,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get trainLineDone => 'Line done! Play on from here.';
+
+  @override
+  String get showBestAfterLine => 'Unlocks when you finish the opening line';
 }

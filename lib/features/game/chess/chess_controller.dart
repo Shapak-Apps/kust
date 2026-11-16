@@ -853,6 +853,7 @@ class ChessController extends Notifier<GameState> {
       state = state.copyWith(suggestSquares: const {});
     }
     if (!state.showBestEnabled ||
+        state.inLine ||
         !state.practiceMode ||
         state.mode != GameMode.bot ||
         state.status != GameStatus.playing ||
