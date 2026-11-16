@@ -72,6 +72,7 @@ class AchievementTile extends StatelessWidget {
     return Semantics(
       label:
           '${achievement.titleIn(context.t)}, ${achievement.descriptionIn(context.t)}, '
+          '${achievement.tier.labelIn(context.t)}, '
           '${earned ? context.t.achEarned : context.t.achNotEarned}',
       excludeSemantics: true,
       child: Container(
@@ -79,23 +80,15 @@ class AchievementTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: k.surface,
           borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          border: Border.all(color: earned ? k.accent : k.line),
+          border: Border.all(
+            color: earned
+                ? achievement.tier.color.withValues(alpha: 0.6)
+                : k.line,
+          ),
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: earned ? k.accent : k.surfaceAlt,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                earned ? achievement.icon : Icons.lock_rounded,
-                color: earned ? k.accentInk : k.muted,
-                size: 22,
-              ),
-            ),
+            AchievementIcon(achievement: achievement, earned: earned, size: 48),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -112,9 +105,95 @@ class AchievementTile extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
+            Text(
+              achievement.tier.labelIn(context.t),
+              style: k.caption.copyWith(
+                color: achievement.tier.color,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// An achievement's picture: its icon on a tile in its tier's colour (green
+/// common, yellow rare, red mythic), raised on a darker lip once earned;
+/// faded in the same colour, with a small lock, until then.
+class AchievementIcon extends StatelessWidget {
+  const AchievementIcon({
+    super.key,
+    required this.achievement,
+    required this.earned,
+    this.size = 72,
+  });
+
+  final Achievement achievement;
+  final bool earned;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final c = achievement.tier.color;
+    final radius = BorderRadius.circular(size * 0.28);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: earned
+              ? BoxDecoration(
+                  borderRadius: radius,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color.lerp(c, Colors.white, 0.22)!, c],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color.lerp(c, Colors.black, 0.4)!,
+                      offset: Offset(0, size * 0.06),
+                    ),
+                  ],
+                )
+              : BoxDecoration(
+                  borderRadius: radius,
+                  color: Color.alphaBlend(c.withValues(alpha: 0.12), k.surface),
+                  border: Border.all(color: c.withValues(alpha: 0.35)),
+                ),
+          child: Icon(
+            achievement.icon,
+            size: size * 0.47,
+            color: earned
+                ? achievement.tier.onColor
+                : c.withValues(alpha: 0.55),
+          ),
+        ),
+        if (!earned)
+          Positioned(
+            right: -size * 0.06,
+            bottom: -size * 0.06,
+            child: Container(
+              width: size * 0.33,
+              height: size * 0.33,
+              decoration: BoxDecoration(
+                color: k.surfaceAlt,
+                shape: BoxShape.circle,
+                border: Border.all(color: k.bg, width: 2),
+              ),
+              child: Icon(
+                Icons.lock_rounded,
+                size: size * 0.17,
+                color: k.muted,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

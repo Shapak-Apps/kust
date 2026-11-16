@@ -496,5 +496,8 @@
   "byFiftyMove": "50 göçüm düzgüni boýunça",
   "byInsufficient": "çöp ýetmezçiligi sebäpli",
   "byAgreement": "ylalaşyk bilen",
-  "byTimeNoMate": "wagt boýunça, şahmat mümkin däl"
+  "byTimeNoMate": "wagt boýunça, şahmat mümkin däl",
+  "tierCommon": "Adaty",
+  "tierRare": "Seýrek",
+  "tierMythic": "Mifiki"
 }

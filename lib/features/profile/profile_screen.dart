@@ -9,6 +9,7 @@ import 'package:kust/core/error_log.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
+import 'package:kust/features/achievements/achievements_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -493,8 +494,8 @@ class _AchievementsSection extends StatelessWidget {
   }
 }
 
-/// One achievement as a badge: gold and glowing once earned; still showing
-/// its picture, faded and with a small lock, until then.
+/// One achievement as a badge (see [AchievementIcon]) with its name under
+/// it.
 class _AchievementBadge extends StatelessWidget {
   const _AchievementBadge({required this.achievement, required this.earned});
 
@@ -508,56 +509,7 @@ class _AchievementBadge extends StatelessWidget {
       width: 80,
       child: Column(
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: earned ? null : k.surface,
-                  gradient: earned
-                      ? LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [k.accent, const Color(0xFFE08A00)],
-                        )
-                      : null,
-                  border: earned ? null : Border.all(color: k.line),
-                  boxShadow: earned
-                      ? [
-                          BoxShadow(
-                            color: k.accent.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Icon(
-                  achievement.icon,
-                  size: 34,
-                  color: earned ? k.accentInk : k.muted.withValues(alpha: 0.45),
-                ),
-              ),
-              if (!earned)
-                Positioned(
-                  right: -4,
-                  bottom: -4,
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: k.surfaceAlt,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: k.bg, width: 2),
-                    ),
-                    child: Icon(Icons.lock_rounded, size: 12, color: k.muted),
-                  ),
-                ),
-            ],
-          ),
+          AchievementIcon(achievement: achievement, earned: earned),
           const SizedBox(height: 8),
           Text(
             achievement.titleIn(context.t),

@@ -1690,4 +1690,13 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get byTimeNoMate => 'по времени, но мат невозможен';
+
+  @override
+  String get tierCommon => 'Обычное';
+
+  @override
+  String get tierRare => 'Редкое';
+
+  @override
+  String get tierMythic => 'Мифическое';
 }

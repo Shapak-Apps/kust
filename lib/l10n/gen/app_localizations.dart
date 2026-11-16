@@ -3080,6 +3080,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'on time, with no mate possible'**
   String get byTimeNoMate;
+
+  /// No description provided for @tierCommon.
+  ///
+  /// In en, this message translates to:
+  /// **'Common'**
+  String get tierCommon;
+
+  /// No description provided for @tierRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare'**
+  String get tierRare;
+
+  /// No description provided for @tierMythic.
+  ///
+  /// In en, this message translates to:
+  /// **'Mythic'**
+  String get tierMythic;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

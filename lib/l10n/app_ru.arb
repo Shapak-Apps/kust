@@ -496,5 +496,8 @@
   "byFiftyMove": "по правилу 50 ходов",
   "byInsufficient": "из-за недостатка материала",
   "byAgreement": "по соглашению",
-  "byTimeNoMate": "по времени, но мат невозможен"
+  "byTimeNoMate": "по времени, но мат невозможен",
+  "tierCommon": "Обычное",
+  "tierRare": "Редкое",
+  "tierMythic": "Мифическое"
 }

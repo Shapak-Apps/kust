@@ -1688,4 +1688,13 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get byTimeNoMate => 'wagt boýunça, şahmat mümkin däl';
+
+  @override
+  String get tierCommon => 'Adaty';
+
+  @override
+  String get tierRare => 'Seýrek';
+
+  @override
+  String get tierMythic => 'Mifiki';
 }

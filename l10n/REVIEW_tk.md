@@ -446,3 +446,11 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `byInsufficient` | by insufficient material | çöp ýetmezçiligi sebäpli |
 | `byAgreement` | by agreement | ylalaşyk bilen |
 | `byTimeNoMate` | on time, with no mate possible | wagt boýunça, şahmat mümkin däl |
+
+## Achievement tiers
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `tierCommon` | Common | Adaty |
+| `tierRare` | Rare | Seýrek |
+| `tierMythic` | Mythic | Mifiki |
