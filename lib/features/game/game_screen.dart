@@ -48,6 +48,7 @@ class GameScreen extends ConsumerStatefulWidget {
     this.timeControl,
     this.practiceMode = false,
     this.resume,
+    this.fromLine = false,
   });
 
   final Bot? bot;
@@ -58,6 +59,9 @@ class GameScreen extends ConsumerStatefulWidget {
 
   /// A saved game to continue instead of starting a new one.
   final LiveGame? resume;
+
+  /// [resume] is a Train line: Rematch plays the line again.
+  final bool fromLine;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -325,7 +329,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
         onRematch: () {
           Navigator.of(dialogContext).pop();
           final controller = ref.read(chessControllerProvider.notifier);
-          if (widget.isLocal) {
+          if (widget.fromLine && widget.resume != null) {
+            controller.resumeGame(widget.resume!, bot: widget.bot);
+          } else if (widget.isLocal) {
             controller.startLocalGame(timeControl: widget.timeControl);
           } else {
             controller.startGame(

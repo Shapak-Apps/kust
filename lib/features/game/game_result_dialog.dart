@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
@@ -11,9 +10,7 @@ import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/features/game/chess/board/chess_board.dart'
-    show kLastMoveHighlight;
-import 'package:kust/widgets/piece_image.dart';
+import 'package:kust/widgets/static_board.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
 
@@ -155,7 +152,13 @@ class GameResultScreen extends ConsumerWidget {
                           constraints: const BoxConstraints(maxWidth: 280),
                           child: AspectRatio(
                             aspectRatio: 1,
-                            child: _FinalBoard(game: game),
+                            child: StaticBoard(
+                              position: game.position,
+                              flipped:
+                                  game.mode == GameMode.bot &&
+                                  game.playerSide == Side.black,
+                              highlight: game.moveSquares,
+                            ),
                           ),
                         ),
                       ),
@@ -264,82 +267,6 @@ class _RatingAndAccuracy extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// The board as the game ended, in the colours and pieces from settings,
-/// the last move marked, seen from the player's side.
-class _FinalBoard extends StatelessWidget {
-  const _FinalBoard({required this.game});
-
-  final GameState game;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = AppSettings.instance.boardTheme.value;
-    final set = AppSettings.instance.pieceSet.value;
-    final flipped = game.mode == GameMode.bot && game.playerSide == Side.black;
-    final board = game.position.board;
-    final marked = game.moveSquares;
-    return ExcludeSemantics(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x66000000),
-              blurRadius: 24,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Column(
-            children: [
-              for (var row = 0; row < 8; row++)
-                Expanded(
-                  child: Row(
-                    children: [
-                      for (var col = 0; col < 8; col++)
-                        Expanded(
-                          child: Builder(
-                            builder: (context) {
-                              final square = Square.fromCoords(
-                                File(flipped ? 7 - col : col),
-                                Rank(flipped ? row : 7 - row),
-                              );
-                              final light = (col + row).isEven;
-                              var colour = light ? theme.light : theme.dark;
-                              if (marked.contains(square)) {
-                                colour = Color.alphaBlend(
-                                  kLastMoveHighlight,
-                                  colour,
-                                );
-                              }
-                              final piece = board.pieceAt(square);
-                              return ColoredBox(
-                                color: colour,
-                                child: piece == null
-                                    ? const SizedBox.expand()
-                                    : PieceImage(
-                                        set.asset(
-                                          piece.color == Side.white ? 'w' : 'b',
-                                          piece.role.uppercaseLetter,
-                                        ),
-                                      ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

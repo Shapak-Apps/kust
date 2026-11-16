@@ -1692,4 +1692,118 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get tierMythic => 'Mythic';
+
+  @override
+  String get opItalianD =>
+      'Quick development and an early fight for the centre: bishop to c4 aims at f7, then c3 and d3 or d4. Calm on the surface, full of traps underneath.';
+
+  @override
+  String get opRuyLopezD =>
+      'The bishop pins pressure on the knight that guards e5. A slow, rich plan that has been the main road at the top for over a century.';
+
+  @override
+  String get opLondonD =>
+      'The same easy setup almost every game: d4, Bf4, e3, Nf3 and c3. Solid, quick to learn, and full of chances to attack the king.';
+
+  @override
+  String get opQueensGambitD =>
+      'White offers the c-pawn to pull Black\'s d-pawn from the centre. If Black takes, White builds a big centre and wins the pawn back.';
+
+  @override
+  String get opKingsGambitD =>
+      'White gives the f-pawn on move two to open the f-file and race for the attack. Wild, risky and a favourite of the Romantic era.';
+
+  @override
+  String get opFriedLiverD =>
+      'Against the Two Knights, the knight jumps to g5 and then sacrifices itself on f7 to drag the black king into the open.';
+
+  @override
+  String get opSicilianD =>
+      'Black answers 1.e4 with c5 and fights unequally: sharp, double-edged games where Black plays to win, not to draw.';
+
+  @override
+  String get opFrenchD =>
+      'Black builds a solid chain with e6 and d5, lets White take space, then strikes back at the centre with c5.';
+
+  @override
+  String get opCaroKannD =>
+      'Like the French, but the light-squared bishop gets out first. A sound, hard-to-crack defence with a clean pawn structure.';
+
+  @override
+  String get opKingsIndianD =>
+      'Black lets White take the whole centre, finishes castling, then hits back with e5 or c5 and often storms the kingside.';
+
+  @override
+  String get opScandinavianD =>
+      'Black attacks e4 at once with d5. One simple idea, a quick game, and little theory to remember.';
+
+  @override
+  String get opBudapestD =>
+      'Against 1.d4 Nf6 2.c4, Black throws in e5 to free the pieces fast. The pawn usually comes back, with the initiative.';
+
+  @override
+  String get kindOpening => 'Opening';
+
+  @override
+  String get kindDefense => 'Defence';
+
+  @override
+  String get kindGambit => 'Gambit';
+
+  @override
+  String get kindAttack => 'Attack';
+
+  @override
+  String get trainAll => 'All';
+
+  @override
+  String get trainSearch => 'Search openings';
+
+  @override
+  String get trainTryFirst => 'Try the first line';
+
+  @override
+  String trainLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lines',
+      one: '1 line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trainAsWhite => 'As White';
+
+  @override
+  String get trainAsBlack => 'As Black';
+
+  @override
+  String trainPractise(String name) {
+    return 'Practise vs $name';
+  }
+
+  @override
+  String get trainNoResults => 'No openings match your search.';
+
+  @override
+  String get trainMainLine => 'Main line';
+
+  @override
+  String get trainSecondLine => 'Second line';
+
+  @override
+  String get trainThirdLine => 'Third line';
+
+  @override
+  String trainOrigin(String origin) {
+    return 'Named after $origin';
+  }
+
+  @override
+  String get toStart => 'To the start';
+
+  @override
+  String get toEnd => 'To the end';
 }
