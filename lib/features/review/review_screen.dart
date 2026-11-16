@@ -1,6 +1,5 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/game_history_store.dart';
@@ -8,6 +7,7 @@ import 'package:kust/features/game/chess/analysis_cache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/game_analyzer.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
+import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/review/analysis_loader.dart';
 import 'package:kust/features/review/game_review.dart';
@@ -276,7 +276,7 @@ class _ReviewBody extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              const _QualityDot(quality: MoveQuality.book, size: 26),
+              const QualityBadge(quality: MoveQuality.book, size: 26),
               const SizedBox(width: 10),
               Expanded(child: Text(opening.nameIn(t), style: k.body)),
             ],
@@ -527,7 +527,7 @@ class _CountsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
-                _QualityDot(quality: q, size: 31),
+                QualityBadge(quality: q, size: 31),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(q.label, style: k.body.copyWith(color: q.color)),
@@ -548,30 +548,6 @@ class _CountsCard extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// The round badge of a rating, as on the board.
-class _QualityDot extends StatelessWidget {
-  const _QualityDot({required this.quality, required this.size});
-
-  final MoveQuality quality;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: quality.color, shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: SvgPicture.asset(
-        quality.asset,
-        width: size * quality.iconScale * 1.3,
-        height: size * quality.iconScale * 1.3,
-        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-      ),
     );
   }
 }
@@ -597,7 +573,7 @@ class _KeyMoment extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(
           children: [
-            _QualityDot(quality: move.quality, size: 48),
+            QualityBadge(quality: move.quality, size: 48),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
