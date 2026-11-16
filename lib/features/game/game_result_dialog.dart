@@ -119,43 +119,67 @@ class GameResultScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  // The parts spread down the screen when there is room,
+                  // and scroll when there is not.
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                      child: Column(
-                        children: [
-                          Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            style: k.display.copyWith(color: Colors.white),
+                    child: LayoutBuilder(
+                      builder: (context, box) => SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: box.maxHeight - 16,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            message,
-                            textAlign: TextAlign.center,
-                            style: k.body.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w700,
+                          child: IntrinsicHeight(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Column(
+                                  children: [
+                                    Text(
+                                      title,
+                                      textAlign: TextAlign.center,
+                                      style: k.display.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      message,
+                                      textAlign: TextAlign.center,
+                                      style: k.body.copyWith(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _RatingAndAccuracy(game: game),
+                                  ],
+                                ),
+                                if (game.mode == GameMode.bot &&
+                                    game.bot != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 24),
+                                    child: _Players(game: game),
+                                  ),
+                                if (botQuote != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 24),
+                                    child: BotSays(
+                                      name: botQuote!.name,
+                                      image: botQuote!.image,
+                                      text: botQuote!.text,
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: _MoveCounts(game: game),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _RatingAndAccuracy(game: game),
-                          if (game.mode == GameMode.bot &&
-                              game.bot != null) ...[
-                            const SizedBox(height: 24),
-                            _Players(game: game),
-                          ],
-                          if (botQuote != null) ...[
-                            const SizedBox(height: 24),
-                            BotSays(
-                              name: botQuote!.name,
-                              image: botQuote!.image,
-                              text: botQuote!.text,
-                            ),
-                          ],
-                          const SizedBox(height: 16),
-                          _MoveCounts(game: game),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -344,9 +368,9 @@ class _Players extends StatelessWidget {
   }
 }
 
-/// How many of the player's moves got each rating, best first and the
-/// errors after, only the ratings that came up. While the game is being
-/// analyzed it says so.
+/// How many of the player's moves got each rating, in three tiles side by
+/// side (see [pickMoveCounts]). While the game is being analyzed it says
+/// so.
 class _MoveCounts extends StatelessWidget {
   const _MoveCounts({required this.game});
 
@@ -370,55 +394,82 @@ class _MoveCounts extends StatelessWidget {
       );
     }
     final counts = game.moveCounts ?? const {};
-    final shown = [
-      for (final q in MoveQuality.values)
-        if (q != MoveQuality.book && (counts[q] ?? 0) > 0) q,
-    ];
+    final shown = pickMoveCounts(counts);
     if (shown.isEmpty) return const SizedBox.shrink();
-    return LayoutBuilder(
-      builder: (context, box) {
-        final width = (box.maxWidth - 16) / 3;
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final q in shown)
-              Container(
-                width: width,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: k.surface,
-                  borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(q.asset, width: 24, height: 24),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${counts[q]}',
-                          style: k.title.copyWith(color: q.color),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      q.labelIn(context.t),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.caption.copyWith(
-                        color: q.color,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
+    return Row(
+      children: [
+        for (final (i, q) in shown.indexed) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: k.surface,
+                borderRadius: BorderRadius.circular(KustSpace.rMedium),
               ),
-          ],
-        );
-      },
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(q.asset, width: 28, height: 28),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${counts[q]}',
+                        style: k.display.copyWith(
+                          color: q.color,
+                          fontSize: 26,
+                          height: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    q.labelIn(context.t),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.caption.copyWith(
+                      color: q.color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
+}
+
+/// The (at most) three ratings the result shows, as chess.com does: the
+/// best ones the player earned, and the worst error when there was one, so
+/// a blunder is never hidden behind good moves. Book moves are left out.
+List<MoveQuality> pickMoveCounts(Map<MoveQuality, int> counts) {
+  bool had(MoveQuality q) => (counts[q] ?? 0) > 0;
+  const good = [
+    MoveQuality.brilliant,
+    MoveQuality.great,
+    MoveQuality.best,
+    MoveQuality.excellent,
+    MoveQuality.good,
+  ];
+  const bad = [
+    MoveQuality.blunder,
+    MoveQuality.miss,
+    MoveQuality.mistake,
+    MoveQuality.inaccuracy,
+  ];
+  final goods = good.where(had).toList();
+  final bads = bad.where(had).toList();
+  final picked = [...goods.take(bads.isEmpty ? 3 : 2), ...bads.take(1)];
+  // Too few of one kind: fill up from the other.
+  for (final q in [...goods, ...bads]) {
+    if (picked.length >= 3) break;
+    if (!picked.contains(q)) picked.add(q);
+  }
+  // Good ones first, then errors from the mildest to the worst.
+  return picked..sort((a, b) => a.index.compareTo(b.index));
 }
