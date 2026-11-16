@@ -349,7 +349,8 @@ class _MoveCounts extends StatelessWidget {
 
 /// The (at most) three ratings the result shows, as chess.com does: the
 /// best ones the player earned, and the worst error when there was one, so
-/// a blunder is never hidden behind good moves. Book moves are left out.
+/// a blunder is never hidden behind good moves. Book moves count as good
+/// ones, after the rest.
 List<MoveQuality> pickMoveCounts(Map<MoveQuality, int> counts) {
   bool had(MoveQuality q) => (counts[q] ?? 0) > 0;
   const good = [
@@ -358,6 +359,8 @@ List<MoveQuality> pickMoveCounts(Map<MoveQuality, int> counts) {
     MoveQuality.best,
     MoveQuality.excellent,
     MoveQuality.good,
+    // Known theory: below the good moves, but worth showing.
+    MoveQuality.book,
   ];
   const bad = [
     MoveQuality.blunder,
