@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:kust/core/error_log.dart';
@@ -8,6 +7,7 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
@@ -138,9 +138,9 @@ class _SettingsSheet extends StatelessWidget {
             onChanged: s.setHaptics,
           ),
         ),
-        if (AppStorage.isReady) const _ProfileRow(),
         const _LanguagePicker(),
         const _ReportRow(),
+        if (AppStorage.isReady) const _LogOutRow(),
       ],
     );
   }
@@ -452,46 +452,74 @@ class _ReportRow extends StatelessWidget {
   }
 }
 
-/// The player's profile: their name, and the way into the profile screen.
-class _ProfileRow extends StatelessWidget {
-  const _ProfileRow();
+/// Logs out, after asking: the player becomes a guest again. Shown only
+/// while there is a profile to log out of.
+class _LogOutRow extends StatelessWidget {
+  const _LogOutRow();
+
+  void _confirm(BuildContext context) {
+    showKustSheet<void>(
+      context,
+      builder: (sheetContext) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          KustSheetHeader(
+            title: sheetContext.t.logOutTitle,
+            subtitle: sheetContext.t.logOutSub,
+          ),
+          KustButton(
+            label: sheetContext.t.logOut,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              Navigator.of(context).pop();
+              AppStorage.instance.logOut();
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: sheetContext.t.keep,
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheetContext).pop(),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     return ValueListenableBuilder(
-      valueListenable: AppStorage.instance.nameListenable(),
-      builder: (context, _, _) => Pressable(
-        onTap: () => context.push('/profile'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 28),
-            child: Row(
-              children: [
-                Icon(Icons.person_outline_rounded, size: 22, color: k.muted),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    context.t.profile,
-                    style: k.body.copyWith(fontWeight: FontWeight.w700),
+      valueListenable: AppStorage.instance.profileListenable(),
+      builder: (context, _, _) {
+        if (AppStorage.instance.username == null) {
+          return const SizedBox.shrink();
+        }
+        return Pressable(
+          onTap: () => _confirm(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 28),
+              child: Row(
+                children: [
+                  Icon(Icons.logout_rounded, size: 22, color: k.danger),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      context.t.logOut,
+                      style: k.body.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: k.danger,
+                      ),
+                    ),
                   ),
-                ),
-                Flexible(
-                  child: Text(
-                    AppStorage.instance.displayName(context.t),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(color: k.muted),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.chevron_right_rounded, size: 22, color: k.muted),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -1647,4 +1647,14 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get solvePuzzles => 'Решать задачи';
+
+  @override
+  String get logOut => 'Выйти';
+
+  @override
+  String get logOutTitle => 'Выйти из профиля?';
+
+  @override
+  String get logOutSub =>
+      'Имя, имя пользователя, описание и фото будут удалены с устройства, и вы будете играть как гость. Партии и прогресс останутся.';
 }

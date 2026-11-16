@@ -65,6 +65,20 @@ void main() {
     expect(File(second).existsSync(), false);
   });
 
+  test('logging out leaves a guest', () async {
+    await store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi');
+    final picked = File('${dir.path}/picked.jpg')..writeAsBytesSync([1]);
+    await store.setPhoto(picked.path);
+    final photo = store.photoPath!;
+
+    await store.logOut();
+    expect(store.username, isNull);
+    expect(store.bio, '');
+    expect(store.photoPath, isNull);
+    expect(File(photo).existsSync(), false);
+    expect(store.guestName, isNot('Ali'));
+  });
+
   testWidgets('the profile shows, and edits in place', (tester) async {
     await tester.runAsync(
       () => store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi'),

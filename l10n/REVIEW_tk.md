@@ -427,3 +427,6 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `qrCode` | QR code | QR kod |
 | `trainSoonSub` | A new way to practise is on its way. Until then, keep sharp with puzzles. | Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň. |
 | `solvePuzzles` | Solve puzzles | Mesele çözüň |
+| `logOut` | Log out | Çyk |
+| `logOutTitle` | Log out? | Profilden çykmalymy? |
+| `logOutSub` | Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay. | Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar. |

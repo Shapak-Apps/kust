@@ -955,5 +955,8 @@
   "viewAll": "View all",
   "qrCode": "QR code",
   "trainSoonSub": "A new way to practise is on its way. Until then, keep sharp with puzzles.",
-  "solvePuzzles": "Solve puzzles"
+  "solvePuzzles": "Solve puzzles",
+  "logOut": "Log out",
+  "logOutTitle": "Log out?",
+  "logOutSub": "Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay."
 }
