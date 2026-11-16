@@ -30,7 +30,6 @@ import 'package:kust/features/game/end_text.dart';
 import 'package:kust/features/game/game_export.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
-import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
@@ -66,8 +65,6 @@ class GameScreen extends ConsumerStatefulWidget {
 
 class _GameScreenState extends ConsumerState<GameScreen>
     with WidgetsBindingObserver {
-  bool _hasDismissedResultDialog = false;
-
   /// The result dialog of a checkmate or a draw waits for the board's
   /// end-of-game show to finish.
   Timer? _endDialogTimer;
@@ -313,12 +310,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 
   void _showResultDialog(String title, String message) {
-    showKustDialog<void>(
+    showGameResult(
       context,
-      builder: (dialogContext) => GameResultContent(
+      builder: (dialogContext) => GameResultScreen(
         title: title,
         message: message,
         botQuote: _botEndQuote(),
+        onClose: () => Navigator.of(dialogContext).pop(),
+        onShare: _export,
         onReview: (id) {
           Navigator.of(dialogContext).pop();
           context.push('/review/$id');
@@ -337,18 +336,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
             );
           }
         },
-        onLobby: () {
-          Navigator.of(dialogContext).pop();
-          context.go('/play');
-        },
       ),
-    ).then((_) {
-      if (mounted) {
-        setState(() {
-          _hasDismissedResultDialog = true;
-        });
-      }
-    });
+    );
+  }
+
+  void _export() {
+    final g = ref.read(chessControllerProvider);
+    showExportSheet(
+      context,
+      position: g.displayPosition,
+      flipped: g.mode == GameMode.bot && g.playerSide == Side.black,
+      pgn: livePgn(g),
+      highlight: g.displayMoveSquares,
+    );
   }
 
   /// The title and message of the dialog for a game that has ended, or null
@@ -388,7 +388,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
       switch (next.status) {
         case GameStatus.playing:
           _endDialogTimer?.cancel();
-          _hasDismissedResultDialog = false;
           _showGameStartModal(next.playerSide);
           break;
         case GameStatus.checkmate:
@@ -469,18 +468,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   KustIconButton(
                     icon: Icons.ios_share_rounded,
                     label: context.t.exportGame,
-                    onTap: () {
-                      final g = ref.read(chessControllerProvider);
-                      showExportSheet(
-                        context,
-                        position: g.displayPosition,
-                        flipped:
-                            g.mode == GameMode.bot &&
-                            g.playerSide == Side.black,
-                        pgn: livePgn(g),
-                        highlight: g.displayMoveSquares,
-                      );
-                    },
+                    onTap: _export,
                   ),
                 if (screen.canAbort)
                   KustIconButton(
@@ -494,7 +482,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     label: context.t.resign,
                     onTap: _confirmResign,
                   ),
-                if (isFinished && !_hasDismissedResultDialog)
+                if (isFinished)
                   KustIconButton(
                     icon: Icons.emoji_events_outlined,
                     label: context.t.showResult,

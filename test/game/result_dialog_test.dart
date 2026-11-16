@@ -11,7 +11,7 @@ import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/theme.dart';
-import 'package:kust/ui/kust_dialog.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 
 /// A controller that just holds a fixed state.
 class _FixedController extends ChessController {
@@ -23,7 +23,12 @@ class _FixedController extends ChessController {
   GameState build() => fixed;
 }
 
-GameState _state({int? ratingChange, double? accuracy, bool pending = false}) {
+GameState _state({
+  int? ratingChange,
+  double? accuracy,
+  bool pending = false,
+  Map<MoveQuality, int>? counts,
+}) {
   return GameState(
     position: Chess.initial,
     mode: GameMode.bot,
@@ -33,6 +38,7 @@ GameState _state({int? ratingChange, double? accuracy, bool pending = false}) {
     ratingChange: ratingChange,
     accuracy: accuracy,
     accuracyPending: pending,
+    moveCounts: counts,
   );
 }
 
@@ -40,7 +46,6 @@ Future<void> _open(
   WidgetTester tester,
   GameState state, {
   VoidCallback? onRematch,
-  VoidCallback? onLobby,
 }) async {
   tester.view.physicalSize = const Size(400, 800);
   tester.view.devicePixelRatio = 1;
@@ -57,13 +62,13 @@ Future<void> _open(
           builder: (context) => Scaffold(
             body: Center(
               child: TextButton(
-                onPressed: () => showKustDialog<void>(
+                onPressed: () => showGameResult(
                   context,
-                  builder: (_) => GameResultContent(
+                  builder: (dialogContext) => GameResultScreen(
                     title: 'Game over',
                     message: 'You resigned.',
                     onRematch: onRematch ?? () {},
-                    onLobby: onLobby ?? () {},
+                    onClose: () => Navigator.of(dialogContext).pop(),
                   ),
                 ),
                 child: const Text('open'),
@@ -95,76 +100,80 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  testWidgets('is a modal in the middle of the screen, not a bottom sheet', (
-    tester,
-  ) async {
+  testWidgets('covers the whole screen and shows the result', (tester) async {
     await _open(tester, _state(ratingChange: 9, accuracy: 87.7));
-
-    final card = tester.getRect(find.byKey(const ValueKey('kustDialogCard')));
-    expect(card.center.dx, closeTo(200, 1));
-    expect(card.center.dy, closeTo(400, 40));
-    // Floats above the bottom edge instead of being attached to it.
-    expect(card.bottom, lessThan(800 - 24));
-    expect(card.top, greaterThan(24));
+    expect(
+      tester.getRect(find.byType(GameResultScreen)).size,
+      const Size(400, 800),
+    );
+    expect(find.text('Game over'), findsOneWidget);
+    expect(find.text('You resigned.'), findsOneWidget);
+    expect(find.text('1209'), findsOneWidget);
+    expect(find.text('+9'), findsOneWidget);
+    expect(find.text('Accuracy 87.7%'), findsOneWidget);
   });
 
-  testWidgets('everything inside is centered', (tester) async {
-    await _open(tester, _state(ratingChange: 9, accuracy: 87.7));
-
-    for (final text in ['Game over', 'You resigned.', 'Rating 1209 (+9)']) {
-      expect(
-        tester.getCenter(find.text(text)).dx,
-        closeTo(200, 1),
-        reason: text,
-      );
-    }
-    expect(tester.getCenter(find.text('Accuracy 87.7%')).dx, closeTo(200, 20));
+  testWidgets('the X closes it and leaves the game behind', (tester) async {
+    await _open(tester, _state());
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Game over'), findsNothing);
+    expect(find.text('open'), findsOneWidget);
   });
 
-  testWidgets('has two buttons in one row that call their callbacks', (
-    tester,
-  ) async {
+  testWidgets('has Rematch and no Lobby or new-game button', (tester) async {
     var rematch = 0;
-    var lobby = 0;
+    await _open(tester, _state(), onRematch: () => rematch++);
+    expect(find.text('Lobby'), findsNothing);
+    await tester.tap(find.text('Rematch'));
+    expect(rematch, 1);
+  });
+
+  testWidgets('rates moves best first, errors after, skipping zeros', (
+    tester,
+  ) async {
     await _open(
       tester,
-      _state(),
-      onRematch: () => rematch++,
-      onLobby: () => lobby++,
+      _state(
+        counts: {
+          MoveQuality.blunder: 1,
+          MoveQuality.best: 12,
+          MoveQuality.brilliant: 1,
+          MoveQuality.book: 4,
+          MoveQuality.inaccuracy: 2,
+        },
+      ),
     );
-
-    final a = tester.getCenter(find.text('Lobby'));
-    final b = tester.getCenter(find.text('Rematch'));
-    expect(a.dy, closeTo(b.dy, 1)); // same row
-    expect(a.dx, lessThan(b.dx));
-
-    await tester.tap(find.text('Rematch'));
-    await tester.tap(find.text('Lobby'));
-    expect(rematch, 1);
-    expect(lobby, 1);
+    final labels = ['Brilliant', 'Best move', 'Inaccuracy', 'Blunder'];
+    for (final l in labels) {
+      expect(find.text(l), findsOneWidget, reason: l);
+    }
+    expect(find.text('Book'), findsNothing);
+    expect(find.text('Great'), findsNothing);
+    final xs = [
+      for (final l in labels.take(3)) tester.getCenter(find.text(l)).dx,
+    ];
+    expect(xs[0], lessThan(xs[1]));
+    expect(xs[1], lessThan(xs[2]));
+    // The fourth wraps to the next row.
+    expect(
+      tester.getCenter(find.text('Blunder')).dy,
+      greaterThan(tester.getCenter(find.text('Brilliant')).dy),
+    );
   });
 
-  testWidgets('says it is analyzing while the accuracy is worked out', (
-    tester,
-  ) async {
+  testWidgets('says it is analyzing while the moves are rated', (tester) async {
     await _open(tester, _state(pending: true));
     expect(find.text('Analyzing your moves…'), findsOneWidget);
     expect(find.textContaining('Accuracy'), findsNothing);
   });
 
-  testWidgets('shows no accuracy line when there is nothing to show', (
+  testWidgets('shows no accuracy when there is nothing to show', (
     tester,
   ) async {
     await _open(tester, _state());
     expect(find.textContaining('Accuracy'), findsNothing);
     expect(find.textContaining('Analyzing'), findsNothing);
-  });
-
-  testWidgets('tapping outside closes it', (tester) async {
-    await _open(tester, _state());
-    await tester.tapAt(const Offset(200, 20));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Game over'), findsNothing);
   });
 }
