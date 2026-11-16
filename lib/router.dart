@@ -42,6 +42,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             resume: args.resume,
             line: args.line,
             lineName: args.lineName,
+            onLineDone: args.onLineDone,
           );
         },
       ),

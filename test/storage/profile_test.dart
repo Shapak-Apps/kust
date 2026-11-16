@@ -95,6 +95,11 @@ void main() {
     expect(find.text('Ali'), findsOneWidget);
     expect(find.text('@ali'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
+    // The real day the app was first opened, not a stand-in.
+    final now = DateTime.now();
+    expect(find.text('Joined'), findsOneWidget);
+    expect(find.textContaining('${now.year}'), findsWidgets);
+    expect(find.byTooltip('QR code'), findsNothing);
 
     await tester.tap(find.byTooltip('Edit profile'));
     await tester.pump();

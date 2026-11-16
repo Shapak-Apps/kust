@@ -1844,6 +1844,12 @@ class ChessController extends Notifier<GameState> {
       return;
     }
     if (next.moves.length == previous.moves.length) return;
+    // A Train drill is not kept until its line is done: Continue could not
+    // bring the drill back, only a plain game.
+    if (next.inLine) {
+      unawaited(store.clear());
+      return;
+    }
     if (next.moves.length < 2) return;
     final tc = next.timeControl;
     unawaited(

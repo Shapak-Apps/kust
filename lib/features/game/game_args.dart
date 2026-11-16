@@ -18,6 +18,9 @@ class GameArgs {
   final List<String>? line;
   final String? lineName;
 
+  /// Called when the player has played the whole [line].
+  final void Function()? onLineDone;
+
   const GameArgs({
     this.bot,
     required this.playerSide,
@@ -27,5 +30,6 @@ class GameArgs {
     this.resume,
     this.line,
     this.lineName,
+    this.onLineDone,
   });
 }
