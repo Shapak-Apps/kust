@@ -1683,4 +1683,13 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get byTimeNoMate => 'on time, with no mate possible';
+
+  @override
+  String get tierCommon => 'Common';
+
+  @override
+  String get tierRare => 'Rare';
+
+  @override
+  String get tierMythic => 'Mythic';
 }

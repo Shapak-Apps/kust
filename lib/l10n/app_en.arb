@@ -969,5 +969,8 @@
   "byFiftyMove": "by the 50-move rule",
   "byInsufficient": "by insufficient material",
   "byAgreement": "by agreement",
-  "byTimeNoMate": "on time, with no mate possible"
+  "byTimeNoMate": "on time, with no mate possible",
+  "tierCommon": "Common",
+  "tierRare": "Rare",
+  "tierMythic": "Mythic"
 }
