@@ -2996,6 +2996,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Solve puzzles'**
   String get solvePuzzles;
+
+  /// No description provided for @logOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get logOut;
+
+  /// No description provided for @logOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get logOutTitle;
+
+  /// No description provided for @logOutSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.'**
+  String get logOutSub;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

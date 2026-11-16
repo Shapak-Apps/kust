@@ -1645,4 +1645,14 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get solvePuzzles => 'Mesele çözüň';
+
+  @override
+  String get logOut => 'Çyk';
+
+  @override
+  String get logOutTitle => 'Profilden çykmalymy?';
+
+  @override
+  String get logOutSub =>
+      'Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar.';
 }

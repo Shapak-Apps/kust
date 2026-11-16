@@ -482,5 +482,8 @@
   "viewAll": "Hemmesi",
   "qrCode": "QR kod",
   "trainSoonSub": "Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň.",
-  "solvePuzzles": "Mesele çözüň"
+  "solvePuzzles": "Mesele çözüň",
+  "logOut": "Çyk",
+  "logOutTitle": "Profilden çykmalymy?",
+  "logOutSub": "Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar."
 }

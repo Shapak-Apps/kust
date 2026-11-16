@@ -165,6 +165,17 @@ class AppStorage {
     return true;
   }
 
+  /// Back to a guest: the photo, username and bio go, and the name becomes
+  /// a guest name again. Games, rating and progress stay.
+  Future<void> logOut() async {
+    await setPhoto(null);
+    await _user.deleteAll([_usernameKey, _bioKey]);
+    await _user.put(
+      _guestNameKey,
+      _guestNames[Random().nextInt(_guestNames.length)],
+    );
+  }
+
   /// Copies the picture at [picked] in as the profile photo, or removes the
   /// photo when null.
   Future<void> setPhoto(String? picked) async {

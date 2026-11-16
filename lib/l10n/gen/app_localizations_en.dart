@@ -1640,4 +1640,14 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get solvePuzzles => 'Solve puzzles';
+
+  @override
+  String get logOut => 'Log out';
+
+  @override
+  String get logOutTitle => 'Log out?';
+
+  @override
+  String get logOutSub =>
+      'Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.';
 }
