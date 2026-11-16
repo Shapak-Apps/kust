@@ -485,5 +485,16 @@
   "solvePuzzles": "Mesele çözüň",
   "logOut": "Çyk",
   "logOutTitle": "Profilden çykmalymy?",
-  "logOutSub": "Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar."
+  "logOutSub": "Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar.",
+  "youWonTitle": "Siz ýeňdiňiz!",
+  "youLostTitle": "Siz utuldyňyz",
+  "byCheckmate": "şahmat bilen",
+  "byResignation": "boýun alyş bilen",
+  "byTimeout": "wagt boýunça",
+  "byStalemate": "pat bilen",
+  "byRepetition": "gaýtalanma bilen",
+  "byFiftyMove": "50 göçüm düzgüni boýunça",
+  "byInsufficient": "çöp ýetmezçiligi sebäpli",
+  "byAgreement": "ylalaşyk bilen",
+  "byTimeNoMate": "wagt boýunça, şahmat mümkin däl"
 }

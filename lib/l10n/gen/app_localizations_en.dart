@@ -1650,4 +1650,37 @@ class AppL10nEn extends AppL10n {
   @override
   String get logOutSub =>
       'Your name, username, bio and photo are removed from this device and you play as a guest. Your games and progress stay.';
+
+  @override
+  String get youWonTitle => 'You won!';
+
+  @override
+  String get youLostTitle => 'You lost';
+
+  @override
+  String get byCheckmate => 'by checkmate';
+
+  @override
+  String get byResignation => 'by resignation';
+
+  @override
+  String get byTimeout => 'on time';
+
+  @override
+  String get byStalemate => 'by stalemate';
+
+  @override
+  String get byRepetition => 'by repetition';
+
+  @override
+  String get byFiftyMove => 'by the 50-move rule';
+
+  @override
+  String get byInsufficient => 'by insufficient material';
+
+  @override
+  String get byAgreement => 'by agreement';
+
+  @override
+  String get byTimeNoMate => 'on time, with no mate possible';
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import 'package:kust/features/puzzles/gol.dart' show LoomColors;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kust/core/settings.dart';
@@ -94,7 +96,12 @@ class BotSays extends StatelessWidget {
     required this.name,
     required this.image,
     required this.text,
+    this.light = false,
   });
+
+  /// A cream bubble with dark words, the bot's name left to its portrait:
+  /// for dark, busy screens where the line must stand out.
+  final bool light;
 
   final String name;
   final String image;
@@ -119,7 +126,10 @@ class BotSays extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: CustomPaint(
-            painter: SpeechBubblePainter(fill: k.surfaceAlt, border: k.line),
+            painter: SpeechBubblePainter(
+              fill: light ? LoomColors.cream : k.surfaceAlt,
+              border: light ? LoomColors.cream : k.line,
+            ),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 BubbleMetrics.tail + 14,
@@ -131,17 +141,24 @@ class BotSays extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    name,
-                    style: k.caption.copyWith(
-                      color: k.accent,
-                      fontWeight: FontWeight.w800,
+                  if (!light) ...[
+                    Text(
+                      name,
+                      style: k.caption.copyWith(
+                        color: k.accent,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
+                    const SizedBox(height: 2),
+                  ],
                   Text(
                     text,
-                    style: k.body.copyWith(fontStyle: FontStyle.italic),
+                    style: light
+                        ? k.body.copyWith(
+                            color: const Color(0xFF17181A),
+                            fontWeight: FontWeight.w600,
+                          )
+                        : k.body.copyWith(fontStyle: FontStyle.italic),
                   ),
                 ],
               ),

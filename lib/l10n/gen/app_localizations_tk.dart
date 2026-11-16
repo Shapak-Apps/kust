@@ -1655,4 +1655,37 @@ class AppL10nTk extends AppL10n {
   @override
   String get logOutSub =>
       'Adyňyz, ulanyjy adyňyz, özüňiz barada we suratyňyz bu enjamdan aýrylar, siz myhman hökmünde oýnarsyňyz. Oýunlaryňyz we ösüşiňiz galar.';
+
+  @override
+  String get youWonTitle => 'Siz ýeňdiňiz!';
+
+  @override
+  String get youLostTitle => 'Siz utuldyňyz';
+
+  @override
+  String get byCheckmate => 'şahmat bilen';
+
+  @override
+  String get byResignation => 'boýun alyş bilen';
+
+  @override
+  String get byTimeout => 'wagt boýunça';
+
+  @override
+  String get byStalemate => 'pat bilen';
+
+  @override
+  String get byRepetition => 'gaýtalanma bilen';
+
+  @override
+  String get byFiftyMove => '50 göçüm düzgüni boýunça';
+
+  @override
+  String get byInsufficient => 'çöp ýetmezçiligi sebäpli';
+
+  @override
+  String get byAgreement => 'ylalaşyk bilen';
+
+  @override
+  String get byTimeNoMate => 'wagt boýunça, şahmat mümkin däl';
 }
