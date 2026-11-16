@@ -50,6 +50,7 @@ class GameScreen extends ConsumerStatefulWidget {
     this.resume,
     this.line,
     this.lineName,
+    this.onLineDone,
   });
 
   final Bot? bot;
@@ -65,6 +66,9 @@ class GameScreen extends ConsumerStatefulWidget {
   /// name.
   final List<String>? line;
   final String? lineName;
+
+  /// Called when the player has played the whole [line].
+  final void Function()? onLineDone;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -377,6 +381,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (next.engineFailed && previous?.engineFailed != true) {
         _showEngineFailed();
+      }
+      if (previous != null && previous.inLine && !next.inLine) {
+        if (next.lineLength > 0 && next.moves.length >= next.lineLength) {
+          widget.onLineDone?.call();
+        }
       }
       if (previous?.status == next.status) return;
 

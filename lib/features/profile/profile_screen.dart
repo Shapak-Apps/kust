@@ -140,10 +140,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _qr() => ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(context.t.levelComingSoon)));
-
   Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
@@ -248,12 +244,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const Spacer(),
                       IconButton(
-                        onPressed: _qr,
-                        tooltip: context.t.qrCode,
-                        color: Colors.white,
-                        icon: const Icon(Icons.qr_code_2_rounded),
-                      ),
-                      IconButton(
                         onPressed: _edit,
                         tooltip: context.t.editProfile,
                         color: Colors.white,
@@ -317,18 +307,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// Joined, rating and games played, side by side.
+/// When the player joined, rating and games played, side by side.
 class _Stats extends StatelessWidget {
   const _Stats();
-
-  /// Not recorded yet: a stand-in until accounts keep a real date.
-  static final DateTime _joined = DateTime(2026, 11, 13);
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     final t = context.t;
-    final month = t.monthsShort.split(',')[_joined.month - 1];
+    final joined = AppStorage.isReady ? AppStorage.instance.joinedAt : null;
     Widget stat(String value, String label) => Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,10 +336,12 @@ class _Stats extends StatelessWidget {
         valueListenable: PlayerRatingStore.instance.listenable(),
         builder: (context, _, _) => Row(
           children: [
-            stat(
-              '${t.dateShort(month, _joined.day)} ${_joined.year}',
-              t.joined,
-            ),
+            if (joined != null)
+              stat(
+                '${t.dateShort(t.monthsShort.split(',')[joined.month - 1], joined.day)} '
+                '${joined.year}',
+                t.joined,
+              ),
             stat('${PlayerRatingStore.instance.rating}', t.rating),
             stat('${GameHistoryStore.instance.all().length}', t.games),
           ],

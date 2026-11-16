@@ -55,7 +55,6 @@ Bot trainBot() {
 void practiseLine(BuildContext context, TrainOpening opening, int index) {
   final bot = trainBot();
   final line = opening.lines[index];
-  TrainProgress.instance.markTried(opening, index);
   context.push(
     '/game',
     extra: GameArgs(
@@ -64,6 +63,8 @@ void practiseLine(BuildContext context, TrainOpening opening, int index) {
       practiceMode: true,
       line: line.uci,
       lineName: line.nameIn(AppText.now),
+      // Practised once the whole line has been played, not on starting.
+      onLineDone: () => TrainProgress.instance.markTried(opening, index),
     ),
   );
 }
