@@ -132,6 +132,7 @@ void main() {
           )
           .earned;
       expect(earned('Puzzler'), isTrue);
+      await tester.scrollUntilVisible(find.text('Knot by knot'), 200);
       expect(earned('Knot by knot'), isFalse);
     });
 
