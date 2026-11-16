@@ -1810,4 +1810,17 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get toEnd => 'Soňuna';
+
+  @override
+  String trainLineProgress(String name, int done, int total) {
+    return '$name · $done/$total göçüm';
+  }
+
+  @override
+  String trainLineWrong(String san) {
+    return 'Wariant boýunça däl. $san oýnaň';
+  }
+
+  @override
+  String get trainLineDone => 'Wariant tamam! Indi dowam ediň.';
 }

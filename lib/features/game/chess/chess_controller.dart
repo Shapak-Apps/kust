@@ -98,6 +98,8 @@ class GameState {
     this.accuracy,
     this.accuracyPending = false,
     this.moveCounts,
+    this.lineLength = 0,
+    this.lineExpected,
   });
 
   final Position position;
@@ -221,6 +223,16 @@ class GameState {
   /// [accuracy].
   final Map<MoveQuality, int>? moveCounts;
 
+  /// How many moves the opening line being drilled has, 0 when none: until
+  /// then the player must play the line's moves and the bot plays its own.
+  final int lineLength;
+
+  /// The line's move the player missed, in SAN, shown until they play it.
+  final String? lineExpected;
+
+  /// Whether the opening line is still being played.
+  bool get inLine => moves.length < lineLength;
+
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
       (mode == GameMode.local || position.turn == playerSide);
@@ -336,6 +348,8 @@ class GameState {
     double? accuracy,
     bool? accuracyPending,
     Map<MoveQuality, int>? moveCounts,
+    String? lineExpected,
+    bool clearLineExpected = false,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -393,6 +407,10 @@ class GameState {
       accuracy: accuracy ?? this.accuracy,
       accuracyPending: accuracyPending ?? this.accuracyPending,
       moveCounts: moveCounts ?? this.moveCounts,
+      lineLength: lineLength,
+      lineExpected: clearLineExpected
+          ? null
+          : (lineExpected ?? this.lineExpected),
     );
   }
 }
@@ -419,6 +437,9 @@ class ChessController extends Notifier<GameState> {
   /// Whether a move of this game was rated brilliant.
   bool _brilliantThisGame = false;
   int _accuracyEpoch = 0;
+
+  /// The opening line being drilled, as moves from the start position.
+  List<NormalMove> _line = const [];
   final Set<int> _feedbackPending = <int>{};
   final Map<String, int> _repCounts = <String, int>{};
 
@@ -1101,7 +1122,9 @@ class ChessController extends Notifier<GameState> {
     Side playerSide = Side.white,
     TimeControl? timeControl,
     bool practiceMode = false,
+    List<String> line = const [],
   }) async {
+    _line = [for (final uci in line) NormalMove.fromUci(uci)];
     _moveRequestId++;
     _evalRequestId++;
     _accuracyEpoch++;
@@ -1131,6 +1154,7 @@ class ChessController extends Notifier<GameState> {
       moveFeedbackEnabled: state.moveFeedbackEnabled,
       showBestEnabled: state.showBestEnabled,
       status: GameStatus.playing,
+      lineLength: _line.length,
     );
 
     _rebuildRepetitions(const <Position>[], state.position);
@@ -1160,6 +1184,7 @@ class ChessController extends Notifier<GameState> {
   /// bot moves if it is its turn. Returns false when the saved game cannot be
   /// replayed (the saved moves do not fit the rules, or the game is over).
   Future<bool> resumeGame(LiveGame saved, {Bot? bot}) async {
+    _line = const [];
     if (!saved.isLocal && bot == null) return false;
 
     Position position = Chess.fromSetup(Setup.parseFen(kStartFen));
@@ -1274,6 +1299,7 @@ class ChessController extends Notifier<GameState> {
   }
 
   Future<void> startLocalGame({TimeControl? timeControl}) async {
+    _line = const [];
     _moveRequestId++;
     _evalRequestId++;
     _accuracyEpoch++;
@@ -2051,6 +2077,13 @@ class ChessController extends Notifier<GameState> {
     if (!state.practiceMode) return;
     if (state.mode == GameMode.local) return;
 
+    // In the opening line the hint is the line's move.
+    if (state.moves.length < _line.length) {
+      final expected = _line[state.moves.length];
+      state = state.copyWith(hintSquares: {expected.from, expected.to});
+      return;
+    }
+
     final requestId = ++_moveRequestId;
     final hintId = ++_hintRequestId;
     state = state.copyWith(isHintThinking: true);
@@ -2164,6 +2197,27 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
+    // Drilling a line: only its move counts. Anything else is taken back
+    // at once, and the right move is named and shown with an arrow.
+    final ply = state.moves.length;
+    if (ply < _line.length) {
+      final expected = _line[ply];
+      if (expected.from != move.from ||
+          expected.to != move.to ||
+          expected.promotion != move.promotion) {
+        _playSound('illegal.wav');
+        state = state.copyWith(
+          clearSelection: true,
+          hintSquares: {expected.from, expected.to},
+          lineExpected: state.position.makeSan(expected).$2,
+        );
+        return;
+      }
+      if (state.lineExpected != null) {
+        state = state.copyWith(clearLineExpected: true, hintSquares: const {});
+      }
+    }
+
     final oldPosition = state.position;
     final newPosition = oldPosition.play(move);
 
@@ -2247,32 +2301,41 @@ class ChessController extends Notifier<GameState> {
     final startedAt = DateTime.now();
     final policy = _policy;
 
+    // In the opening line the bot plays the line's move, after a beat.
+    final ply = state.moves.length;
+    final NormalMove? scripted = ply < _line.length ? _line[ply] : null;
+
     final String uci;
     Duration delay = Duration.zero;
-    try {
-      final candidates = await _engine.candidateMoves(
-        state.position.fen,
-        lines: policy.lines,
-        depth: policy.depth,
-        thinkTime: policy.thinkTime,
-      );
-      if (candidates.isNotEmpty) _remarkFromSwing(candidates.first.cp);
-      uci = candidates.isEmpty
-          ? '(none)'
-          : policy.pick(
-              candidates,
-              phase: phaseOf(state.position.fen, state.moves.length),
-            );
-      delay = policy.moveDelay(
-        candidates,
-        phase: phaseOf(state.position.fen, state.moves.length),
-        clockLeft: _botClockLeft(),
-      );
-    } catch (_) {
-      if (!_isDisposed && requestId == _moveRequestId) {
-        state = state.copyWith(isBotThinking: false, engineFailed: true);
+    if (scripted != null) {
+      uci = scripted.uci;
+      delay = const Duration(milliseconds: 600);
+    } else {
+      try {
+        final candidates = await _engine.candidateMoves(
+          state.position.fen,
+          lines: policy.lines,
+          depth: policy.depth,
+          thinkTime: policy.thinkTime,
+        );
+        if (candidates.isNotEmpty) _remarkFromSwing(candidates.first.cp);
+        uci = candidates.isEmpty
+            ? '(none)'
+            : policy.pick(
+                candidates,
+                phase: phaseOf(state.position.fen, state.moves.length),
+              );
+        delay = policy.moveDelay(
+          candidates,
+          phase: phaseOf(state.position.fen, state.moves.length),
+          clockLeft: _botClockLeft(),
+        );
+      } catch (_) {
+        if (!_isDisposed && requestId == _moveRequestId) {
+          state = state.copyWith(isBotThinking: false, engineFailed: true);
+        }
+        return;
       }
-      return;
     }
 
     if (uci == '(none)' || uci.length < 4) {
@@ -2281,7 +2344,7 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    final move = _parseUciMove(uci, state.position);
+    final move = scripted ?? _parseUciMove(uci, state.position);
 
     final remaining = delay - DateTime.now().difference(startedAt);
     if (remaining > Duration.zero) await Future.delayed(remaining);

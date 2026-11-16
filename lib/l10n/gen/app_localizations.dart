@@ -3278,6 +3278,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'To the end'**
   String get toEnd;
+
+  /// No description provided for @trainLineProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · move {done} of {total}'**
+  String trainLineProgress(String name, int done, int total);
+
+  /// No description provided for @trainLineWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Not the line. Play {san}'**
+  String trainLineWrong(String san);
+
+  /// No description provided for @trainLineDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Line done! Play on from here.'**
+  String get trainLineDone;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

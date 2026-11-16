@@ -1,15 +1,14 @@
-import 'package:dartchess/dartchess.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
-import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/train/train_openings.dart';
+import 'package:kust/l10n/app_locale.dart';
 
 /// Which lines the player has practised, kept as "opening:index".
 class TrainProgress {
@@ -50,10 +49,12 @@ Bot trainBot() {
   );
 }
 
-/// Starts a practice game against [trainBot] from the end of line [index]
-/// of [opening], the player on the opening's side.
+/// Starts a practice game against [trainBot] that drills line [index] of
+/// [opening] from the first move: the player must play the line's moves,
+/// the bot answers with the line's, then the game goes on freely.
 void practiseLine(BuildContext context, TrainOpening opening, int index) {
   final bot = trainBot();
+  final line = opening.lines[index];
   TrainProgress.instance.markTried(opening, index);
   context.push(
     '/game',
@@ -61,15 +62,8 @@ void practiseLine(BuildContext context, TrainOpening opening, int index) {
       bot: bot,
       playerSide: opening.side,
       practiceMode: true,
-      fromLine: true,
-      resume: LiveGame(
-        isLocal: false,
-        botId: bot.id,
-        playerIsWhite: opening.side == Side.white,
-        practice: true,
-        uciMoves: opening.lines[index].uci,
-        savedAt: DateTime.now().millisecondsSinceEpoch,
-      ),
+      line: line.uci,
+      lineName: line.nameIn(AppText.now),
     ),
   );
 }

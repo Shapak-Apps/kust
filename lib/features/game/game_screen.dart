@@ -48,7 +48,8 @@ class GameScreen extends ConsumerStatefulWidget {
     this.timeControl,
     this.practiceMode = false,
     this.resume,
-    this.fromLine = false,
+    this.line,
+    this.lineName,
   });
 
   final Bot? bot;
@@ -60,8 +61,10 @@ class GameScreen extends ConsumerStatefulWidget {
   /// A saved game to continue instead of starting a new one.
   final LiveGame? resume;
 
-  /// [resume] is a Train line: Rematch plays the line again.
-  final bool fromLine;
+  /// An opening line from Train to drill from the first move, and its
+  /// name.
+  final List<String>? line;
+  final String? lineName;
 
   @override
   ConsumerState<GameScreen> createState() => _GameScreenState();
@@ -96,6 +99,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
           playerSide: widget.playerSide,
           practiceMode: widget.practiceMode,
           timeControl: widget.timeControl,
+          line: widget.line ?? const [],
         );
       }
     });
@@ -329,9 +333,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
         onRematch: () {
           Navigator.of(dialogContext).pop();
           final controller = ref.read(chessControllerProvider.notifier);
-          if (widget.fromLine && widget.resume != null) {
-            controller.resumeGame(widget.resume!, bot: widget.bot);
-          } else if (widget.isLocal) {
+          if (widget.isLocal) {
             controller.startLocalGame(timeControl: widget.timeControl);
           } else {
             controller.startGame(
@@ -339,6 +341,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               playerSide: widget.playerSide,
               practiceMode: widget.practiceMode,
               timeControl: widget.timeControl,
+              line: widget.line ?? const [],
             );
           }
         },
@@ -486,6 +489,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
               ],
             ),
             const _EngineSetupBanner(),
+            if (widget.lineName != null) _LineBanner(name: widget.lineName!),
             Expanded(
               child: SafeArea(
                 top: false,
@@ -1114,6 +1118,62 @@ class _MoveFeedbackLine extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// While an opening line is drilled: its name and how far along it is, the
+/// right move after a wrong one, and a word when it is done.
+class _LineBanner extends ConsumerWidget {
+  const _LineBanner({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final k = context.k;
+    final t = context.t;
+    final s = ref.watch(
+      chessControllerProvider.select(
+        (g) =>
+            (done: g.moves.length, total: g.lineLength, wrong: g.lineExpected),
+      ),
+    );
+    if (s.total == 0) return const SizedBox.shrink();
+    final finished = s.done >= s.total;
+    final (text, colour, icon) = finished
+        ? (t.trainLineDone, k.success, Icons.check_circle_rounded)
+        : s.wrong != null
+        ? (t.trainLineWrong(s.wrong!), k.danger, Icons.close_rounded)
+        : (
+            t.trainLineProgress(name, s.done, s.total),
+            k.ink,
+            Icons.menu_book_rounded,
+          );
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        color: k.surface,
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: colour),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: k.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colour,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

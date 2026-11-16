@@ -529,5 +529,8 @@
   "trainThirdLine": "Üçünji wariant",
   "trainOrigin": "Ady: {origin}",
   "toStart": "Başyna",
-  "toEnd": "Soňuna"
+  "toEnd": "Soňuna",
+  "trainLineProgress": "{name} · {done}/{total} göçüm",
+  "trainLineWrong": "Wariant boýunça däl. {san} oýnaň",
+  "trainLineDone": "Wariant tamam! Indi dowam ediň."
 }

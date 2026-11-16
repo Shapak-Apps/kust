@@ -40,7 +40,8 @@ GoRouter createRouter({required bool onboardingCompleted}) {
             timeControl: args.timeControl,
             practiceMode: args.practiceMode,
             resume: args.resume,
-            fromLine: args.fromLine,
+            line: args.line,
+            lineName: args.lineName,
           );
         },
       ),

@@ -1814,4 +1814,17 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get toEnd => 'В конец';
+
+  @override
+  String trainLineProgress(String name, int done, int total) {
+    return '$name · ход $done из $total';
+  }
+
+  @override
+  String trainLineWrong(String san) {
+    return 'Не по варианту. Ходите $san';
+  }
+
+  @override
+  String get trainLineDone => 'Вариант пройден! Играйте дальше.';
 }
