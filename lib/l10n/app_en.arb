@@ -972,5 +972,56 @@
   "byTimeNoMate": "on time, with no mate possible",
   "tierCommon": "Common",
   "tierRare": "Rare",
-  "tierMythic": "Mythic"
+  "tierMythic": "Mythic",
+  "opItalianD": "Quick development and an early fight for the centre: bishop to c4 aims at f7, then c3 and d3 or d4. Calm on the surface, full of traps underneath.",
+  "opRuyLopezD": "The bishop pins pressure on the knight that guards e5. A slow, rich plan that has been the main road at the top for over a century.",
+  "opLondonD": "The same easy setup almost every game: d4, Bf4, e3, Nf3 and c3. Solid, quick to learn, and full of chances to attack the king.",
+  "opQueensGambitD": "White offers the c-pawn to pull Black's d-pawn from the centre. If Black takes, White builds a big centre and wins the pawn back.",
+  "opKingsGambitD": "White gives the f-pawn on move two to open the f-file and race for the attack. Wild, risky and a favourite of the Romantic era.",
+  "opFriedLiverD": "Against the Two Knights, the knight jumps to g5 and then sacrifices itself on f7 to drag the black king into the open.",
+  "opSicilianD": "Black answers 1.e4 with c5 and fights unequally: sharp, double-edged games where Black plays to win, not to draw.",
+  "opFrenchD": "Black builds a solid chain with e6 and d5, lets White take space, then strikes back at the centre with c5.",
+  "opCaroKannD": "Like the French, but the light-squared bishop gets out first. A sound, hard-to-crack defence with a clean pawn structure.",
+  "opKingsIndianD": "Black lets White take the whole centre, finishes castling, then hits back with e5 or c5 and often storms the kingside.",
+  "opScandinavianD": "Black attacks e4 at once with d5. One simple idea, a quick game, and little theory to remember.",
+  "opBudapestD": "Against 1.d4 Nf6 2.c4, Black throws in e5 to free the pieces fast. The pawn usually comes back, with the initiative.",
+  "kindOpening": "Opening",
+  "kindDefense": "Defence",
+  "kindGambit": "Gambit",
+  "kindAttack": "Attack",
+  "trainAll": "All",
+  "trainSearch": "Search openings",
+  "trainTryFirst": "Try the first line",
+  "trainLines": "{count, plural, one{1 line} other{{count} lines}}",
+  "@trainLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trainAsWhite": "As White",
+  "trainAsBlack": "As Black",
+  "trainPractise": "Practise vs {name}",
+  "@trainPractise": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trainNoResults": "No openings match your search.",
+  "trainMainLine": "Main line",
+  "trainSecondLine": "Second line",
+  "trainThirdLine": "Third line",
+  "trainOrigin": "Named after {origin}",
+  "@trainOrigin": {
+    "placeholders": {
+      "origin": {
+        "type": "String"
+      }
+    }
+  },
+  "toStart": "To the start",
+  "toEnd": "To the end"
 }
