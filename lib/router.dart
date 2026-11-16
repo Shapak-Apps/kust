@@ -15,6 +15,7 @@ import 'package:kust/features/puzzles/puzzle_game_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/history/replay_screen.dart';
 import 'package:kust/features/puzzles/puzzles_screen.dart';
+import 'package:kust/features/train/train_screen.dart';
 import 'package:kust/widgets/app_shell.dart';
 
 GoRouter createRouter({required bool onboardingCompleted}) {
@@ -61,6 +62,10 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         builder: (context, state) => const ProfileScreen(),
       ),
 
+      GoRoute(
+        path: '/history',
+        builder: (context, state) => const HistoryScreen(),
+      ),
       GoRoute(
         path: '/history/:id',
         builder: (context, state) => ReplayScreen(
@@ -109,9 +114,9 @@ GoRouter createRouter({required bool onboardingCompleted}) {
                 _tabPage(state, const LearnScreen()),
           ),
           GoRoute(
-            path: '/history',
+            path: '/train',
             pageBuilder: (context, state) =>
-                _tabPage(state, const HistoryScreen()),
+                _tabPage(state, const TrainScreen()),
           ),
         ],
       ),

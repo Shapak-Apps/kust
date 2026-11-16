@@ -1619,4 +1619,25 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get editProfile => 'Изменить профиль';
+
+  @override
+  String get navTrain => 'Тренировка';
+
+  @override
+  String get joined => 'Регистрация';
+
+  @override
+  String get rating => 'Рейтинг';
+
+  @override
+  String get games => 'Партии';
+
+  @override
+  String get gameHistory => 'История партий';
+
+  @override
+  String get viewAll => 'Все';
+
+  @override
+  String get qrCode => 'QR-код';
 }

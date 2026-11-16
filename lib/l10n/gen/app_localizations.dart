@@ -2942,6 +2942,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Edit profile'**
   String get editProfile;
+
+  /// No description provided for @navTrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Train'**
+  String get navTrain;
+
+  /// No description provided for @joined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get joined;
+
+  /// No description provided for @rating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get rating;
+
+  /// No description provided for @games.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get games;
+
+  /// No description provided for @gameHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Game history'**
+  String get gameHistory;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAll;
+
+  /// No description provided for @qrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code'**
+  String get qrCode;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

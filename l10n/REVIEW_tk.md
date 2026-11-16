@@ -413,3 +413,15 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `lessonPatternsIntro` | Strong players know mates by their shape: the smothered mate with a knight, the queen right next to the king, and the rook and knight working together. Find the mate in one move. | Güýçli oýunçylar şahmatlary görnüşinden tanaýar: at bilen gysylan şahmat, şanyň ýanyndaky wezir, bilelikde işleýän gala we at. Bir göçümde şahmady tapyň. |
 | `campTacticsTitle` | Tactics | Taktika |
 | `campTacticsSub` | Win pieces with clever moves | Akylly göçümler bilen çöp utuň |
+
+## Profile and Train
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `navTrain` | Train | Türgenleşik |
+| `joined` | Joined | Goşulan senesi |
+| `rating` | Rating | Reýting |
+| `games` | Games | Oýunlar |
+| `gameHistory` | Game history | Oýunlarym |
+| `viewAll` | View all | Hemmesi |
+| `qrCode` | QR code | QR kod |

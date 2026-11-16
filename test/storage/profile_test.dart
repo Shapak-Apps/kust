@@ -82,7 +82,7 @@ void main() {
     expect(find.text('@ali'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
 
-    await tester.tap(find.text('Edit profile'));
+    await tester.tap(find.byTooltip('Edit profile'));
     await tester.pump();
     KustButton save() => tester.widget(
       find.byWidgetPredicate((w) => w is KustButton && w.label == 'Save'),

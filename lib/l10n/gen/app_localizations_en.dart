@@ -1612,4 +1612,25 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get editProfile => 'Edit profile';
+
+  @override
+  String get navTrain => 'Train';
+
+  @override
+  String get joined => 'Joined';
+
+  @override
+  String get rating => 'Rating';
+
+  @override
+  String get games => 'Games';
+
+  @override
+  String get gameHistory => 'Game history';
+
+  @override
+  String get viewAll => 'View all';
+
+  @override
+  String get qrCode => 'QR code';
 }
