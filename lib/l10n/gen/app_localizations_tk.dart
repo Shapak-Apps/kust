@@ -1823,4 +1823,8 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get trainLineDone => 'Wariant tamam! Indi dowam ediň.';
+
+  @override
+  String get showBestAfterLine =>
+      'Debýut wariantyny tamamlanyňyzdan soň açylar';
 }

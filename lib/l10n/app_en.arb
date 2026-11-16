@@ -1046,5 +1046,6 @@
       }
     }
   },
-  "trainLineDone": "Line done! Play on from here."
+  "trainLineDone": "Line done! Play on from here.",
+  "showBestAfterLine": "Unlocks when you finish the opening line"
 }

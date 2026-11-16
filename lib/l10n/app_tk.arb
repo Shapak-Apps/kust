@@ -532,5 +532,6 @@
   "toEnd": "Soňuna",
   "trainLineProgress": "{name} · {done}/{total} göçüm",
   "trainLineWrong": "Wariant boýunça däl. {san} oýnaň",
-  "trainLineDone": "Wariant tamam! Indi dowam ediň."
+  "trainLineDone": "Wariant tamam! Indi dowam ediň.",
+  "showBestAfterLine": "Debýut wariantyny tamamlanyňyzdan soň açylar"
 }
