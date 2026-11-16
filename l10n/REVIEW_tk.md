@@ -425,3 +425,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `gameHistory` | Game history | Oýunlarym |
 | `viewAll` | View all | Hemmesi |
 | `qrCode` | QR code | QR kod |
+| `trainSoonSub` | A new way to practise is on its way. Until then, keep sharp with puzzles. | Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň. |
+| `solvePuzzles` | Solve puzzles | Mesele çözüň |

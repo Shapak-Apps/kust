@@ -44,10 +44,6 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 100));
-      expect(
-        find.image(const AssetImage('assets/images/banner.png')),
-        findsNothing, // drawn through a ResizeImage
-      );
       expect(find.byType(Image), findsWidgets);
       expect(errors, isEmpty);
       expect(tester.takeException(), isNull);

@@ -1640,4 +1640,11 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get qrCode => 'QR-код';
+
+  @override
+  String get trainSoonSub =>
+      'Новый способ тренироваться скоро появится. А пока держите себя в форме с задачами.';
+
+  @override
+  String get solvePuzzles => 'Решать задачи';
 }

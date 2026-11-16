@@ -2984,6 +2984,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'QR code'**
   String get qrCode;
+
+  /// No description provided for @trainSoonSub.
+  ///
+  /// In en, this message translates to:
+  /// **'A new way to practise is on its way. Until then, keep sharp with puzzles.'**
+  String get trainSoonSub;
+
+  /// No description provided for @solvePuzzles.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve puzzles'**
+  String get solvePuzzles;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

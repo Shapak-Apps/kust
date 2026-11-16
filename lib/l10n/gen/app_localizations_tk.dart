@@ -1638,4 +1638,11 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get qrCode => 'QR kod';
+
+  @override
+  String get trainSoonSub =>
+      'Türgenleşmegiň täze usuly ýakyn wagtda geler. Oňa çenli meseleler bilen taýýarlygyňyzy saklaň.';
+
+  @override
+  String get solvePuzzles => 'Mesele çözüň';
 }

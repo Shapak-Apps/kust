@@ -4,8 +4,8 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// A squarish card for a shortcut: an icon at the top, a title and a line
-/// under it at the bottom, and something small (a badge) in the corner.
+/// A one-row card for a shortcut: an icon, a title with a line under it,
+/// something small (a badge) and an arrow.
 class KustTile extends StatelessWidget {
   const KustTile({
     super.key,
@@ -23,11 +23,11 @@ class KustTile extends StatelessWidget {
   final VoidCallback onTap;
   final String semanticsLabel;
 
-  /// Shown in the top right corner.
+  /// Shown before the arrow.
   final Widget? badge;
 
   /// The tile's height.
-  static const double height = 132;
+  static const double height = 72;
 
   @override
   Widget build(BuildContext context) {
@@ -40,33 +40,39 @@ class KustTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: height,
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: k.surface,
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
             border: Border.all(color: k.line),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [KustIconTile(icon), const Spacer(), ?badge],
+              KustIconTile(icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.caption,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: k.body.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: k.caption,
-              ),
+              if (badge != null) ...[const SizedBox(width: 8), badge!],
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, color: k.muted),
             ],
           ),
         ),
