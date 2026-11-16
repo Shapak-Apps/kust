@@ -26,7 +26,7 @@ class _AppShellState extends State<AppShell> {
     // second.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.go(const ['/play', '/puzzles', '/learn', '/history'][index]);
+      context.go(const ['/play', '/puzzles', '/learn', '/train'][index]);
     });
   }
 
@@ -37,7 +37,7 @@ class _AppShellState extends State<AppShell> {
         ? 1
         : location.startsWith('/learn')
         ? 2
-        : location.startsWith('/history')
+        : location.startsWith('/train')
         ? 3
         : 0;
     if (_pending == current) _pending = null;
@@ -72,11 +72,7 @@ class _AppShellState extends State<AppShell> {
                     Icons.school_rounded,
                     context.t.navLearn,
                   ),
-                  KustNavItem(
-                    Icons.history_rounded,
-                    Icons.history_rounded,
-                    context.t.navHistory,
-                  ),
+                  KustNavItem.svg('assets/icons/sword.svg', context.t.navTrain),
                 ],
                 onSelected: _select,
               ),

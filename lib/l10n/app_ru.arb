@@ -473,5 +473,12 @@
   "removePhoto": "Удалить фото",
   "onbNameTitle": "Как вас называть?",
   "onbNameSub": "Это можно поменять позже в профиле.",
-  "editProfile": "Изменить профиль"
+  "editProfile": "Изменить профиль",
+  "navTrain": "Тренировка",
+  "joined": "Регистрация",
+  "rating": "Рейтинг",
+  "games": "Партии",
+  "gameHistory": "История партий",
+  "viewAll": "Все",
+  "qrCode": "QR-код"
 }

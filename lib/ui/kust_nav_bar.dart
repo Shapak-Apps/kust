@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/ui/motion.dart';
@@ -7,10 +8,17 @@ import 'package:kust/ui/motion.dart';
 const double _barHeight = 62;
 
 class KustNavItem {
-  const KustNavItem(this.icon, this.selectedIcon, this.label);
+  const KustNavItem(this.icon, this.selectedIcon, this.label) : svg = null;
 
-  final IconData icon;
-  final IconData selectedIcon;
+  /// A tab whose icon is an SVG drawn in one colour, for icons Material
+  /// lacks.
+  const KustNavItem.svg(String this.svg, this.label)
+    : icon = null,
+      selectedIcon = null;
+
+  final IconData? icon;
+  final IconData? selectedIcon;
+  final String? svg;
   final String label;
 }
 
@@ -128,11 +136,18 @@ class _NavButton extends StatelessWidget {
               curve: Curves.elasticOut,
               builder: (context, v, child) =>
                   Transform.scale(scale: v, child: child),
-              child: Icon(
-                selected ? item.selectedIcon : item.icon,
-                size: 28,
-                color: color,
-              ),
+              child: item.svg == null
+                  ? Icon(
+                      selected ? item.selectedIcon : item.icon,
+                      size: 28,
+                      color: color,
+                    )
+                  : SvgPicture.asset(
+                      item.svg!,
+                      width: 26,
+                      height: 26,
+                      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                    ),
             ),
             const SizedBox(height: 3),
             AnimatedDefaultTextStyle(

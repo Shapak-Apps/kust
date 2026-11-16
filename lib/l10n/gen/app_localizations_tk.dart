@@ -1617,4 +1617,25 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get editProfile => 'Profili üýtget';
+
+  @override
+  String get navTrain => 'Türgenleşik';
+
+  @override
+  String get joined => 'Goşulan senesi';
+
+  @override
+  String get rating => 'Reýting';
+
+  @override
+  String get games => 'Oýunlar';
+
+  @override
+  String get gameHistory => 'Oýunlarym';
+
+  @override
+  String get viewAll => 'Hemmesi';
+
+  @override
+  String get qrCode => 'QR kod';
 }

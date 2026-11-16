@@ -946,5 +946,12 @@
   "removePhoto": "Remove photo",
   "onbNameTitle": "What should we call you?",
   "onbNameSub": "You can change these later in your profile.",
-  "editProfile": "Edit profile"
+  "editProfile": "Edit profile",
+  "navTrain": "Train",
+  "joined": "Joined",
+  "rating": "Rating",
+  "games": "Games",
+  "gameHistory": "Game history",
+  "viewAll": "View all",
+  "qrCode": "QR code"
 }

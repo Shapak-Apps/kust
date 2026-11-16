@@ -1,10 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/piece_set.dart';
+import 'package:kust/core/settings.dart';
+import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/features/achievements/achievements.dart';
+import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/felt_header.dart';
@@ -14,9 +22,11 @@ import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/piece_image.dart';
 
-/// The player's profile: photo, name, username and a few words about them,
-/// with an edit mode for changing them. Kept on the device.
+/// The player's profile: their board and pieces from settings, photo, name,
+/// username and a few words about them, their numbers, recent games and
+/// achievements, with an edit mode for changing them. Kept on the device.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -100,67 +110,167 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
       child: Scaffold(
         backgroundColor: k.bg,
-        body: Column(
-          children: [
-            FeltHeader(
-              title: _editing ? context.t.editProfile : context.t.profile,
-              onBack: _editing ? () => setState(() => _editing = false) : _back,
-            ),
-            Expanded(
-              child: ValueListenableBuilder(
-                valueListenable: _store.profileListenable(),
-                builder: (context, _, _) => ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                  children: _editing ? _form(context, k) : _view(context, k),
-                ),
-              ),
-            ),
-          ],
+        body: ValueListenableBuilder(
+          valueListenable: _store.profileListenable(),
+          builder: (context, _, _) => _editing
+              ? Column(
+                  children: [
+                    FeltHeader(
+                      title: context.t.editProfile,
+                      onBack: () => setState(() => _editing = false),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        children: _form(context, k),
+                      ),
+                    ),
+                  ],
+                )
+              : _view(context, k),
         ),
       ),
     );
   }
 
-  Widget _avatar(BuildContext context) {
+  Widget _avatar(BuildContext context, {double size = 104}) {
     final path = _store.photoPath;
     return PlayerAvatar(
-      size: 104,
+      size: size,
       name: _store.displayName(context.t),
       photo: path == null ? null : FileImage(File(path)),
     );
   }
 
-  List<Widget> _view(BuildContext context, KustTokens k) {
+  void _qr() => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(context.t.levelComingSoon)));
+
+  Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
-    return [
-      Center(child: _avatar(context)),
-      const SizedBox(height: 16),
-      Text(
-        _store.displayName(context.t),
-        textAlign: TextAlign.center,
-        style: k.title,
+    final top = MediaQuery.paddingOf(context).top;
+    final square = MediaQuery.sizeOf(context).width / 8;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.paddingOf(context).bottom + 32,
+            ),
+            children: [
+              // The board from settings, with the avatar standing on its edge.
+              Stack(
+                children: [
+                  Column(
+                    children: [
+                      // Both ranks whole, and a little of the third.
+                      _BoardBanner(height: top + square * 2.4),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                  Positioned(
+                    left: 20,
+                    right: 20,
+                    bottom: 0,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: k.bg, width: 3),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: _avatar(context, size: 88),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _store.displayName(context.t),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: k.title,
+                              ),
+                              if (username != null)
+                                Text(
+                                  '@$username',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: k.body.copyWith(color: k.muted),
+                                ),
+                              const SizedBox(height: 4),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (bio.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                  child: Text(bio, style: k.body),
+                ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: _Stats(),
+              ),
+              const _HistorySection(),
+              const _AchievementsSection(),
+            ],
+          ),
+          // The bar over the board: back, and the QR code and edit buttons.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x99000000), Color(0x00000000)],
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: _back,
+                        tooltip: context.t.back,
+                        color: Colors.white,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: _qr,
+                        tooltip: context.t.qrCode,
+                        color: Colors.white,
+                        icon: const Icon(Icons.qr_code_2_rounded),
+                      ),
+                      IconButton(
+                        onPressed: _edit,
+                        tooltip: context.t.editProfile,
+                        color: Colors.white,
+                        icon: const Icon(Icons.edit_outlined),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      if (username != null) ...[
-        const SizedBox(height: 4),
-        Text(
-          '@$username',
-          textAlign: TextAlign.center,
-          style: k.body.copyWith(color: k.muted),
-        ),
-      ],
-      if (bio.isNotEmpty) ...[
-        const SizedBox(height: 16),
-        Text(bio, textAlign: TextAlign.center, style: k.body),
-      ],
-      const SizedBox(height: 24),
-      KustButton(
-        label: context.t.editProfile,
-        icon: Icons.edit_outlined,
-        style: KustButtonStyle.outline,
-        onTap: _edit,
-      ),
-    ];
+    );
   }
 
   List<Widget> _form(BuildContext context, KustTokens k) {
@@ -207,5 +317,321 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SizedBox(height: 24),
       KustButton(label: context.t.saveName, onTap: _valid ? _save : null),
     ];
+  }
+}
+
+/// The first two ranks of the board in the theme and pieces picked in
+/// settings, fading into the page at the bottom.
+class _BoardBanner extends StatelessWidget {
+  const _BoardBanner({required this.height});
+
+  final double height;
+
+  static const _backRank = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppSettings.instance;
+    final bg = context.k.bg;
+    return ExcludeSemantics(
+      child: SizedBox(
+        height: height,
+        child: ValueListenableBuilder<BoardTheme>(
+          valueListenable: s.boardTheme,
+          builder: (context, board, _) => ValueListenableBuilder<PieceSet>(
+            valueListenable: s.pieceSet,
+            builder: (context, set, _) => LayoutBuilder(
+              builder: (context, box) {
+                final sq = box.maxWidth / 8;
+                // Ranks 3, 2 and 1 from the top; rank 3 is cut by the top.
+                Widget square(int file, int rank) {
+                  final light = (file + rank).isEven;
+                  final role = rank == 1
+                      ? _backRank[file]
+                      : rank == 2
+                      ? 'P'
+                      : null;
+                  return Container(
+                    width: sq,
+                    height: sq,
+                    color: light ? board.light : board.dark,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (board.grain)
+                          CustomPaint(
+                            painter: WoodGrainPainter(
+                              seed: rank * 8 + file,
+                              light: light,
+                            ),
+                          ),
+                        if (role != null)
+                          Padding(
+                            padding: EdgeInsets.all(sq * 0.06),
+                            child: PieceImage(set.asset('w', role)),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ClipRect(
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Column(
+                          children: [
+                            for (final rank in const [3, 2, 1])
+                              Row(
+                                children: [
+                                  for (var f = 0; f < 8; f++) square(f, rank),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                bg.withValues(alpha: 0.15),
+                                bg.withValues(alpha: 0.15),
+                                bg.withValues(alpha: 0.9),
+                              ],
+                              stops: const [0, 0.7, 1],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Joined, rating and games played, side by side.
+class _Stats extends StatelessWidget {
+  const _Stats();
+
+  /// Not recorded yet: a stand-in until accounts keep a real date.
+  static final DateTime _joined = DateTime(2026, 11, 13);
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    final month = t.monthsShort.split(',')[_joined.month - 1];
+    Widget stat(String value, String label) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: k.body.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(label, style: k.caption),
+        ],
+      ),
+    );
+    return ValueListenableBuilder(
+      valueListenable: GameHistoryStore.instance.listenable(),
+      builder: (context, _, _) => ValueListenableBuilder(
+        valueListenable: PlayerRatingStore.instance.listenable(),
+        builder: (context, _, _) => Row(
+          children: [
+            stat(
+              '${t.dateShort(month, _joined.day)} ${_joined.year}',
+              t.joined,
+            ),
+            stat('${PlayerRatingStore.instance.rating}', t.rating),
+            stat('${GameHistoryStore.instance.all().length}', t.games),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A section title with a count beside it and a View all link.
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.title,
+    required this.count,
+    required this.onViewAll,
+  });
+
+  final String title;
+  final String count;
+  final VoidCallback onViewAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 8, 4),
+      child: Row(
+        children: [
+          Text(title, style: k.title),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: k.surfaceAlt,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              count,
+              style: k.caption.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ),
+          const Spacer(),
+          TextButton(onPressed: onViewAll, child: Text(context.t.viewAll)),
+        ],
+      ),
+    );
+  }
+}
+
+/// The last few games, and the way to all of them.
+class _HistorySection extends StatelessWidget {
+  const _HistorySection();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder(
+      valueListenable: GameHistoryStore.instance.listenable(),
+      builder: (context, _, _) {
+        final games = GameHistoryStore.instance.all();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _SectionTitle(
+              title: context.t.gameHistory,
+              count: '${games.length}',
+              onViewAll: () => context.push('/history'),
+            ),
+            if (games.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  context.t.histNoGames,
+                  style: k.body.copyWith(color: k.muted),
+                ),
+              ),
+            for (final (i, game) in games.take(5).indexed) ...[
+              if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
+              GameTile(game: game),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Achievements in a row of tiles, earned ones first and in colour.
+class _AchievementsSection extends StatelessWidget {
+  const _AchievementsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder(
+      valueListenable: AchievementStore.instance.listenable(),
+      builder: (context, _, _) {
+        final unlocked = AchievementStore.instance.unlocked();
+        final sorted = [
+          ...kAchievements.where((a) => unlocked.containsKey(a.id)),
+          ...kAchievements.where((a) => !unlocked.containsKey(a.id)),
+        ];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _SectionTitle(
+              title: context.t.achievements,
+              count: '${unlocked.length}/${kAchievements.length}',
+              onViewAll: () => context.push('/achievements'),
+            ),
+            SizedBox(
+              height: 124,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: sorted.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                itemBuilder: (context, i) {
+                  final a = sorted[i];
+                  final earned = unlocked.containsKey(a.id);
+                  return Semantics(
+                    label:
+                        '${a.titleIn(context.t)}, '
+                        '${earned ? context.t.achEarned : context.t.achNotEarned}',
+                    excludeSemantics: true,
+                    child: Pressable(
+                      onTap: () => context.push('/achievements'),
+                      child: Container(
+                        width: 104,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: k.surface,
+                          borderRadius: BorderRadius.circular(
+                            KustSpace.rMedium,
+                          ),
+                          border: Border.all(color: earned ? k.accent : k.line),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: earned ? k.accent : k.surfaceAlt,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                earned ? a.icon : Icons.lock_rounded,
+                                color: earned ? k.accentInk : k.muted,
+                                size: 26,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              a.titleIn(context.t),
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: k.caption.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: earned ? k.ink : k.muted,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
