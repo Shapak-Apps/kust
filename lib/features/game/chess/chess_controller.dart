@@ -21,6 +21,7 @@ import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/premoves.dart';
 import 'package:kust/features/game/chess/move_record.dart';
+import 'package:kust/features/game/chess/openings.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/play/bot_voice.dart';
@@ -96,6 +97,7 @@ class GameState {
     this.ratingChange,
     this.accuracy,
     this.accuracyPending = false,
+    this.moveCounts,
   });
 
   final Position position;
@@ -215,6 +217,10 @@ class GameState {
   /// The finished game is still being analyzed for [accuracy].
   final bool accuracyPending;
 
+  /// How many of the player's moves got each rating, worked out with
+  /// [accuracy].
+  final Map<MoveQuality, int>? moveCounts;
+
   bool get isPlayerTurn =>
       status == GameStatus.playing &&
       (mode == GameMode.local || position.turn == playerSide);
@@ -329,6 +335,7 @@ class GameState {
     int? ratingChange,
     double? accuracy,
     bool? accuracyPending,
+    Map<MoveQuality, int>? moveCounts,
   }) {
     return GameState(
       position: position ?? this.position,
@@ -385,6 +392,7 @@ class GameState {
       ratingChange: ratingChange ?? this.ratingChange,
       accuracy: accuracy ?? this.accuracy,
       accuracyPending: accuracyPending ?? this.accuracyPending,
+      moveCounts: moveCounts ?? this.moveCounts,
     );
   }
 }
@@ -1957,7 +1965,14 @@ class ChessController extends Notifier<GameState> {
     }
     if (stale()) return;
 
-    state = state.copyWith(accuracy: value, accuracyPending: false);
+    // Every move is in the cache by now, so the counts come at once.
+    final counts = await _countQualities(game);
+    if (stale()) return;
+    state = state.copyWith(
+      accuracy: value,
+      accuracyPending: false,
+      moveCounts: counts,
+    );
     if (value != null) {
       unawaited(AchievementTracker.accuracy(value));
       // The result sheet has just shown it, so History shows it too, for
@@ -1968,6 +1983,67 @@ class ChessController extends Notifier<GameState> {
         analyzed: true,
       );
     }
+  }
+
+  /// How many of the player's moves in [game] got each rating, from the
+  /// analysis cache, rated as Review rates them.
+  Future<Map<MoveQuality, int>> _countQualities(GameState game) async {
+    final counts = <MoveQuality, int>{};
+    final Map<String, Opening> book;
+    try {
+      book = await openingBook();
+    } catch (_) {
+      return counts;
+    }
+    final positions = [...game.history, game.position];
+    var rated = 0;
+    for (var i = 0; i < game.moves.length && i < game.history.length; i++) {
+      if (game.moves[i].side != game.playerSide) continue;
+      if (++rated > _maxAccuracyMoves) break;
+      final before = game.history[i];
+      final move = game.moves[i].move;
+      final uci = engineUci(move, before);
+      final a = AnalysisCache.instance.get(
+        AnalysisCache.keyFor(before.fen, uci),
+      );
+      if (a == null) continue;
+      final quality = isBookMove(book, positions, i + 1)
+          ? MoveQuality.book
+          : classifyPlayedMove(
+              before: before,
+              after: before.play(move),
+              move: move,
+              bestCp: a.bestCp,
+              playedCp: a.playedCp,
+              secondBestCp: a.secondBestCp,
+              isBest: a.bestUci == uci,
+            );
+      counts[quality] = (counts[quality] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  /// Rates the player's last move in the background while they think about
+  /// the next one, so the result screen has it ready when the game ends.
+  /// Practice games with feedback rate it already.
+  void _prepareAnalysis() {
+    if (state.mode != GameMode.bot) return;
+    if (state.practiceMode && state.moveFeedbackEnabled) return;
+    final i = _lastPlayerMoveIndex();
+    if (i < 0 || i >= state.history.length) return;
+    final before = state.history[i];
+    final move = state.moves[i].move;
+    unawaited(
+      AnalysisCache.instance
+          .wrap(_engine.analyzeMove)(
+            beforeFen: before.fen,
+            playedUci: engineUci(move, before),
+            afterFen: before.play(move).fen,
+            thinkTime: kAnalysisThinkTime,
+            isStale: () => _isDisposed,
+          )
+          .catchError((_) => null),
+    );
   }
 
   Future<void> requestHint() async {
@@ -2284,6 +2360,7 @@ class ChessController extends Notifier<GameState> {
       // Straight away, as on chess.com: the board shows the premove made
       // already, so it appears in place while the bot's piece still glides.
       _playPremove();
+      _prepareAnalysis();
     }
 
     _refreshEvaluation();

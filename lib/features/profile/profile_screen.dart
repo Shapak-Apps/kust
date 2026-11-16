@@ -5,10 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/error_log.dart';
-import 'package:kust/core/piece_set.dart';
-import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
@@ -22,7 +19,7 @@ import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/piece_image.dart';
+import 'package:kust/widgets/board_banner.dart';
 
 /// The player's profile: their board and pieces from settings, photo, name,
 /// username and a few words about them, their numbers, recent games and
@@ -149,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
-    final square = MediaQuery.sizeOf(context).width / _BoardBanner.files;
+    final square = MediaQuery.sizeOf(context).width / BoardBanner.files;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Stack(
@@ -165,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Column(
                     children: [
                       // Two ranks, the pawns behind the status bar.
-                      _BoardBanner(height: square * 2),
+                      BoardBanner(height: square * 2),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -316,106 +313,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SizedBox(height: 24),
       KustButton(label: context.t.saveName, onTap: _valid ? _save : null),
     ];
-  }
-}
-
-/// A corner of the board, five big squares by two, in the theme and pieces
-/// picked in
-/// settings, fading into the page at the bottom.
-class _BoardBanner extends StatelessWidget {
-  const _BoardBanner({required this.height});
-
-  final double height;
-
-  /// Squares across: few, so the pieces are big.
-  static const files = 5;
-  static const _backRank = ['R', 'Q', 'K', 'B', 'N'];
-
-  @override
-  Widget build(BuildContext context) {
-    final s = AppSettings.instance;
-    final bg = context.k.bg;
-    return ExcludeSemantics(
-      child: SizedBox(
-        height: height,
-        child: ValueListenableBuilder<BoardTheme>(
-          valueListenable: s.boardTheme,
-          builder: (context, board, _) => ValueListenableBuilder<PieceSet>(
-            valueListenable: s.pieceSet,
-            builder: (context, set, _) => LayoutBuilder(
-              builder: (context, box) {
-                final sq = box.maxWidth / files;
-                // Pawns over the back rank, cut at the top if the box is short.
-                Widget square(int file, int rank) {
-                  final light = (file + rank).isEven;
-                  final role = rank == 1 ? _backRank[file] : 'P';
-                  return Container(
-                    width: sq,
-                    height: sq,
-                    color: light ? board.light : board.dark,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (board.grain)
-                          CustomPaint(
-                            painter: WoodGrainPainter(
-                              seed: rank * 8 + file,
-                              light: light,
-                            ),
-                          ),
-                        Padding(
-                          padding: EdgeInsets.all(sq * 0.06),
-                          child: PieceImage(set.asset('w', role)),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ClipRect(
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Column(
-                          children: [
-                            for (final rank in const [2, 1])
-                              Row(
-                                children: [
-                                  for (var f = 0; f < files; f++)
-                                    square(f, rank),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                bg.withValues(alpha: 0.15),
-                                bg.withValues(alpha: 0.15),
-                                bg.withValues(alpha: 0.9),
-                              ],
-                              stops: const [0, 0.7, 1],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
