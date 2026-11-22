@@ -1543,11 +1543,13 @@ class ChessController extends Notifier<GameState> {
       state = state.copyWith(premoves: const [], clearSelection: true);
       return;
     }
-    // Not legal yet (the piece to take has not arrived, say): the premoves
-    // wait for a later turn. Your clock runs while they wait; a tap on an
-    // empty square clears them.
-    if (!state.isPlayerTurn ||
-        !_displayDestinationsFrom(next.from).contains(next.to)) {
+    // Not the player's turn yet: wait.
+    if (!state.isPlayerTurn) return;
+    // The opponent has moved and the premove is not legal now (the piece
+    // to take did not arrive, say): it, and those queued after it, are
+    // dropped instead of left waiting.
+    if (!_displayDestinationsFrom(next.from).contains(next.to)) {
+      state = state.copyWith(premoves: const [], clearSelection: true);
       return;
     }
     state = state.copyWith(premoves: queue.sublist(1), clearSelection: true);

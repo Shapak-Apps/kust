@@ -1165,7 +1165,10 @@ class _LineBanner extends ConsumerWidget {
       liveRegion: true,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        // A fixed height for one or two lines, so the board under it never
+        // moves when the text changes.
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         color: k.surface,
         child: Row(
           children: [
