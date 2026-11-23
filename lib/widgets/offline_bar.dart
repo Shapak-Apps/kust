@@ -102,33 +102,51 @@ class _Strip extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final dark = Theme.of(context).brightness == Brightness.dark;
+    // Like the tab bar, turned over: darkest at the very top, lighter
+    // toward the bottom, so the page shows faintly through its lower edge.
+    final base = restored
+        ? k.success
+        : dark
+        ? const Color(0xFF121110)
+        : k.ink;
+    // Transparent Material: it gives the text its style above the screens.
     return Material(
-      color: restored
-          ? k.success
-          : dark
-          ? const Color(0xFF121110)
-          : k.ink,
-      child: ClipRect(
-        child: Padding(
-          padding: EdgeInsets.only(top: statusBar),
-          child: OverflowBox(
-            alignment: Alignment.topCenter,
-            minHeight: kOfflineBarHeight,
-            maxHeight: kOfflineBarHeight,
-            child: Center(
-              child: Semantics(
-                liveRegion: true,
-                child: Text(
-                  restored
-                      ? context.t.backOnlineBanner
-                      : context.t.offlineBanner,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: k.body.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                    color: Colors.white,
+      type: MaterialType.transparency,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              base.withValues(alpha: 0.96),
+              base.withValues(alpha: 0.82),
+              base.withValues(alpha: 0.55),
+            ],
+            stops: const [0, 0.55, 1],
+          ),
+        ),
+        child: ClipRect(
+          child: Padding(
+            padding: EdgeInsets.only(top: statusBar),
+            child: OverflowBox(
+              alignment: Alignment.topCenter,
+              minHeight: kOfflineBarHeight,
+              maxHeight: kOfflineBarHeight,
+              child: Center(
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    restored
+                        ? context.t.backOnlineBanner
+                        : context.t.offlineBanner,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
