@@ -1,7 +1,8 @@
 /// Countries a player can pick in the profile: their ISO code (and GB-ENG
 /// and the like for the UK nations) and English name, as lichess lists
-/// them. The flags are in assets/flags/, from GoSquared under the MIT
-/// licence (assets/flags/LICENSE.txt).
+/// them. The flags are in assets/flags/: GoSquared's shiny flags at 64 px
+/// (the ones lichess uses, at 24 px), under the MIT licence
+/// (assets/flags/LICENSE.txt).
 const Map<String, String> kCountries = {
   'AF': 'Afghanistan',
   'AX': 'Aland Islands',

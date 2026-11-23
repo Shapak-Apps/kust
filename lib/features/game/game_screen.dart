@@ -939,17 +939,7 @@ class _PlayerBar extends ConsumerWidget {
                       const SizedBox(width: 6),
                       CountryFlag(AppStorage.instance.country!, height: 18),
                     ],
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
-                        ),
-                      ),
-                    ],
+
                     if (s.thinking) ...[
                       const SizedBox(width: 8),
                       const SizedBox(
@@ -976,35 +966,53 @@ class _PlayerBar extends ConsumerWidget {
                 const SizedBox(height: 2),
                 // After many captures the row is wider than the room beside the
                 // clock: it shrinks to fit instead of overflowing.
-                _withBotQuote(
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final piece in captured)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 1),
-                            child: PieceImage(
-                              assetForPiece(piece),
-                              width: 16,
-                              height: 16,
-                            ),
+                // The rating under the name, then what has been taken.
+                Row(
+                  children: [
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: _withBotQuote(
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final piece in captured)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 1),
+                                  child: PieceImage(
+                                    assetForPiece(piece),
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                ),
+                              if (captured.isNotEmpty && advantage > 0)
+                                const SizedBox(width: 5),
+                              if (advantage > 0)
+                                Text(
+                                  '+$advantage',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: muted,
+                                  ),
+                                ),
+                            ],
                           ),
-                        if (captured.isNotEmpty && advantage > 0)
-                          const SizedBox(width: 5),
-                        if (advantage > 0)
-                          Text(
-                            '+$advantage',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: muted,
-                            ),
-                          ),
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
