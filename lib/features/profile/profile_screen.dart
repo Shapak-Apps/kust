@@ -305,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(bio, style: k.body),
                 ),
               const Padding(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+                padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
                 child: _Stats(),
               ),
               const _AccountCard(),
@@ -588,7 +588,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 8, 4),
+      padding: const EdgeInsets.fromLTRB(20, 14, 8, 2),
       child: Row(
         children: [
           // The title takes the room up to View all, and only then is cut.
@@ -600,7 +600,8 @@ class _SectionTitle extends StatelessWidget {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: k.title,
+                    // One size for every section title.
+                    style: k.title.copyWith(fontSize: 20, height: 1.2),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -623,6 +624,11 @@ class _SectionTitle extends StatelessWidget {
           ),
           TextButton(
             onPressed: onViewAll,
+            // No extra height: the row is as tall as the title.
+            style: TextButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
             child: Text(context.t.viewAll, maxLines: 1),
           ),
         ],
@@ -878,7 +884,7 @@ class _FriendsSectionState extends State<_FriendsSection> {
       final f = await PlayersRepository.instance.friends();
       if (mounted) setState(() => _friends = f.friends);
     } on ApiException {
-      if (mounted) setState(() => _friends = const []);
+      // Offline: no row at all, rather than a wrong "no friends yet".
     }
   }
 
@@ -905,7 +911,7 @@ class _FriendsSectionState extends State<_FriendsSection> {
           )
         else
           SizedBox(
-            height: 112,
+            height: 102,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 20),

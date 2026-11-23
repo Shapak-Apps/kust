@@ -412,7 +412,7 @@ class PlayerTile extends StatelessWidget {
                       ),
                       if (player.country != null) ...[
                         const SizedBox(width: 6),
-                        CountryFlag(player.country!, height: 14),
+                        CountryFlag(player.country!, height: 18),
                       ],
                     ],
                   ),
@@ -497,7 +497,7 @@ class FriendRequestCard extends StatelessWidget {
                           ),
                           if (player.country != null) ...[
                             const SizedBox(width: 6),
-                            CountryFlag(player.country!, height: 14),
+                            CountryFlag(player.country!, height: 18),
                           ],
                         ],
                       ),
