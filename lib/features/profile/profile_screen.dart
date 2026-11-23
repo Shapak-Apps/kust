@@ -9,7 +9,6 @@ import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/server_config.dart';
-import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
@@ -293,7 +292,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const _AccountCard(),
               const _HistorySection(),
               const _AchievementsSection(),
-              const _AccountSection(),
             ],
           ),
           const Positioned(
@@ -734,44 +732,6 @@ class _AchievementBadge extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _AccountSection extends StatelessWidget {
-  const _AccountSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final t = context.t;
-    return ValueListenableBuilder<AuthState>(
-      valueListenable: AuthService.instance.state,
-      builder: (context, auth, _) {
-        if (!auth.isSignedIn) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  t.accountSignedInAs(auth.account?.email ?? ''),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: k.caption,
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await AuthService.instance.logout();
-                  await PlayersRepository.instance.clearCache();
-                },
-                child: Text(t.signOut),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

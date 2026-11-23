@@ -37,7 +37,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     expect(service.status.value, ConnectionStatus.offline);
-    expect(_height(tester), kOfflineBarHeight);
+    expect(_height(tester), kOfflineBarHeight + kOfflineMinUnder);
     expect(find.text("You're offline"), findsOneWidget);
 
     reachable = true;
@@ -47,7 +47,7 @@ void main() {
     }
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Back online'), findsOneWidget);
-    expect(_height(tester), kOfflineBarHeight);
+    expect(_height(tester), kOfflineBarHeight + kOfflineMinUnder);
 
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
@@ -119,6 +119,6 @@ void main() {
         ),
       ),
     );
-    expect(shown! - hidden!, kOfflineBarHeight);
+    expect(shown! - hidden!, kOfflineBarHeight + kOfflineMinUnder);
   });
 }

@@ -41,7 +41,7 @@ class KustNavBar extends StatelessWidget {
   final List<KustNavItem> items;
   final ValueChanged<int> onSelected;
 
-  /// Shown under the tabs, above the gesture bar; the offline line.
+  /// Shown under the tabs down to the bottom edge; the offline strip.
   final Widget? footer;
 
   /// Space content must leave at the bottom so nothing hides under the bar.
@@ -70,8 +70,14 @@ class KustNavBar extends StatelessWidget {
             stops: const [0, 0.4, 0.7, 1],
           ),
         ),
+        // The offline strip runs to the bottom edge itself; without it the
+        // tabs keep clear of the gesture bar.
         child: Padding(
-          padding: EdgeInsets.only(bottom: bottomGap(context, min: 0)),
+          padding: EdgeInsets.only(
+            bottom: OfflineInset.of(context) > 0
+                ? 0
+                : bottomGap(context, min: 0),
+          ),
           child: Padding(
             padding: const EdgeInsets.only(top: 22),
             child: Column(

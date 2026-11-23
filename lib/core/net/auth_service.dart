@@ -164,12 +164,18 @@ class AuthService {
     String? displayName,
     String? bio,
     String? country,
+    int? rating,
   }) async {
     final json = await authed(
       (token) => api.patch(
         '/v1/me',
         token: token,
-        body: {'display_name': ?displayName, 'bio': ?bio, 'country': ?country},
+        body: {
+          'display_name': ?displayName,
+          'bio': ?bio,
+          'country': ?country,
+          'rating': ?rating,
+        },
       ),
     );
     return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));

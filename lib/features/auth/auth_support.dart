@@ -5,6 +5,7 @@ import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
@@ -62,6 +63,8 @@ Future<void> pullServerProfile(Account account) async {
     bio: account.bio,
   );
   await store.setCountry(account.country);
+  // Signing in on this phone: the account's rating is the player's.
+  await PlayerRatingStore.instance.setStartingRating(account.rating);
 }
 
 Future<void> pushLocalProfile(AuthService auth) async {
