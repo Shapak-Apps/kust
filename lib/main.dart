@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/net/profile_sync.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/core/net/connection_service.dart';
 import 'package:kust/core/net/live_socket.dart';
@@ -85,6 +87,7 @@ void _startServerLink() {
   AuthService.instance.state.addListener(_syncLiveSocket);
   AuthService.instance.state.addListener(_syncRating);
   PlayerRatingStore.instance.listenable().addListener(_syncRating);
+  ProfileSync.instance.start();
   unawaited(AuthService.instance.restore());
 }
 
@@ -120,6 +123,8 @@ void _syncLiveSocket() {
     ConnectionService.instance.stop();
   }
   if (auth.isVerified) {
+    // The bell on the home screen counts friend requests waiting.
+    unawaited(PlayersRepository.instance.refreshIncoming());
     LiveSocket.instance.connect();
   } else {
     unawaited(LiveSocket.instance.close());

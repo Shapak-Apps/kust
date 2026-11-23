@@ -2142,4 +2142,11 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get photoNotUploaded => 'Не удалось загрузить фото. Попробуйте позже.';
+
+  @override
+  String get notifications => 'Уведомления';
+
+  @override
+  String get notifEmpty =>
+      'Пока ничего нового. Здесь появятся заявки в друзья.';
 }
