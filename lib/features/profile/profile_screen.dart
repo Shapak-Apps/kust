@@ -300,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: SafeArea(top: false, child: OfflineBar()),
+            child: OfflineBar(edge: true),
           ),
           // The bar over the board: back, and the QR code and edit buttons.
           Positioned(

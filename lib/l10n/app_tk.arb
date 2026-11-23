@@ -589,10 +589,14 @@
   "signInToSeePlayers": "Beýleki oýunçylary görmek üçin giriň",
   "signInToSeePlayersBody": "Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar.",
   "accountSignedInAs": "{email} hökmünde girdiňiz",
-  "welcomeHaveAccount": "Hasabym bar",
-  "welcomeGuest": "Myhman hökmünde dowam et",
   "onbStepOf": "{total} ädimden {step}-nji",
   "onbPreview": "Beýleki oýunçylar sizi şeýle görer",
   "accountCardTitle": "Mugt hasap açyň",
-  "accountCardBody": "Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň."
+  "accountCardBody": "Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň.",
+  "authWelcomeBack": "Hoş geldiňiz",
+  "authSignInSub": "Küşt ýolyňyzy dowam etmek üçin giriň.",
+  "authCreateTitle": "Hasabyňyzy açyň",
+  "authCreateSub": "Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň.",
+  "authNoAccount": "Hasabyňyz ýokmy?",
+  "authHaveAccount": "Hasabyňyz barmy?"
 }

@@ -3633,18 +3633,6 @@ abstract class AppL10n {
   /// **'Signed in as {email}'**
   String accountSignedInAs(String email);
 
-  /// No description provided for @welcomeHaveAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'I have an account'**
-  String get welcomeHaveAccount;
-
-  /// No description provided for @welcomeGuest.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue as guest'**
-  String get welcomeGuest;
-
   /// No description provided for @onbStepOf.
   ///
   /// In en, this message translates to:
@@ -3668,6 +3656,42 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'See who\'s online, find players and keep your profile on any phone.'**
   String get accountCardBody;
+
+  /// No description provided for @authWelcomeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back'**
+  String get authWelcomeBack;
+
+  /// No description provided for @authSignInSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to continue your chess journey.'**
+  String get authSignInSub;
+
+  /// No description provided for @authCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account'**
+  String get authCreateTitle;
+
+  /// No description provided for @authCreateSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your progress safe and play with real people.'**
+  String get authCreateSub;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get authNoAccount;
+
+  /// No description provided for @authHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get authHaveAccount;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

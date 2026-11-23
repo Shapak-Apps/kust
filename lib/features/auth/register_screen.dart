@@ -8,7 +8,7 @@ import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_text_field.dart';
 
 enum _UsernameCheck { idle, checking, free, taken, reserved }
@@ -134,32 +134,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _UsernameCheck.reserved => t.usernameReserved,
       _ => null,
     };
+    final next = widget.next;
     return AuthPage(
-      title: t.createAccount,
+      title: t.authCreateTitle,
+      subtitle: t.authCreateSub,
+      onSkip: next == null ? null : () => context.go(next),
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          KustButton(
+          KustButton3D(
+            expand: true,
             label: t.createAccount,
             onTap: _valid && !_busy ? _submit : null,
           ),
-          const SizedBox(height: 8),
-          KustButton(
-            label: t.haveAccount,
-            style: KustButtonStyle.secondary,
+          AuthSwitch(
+            prompt: t.authHaveAccount,
+            action: t.signIn,
             onTap: _busy
                 ? null
-                : () =>
-                      context.pushReplacement(withNext('/login', widget.next)),
+                : () => context.pushReplacement(withNext('/login', next)),
           ),
         ],
       ),
       children: [
-        FieldLabel(t.emailLabel),
         KustTextField(
           controller: _email,
           maxLength: 254,
           autofocus: true,
+          icon: Icons.mail_outline_rounded,
+          hint: t.emailLabel,
           action: TextInputAction.next,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
@@ -167,9 +170,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ? t.invalidEmail
               : null,
         ),
-        FieldLabel(t.username),
+        fieldGap,
         KustTextField.username(
           controller: _username,
+          icon: Icons.alternate_email_rounded,
+          hint: t.username,
           action: TextInputAction.next,
           onChanged: _scheduleCheck,
           errorText: usernameError,
@@ -177,11 +182,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ? t.usernameFree
               : t.usernameRule,
         ),
-        FieldLabel(t.passwordLabel),
+        fieldGap,
         KustTextField(
           controller: _password,
           maxLength: 128,
           obscure: true,
+          icon: Icons.lock_outline_rounded,
+          hint: t.passwordLabel,
           action: TextInputAction.next,
           keyboardType: TextInputType.visiblePassword,
           autofillHints: const [AutofillHints.newPassword],
@@ -189,11 +196,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ? t.passwordShort
               : null,
         ),
-        FieldLabel(t.confirmPassword),
+        fieldGap,
         KustTextField(
           controller: _confirm,
           maxLength: 128,
           obscure: true,
+          icon: Icons.lock_outline_rounded,
+          hint: t.confirmPassword,
           action: TextInputAction.done,
           keyboardType: TextInputType.visiblePassword,
           autofillHints: const [AutofillHints.newPassword],

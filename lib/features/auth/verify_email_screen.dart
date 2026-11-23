@@ -9,7 +9,7 @@ import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/tokens.dart';
 
@@ -123,32 +123,44 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
         final email = auth.account?.email ?? '';
         return AuthPage(
           title: t.verifyTitle,
+          subtitle: t.verifySubtitle(email),
           footer: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              KustButton(
+              KustButton3D(
+                expand: true,
                 label: t.verifyButton,
                 onTap: _code.text.length == 6 && !_busy ? _verify : null,
               ),
-              const SizedBox(height: 8),
-              KustButton(
-                label: _cooldown > 0 ? t.resendIn(_cooldown) : t.resendCode,
-                style: KustButtonStyle.secondary,
-                onTap: _cooldown > 0 || _busy ? null : _resend,
-              ),
-              TextButton(
-                onPressed: _busy ? null : _signOut,
-                child: Text(t.signOut, style: TextStyle(color: k.muted)),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: _cooldown > 0 || _busy ? null : _resend,
+                    child: Text(
+                      _cooldown > 0 ? t.resendIn(_cooldown) : t.resendCode,
+                      style: TextStyle(
+                        color: _cooldown > 0 ? k.muted : KustTokens.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : _signOut,
+                    child: Text(t.signOut, style: TextStyle(color: k.muted)),
+                  ),
+                ],
               ),
             ],
           ),
           children: [
-            Text(t.verifySubtitle(email), style: k.body),
-            FieldLabel(t.verifyCode),
             KustTextField(
               controller: _code,
               maxLength: 6,
               autofocus: true,
+              icon: Icons.pin_outlined,
+              hint: t.verifyCode,
               keyboardType: TextInputType.number,
               autofillHints: const [AutofillHints.oneTimeCode],
               formatters: [FilteringTextInputFormatter.digitsOnly],

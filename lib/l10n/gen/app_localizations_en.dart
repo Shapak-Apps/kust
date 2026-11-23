@@ -2004,12 +2004,6 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get welcomeHaveAccount => 'I have an account';
-
-  @override
-  String get welcomeGuest => 'Continue as guest';
-
-  @override
   String onbStepOf(int step, int total) {
     return 'Step $step of $total';
   }
@@ -2023,4 +2017,23 @@ class AppL10nEn extends AppL10n {
   @override
   String get accountCardBody =>
       'See who\'s online, find players and keep your profile on any phone.';
+
+  @override
+  String get authWelcomeBack => 'Welcome back';
+
+  @override
+  String get authSignInSub => 'Sign in to continue your chess journey.';
+
+  @override
+  String get authCreateTitle => 'Create your account';
+
+  @override
+  String get authCreateSub =>
+      'Keep your progress safe and play with real people.';
+
+  @override
+  String get authNoAccount => 'Don\'t have an account?';
+
+  @override
+  String get authHaveAccount => 'Already have an account?';
 }

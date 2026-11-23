@@ -49,6 +49,23 @@ void main() {
     h.service.dispose();
   });
 
+  testWidgets('stop (signing out) hides offline and stops probing', (
+    tester,
+  ) async {
+    final h = _Harness(reachable: false);
+    h.start();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    expect(h.service.status.value, ConnectionStatus.offline);
+    h.service.stop();
+    expect(h.service.status.value, ConnectionStatus.online);
+    final probes = h.probes;
+    await tester.pump(const Duration(seconds: 70));
+    expect(h.probes, probes);
+    expect(h.service.status.value, ConnectionStatus.online);
+    h.service.dispose();
+  });
+
   testWidgets('a short blip never shows offline', (tester) async {
     final h = _Harness(reachable: false);
     h.start();

@@ -5,7 +5,7 @@ import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -72,39 +72,46 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+    final next = widget.next;
     return AuthPage(
-      title: t.signIn,
+      title: t.authWelcomeBack,
+      subtitle: t.authSignInSub,
+      onSkip: next == null ? null : () => context.go(next),
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          KustButton(label: t.signIn, onTap: _valid && !_busy ? _submit : null),
-          const SizedBox(height: 8),
-          KustButton(
-            label: t.createAccount,
-            style: KustButtonStyle.secondary,
+          KustButton3D(
+            expand: true,
+            label: t.signIn,
+            onTap: _valid && !_busy ? _submit : null,
+          ),
+          AuthSwitch(
+            prompt: t.authNoAccount,
+            action: t.createAccount,
             onTap: _busy
                 ? null
-                : () => context.pushReplacement(
-                    withNext('/register', widget.next),
-                  ),
+                : () => context.pushReplacement(withNext('/register', next)),
           ),
         ],
       ),
       children: [
-        FieldLabel(t.emailOrUsername),
         KustTextField(
           controller: _identifier,
           maxLength: 254,
           autofocus: true,
+          icon: Icons.person_outline_rounded,
+          hint: t.emailOrUsername,
           action: TextInputAction.next,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.username, AutofillHints.email],
         ),
-        FieldLabel(t.passwordLabel),
+        fieldGap,
         KustTextField(
           controller: _password,
           maxLength: 128,
           obscure: true,
+          icon: Icons.lock_outline_rounded,
+          hint: t.passwordLabel,
           action: TextInputAction.done,
           keyboardType: TextInputType.visiblePassword,
           autofillHints: const [AutofillHints.password],

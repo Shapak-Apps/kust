@@ -6,9 +6,8 @@ import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/felt_header.dart';
+import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/offline_bar.dart';
 
 /// [path] with the screen to open after signing in, when there is one.
 String withNext(String path, String? next) =>
@@ -80,47 +79,138 @@ Future<void> pushLocalProfile(AuthService auth) async {
   }
 }
 
+/// A sign-in screen, kept bare: back (and skip, during onboarding), a big
+/// title with a line under it, the fields, then the button and a link to
+/// the other screen at the bottom. Never says it is offline: the app only
+/// watches the connection once someone is signed in.
 class AuthPage extends StatelessWidget {
   const AuthPage({
     super.key,
     required this.title,
     required this.children,
+    this.subtitle,
     this.footer,
+    this.onSkip,
   });
 
   final String title;
+  final String? subtitle;
   final List<Widget> children;
   final Widget? footer;
 
+  /// Shown as "Skip for now" at the top right when set.
+  final VoidCallback? onSkip;
+
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     return Scaffold(
-      backgroundColor: context.k.bg,
+      backgroundColor: k.bg,
       resizeToAvoidBottomInset: true,
-      body: Column(
-        children: [
-          FeltHeader(
-            title: title,
-            onBack: () => Navigator.of(context).maybePop(),
-          ),
-          Expanded(
-            child: ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              children: children,
-            ),
-          ),
-          if (footer != null)
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              child: footer,
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 0),
+              child: Row(
+                children: [
+                  KustIconButton(
+                    icon: Icons.arrow_back_rounded,
+                    label: context.t.back,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  const Spacer(),
+                  if (onSkip != null)
+                    TextButton(
+                      onPressed: onSkip,
+                      child: Text(
+                        context.t.onbSkip,
+                        style: k.body.copyWith(
+                          color: k.muted,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          const SafeArea(top: false, child: OfflineBar()),
-        ],
+            Expanded(
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                children: [
+                  Text(title, style: k.display),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 8),
+                    Text(subtitle!, style: k.body.copyWith(color: k.muted)),
+                  ],
+                  const SizedBox(height: 28),
+                  ...children,
+                ],
+              ),
+            ),
+            if (footer != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                child: footer,
+              ),
+          ],
+        ),
       ),
     );
   }
 }
+
+/// "Don't have an account? Create account": a quiet line under the main
+/// button that leads to the other screen.
+class AuthSwitch extends StatelessWidget {
+  const AuthSwitch({
+    super.key,
+    required this.prompt,
+    required this.action,
+    required this.onTap,
+  });
+
+  final String prompt;
+  final String action;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Text.rich(
+            TextSpan(
+              text: '$prompt ',
+              style: k.body.copyWith(color: k.muted),
+              children: [
+                TextSpan(
+                  text: action,
+                  style: k.body.copyWith(
+                    color: KustTokens.gold,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The space between two fields.
+const Widget fieldGap = SizedBox(height: 14);
 
 class FieldLabel extends StatelessWidget {
   const FieldLabel(this.text, {super.key});

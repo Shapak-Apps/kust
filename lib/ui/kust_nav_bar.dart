@@ -41,16 +41,12 @@ class KustNavBar extends StatelessWidget {
   final List<KustNavItem> items;
   final ValueChanged<int> onSelected;
 
-  /// Shown just above the tabs; the offline pill.
+  /// Shown under the tabs, above the gesture bar; the offline line.
   final Widget? footer;
 
   /// Space content must leave at the bottom so nothing hides under the bar.
   static double clearance(BuildContext context) =>
-      MediaQuery.of(context).padding.bottom +
-      64 +
-      8 +
-      12 +
-      OfflineInset.of(context);
+      bottomGap(context, min: 0) + 64 + 8 + 12 + OfflineInset.of(context);
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +70,13 @@ class KustNavBar extends StatelessWidget {
             stops: const [0, 0.4, 0.7, 1],
           ),
         ),
-        child: SafeArea(
-          top: false,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomGap(context, min: 0)),
           child: Padding(
             padding: const EdgeInsets.only(top: 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ?footer,
                 SizedBox(
                   height: _barHeight,
                   child: Row(
@@ -103,6 +98,7 @@ class KustNavBar extends StatelessWidget {
                     ],
                   ),
                 ),
+                ?footer,
               ],
             ),
           ),

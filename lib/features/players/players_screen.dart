@@ -181,7 +181,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
               ),
             ),
           Expanded(child: _body(context)),
-          const SafeArea(top: false, child: OfflineBar()),
+          const OfflineBar(edge: true),
         ],
       ),
     );
