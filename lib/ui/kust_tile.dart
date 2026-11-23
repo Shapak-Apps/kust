@@ -15,6 +15,7 @@ class KustTile extends StatelessWidget {
     required this.onTap,
     required this.semanticsLabel,
     this.badge,
+    this.done = false,
   });
 
   final IconData icon;
@@ -25,6 +26,10 @@ class KustTile extends StatelessWidget {
 
   /// Shown before the arrow.
   final Widget? badge;
+
+  /// Finished for now (today's daily puzzle, say): a green tick in place of
+  /// the icon, the line under the title in green, a green edge.
+  final bool done;
 
   /// The tile's height.
   static const double height = 72;
@@ -44,11 +49,28 @@ class KustTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: k.surface,
             borderRadius: BorderRadius.circular(KustSpace.rMedium),
-            border: Border.all(color: k.line),
+            border: Border.all(
+              color: done ? k.success.withValues(alpha: 0.6) : k.line,
+            ),
           ),
           child: Row(
             children: [
-              KustIconTile(icon),
+              if (done)
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: k.success,
+                    borderRadius: BorderRadius.circular(KustSpace.rSmall),
+                  ),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                )
+              else
+                KustIconTile(icon),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -65,7 +87,12 @@ class KustTile extends StatelessWidget {
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: k.caption,
+                      style: done
+                          ? k.caption.copyWith(
+                              color: k.success,
+                              fontWeight: FontWeight.w800,
+                            )
+                          : k.caption,
                     ),
                   ],
                 ),

@@ -56,6 +56,9 @@ const Color _targetDotColor = Color(0x33000000);
   return null;
 }
 
+/// A king in check, on top of its square's colour.
+const Color _checkColor = Color(0xCCE5484D);
+
 class PuzzleBoard extends StatefulWidget {
   const PuzzleBoard({
     super.key,
@@ -69,6 +72,7 @@ class PuzzleBoard extends StatefulWidget {
     this.slide,
     this.slideKey = 0,
     this.arrow,
+    this.arrows = const [],
     this.badge,
   });
 
@@ -88,6 +92,9 @@ class PuzzleBoard extends StatefulWidget {
 
   /// An arrow to draw, e.g. the best move in a replay.
   final ({Square from, Square to})? arrow;
+
+  /// More arrows, each in its own colour, e.g. the lines of a tactic.
+  final List<({Square from, Square to, Color color})> arrows;
 
   /// A move rating to pin on a square's corner, as in a game.
   final ({Square square, MoveQuality quality})? badge;
@@ -422,6 +429,17 @@ class _PuzzleBoardState extends State<PuzzleBoard>
                       toCol: _colOf(widget.arrow!.to),
                     ),
                   ),
+                for (final a in widget.arrows)
+                  Positioned.fill(
+                    child: MoveArrow(
+                      key: ValueKey('arrow ${a.from} ${a.to}'),
+                      fromRow: _rowOf(a.from),
+                      fromCol: _colOf(a.from),
+                      toRow: _rowOf(a.to),
+                      toCol: _colOf(a.to),
+                      color: a.color,
+                    ),
+                  ),
                 if (widget.badge != null)
                   Positioned(
                     left: _colOf(widget.badge!.square) * cell,
@@ -586,6 +604,11 @@ class _PuzzleBoardState extends State<PuzzleBoard>
     if (lastMove != null &&
         (square == lastMove.from || square == lastMove.to)) {
       background = Color.alphaBlend(_lastMoveColor, background);
+    }
+    // The king in check, in red, as on the game board.
+    final position = widget.position;
+    if (position.isCheck && square == position.board.kingOf(position.turn)) {
+      background = Color.alphaBlend(_checkColor, background);
     }
     if (widget.hintFrom == square) {
       background = Color.alphaBlend(_hintFromColor, background);
