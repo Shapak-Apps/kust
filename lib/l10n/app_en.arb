@@ -1138,8 +1138,6 @@
       }
     }
   },
-  "welcomeHaveAccount": "I have an account",
-  "welcomeGuest": "Continue as guest",
   "onbStepOf": "Step {step} of {total}",
   "@onbStepOf": {
     "placeholders": {
@@ -1153,5 +1151,11 @@
   },
   "onbPreview": "How other players will see you",
   "accountCardTitle": "Get a free account",
-  "accountCardBody": "See who's online, find players and keep your profile on any phone."
+  "accountCardBody": "See who's online, find players and keep your profile on any phone.",
+  "authWelcomeBack": "Welcome back",
+  "authSignInSub": "Sign in to continue your chess journey.",
+  "authCreateTitle": "Create your account",
+  "authCreateSub": "Keep your progress safe and play with real people.",
+  "authNoAccount": "Don't have an account?",
+  "authHaveAccount": "Already have an account?"
 }

@@ -2013,12 +2013,6 @@ class AppL10nRu extends AppL10n {
   }
 
   @override
-  String get welcomeHaveAccount => 'У меня есть аккаунт';
-
-  @override
-  String get welcomeGuest => 'Продолжить как гость';
-
-  @override
   String onbStepOf(int step, int total) {
     return 'Шаг $step из $total';
   }
@@ -2032,4 +2026,22 @@ class AppL10nRu extends AppL10n {
   @override
   String get accountCardBody =>
       'Смотрите, кто в сети, находите игроков и сохраняйте профиль на любом телефоне.';
+
+  @override
+  String get authWelcomeBack => 'С возвращением';
+
+  @override
+  String get authSignInSub => 'Войдите, чтобы продолжить свой шахматный путь.';
+
+  @override
+  String get authCreateTitle => 'Создайте аккаунт';
+
+  @override
+  String get authCreateSub => 'Сохраните прогресс и играйте с живыми людьми.';
+
+  @override
+  String get authNoAccount => 'Нет аккаунта?';
+
+  @override
+  String get authHaveAccount => 'Уже есть аккаунт?';
 }

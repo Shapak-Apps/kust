@@ -5,8 +5,18 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// The pill and the gap under it.
-const double kOfflineBarHeight = 38;
+/// The line of text under the tabs.
+const double kOfflineBarHeight = 24;
+
+/// Space to leave under the last line on screen: the gesture bar's, read
+/// from the window so a parent that took the padding away cannot hide it,
+/// and never less than [min].
+double bottomGap(BuildContext context, {double min = 8}) {
+  final view = MediaQuery.viewPaddingOf(context).bottom;
+  final pad = MediaQuery.paddingOf(context).bottom;
+  final gap = view > pad ? view : pad;
+  return gap < min ? min : gap;
+}
 
 class OfflineInset extends InheritedWidget {
   const OfflineInset({super.key, required this.visible, required super.child});
@@ -42,10 +52,16 @@ class OfflineInsetHost extends StatelessWidget {
   }
 }
 
+/// "You're offline" in a line of plain text, as Spotify shows it under its
+/// tabs; "Back online" in green for a moment when the connection returns.
 class OfflineBar extends StatefulWidget {
-  const OfflineBar({super.key, this.service});
+  const OfflineBar({super.key, this.service, this.edge = false});
 
   final ConnectionService? service;
+
+  /// At the bottom of a screen with no tab bar: on the page's colour, and
+  /// clear of the gesture bar.
+  final bool edge;
 
   @override
   State<OfflineBar> createState() => _OfflineBarState();
@@ -77,56 +93,29 @@ class _OfflineBarState extends State<OfflineBar> {
             duration: motion(context, const Duration(milliseconds: 250)),
             curve: Curves.easeOutCubic,
             child: ClipRect(
-              child: SizedBox(
-                height: kOfflineBarHeight,
-                width: double.infinity,
-                child: Align(
-                  alignment: const Alignment(0, -0.4),
-                  // A small pill, as on Spotify: dark while offline, green
-                  // for a moment when the connection comes back.
-                  child: AnimatedContainer(
-                    duration: motion(
-                      context,
-                      const Duration(milliseconds: 200),
-                    ),
-                    height: 30,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: restored ? k.success : k.ink,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x33000000),
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+              child: ColoredBox(
+                color: widget.edge ? k.bg : Colors.transparent,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: widget.edge ? bottomGap(context) : 0,
+                  ),
+                  child: SizedBox(
+                    height: kOfflineBarHeight,
+                    width: double.infinity,
+                    child: Center(
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: k.body.copyWith(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0,
+                            color: restored ? k.success : k.ink,
+                          ),
                         ),
-                      ],
-                    ),
-                    child: Semantics(
-                      liveRegion: true,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            restored
-                                ? Icons.wifi_rounded
-                                : Icons.cloud_off_rounded,
-                            size: 15,
-                            color: restored ? Colors.white : k.bg,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            text,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: k.caption.copyWith(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0,
-                              color: restored ? Colors.white : k.bg,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),

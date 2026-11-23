@@ -25,6 +25,7 @@ class KustTextField extends StatelessWidget {
     this.onChanged,
     this.errorText,
     this.hint,
+    this.icon,
   });
 
   /// For a username: only what [AppStorage.usernamePattern] allows, in
@@ -40,12 +41,14 @@ class KustTextField extends StatelessWidget {
     this.onChanged,
     this.errorText,
     this.hint,
+    this.icon,
   }) : obscure = false,
        keyboardType = TextInputType.visiblePassword,
        autofillHints = const [AutofillHints.username],
        maxLength = 20,
        maxLines = 1,
-       prefix = '@',
+       // With an icon the "@" is the icon.
+       prefix = icon == null ? '@' : null,
        capitalization = TextCapitalization.none,
        formatters = _usernameFormatters;
 
@@ -79,6 +82,9 @@ class KustTextField extends StatelessWidget {
   final String? errorText;
   final String? hint;
 
+  /// Shown at the start of the field, in the muted colour.
+  final IconData? icon;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -90,7 +96,7 @@ class KustTextField extends StatelessWidget {
       autofocus: autofocus,
       textCapitalization: capitalization,
       inputFormatters: formatters,
-      autocorrect: prefix == null && !obscure,
+      autocorrect: prefix == null && formatters == null && !obscure,
       enableSuggestions: !obscure,
       obscureText: obscure,
       keyboardType: keyboardType,
@@ -115,6 +121,9 @@ class KustTextField extends StatelessWidget {
               errorText: errorText,
               hintText: hint,
               hintStyle: k.body.copyWith(color: k.muted),
+              prefixIcon: icon == null
+                  ? null
+                  : Icon(icon, size: 20, color: k.muted),
               filled: true,
               fillColor: k.surfaceAlt,
               border: OutlineInputBorder(

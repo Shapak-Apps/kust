@@ -200,6 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       setState(() => _level = null);
                       _finish();
                     },
+              above: _LevelNote(level: _level),
               children: [
                 _LevelGrid(
                   selected: _level,
@@ -273,58 +274,16 @@ class _Welcome extends StatelessWidget {
               bottom: 0,
               child: SafeArea(
                 top: false,
-                minimum: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: accounts
-                      ? [
-                          _WelcomeButton(
-                            label: t.createAccount,
-                            filled: true,
-                            onTap: () => context.push(
-                              withNext('/register', '/onboarding?step=name'),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          _WelcomeButton(
-                            label: t.welcomeHaveAccount,
-                            onTap: () => context.push(
-                              withNext('/login', '/onboarding?step=level'),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Semantics(
-                            button: true,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: onGuest,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 24,
-                                ),
-                                child: Text(
-                                  t.welcomeGuest,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: _ink,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: _ink,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ]
-                      : [
-                          _WelcomeButton(
-                            label: t.onbGetStarted,
-                            filled: true,
-                            onTap: onGuest,
-                          ),
-                          const SizedBox(height: 4),
-                        ],
+                minimum: const EdgeInsets.only(bottom: 16),
+                child: _WelcomeButton(
+                  label: t.onbGetStarted,
+                  filled: true,
+                  // With a server, the way in is an account (or skip).
+                  onTap: accounts
+                      ? () => context.push(
+                          withNext('/register', '/onboarding?step=name'),
+                        )
+                      : onGuest,
                 ),
               ),
             ),
@@ -391,6 +350,7 @@ class _StepPage extends StatelessWidget {
     required this.onButton,
     required this.children,
     this.onSkip,
+    this.above,
   });
 
   static const int _steps = 2;
@@ -402,6 +362,9 @@ class _StepPage extends StatelessWidget {
   final String button;
   final VoidCallback? onButton;
   final VoidCallback? onSkip;
+
+  /// Shown right above the button, so it reads with it.
+  final Widget? above;
   final List<Widget> children;
 
   @override
@@ -468,6 +431,7 @@ class _StepPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Column(
                 children: [
+                  ?above,
                   KustButton3D(expand: true, label: button, onTap: onButton),
                   if (onSkip != null) ...[
                     const SizedBox(height: 4),
@@ -497,7 +461,7 @@ class _StepPage extends StatelessWidget {
 }
 
 /// The player as others will see them, filled in while they type: the
-/// avatar, the name and the @username, with a knight behind.
+/// avatar, the name and the @username, with a queen behind.
 class _PlayerPreview extends StatelessWidget {
   const _PlayerPreview({required this.name, required this.username});
 
@@ -522,7 +486,7 @@ class _PlayerPreview extends StatelessWidget {
             bottom: -18,
             child: Opacity(
               opacity: 0.14,
-              child: const LearnPiece(Role.knight, height: 112),
+              child: const LearnPiece(Role.queen, height: 112),
             ),
           ),
           Padding(
@@ -585,7 +549,7 @@ Role _pieceFor(OnboardingLevel? level) => switch (level) {
 };
 
 /// The four levels in two rows, the piece growing from the pawn to the
-/// king, and a line about the chosen one under them.
+/// king.
 class _LevelGrid extends StatelessWidget {
   const _LevelGrid({required this.selected, required this.onSelect});
 
@@ -594,8 +558,6 @@ class _LevelGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final k = context.k;
-    final t = context.t;
     const levels = OnboardingLevel.values;
     Widget tile(int i) => Expanded(
       child: _LevelTile(
@@ -611,43 +573,58 @@ class _LevelGrid extends StatelessWidget {
         Row(children: [tile(0), const SizedBox(width: 12), tile(1)]),
         const SizedBox(height: 12),
         Row(children: [tile(2), const SizedBox(width: 12), tile(3)]),
-        const SizedBox(height: 16),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: selected == null
-              ? const SizedBox.shrink()
-              : Container(
-                  key: ValueKey(selected),
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                  decoration: BoxDecoration(
-                    color: k.surfaceAlt,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        size: 18,
-                        color: KustButton3D.face,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          selected!.descriptionIn(t),
-                          style: k.body.copyWith(fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        ),
       ],
     );
   }
 }
 
+/// What the chosen level means, just above the button that confirms it.
+class _LevelNote extends StatelessWidget {
+  const _LevelNote({required this.level});
+
+  final OnboardingLevel? level;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final level = this.level;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      child: level == null
+          ? const SizedBox(width: double.infinity)
+          : Container(
+              key: ValueKey(level),
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
+              decoration: BoxDecoration(
+                color: k.surfaceAlt,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    size: 26,
+                    color: KustTokens.gold,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      level.descriptionIn(context.t),
+                      style: k.body.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
 /// A level: its piece on a light square, its name and the rating it
-/// starts at; ringed in green with a tick when chosen.
+/// starts at; ringed in gold with a tick when chosen.
 class _LevelTile extends StatelessWidget {
   const _LevelTile({
     required this.level,
@@ -665,7 +642,7 @@ class _LevelTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final t = context.t;
-    const green = KustButton3D.face;
+    const gold = KustTokens.gold;
     return Semantics(
       button: true,
       selected: selected,
@@ -679,10 +656,10 @@ class _LevelTile extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           height: 172,
           decoration: BoxDecoration(
-            color: selected ? green.withValues(alpha: 0.12) : k.surface,
+            color: selected ? gold.withValues(alpha: 0.12) : k.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? green : k.line,
+              color: selected ? gold : k.line,
               width: selected ? 2 : 1,
             ),
           ),
@@ -711,7 +688,7 @@ class _LevelTile extends StatelessWidget {
                     '${level.startingRating}',
                     style: k.caption.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: selected ? green : k.muted,
+                      color: selected ? gold : k.muted,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -726,7 +703,7 @@ class _LevelTile extends StatelessWidget {
                   curve: Curves.easeOutBack,
                   child: const Icon(
                     Icons.check_circle_rounded,
-                    color: green,
+                    color: gold,
                     size: 24,
                   ),
                 ),

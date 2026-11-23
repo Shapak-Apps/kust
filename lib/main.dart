@@ -81,13 +81,20 @@ Future<void> _start() async {
 }
 
 void _startServerLink() {
-  ConnectionService.instance.start();
   AuthService.instance.state.addListener(_syncLiveSocket);
   unawaited(AuthService.instance.restore());
 }
 
+/// Signed in: watch the connection; verified too: join the live server.
+/// Signed out, the app is fully offline and never says so.
 void _syncLiveSocket() {
-  if (AuthService.instance.state.value.isVerified) {
+  final auth = AuthService.instance.state.value;
+  if (auth.isSignedIn) {
+    ConnectionService.instance.start();
+  } else {
+    ConnectionService.instance.stop();
+  }
+  if (auth.isVerified) {
     LiveSocket.instance.connect();
   } else {
     unawaited(LiveSocket.instance.close());

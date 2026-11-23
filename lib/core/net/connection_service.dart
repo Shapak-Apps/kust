@@ -62,6 +62,25 @@ class ConnectionService {
     checkNow();
   }
 
+  /// Stops checking and hides the offline notice; [start] begins again.
+  /// The app checks only while someone is signed in.
+  void stop() {
+    if (!_started || _disposed) return;
+    _started = false;
+    _paused = false;
+    _connectivitySub?.cancel();
+    _connectivitySub = null;
+    _lifecycle?.dispose();
+    _lifecycle = null;
+    _probeTimer?.cancel();
+    _probeTimer = null;
+    _graceTimer?.cancel();
+    _graceTimer = null;
+    _restoredTimer?.cancel();
+    _restoredTimer = null;
+    _status.value = ConnectionStatus.online;
+  }
+
   void pause() {
     _paused = true;
     _probeTimer?.cancel();
@@ -85,7 +104,8 @@ class ConnectionService {
       reachable = false;
     }
     _probing = false;
-    if (_disposed) return;
+    // Stopped while the probe was out: its answer no longer counts.
+    if (_disposed || !_started) return;
     if (reachable) {
       _onReachable();
     } else {

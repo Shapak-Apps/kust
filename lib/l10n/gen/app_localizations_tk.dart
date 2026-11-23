@@ -2009,12 +2009,6 @@ class AppL10nTk extends AppL10n {
   }
 
   @override
-  String get welcomeHaveAccount => 'Hasabym bar';
-
-  @override
-  String get welcomeGuest => 'Myhman hökmünde dowam et';
-
-  @override
   String onbStepOf(int step, int total) {
     return '$total ädimden $step-nji';
   }
@@ -2028,4 +2022,23 @@ class AppL10nTk extends AppL10n {
   @override
   String get accountCardBody =>
       'Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň.';
+
+  @override
+  String get authWelcomeBack => 'Hoş geldiňiz';
+
+  @override
+  String get authSignInSub => 'Küşt ýolyňyzy dowam etmek üçin giriň.';
+
+  @override
+  String get authCreateTitle => 'Hasabyňyzy açyň';
+
+  @override
+  String get authCreateSub =>
+      'Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň.';
+
+  @override
+  String get authNoAccount => 'Hasabyňyz ýokmy?';
+
+  @override
+  String get authHaveAccount => 'Hasabyňyz barmy?';
 }
