@@ -26,6 +26,7 @@ import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/board_thumbnail.dart';
 import 'package:kust/widgets/more_sheet.dart';
 import 'package:kust/l10n/app_locale.dart';
 
@@ -232,7 +233,13 @@ class _PlayScreenState extends State<PlayScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                     sliver: SliverToBoxAdapter(
-                      child: _HeroCard(name: name, onPlay: _showPlayChooser),
+                      child: ValueListenableBuilder(
+                        valueListenable:
+                            LiveGameStore.instance.listenable() ??
+                            ValueNotifier(null),
+                        builder: (context, _, _) =>
+                            _HeroCard(name: name, onPlay: _showPlayChooser),
+                      ),
                     ),
                   ),
                   const SliverPadding(
@@ -318,10 +325,29 @@ class _PlayScreenState extends State<PlayScreen> {
 }
 
 /// "Continue your game": shown while a game was left unfinished.
+/// The game left unfinished: its position on a small board, who it is
+/// against and whose move it is, a Continue button, and an ✕ that removes
+/// it (with Undo).
 class _ContinueCard extends StatelessWidget {
   const _ContinueCard({required this.onContinue});
 
   final void Function(LiveGame game) onContinue;
+
+  void _remove(BuildContext context, LiveGame game) {
+    final store = LiveGameStore.instance;
+    store.clear();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(context.t.gameRemoved),
+          action: SnackBarAction(
+            label: context.t.undo,
+            onPressed: () => store.save(game),
+          ),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -339,64 +365,110 @@ class _ContinueCard extends StatelessWidget {
           if (b.id == game.botId) bot = b;
         }
         if (!game.isLocal && bot == null) return const SizedBox.shrink();
+        Position position = Chess.initial;
+        try {
+          for (final uci in game.uciMoves) {
+            position = position.play(NormalMove.fromUci(uci));
+          }
+        } catch (_) {
+          return const SizedBox.shrink();
+        }
+        final playerSide = game.playerIsWhite ? Side.white : Side.black;
         final who = game.isLocal ? t.passAndPlay : t.vsBot(bot!.name);
+        final turn = game.isLocal
+            ? (position.turn == Side.white ? t.whiteName : t.blackName)
+            : null;
+        final toMove = game.isLocal
+            ? t.sideToMove(turn!)
+            : position.turn == playerSide
+            ? t.yourMove
+            : t.sideToMove(bot!.name);
         return Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Pressable(
-            onTap: () => onContinue(game),
-            haptic: true,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: k.surface,
-                borderRadius: BorderRadius.circular(KustSpace.rLarge),
-                border: Border.all(color: KustButton3D.face, width: 1.5),
-              ),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                    child: bot == null
-                        ? SizedBox.square(
-                            dimension: 48,
-                            child: Icon(Icons.people_alt_rounded, color: k.ink),
-                          )
-                        : Image.asset(
-                            bot.imagePath,
-                            width: 48,
-                            height: 48,
-                            cacheWidth: 144,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.continueGame,
-                          style: k.body.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        Text(
-                          t.continueGameSub(
-                            who,
-                            (game.uciMoves.length + 1) ~/ 2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.caption,
-                        ),
-                      ],
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: k.surface,
+              borderRadius: BorderRadius.circular(KustSpace.rLarge),
+              border: Border.all(color: k.line),
+            ),
+            child: Row(
+              children: [
+                // As tall as the card's content, so the board fills the card.
+                SizedBox(
+                  width: 112,
+                  child: Pressable(
+                    onTap: () => onContinue(game),
+                    child: BoardThumbnail(
+                      position: position,
+                      flipped: !game.isLocal && playerSide == Side.black,
                     ),
                   ),
-                  const Icon(
-                    Icons.play_circle_fill_rounded,
-                    color: KustButton3D.face,
-                    size: 36,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              t.continueGame,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: k.body.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          Semantics(
+                            button: true,
+                            label: t.discardGame,
+                            excludeSemantics: true,
+                            child: Pressable(
+                              onTap: () => _remove(context, game),
+                              child: SizedBox.square(
+                                dimension: 32,
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 20,
+                                  color: k.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        t.continueGameSub(who, (game.uciMoves.length + 1) ~/ 2),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption,
+                      ),
+                      Text(
+                        toMove,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption.copyWith(
+                          color: position.turn == playerSide || game.isLocal
+                              ? k.success
+                              : k.muted,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      KustButton(
+                        label: t.continueButton,
+                        icon: Icons.play_arrow_rounded,
+                        height: 40,
+                        onTap: () => onContinue(game),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -453,12 +525,22 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          KustButton3D(
-            label: context.t.playAGame,
-            icon: Icons.play_arrow_rounded,
-            expand: true,
-            onTap: onPlay,
-          ),
+          // A game waiting to be continued takes the green button; a new
+          // one is the quieter choice then.
+          if (LiveGameStore.instance.get() == null)
+            KustButton3D(
+              label: context.t.playAGame,
+              icon: Icons.play_arrow_rounded,
+              expand: true,
+              onTap: onPlay,
+            )
+          else
+            KustButton(
+              label: context.t.playAGame,
+              icon: Icons.add_rounded,
+              style: KustButtonStyle.secondary,
+              onTap: onPlay,
+            ),
         ],
       ),
     );

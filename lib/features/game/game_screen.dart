@@ -1,3 +1,4 @@
+import 'dart:io' as io;
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -6,6 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
 
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
@@ -513,7 +518,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       ),
                     const _HistorySlot(),
                     const _OpeningSlot(),
-                    if (screen.practice && screen.feedback)
+                    if (screen.practice && screen.feedback && !widget.isLocal)
                       const SizedBox(
                         height: 24,
                         child: Stack(children: [_FeedbackSlot()]),
@@ -571,7 +576,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       side: bottomSide,
                                       name: widget.isLocal
                                           ? context.t.whiteName
+                                          : AppStorage.isReady
+                                          ? AppStorage.instance.displayName(
+                                              context.t,
+                                            )
                                           : context.t.youName,
+                                      subtitle:
+                                          widget.isLocal || !AppStorage.isReady
+                                          ? null
+                                          : context.t.eloValue(
+                                              PlayerRatingStore.instance.rating,
+                                            ),
+                                      isYou: !widget.isLocal,
                                     ),
                                   ],
                                 ),
@@ -740,9 +756,13 @@ class _OpeningSlot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(chessControllerProvider.select((g) => g.history));
+    // Every position the game went through, the one on the board too, as
+    // Review reads them: history holds only those before each move.
+    final g = ref.watch(
+      chessControllerProvider.select((g) => (g.history, g.position)),
+    );
     final book = loadedOpeningBook;
-    final opening = book == null ? null : openingOf(book, history);
+    final opening = book == null ? null : openingOf(book, [...g.$1, g.$2]);
     return SizedBox(
       height: 22,
       child: opening == null
@@ -853,7 +873,11 @@ class _PlayerBar extends ConsumerWidget {
     this.avatarPath,
     this.thinkingText,
     this.bot,
+    this.isYou = false,
   });
+
+  /// The player's own bar: their photo (or initial) and country flag.
+  final bool isYou;
 
   final Side side;
   final String name;
@@ -909,17 +933,13 @@ class _PlayerBar extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                    if (isYou &&
+                        AppStorage.isReady &&
+                        AppStorage.instance.country != null) ...[
                       const SizedBox(width: 6),
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
-                        ),
-                      ),
+                      CountryFlag(AppStorage.instance.country!, height: 18),
                     ],
+
                     if (s.thinking) ...[
                       const SizedBox(width: 8),
                       const SizedBox(
@@ -946,35 +966,53 @@ class _PlayerBar extends ConsumerWidget {
                 const SizedBox(height: 2),
                 // After many captures the row is wider than the room beside the
                 // clock: it shrinks to fit instead of overflowing.
-                _withBotQuote(
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final piece in captured)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 1),
-                            child: PieceImage(
-                              assetForPiece(piece),
-                              width: 16,
-                              height: 16,
-                            ),
+                // The rating under the name, then what has been taken.
+                Row(
+                  children: [
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: _withBotQuote(
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final piece in captured)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 1),
+                                  child: PieceImage(
+                                    assetForPiece(piece),
+                                    width: 16,
+                                    height: 16,
+                                  ),
+                                ),
+                              if (captured.isNotEmpty && advantage > 0)
+                                const SizedBox(width: 5),
+                              if (advantage > 0)
+                                Text(
+                                  '+$advantage',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: muted,
+                                  ),
+                                ),
+                            ],
                           ),
-                        if (captured.isNotEmpty && advantage > 0)
-                          const SizedBox(width: 5),
-                        if (advantage > 0)
-                          Text(
-                            '+$advantage',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: muted,
-                            ),
-                          ),
-                      ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -1002,6 +1040,14 @@ class _PlayerBar extends ConsumerWidget {
   }
 
   Widget _buildAvatar(ThemeData theme) {
+    if (isYou && AppStorage.isReady) {
+      final photo = AppStorage.instance.photoPath;
+      return PlayerAvatar(
+        size: 40,
+        name: name,
+        photo: photo == null ? null : FileImage(io.File(photo)),
+      );
+    }
     if (avatarPath != null && avatarPath!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(KustSpace.rSmall),
@@ -1165,7 +1211,10 @@ class _LineBanner extends ConsumerWidget {
       liveRegion: true,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        // A fixed height for one or two lines, so the board under it never
+        // moves when the text changes.
+        height: 60,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         color: k.surface,
         child: Row(
           children: [

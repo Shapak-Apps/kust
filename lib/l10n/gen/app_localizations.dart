@@ -2658,7 +2658,7 @@ abstract class AppL10n {
   /// No description provided for @lessonBackToMap.
   ///
   /// In en, this message translates to:
-  /// **'Back to the map'**
+  /// **'Back to lessons'**
   String get lessonBackToMap;
 
   /// No description provided for @learnCoachDone.
@@ -3302,6 +3302,96 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Unlocks when you finish the opening line'**
   String get showBestAfterLine;
+
+  /// No description provided for @yourMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Your move'**
+  String get yourMove;
+
+  /// No description provided for @sideToMove.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} to move'**
+  String sideToMove(String name);
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @discardGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this game'**
+  String get discardGame;
+
+  /// No description provided for @gameRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Game removed'**
+  String get gameRemoved;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @doneButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get doneButton;
+
+  /// No description provided for @lessonNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson {n}'**
+  String lessonNumber(int n);
+
+  /// No description provided for @opViennaD.
+  ///
+  /// In en, this message translates to:
+  /// **'White brings the queen\'s knight out first and keeps f4 in reserve: a quiet start that can turn into a King\'s Gambit with the knight already in play.'**
+  String get opViennaD;
+
+  /// No description provided for @opPircD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black lets White build a big centre, fianchettoes the bishop to g7 and waits to strike at it later. Flexible and full of counterplay.'**
+  String get opPircD;
+
+  /// No description provided for @opDutchD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black answers 1.d4 with f5, grabbing e4 and aiming at the kingside. Unbalanced from the first move, for players who want to fight.'**
+  String get opDutchD;
+
+  /// No description provided for @opNimzoD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.'**
+  String get opNimzoD;
+
+  /// No description provided for @country.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get country;
+
+  /// No description provided for @countryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get countryNone;
+
+  /// No description provided for @searchCountries.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get searchCountries;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

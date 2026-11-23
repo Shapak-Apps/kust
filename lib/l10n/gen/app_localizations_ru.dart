@@ -1460,7 +1460,7 @@ class AppL10nRu extends AppL10n {
   String get lessonTasksDone => 'Задания';
 
   @override
-  String get lessonBackToMap => 'К карте';
+  String get lessonBackToMap => 'К урокам';
 
   @override
   String get learnCoachDone => 'Получилось! Нажмите «Продолжить».';
@@ -1830,4 +1830,57 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get showBestAfterLine => 'Откроется, когда пройдёте вариант дебюта';
+
+  @override
+  String get yourMove => 'Ваш ход';
+
+  @override
+  String sideToMove(String name) {
+    return 'Ход: $name';
+  }
+
+  @override
+  String get continueButton => 'Продолжить';
+
+  @override
+  String get discardGame => 'Убрать эту партию';
+
+  @override
+  String get gameRemoved => 'Партия убрана';
+
+  @override
+  String get undo => 'Вернуть';
+
+  @override
+  String get doneButton => 'Готово';
+
+  @override
+  String lessonNumber(int n) {
+    return 'Урок $n';
+  }
+
+  @override
+  String get opViennaD =>
+      'Белые сначала выводят ферзевого коня и держат f4 в запасе: спокойное начало, которое может превратиться в королевский гамбит с уже развитым конём.';
+
+  @override
+  String get opPircD =>
+      'Чёрные дают белым построить большой центр, ставят слона на g7 и потом бьют по центру. Гибко и с большой контригрой.';
+
+  @override
+  String get opDutchD =>
+      'Чёрные отвечают на 1.d4 ходом f5, захватывая e4 и нацеливаясь на королевский фланг. Неравная игра с первого хода, для тех, кто хочет бороться.';
+
+  @override
+  String get opNimzoD =>
+      'Чёрные связывают коня c3 слоном и борются за e4 фигурами, а не пешками. Один из самых уважаемых ответов на 1.d4.';
+
+  @override
+  String get country => 'Страна';
+
+  @override
+  String get countryNone => 'Не указана';
+
+  @override
+  String get searchCountries => 'Поиск страны';
 }

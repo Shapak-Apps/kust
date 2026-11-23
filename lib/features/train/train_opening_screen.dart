@@ -153,7 +153,7 @@ class _TrainOpeningScreenState extends State<TrainOpeningScreen> {
                 Text(_o.descriptionIn(t), style: k.body),
                 const SizedBox(height: 8),
                 Text(
-                  '${t.trainOrigin(_o.origin)} ${_o.flag}',
+                  '${t.trainOrigin(_o.originIn(t))} ${_o.flag}',
                   style: k.caption,
                 ),
                 const SizedBox(height: 12),

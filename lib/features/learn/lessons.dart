@@ -437,3 +437,25 @@ class LearnPiece extends StatelessWidget {
     width: height * 100 / 135,
   );
 }
+
+/// The position a lesson is pictured by: its busiest one, with the squares
+/// it asks about marked.
+({Position position, List<Square> marked}) lessonCover(Lesson lesson) {
+  var best = lesson.tasks.first;
+  var most = 0;
+  for (final task in lesson.tasks) {
+    final pieces = task.fen
+        .split(' ')
+        .first
+        .replaceAll(RegExp('[^a-zA-Z]'), '')
+        .length;
+    if (pieces > most) {
+      most = pieces;
+      best = task;
+    }
+  }
+  return (
+    position: Chess.fromSetup(Setup.parseFen(best.fen)),
+    marked: best.targets.toList(),
+  );
+}

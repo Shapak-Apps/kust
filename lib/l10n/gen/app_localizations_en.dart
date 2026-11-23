@@ -1454,7 +1454,7 @@ class AppL10nEn extends AppL10n {
   String get lessonTasksDone => 'Tasks';
 
   @override
-  String get lessonBackToMap => 'Back to the map';
+  String get lessonBackToMap => 'Back to lessons';
 
   @override
   String get learnCoachDone => 'That is it! Tap Continue.';
@@ -1822,4 +1822,57 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get showBestAfterLine => 'Unlocks when you finish the opening line';
+
+  @override
+  String get yourMove => 'Your move';
+
+  @override
+  String sideToMove(String name) {
+    return '$name to move';
+  }
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get discardGame => 'Remove this game';
+
+  @override
+  String get gameRemoved => 'Game removed';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get doneButton => 'Done';
+
+  @override
+  String lessonNumber(int n) {
+    return 'Lesson $n';
+  }
+
+  @override
+  String get opViennaD =>
+      'White brings the queen\'s knight out first and keeps f4 in reserve: a quiet start that can turn into a King\'s Gambit with the knight already in play.';
+
+  @override
+  String get opPircD =>
+      'Black lets White build a big centre, fianchettoes the bishop to g7 and waits to strike at it later. Flexible and full of counterplay.';
+
+  @override
+  String get opDutchD =>
+      'Black answers 1.d4 with f5, grabbing e4 and aiming at the kingside. Unbalanced from the first move, for players who want to fight.';
+
+  @override
+  String get opNimzoD =>
+      'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.';
+
+  @override
+  String get country => 'Country';
+
+  @override
+  String get countryNone => 'Not set';
+
+  @override
+  String get searchCountries => 'Search countries';
 }

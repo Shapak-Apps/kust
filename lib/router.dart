@@ -2,7 +2,6 @@ import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_screen.dart';
 import 'package:kust/features/review/retry_screen.dart';
 import 'package:kust/features/review/review_screen.dart';
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievements_screen.dart';
@@ -100,61 +99,45 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         ),
       ),
 
-      ShellRoute(
-        builder: (context, state, child) {
-          return AppShell(child: child);
-        },
-        routes: [
-          GoRoute(
-            path: '/play',
-            pageBuilder: (context, state) =>
-                _tabPage(state, const PlayScreen()),
+      // The tabs stay built once visited, each in its own branch, so
+      // switching back to one is instant; the hidden ones are paused.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => AppShell(shell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/play',
+                builder: (context, state) => const PlayScreen(),
+              ),
+            ],
           ),
-
-          GoRoute(
-            path: '/puzzles',
-            pageBuilder: (context, state) =>
-                _tabPage(state, const PuzzlesScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/puzzles',
+                builder: (context, state) => const PuzzlesScreen(),
+              ),
+            ],
           ),
-
-          GoRoute(
-            path: '/learn',
-            pageBuilder: (context, state) =>
-                _tabPage(state, const LearnScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/learn',
+                builder: (context, state) => const LearnScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/train',
-            pageBuilder: (context, state) =>
-                _tabPage(state, const TrainScreen()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/train',
+                builder: (context, state) => const TrainScreen(),
+              ),
+            ],
           ),
         ],
       ),
     ],
-  );
-}
-
-/// Tab switch: quick fade with a slight rise, like iOS cross-fades.
-CustomTransitionPage<void> _tabPage(GoRouterState state, Widget child) {
-  return CustomTransitionPage<void>(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 260),
-    reverseTransitionDuration: const Duration(milliseconds: 200),
-    transitionsBuilder: (context, animation, secondary, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      );
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0, 0.02),
-            end: Offset.zero,
-          ).animate(curved),
-          child: child,
-        ),
-      );
-    },
   );
 }

@@ -132,7 +132,7 @@ void main() {
     await _finish(tester);
   });
 
-  testWidgets('a premove not legal yet waits; an empty tap clears it', (
+  testWidgets('a premove that is illegal once the opponent moved is dropped', (
     tester,
   ) async {
     final (c, engine) = await _game(tester, ['e7e5', 'a7a6']);
@@ -144,13 +144,10 @@ void main() {
     expect(c.state.premoves.length, 2);
 
     await _reply(tester, engine); // ...e5 blocks the pawn
-    expect(c.state.premoves.length, 2); // still waiting
+    // Not left waiting: both premoves are gone, and it is the player's turn.
+    expect(c.state.premoves, isEmpty);
     expect(c.state.moves.length, 2);
     expect(c.state.position.turn, Side.white);
-
-    // A tap on an empty square clears them.
-    c.selectSquare(Square.h5);
-    expect(c.state.premoves, isEmpty);
     await _finish(tester);
   });
 

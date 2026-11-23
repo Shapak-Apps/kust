@@ -36,28 +36,6 @@ void main() {
     LearnProgress.instance.done.value = const {};
   });
 
-  testWidgets('the coach marker stands still when animations are off', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(400, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    for (final off in [true, false]) {
-      final router = GoRouter(
-        routes: [GoRoute(path: '/', builder: (_, _) => const LearnScreen())],
-      );
-      await tester.pumpWidget(
-        MediaQuery(
-          data: MediaQueryData(disableAnimations: off),
-          child: MaterialApp.router(theme: appDarkTheme, routerConfig: router),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.pump(const Duration(milliseconds: 50));
-      expect(tester.hasRunningAnimations, !off, reason: 'disabled: $off');
-    }
-  });
-
   testWidgets('the Learn tab lists the lessons and marks the next one', (
     tester,
   ) async {
@@ -79,9 +57,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('The pawn'), findsWidgets);
-    expect(find.textContaining('Checkmate'), findsWidgets);
     expect(find.text('0 / 45'), findsOneWidget);
     expect(find.text('Learn how every piece moves'), findsOneWidget);
+    // The last camp is further down the list.
+    final scroll = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(
+      find.text('Mate patterns'),
+      300,
+      scrollable: scroll,
+    );
+    expect(find.textContaining('Checkmate'), findsWidgets);
+    // Back to the top.
+    await tester.drag(scroll, const Offset(0, 3000));
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 200)),
     );

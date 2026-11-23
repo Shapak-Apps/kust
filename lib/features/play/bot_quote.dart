@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:kust/features/puzzles/gol.dart' show LoomColors;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kust/core/settings.dart';
@@ -89,19 +88,15 @@ class _BotQuoteSwitcherState extends ConsumerState<BotQuoteSwitcher> {
   }
 }
 
-/// The opponent's portrait with what it says, like a message from it.
+/// The opponent's portrait with what it says, like a message from it, in
+/// the app's one bubble style.
 class BotSays extends StatelessWidget {
   const BotSays({
     super.key,
     required this.name,
     required this.image,
     required this.text,
-    this.light = false,
   });
-
-  /// A cream bubble with dark words, the bot's name left to its portrait:
-  /// for dark, busy screens where the line must stand out.
-  final bool light;
 
   final String name;
   final String image;
@@ -110,62 +105,36 @@ class BotSays extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.asset(
-            image,
-            width: 68,
-            height: 68,
-            cacheWidth: 204,
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: CustomPaint(
-            painter: SpeechBubblePainter(
-              fill: light ? LoomColors.cream : k.surfaceAlt,
-              border: light ? LoomColors.cream : k.line,
+    return Semantics(
+      label: '$name: $text',
+      excludeSemantics: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.asset(
+              image,
+              width: 68,
+              height: 68,
+              cacheWidth: 204,
+              fit: BoxFit.cover,
             ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                BubbleMetrics.tail + 14,
-                12,
-                14,
-                12,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!light) ...[
-                    Text(
-                      name,
-                      style: k.caption.copyWith(
-                        color: k.accent,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  Text(
-                    text,
-                    style: light
-                        ? k.body.copyWith(
-                            color: const Color(0xFF17181A),
-                            fontWeight: FontWeight.w600,
-                          )
-                        : k.body.copyWith(fontStyle: FontStyle.italic),
-                  ),
-                ],
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: SpeechBubble(
+              child: Text(
+                text,
+                style: k.body.copyWith(
+                  color: BubbleColors.ink,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

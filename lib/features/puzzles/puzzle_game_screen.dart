@@ -12,6 +12,7 @@ import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/features/puzzles/puzzle_coach.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
@@ -411,7 +412,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
   }
 
   void _nextPuzzle(BuildContext context) {
-    if (_index + 1 < _puzzleCount) {
+    // The daily puzzle stands on its own: done, not on to the next one.
+    if (widget.daily) {
+      _exit(context);
+    } else if (_index + 1 < _puzzleCount) {
       context.pushReplacement('/puzzle/${widget.level}/${_index + 1}');
     } else if (_hasNextLevel) {
       context.pushReplacement('/puzzle/${widget.level + 1}/0');
@@ -487,10 +491,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                               whiteToMove: _position.turn == Side.white,
                             ),
                             titleColor: _solved
-                                ? const Color(0xFF1F7A4D)
+                                ? BubbleColors.good
                                 : _mistakeFlash
-                                ? const Color(0xFFB3261E)
-                                : LoomColors.indigo,
+                                ? BubbleColors.bad
+                                : BubbleColors.ink,
                           ),
                         ),
                       ),
@@ -519,6 +523,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                   alignment: Alignment.bottomCenter,
                   child: finished
                       ? _FinishedBar(
+                          daily: widget.daily,
                           hasNext: hasNext,
                           nextLevel: _hasNextLevel,
                           busy: _busy,
@@ -709,6 +714,7 @@ class _ControlBar extends StatelessWidget {
 
 class _FinishedBar extends StatelessWidget {
   const _FinishedBar({
+    required this.daily,
     required this.hasNext,
     required this.nextLevel,
     required this.busy,
@@ -716,6 +722,8 @@ class _FinishedBar extends StatelessWidget {
     required this.onNext,
   });
 
+  /// The daily puzzle: its button says Done and goes back.
+  final bool daily;
   final bool hasNext;
 
   /// The last puzzle of a level, with another level after it.
@@ -739,7 +747,9 @@ class _FinishedBar extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: KustButton(
-              label: hasNext
+              label: daily
+                  ? context.t.doneButton
+                  : hasNext
                   ? context.t.nextPuzzle
                   : nextLevel
                   ? context.t.nextLevel

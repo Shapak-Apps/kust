@@ -2,6 +2,9 @@ import 'package:dartchess/dartchess.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kust/features/train/train_openings.dart';
+import 'package:kust/l10n/app_locale.dart';
+
+import 'dart:ui' show Locale;
 
 void main() {
   test('every line is legal from the start, three lines at most', () {
@@ -26,5 +29,18 @@ void main() {
   test('castling is kept as king takes rook, as saved games want it', () {
     final italian = kTrainOpenings.firstWhere((o) => o.id == 'italian');
     expect(italian.lines.first.uci, contains('e1h1'));
+  });
+
+  test('every opening has a description and an origin in each language', () {
+    for (final code in ['en', 'ru', 'tk']) {
+      final t = lookupAppL10n(Locale(code));
+      for (final o in kTrainOpenings) {
+        expect(o.descriptionIn(t), isNotEmpty, reason: '${o.id} $code');
+        expect(o.originIn(t), isNotEmpty, reason: '${o.id} $code');
+      }
+    }
+    final ru = lookupAppL10n(const Locale('ru'));
+    final london = kTrainOpenings.firstWhere((o) => o.id == 'london');
+    expect(london.originIn(ru), 'Лондонский турнир, 1922');
   });
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
@@ -13,9 +14,9 @@ import 'package:kust/features/achievements/achievements_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -119,8 +120,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Expanded(
                       child: ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                         children: _form(context, k),
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        child: KustButton(
+                          label: context.t.saveName,
+                          onTap: _valid ? _save : null,
+                        ),
                       ),
                     ),
                   ],
@@ -143,6 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
+    final country = _store.country;
     final square = MediaQuery.sizeOf(context).width / BoardBanner.files;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -188,12 +200,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: k.title,
                               ),
-                              if (username != null)
-                                Text(
-                                  '@$username',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: k.body.copyWith(color: k.muted),
+                              if (username != null || country != null)
+                                // @username and the flag of the player's
+                                // country after it.
+                                Row(
+                                  children: [
+                                    if (username != null)
+                                      Flexible(
+                                        child: Text(
+                                          '@$username',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: k.body.copyWith(
+                                            color: k.muted,
+                                          ),
+                                        ),
+                                      ),
+                                    if (country != null) ...[
+                                      if (username != null)
+                                        const SizedBox(width: 8),
+                                      CountryFlag(country, height: 22),
+                                    ],
+                                  ],
                                 ),
                               const SizedBox(height: 4),
                             ],
@@ -261,49 +289,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   List<Widget> _form(BuildContext context, KustTokens k) {
+    final t = context.t;
+    final country = _store.country;
     return [
+      // The photo, with a camera on its corner: tap to change it.
       Center(
-        child: Pressable(onTap: _pickPhoto, child: _avatar(context)),
+        child: Semantics(
+          button: true,
+          label: t.choosePhoto,
+          child: Pressable(
+            onTap: _pickPhoto,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _avatar(context),
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: k.accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: k.bg, width: 3),
+                    ),
+                    child: Icon(
+                      Icons.photo_camera_rounded,
+                      size: 18,
+                      color: k.accentInk,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
+      if (_store.photoPath != null)
+        Center(
+          child: TextButton(
+            onPressed: () => _store.setPhoto(null),
+            child: Text(t.removePhoto, style: TextStyle(color: k.muted)),
+          ),
+        )
+      else
+        const SizedBox(height: 16),
       const SizedBox(height: 8),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextButton(onPressed: _pickPhoto, child: Text(context.t.choosePhoto)),
-          if (_store.photoPath != null)
-            TextButton(
-              onPressed: () => _store.setPhoto(null),
-              child: Text(
-                context.t.removePhoto,
-                style: TextStyle(color: k.muted),
+      // One group of rows, label on the left and the value beside it.
+      Container(
+        decoration: BoxDecoration(
+          color: k.surface,
+          borderRadius: BorderRadius.circular(KustSpace.rMedium),
+        ),
+        child: Column(
+          children: [
+            _FormRow(
+              label: t.yourName,
+              child: KustTextField(
+                controller: _name,
+                maxLength: AppStorage.maxNameLength,
+                capitalization: TextCapitalization.words,
+                bare: true,
               ),
             ),
+            _FormRow(
+              label: t.username,
+              child: KustTextField.username(controller: _username, bare: true),
+            ),
+            _FormRow(
+              label: t.country,
+              onTap: () async {
+                final picked = await pickCountry(context, current: country);
+                if (picked != null) {
+                  await _store.setCountry(picked.isEmpty ? null : picked);
+                }
+              },
+              child: Row(
+                children: [
+                  if (country != null) ...[
+                    CountryFlag(country, height: 22),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Text(
+                      country == null ? t.countryNone : kCountries[country]!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(
+                        color: country == null ? k.muted : k.ink,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: k.muted),
+                ],
+              ),
+            ),
+            _FormRow(
+              label: t.bio,
+              last: true,
+              child: KustTextField(
+                controller: _bio,
+                maxLength: AppStorage.maxBioLength,
+                maxLines: 3,
+                capitalization: TextCapitalization.sentences,
+                bare: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+        child: Text(t.usernameRule, style: k.caption),
+      ),
+    ];
+  }
+}
+
+/// A row of the edit form: the label on the left, the value beside it, a
+/// hairline under it unless it is the [last].
+class _FormRow extends StatelessWidget {
+  const _FormRow({
+    required this.label,
+    required this.child,
+    this.onTap,
+    this.last = false,
+  });
+
+  final String label;
+  final Widget child;
+  final VoidCallback? onTap;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final row = Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        border: last ? null : Border(bottom: BorderSide(color: k.line)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 104,
+            child: Text(label, style: k.body.copyWith(color: k.muted)),
+          ),
+          Expanded(child: child),
         ],
       ),
-      const SizedBox(height: 24),
-      KustSectionLabel(context.t.yourName),
-      KustTextField(
-        controller: _name,
-        maxLength: AppStorage.maxNameLength,
-        capitalization: TextCapitalization.words,
-      ),
-      const SizedBox(height: 16),
-      KustSectionLabel(context.t.username),
-      KustTextField.username(
-        controller: _username,
-        helper: context.t.usernameRule,
-      ),
-      const SizedBox(height: 16),
-      KustSectionLabel(context.t.bio),
-      KustTextField(
-        controller: _bio,
-        maxLength: AppStorage.maxBioLength,
-        maxLines: 4,
-        capitalization: TextCapitalization.sentences,
-      ),
-      const SizedBox(height: 24),
-      KustButton(label: context.t.saveName, onTap: _valid ? _save : null),
-    ];
+    );
+    return onTap == null ? row : Pressable(onTap: onTap, child: row);
   }
 }
 
@@ -370,21 +508,40 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 20, 8, 4),
       child: Row(
         children: [
-          Text(title, style: k.title),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(
-              color: k.surfaceAlt,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              count,
-              style: k.caption.copyWith(fontWeight: FontWeight.w800),
+          // The title takes the room up to View all, and only then is cut.
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.title,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: k.surfaceAlt,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    count,
+                    style: k.caption.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          TextButton(onPressed: onViewAll, child: Text(context.t.viewAll)),
+          TextButton(
+            onPressed: onViewAll,
+            child: Text(context.t.viewAll, maxLines: 1),
+          ),
         ],
       ),
     );
