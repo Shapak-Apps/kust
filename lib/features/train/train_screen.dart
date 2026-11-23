@@ -164,7 +164,7 @@ class _OpeningCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '${opening.origin} ${opening.flag}',
+                            '${opening.originIn(t)} ${opening.flag}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: k.caption,
