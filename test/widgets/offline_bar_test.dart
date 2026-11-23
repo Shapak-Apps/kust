@@ -4,121 +4,73 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kust/core/net/connection_service.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
-import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/widgets/offline_bar.dart';
 
-Widget _app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
-  theme: appTheme,
-  locale: locale,
-  supportedLocales: kSupportedLocales,
-  localizationsDelegates: kLocalizationDelegates,
-  home: Scaffold(
-    body: Align(alignment: Alignment.bottomCenter, child: child),
-  ),
-);
+/// A screen that reports the top padding it is given.
+class _Probe extends StatelessWidget {
+  const _Probe();
 
-double _height(WidgetTester tester) =>
-    tester.getSize(find.byType(OfflineBar)).height;
+  static double top = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    top = MediaQuery.paddingOf(context).top;
+    return const SizedBox.expand();
+  }
+}
+
+Widget _app(ConnectionService service, {Locale locale = const Locale('en')}) =>
+    MaterialApp(
+      theme: appTheme,
+      locale: locale,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: kLocalizationDelegates,
+      builder: (context, child) =>
+          OfflineInsetHost(service: service, child: child!),
+      home: const _Probe(),
+    );
 
 void main() {
-  testWidgets('hidden while online, shown when offline, then restored', (
+  testWidgets('offline shows at the top and pushes the screen down', (
     tester,
   ) async {
     var reachable = true;
     final service = ConnectionService(probe: () async => reachable);
-    await tester.pumpWidget(_app(OfflineBar(service: service)));
+    await tester.pumpWidget(_app(service));
     service.start(observeLifecycle: false);
     await tester.pump();
     await tester.pumpAndSettle();
-    expect(_height(tester), 0);
+    final base = _Probe.top;
+    expect(find.text("You're offline"), findsNothing);
 
     reachable = false;
     await tester.pump(const Duration(seconds: 21));
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     expect(service.status.value, ConnectionStatus.offline);
-    expect(_height(tester), kOfflineBarHeight + kOfflineMinUnder);
     expect(find.text("You're offline"), findsOneWidget);
+    expect(tester.getTopLeft(find.text("You're offline")).dy, lessThan(40));
+    expect(_Probe.top, base + kOfflineBarHeight);
 
     reachable = true;
-    for (var i = 0; i < 12; i++) {
-      if (service.status.value == ConnectionStatus.restored) break;
-      await tester.pump(const Duration(seconds: 1));
-    }
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Back online'), findsOneWidget);
-    expect(_height(tester), kOfflineBarHeight + kOfflineMinUnder);
-
-    await tester.pump(const Duration(seconds: 3));
+    await service.checkNow();
     await tester.pumpAndSettle();
-    expect(_height(tester), 0);
-
+    expect(find.text('Back online'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Back online'), findsNothing);
+    expect(_Probe.top, base);
     service.dispose();
   });
 
   testWidgets('speaks the app language', (tester) async {
     final service = ConnectionService(probe: () async => false);
-    await tester.pumpWidget(
-      _app(OfflineBar(service: service), locale: const Locale('ru')),
-    );
+    await tester.pumpWidget(_app(service, locale: const Locale('ru')));
     service.start(observeLifecycle: false);
     await tester.pump();
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
     expect(find.text('Вы не в сети'), findsOneWidget);
     service.dispose();
-  });
-
-  testWidgets('the nav bar shows the footer under its tabs', (tester) async {
-    await tester.pumpWidget(
-      _app(
-        KustNavBar(
-          selectedIndex: 0,
-          onSelected: (_) {},
-          items: const [
-            KustNavItem(Icons.home_outlined, Icons.home, 'Home'),
-            KustNavItem(Icons.search, Icons.search, 'Search'),
-          ],
-          footer: const Text('footer here'),
-        ),
-      ),
-    );
-    final tab = tester.getBottomLeft(find.text('Home')).dy;
-    final footer = tester.getTopLeft(find.text('footer here')).dy;
-    expect(footer, greaterThan(tab));
-  });
-
-  testWidgets('clearance grows by the strip height only while it shows', (
-    tester,
-  ) async {
-    double? hidden;
-    double? shown;
-    await tester.pumpWidget(
-      _app(
-        Column(
-          children: [
-            OfflineInset(
-              visible: false,
-              child: Builder(
-                builder: (context) {
-                  hidden = KustNavBar.clearance(context);
-                  return const SizedBox();
-                },
-              ),
-            ),
-            OfflineInset(
-              visible: true,
-              child: Builder(
-                builder: (context) {
-                  shown = KustNavBar.clearance(context);
-                  return const SizedBox();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    expect(shown! - hidden!, kOfflineBarHeight + kOfflineMinUnder);
   });
 }

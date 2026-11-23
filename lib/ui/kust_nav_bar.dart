@@ -46,7 +46,7 @@ class KustNavBar extends StatelessWidget {
 
   /// Space content must leave at the bottom so nothing hides under the bar.
   static double clearance(BuildContext context) =>
-      bottomGap(context, min: 0) + 64 + 8 + 12 + OfflineInset.of(context);
+      bottomGap(context, min: 0) + 64 + 8 + 12;
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +73,7 @@ class KustNavBar extends StatelessWidget {
         // The offline strip runs to the bottom edge itself; without it the
         // tabs keep clear of the gesture bar.
         child: Padding(
-          padding: EdgeInsets.only(
-            bottom: OfflineInset.of(context) > 0
-                ? 0
-                : bottomGap(context, min: 0),
-          ),
+          padding: EdgeInsets.only(bottom: bottomGap(context, min: 0)),
           child: Padding(
             padding: const EdgeInsets.only(top: 22),
             child: Column(

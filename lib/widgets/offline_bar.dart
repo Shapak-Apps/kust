@@ -5,9 +5,8 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// The line of text under the tabs, and the most room kept under it.
+/// The height of the offline strip.
 const double kOfflineBarHeight = 26;
-const double kOfflineMinUnder = 14;
 
 /// Space to leave under the last line on screen: the gesture bar's, read
 /// from the window so a parent that took the padding away cannot hide it,
@@ -23,131 +22,120 @@ double bottomGap(BuildContext context, {double min = 8}) {
   return gap < min ? min : gap;
 }
 
-class OfflineInset extends InheritedWidget {
-  const OfflineInset({super.key, required this.visible, required super.child});
-
-  final bool visible;
-
-  static double of(BuildContext context) {
-    final inset = context.dependOnInheritedWidgetOfExactType<OfflineInset>();
-    return inset != null && inset.visible
-        ? kOfflineBarHeight + kOfflineMinUnder
-        : 0;
-  }
-
-  @override
-  bool updateShouldNotify(OfflineInset oldWidget) =>
-      visible != oldWidget.visible;
-}
-
-class OfflineInsetHost extends StatelessWidget {
+/// Wraps the whole app: while the connection is lost, "You're offline"
+/// shows in a strip right under the status bar and every screen below
+/// moves down to make room for it (the screens lay out under a top padding
+/// that grows by the strip). "Back online" shows in green for a moment
+/// when the connection returns. Only signed-in players are ever checked,
+/// so guests never see it.
+class OfflineInsetHost extends StatefulWidget {
   const OfflineInsetHost({super.key, required this.child, this.service});
 
   final Widget child;
   final ConnectionService? service;
 
   @override
+  State<OfflineInsetHost> createState() => _OfflineInsetHostState();
+}
+
+class _OfflineInsetHostState extends State<OfflineInsetHost> {
+  /// What the strip says while it slides away after coming back online.
+  ConnectionStatus _shown = ConnectionStatus.offline;
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ConnectionStatus>(
-      valueListenable: (service ?? ConnectionService.instance).status,
-      child: child,
-      builder: (context, status, child) => OfflineInset(
-        visible: status != ConnectionStatus.online,
-        child: child!,
-      ),
+      valueListenable: (widget.service ?? ConnectionService.instance).status,
+      builder: (context, status, _) {
+        final visible = status != ConnectionStatus.online;
+        if (visible) _shown = status;
+        return TweenAnimationBuilder<double>(
+          tween: Tween(end: visible ? kOfflineBarHeight : 0),
+          duration: motion(context, const Duration(milliseconds: 250)),
+          curve: Curves.easeOutCubic,
+          builder: (context, height, _) {
+            final media = MediaQuery.of(context);
+            final top = media.padding.top;
+            return Stack(
+              children: [
+                MediaQuery(
+                  data: media.copyWith(
+                    padding: media.padding.copyWith(top: top + height),
+                    viewPadding: media.viewPadding.copyWith(
+                      top: media.viewPadding.top + height,
+                    ),
+                  ),
+                  child: widget.child,
+                ),
+                if (height > 0)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: top + height,
+                    child: ExcludeSemantics(
+                      excluding: !visible,
+                      child: _Strip(
+                        restored: _shown == ConnectionStatus.restored,
+                        statusBar: top,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
 
-/// "You're offline" in a line of plain text, as Spotify shows it under its
-/// tabs; "Back online" in green for a moment when the connection returns.
-class OfflineBar extends StatefulWidget {
-  const OfflineBar({super.key, this.service, this.edge = false});
+/// The strip itself: dark (green when back online), one line of text,
+/// under the status bar.
+class _Strip extends StatelessWidget {
+  const _Strip({required this.restored, required this.statusBar});
 
-  final ConnectionService? service;
-
-  /// At the bottom of a screen with no tab bar: on the page's colour, and
-  /// clear of the gesture bar.
-  final bool edge;
-
-  @override
-  State<OfflineBar> createState() => _OfflineBarState();
-}
-
-class _OfflineBarState extends State<OfflineBar> {
-  ConnectionStatus _shown = ConnectionStatus.offline;
-
-  ConnectionService get _service =>
-      widget.service ?? ConnectionService.instance;
+  final bool restored;
+  final double statusBar;
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return ValueListenableBuilder<ConnectionStatus>(
-      valueListenable: _service.status,
-      builder: (context, status, _) {
-        final visible = status != ConnectionStatus.online;
-        if (visible) _shown = status;
-        final restored = _shown == ConnectionStatus.restored;
-        final text = restored
-            ? context.t.backOnlineBanner
-            : context.t.offlineBanner;
-        return ExcludeSemantics(
-          excluding: !visible,
-          child: AnimatedAlign(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: restored
+          ? k.success
+          : dark
+          ? const Color(0xFF121110)
+          : k.ink,
+      child: ClipRect(
+        child: Padding(
+          padding: EdgeInsets.only(top: statusBar),
+          child: OverflowBox(
             alignment: Alignment.topCenter,
-            heightFactor: visible ? 1 : 0,
-            duration: motion(context, const Duration(milliseconds: 250)),
-            curve: Curves.easeOutCubic,
-            child: ClipRect(
-              // A solid strip, as on Spotify, so the page never shows
-              // through the words.
-              child: ColoredBox(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF121110)
-                    : k.bg,
-                child: Padding(
-                  // At least [kOfflineMinUnder] under the words: some phones
-                  // report no bottom inset yet draw the gesture bar there.
-                  padding: EdgeInsets.only(
-                    bottom: widget.edge
-                        ? bottomGap(context, min: kOfflineMinUnder)
-                        : (kOfflineMinUnder - bottomGap(context, min: 0)).clamp(
-                            0,
-                            kOfflineMinUnder,
-                          ),
-                  ),
-                  child: SizedBox(
-                    height: kOfflineBarHeight,
-                    width: double.infinity,
-                    child: Center(
-                      child: Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          text,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0,
-                            color: restored
-                                ? k.success
-                                : Theme.of(context).brightness ==
-                                      Brightness.dark
-                                ? Colors.white
-                                : k.ink,
-                          ),
-                        ),
-                      ),
-                    ),
+            minHeight: kOfflineBarHeight,
+            maxHeight: kOfflineBarHeight,
+            child: Center(
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  restored
+                      ? context.t.backOnlineBanner
+                      : context.t.offlineBanner,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: k.body.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0,
+                    color: Colors.white,
                   ),
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
