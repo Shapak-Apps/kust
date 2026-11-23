@@ -120,13 +120,39 @@ class AuthService {
     return (json['retry_after'] as num?)?.toInt() ?? 60;
   }
 
-  Future<String?> usernameProblem(String username) async {
+  /// Why [username] can't be had ('taken', 'reserved', ...), or null when
+  /// it is free. Answers are kept, so typing back and forth over the same
+  /// names asks the server once: a taken name stays taken for the session,
+  /// a free one is trusted for [_freeFor] (someone may take it; sign-up
+  /// checks again anyway). Two asks for one name share one request.
+  Future<String?> usernameProblem(String username) {
+    final known = _usernameAnswers[username];
+    if (known != null &&
+        (known.problem != null || _now().difference(known.at) < _freeFor)) {
+      return Future.value(known.problem);
+    }
+    // A block body: returning the removed future would make it wait on
+    // itself.
+    return _usernameAsks[username] ??= _askUsername(username).whenComplete(() {
+      _usernameAsks.remove(username);
+    });
+  }
+
+  static const Duration _freeFor = Duration(seconds: 30);
+  final Map<String, ({String? problem, DateTime at})> _usernameAnswers = {};
+  final Map<String, Future<String?>> _usernameAsks = {};
+
+  Future<String?> _askUsername(String username) async {
     final json = await api.get(
       '/v1/auth/username-available',
       query: {'u': username},
     );
-    if (json['available'] == true) return null;
-    return (json['reason'] as String?) ?? 'taken';
+    final problem = json['available'] == true
+        ? null
+        : (json['reason'] as String?) ?? 'taken';
+    if (_usernameAnswers.length >= 500) _usernameAnswers.clear();
+    _usernameAnswers[username] = (problem: problem, at: _now());
+    return problem;
   }
 
   Future<Account> refreshAccount() async {

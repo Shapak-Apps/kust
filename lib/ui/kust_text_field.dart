@@ -123,7 +123,10 @@ class KustTextField extends StatelessWidget {
               hintStyle: k.body.copyWith(color: k.muted),
               prefixIcon: icon == null
                   ? null
-                  : Icon(icon, size: 20, color: k.muted),
+                  : Padding(
+                      padding: const EdgeInsets.only(left: 14, right: 8),
+                      child: Icon(icon, size: 20, color: k.muted),
+                    ),
               filled: true,
               fillColor: k.surfaceAlt,
               // Slim, with modest corners.
@@ -132,10 +135,8 @@ class KustTextField extends StatelessWidget {
                 horizontal: 14,
                 vertical: 14,
               ),
-              prefixIconConstraints: const BoxConstraints(
-                minWidth: 44,
-                minHeight: 20,
-              ),
+              // The icon brings its own padding: 14 before, 8 after.
+              prefixIconConstraints: const BoxConstraints(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,

@@ -300,4 +300,32 @@ void main() {
     await rig.service.login(identifier: 'dev_one', password: 'password123');
     expect(await rig.service.resendCode(), 60);
   });
+
+  test('username checks are cached and shared', () async {
+    final rig = _Rig(
+      (o) => jsonBody(
+        o.queryParameters['u'] == 'taken_one'
+            ? {'available': false, 'reason': 'taken'}
+            : {'available': true},
+      ),
+    );
+    const path = '/v1/auth/username-available';
+    // Two asks at once: one request.
+    final both = await Future.wait([
+      rig.service.usernameProblem('free_one'),
+      rig.service.usernameProblem('free_one'),
+    ]);
+    expect(both, [null, null]);
+    expect(rig.count(path), 1);
+    // Asked again soon: from memory.
+    expect(await rig.service.usernameProblem('free_one'), isNull);
+    expect(rig.count(path), 1);
+    // A free answer goes stale after 30 s; a taken one does not.
+    expect(await rig.service.usernameProblem('taken_one'), 'taken');
+    rig.clock = rig.clock.add(const Duration(minutes: 5));
+    expect(await rig.service.usernameProblem('taken_one'), 'taken');
+    expect(rig.count(path), 2);
+    expect(await rig.service.usernameProblem('free_one'), isNull);
+    expect(rig.count(path), 3);
+  });
 }

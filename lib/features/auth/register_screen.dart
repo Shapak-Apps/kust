@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     setState(() => _check = _UsernameCheck.checking);
-    _debounce = Timer(const Duration(milliseconds: 450), () async {
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
       try {
         final problem = await AuthService.instance.usernameProblem(value);
         if (!mounted || _username.text != value) return;
