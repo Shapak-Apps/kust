@@ -7,6 +7,10 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
@@ -17,6 +21,7 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -75,6 +80,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _edit() => setState(_fill);
 
+  void _openPlayers() {
+    final auth = AuthService.instance.state.value;
+    if (!auth.isSignedIn) {
+      _showSignInSheet();
+    } else if (!auth.isVerified) {
+      context.push('/verify');
+    } else {
+      context.push('/players');
+    }
+  }
+
+  void _showSignInSheet() {
+    final t = context.t;
+    showKustSheet<void>(
+      context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KustSheetHeader(
+            title: t.signInToSeePlayers,
+            subtitle: t.signInToSeePlayersBody,
+          ),
+          KustButton(
+            label: t.signIn,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              context.push('/login');
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.createAccount,
+            style: KustButtonStyle.secondary,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              context.push('/register');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final saved = await _store.saveProfile(
       name: _name.text,
@@ -86,13 +135,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickPhoto() async {
     try {
+      // Shrunk on the phone to at most 512 px as a JPEG (around 30–60 KB),
+      // so uploads are quick and the bucket stays small.
       final picked = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
         maxHeight: 512,
-        imageQuality: 85,
+        imageQuality: 80,
       );
-      if (picked != null) await _store.setPhoto(picked.path);
+      if (picked == null) return;
+      await _store.setPhoto(picked.path);
+      if (AuthService.instance.state.value.isSignedIn) {
+        try {
+          await AuthService.instance.uploadAvatar(await picked.readAsBytes());
+        } on ApiException {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.t.photoNotUploaded),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      }
     } catch (e, st) {
       ErrorLog.record(e, st);
     }
@@ -147,7 +213,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return PlayerAvatar(
       size: size,
       name: _store.displayName(context.t),
-      photo: path == null ? null : FileImage(File(path)),
+      // The photo on this phone, else the account's (signed in elsewhere).
+      photo: path != null
+          ? FileImage(File(path))
+          : avatarImage(
+              avatarUrlFor(AuthService.instance.state.value.account?.avatarKey),
+            ),
     );
   }
 
@@ -241,6 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
                 child: _Stats(),
               ),
+              const _AccountCard(),
               const _HistorySection(),
               const _AchievementsSection(),
             ],
@@ -271,6 +343,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: const Icon(Icons.arrow_back_rounded),
                       ),
                       const Spacer(),
+                      IconButton(
+                        onPressed: _openPlayers,
+                        tooltip: context.t.allPlayers,
+                        color: Colors.white,
+                        icon: const Icon(Icons.public_rounded),
+                      ),
                       IconButton(
                         onPressed: _edit,
                         tooltip: context.t.editProfile,
@@ -329,7 +407,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (_store.photoPath != null)
         Center(
           child: TextButton(
-            onPressed: () => _store.setPhoto(null),
+            onPressed: () {
+              _store.setPhoto(null);
+              if (AuthService.instance.state.value.isSignedIn) {
+                AuthService.instance.removeAvatar().ignore();
+              }
+            },
             child: Text(t.removePhoto, style: TextStyle(color: k.muted)),
           ),
         )
@@ -671,6 +754,98 @@ class _AchievementBadge extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// For a guest: what an account gives, with the two ways to get one.
+/// Under the stats, where it is seen without crowding the player's name.
+class _AccountCard extends StatelessWidget {
+  const _AccountCard();
+
+  @override
+  Widget build(BuildContext context) {
+    if (!ServerConfig.enabled) return const SizedBox.shrink();
+    final k = context.k;
+    final t = context.t;
+    return ValueListenableBuilder<AuthState>(
+      valueListenable: AuthService.instance.state,
+      builder: (context, auth, _) {
+        if (auth.status != AuthStatus.signedOut) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: k.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: k.line),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: KustTokens.gold.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.public_rounded,
+                        color: KustTokens.gold,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.accountCardTitle,
+                            style: k.body.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(t.accountCardBody, style: k.caption),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: KustButton(
+                        label: t.createAccount,
+                        height: 46,
+                        onTap: () => context.push('/register'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: KustButton(
+                        label: t.signIn,
+                        height: 46,
+                        style: KustButtonStyle.secondary,
+                        onTap: () => context.push('/login'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

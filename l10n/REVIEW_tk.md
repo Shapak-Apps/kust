@@ -524,3 +524,84 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `country` | Country | Ýurt |
 | `countryNone` | Not set | Görkezilmedi |
 | `searchCountries` | Search countries | Ýurt gözläň |
+| `offlineBanner` | You're offline | Siz onlaýn däl |
+| `backOnlineBanner` | Back online | Ýene onlaýn |
+| `playersTitle` | Players | Oýunçylar |
+| `playersSearch` | Search players | Oýunçy gözle |
+| `playersEmpty` | No players found | Oýunçy tapylmady |
+| `playersLoadFailed` | Couldn't load players | Oýunçylary ýükläp bolmady |
+| `playersSaved` | Showing your saved list | Saklanan sanaw görkezilýär |
+| `allPlayers` | All players | Ähli oýunçylar |
+| `signIn` | Sign in | Giriş |
+| `createAccount` | Create account | Hasap aç |
+| `haveAccount` | I already have an account | Hasabym bar |
+| `emailLabel` | Email | E-poçta |
+| `emailOrUsername` | Email or username | E-poçta ýa-da ulanyjy ady |
+| `passwordLabel` | Password | Parol |
+| `confirmPassword` | Confirm password | Paroly tassykla |
+| `signOut` | Sign out | Çyk |
+| `usernameTaken` | That username is taken | Bu ulanyjy ady eýýäm alnan |
+| `usernameFree` | Username is free | Ulanyjy ady boş |
+| `usernameReserved` | That username is reserved | Bu ulanyjy ady elýeterli däl |
+| `invalidEmail` | Enter a valid email | Dogry e-poçta giriziň |
+| `passwordShort` | At least 8 characters | Iň az 8 nyşan |
+| `passwordsDiffer` | Passwords don't match | Parollar gabat gelmeýär |
+| `invalidCredentials` | Wrong email, username or password | E-poçta, ulanyjy ady ýa-da parol nädogry |
+| `emailTaken` | An account with this email already exists | Bu e-poçta bilen hasap eýýäm bar |
+| `noInternet` | No connection. Try again when you're online. | Internet ýok. Birleşenden soň täzeden synanyşyň. |
+| `genericError` | Something went wrong. Try again. | Bir zat nädogry gitdi. Täzeden synanyşyň. |
+| `rateLimited` | Too many tries, wait a moment | Köp synanyşyk, biraz garaşyň |
+| `verifyTitle` | Verify your email | E-poçtaňyzy tassyklaň |
+| `verifySubtitle` | We sent a 6-digit code to {email} | {email} salgysyna 6 sanly kod iberdik |
+| `verifyCode` | Code | Kod |
+| `verifyButton` | Verify | Tassykla |
+| `resendCode` | Send a new code | Täze kod iber |
+| `resendIn` | Send a new code in {seconds}s | Täze kod {seconds} s soň |
+| `codeWrong` | That code doesn't match | Kod gabat gelmedi |
+| `codeExpired` | That code expired, send a new one | Koduň möhleti gutardy, täzesini iberiň |
+| `codeTooMany` | Too many wrong tries, send a new code | Köp ýalňyş synanyşyk, täze kod iberiň |
+| `codeSent` | Code sent | Kod iberildi |
+| `signInToSeePlayers` | Sign in to see other players | Beýleki oýunçylary görmek üçin giriň |
+| `signInToSeePlayersBody` | Players are visible to signed-in members. Your games and progress stay on your phone either way. | Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar. |
+| `accountSignedInAs` | Signed in as {email} | {email} hökmünde girdiňiz |
+| `onbStepOf` | Step {step} of {total} | {total} ädimden {step}-nji |
+| `onbPreview` | How other players will see you | Beýleki oýunçylar sizi şeýle görer |
+| `accountCardTitle` | Get a free account | Mugt hasap açyň |
+| `accountCardBody` | See who's online, find players and keep your profile on any phone. | Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň. |
+| `authWelcomeBack` | Welcome back | Hoş geldiňiz |
+| `authSignInSub` | Sign in to continue your chess journey. | Küşt ýolyňyzy dowam etmek üçin giriň. |
+| `authCreateTitle` | Create your account | Hasabyňyzy açyň |
+| `authCreateSub` | Keep your progress safe and play with real people. | Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň. |
+| `authNoAccount` | Don't have an account? | Hasabyňyz ýokmy? |
+| `authHaveAccount` | Already have an account? | Hasabyňyz barmy? |
+| `authPasswordTitle` | Choose a password | Parol saýlaň |
+| `authPasswordSub` | You'll use it to sign in. | Onuň bilen hasabyňyza girersiňiz. |
+| `passwordWeak` | That password is too weak | Parol gaty ýönekeý |
+| `pwRuleLength` | At least 8 characters | Iň az 8 nyşan |
+| `pwRuleUpper` | One capital letter | Bir baş harp |
+| `pwRuleLower` | One small letter | Bir kiçi harp |
+| `pwRuleDigit` | One digit | Bir sifr |
+| `pwRuleNoName` | Not your username or email | Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn |
+| `showPassword` | Show password | Paroly görkez |
+| `hidePassword` | Hide password | Paroly gizle |
+| `learnFirstTitle` | Learn the moves first | Ilki göçümleri öwreniň |
+| `learnFirstBody` | You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes. | Siz «Başlangyç» derejesini saýladyňyz. Çöpleriň nähili ýöreýändigi barada 6 sapagy tamamlaň, şonda Küştüň galan ähli bölümleri açylar. Takmynan 10 minut alar. |
+| `learnFirstProgress` | {done} of 6 done | 6 sapakdan {done} tamamlandy |
+| `learnFirstKeep` | Continue learning | Öwrenmegi dowam et |
+| `learnFirstSkip` | I already know how the pieces move | Çöpleriň nähili ýöreýändigini bilýärin |
+| `friendAdd` | Add friend | Dost goş |
+| `friendRequested` | Request sent | Haýyş iberildi |
+| `friendAccept` | Accept | Kabul et |
+| `friendDecline` | Decline | Ret et |
+| `friendFriends` | Friends | Dostlar |
+| `friendRemoveTitle` | Remove {name} from your friends? | {name} dostlaryňyzdan aýrylsynmy? |
+| `friendRemove` | Remove | Aýyr |
+| `friendCancel` | Cancel request | Haýyşy ýatyr |
+| `messageButton` | Message | Hat ýaz |
+| `messagesSoon` | Messages are coming soon | Hatlaşmak ýakyn wagtda goşular |
+| `friendRequests` | Friend requests | Dostluk haýyşlary |
+| `friendsSection` | Your friends | Dostlaryňyz |
+| `everyonePlayers` | Everyone | Ähli oýunçylar |
+| `wantsToBeFriend` | Wants to be your friend | Siz bilen dost bolmak isleýär |
+| `playerMissing` | This player can't be found | Bu oýunçy tapylmady |
+| `photoNotUploaded` | Couldn't upload your photo. Try again later. | Suraty ýükläp bolmady. Soňrak täzeden synanyşyň. |

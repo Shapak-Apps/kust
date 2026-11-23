@@ -1880,4 +1880,264 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get searchCountries => 'Ýurt gözläň';
+
+  @override
+  String get offlineBanner => 'Siz onlaýn däl';
+
+  @override
+  String get backOnlineBanner => 'Ýene onlaýn';
+
+  @override
+  String get playersTitle => 'Oýunçylar';
+
+  @override
+  String get playersSearch => 'Oýunçy gözle';
+
+  @override
+  String get playersEmpty => 'Oýunçy tapylmady';
+
+  @override
+  String get playersLoadFailed => 'Oýunçylary ýükläp bolmady';
+
+  @override
+  String get playersSaved => 'Saklanan sanaw görkezilýär';
+
+  @override
+  String get allPlayers => 'Ähli oýunçylar';
+
+  @override
+  String get signIn => 'Giriş';
+
+  @override
+  String get createAccount => 'Hasap aç';
+
+  @override
+  String get haveAccount => 'Hasabym bar';
+
+  @override
+  String get emailLabel => 'E-poçta';
+
+  @override
+  String get emailOrUsername => 'E-poçta ýa-da ulanyjy ady';
+
+  @override
+  String get passwordLabel => 'Parol';
+
+  @override
+  String get confirmPassword => 'Paroly tassykla';
+
+  @override
+  String get signOut => 'Çyk';
+
+  @override
+  String get usernameTaken => 'Bu ulanyjy ady eýýäm alnan';
+
+  @override
+  String get usernameFree => 'Ulanyjy ady boş';
+
+  @override
+  String get usernameReserved => 'Bu ulanyjy ady elýeterli däl';
+
+  @override
+  String get invalidEmail => 'Dogry e-poçta giriziň';
+
+  @override
+  String get passwordShort => 'Iň az 8 nyşan';
+
+  @override
+  String get passwordsDiffer => 'Parollar gabat gelmeýär';
+
+  @override
+  String get invalidCredentials => 'E-poçta, ulanyjy ady ýa-da parol nädogry';
+
+  @override
+  String get emailTaken => 'Bu e-poçta bilen hasap eýýäm bar';
+
+  @override
+  String get noInternet => 'Internet ýok. Birleşenden soň täzeden synanyşyň.';
+
+  @override
+  String get genericError => 'Bir zat nädogry gitdi. Täzeden synanyşyň.';
+
+  @override
+  String get rateLimited => 'Köp synanyşyk, biraz garaşyň';
+
+  @override
+  String get verifyTitle => 'E-poçtaňyzy tassyklaň';
+
+  @override
+  String verifySubtitle(String email) {
+    return '$email salgysyna 6 sanly kod iberdik';
+  }
+
+  @override
+  String get verifyCode => 'Kod';
+
+  @override
+  String get verifyButton => 'Tassykla';
+
+  @override
+  String get resendCode => 'Täze kod iber';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Täze kod $seconds s soň';
+  }
+
+  @override
+  String get codeWrong => 'Kod gabat gelmedi';
+
+  @override
+  String get codeExpired => 'Koduň möhleti gutardy, täzesini iberiň';
+
+  @override
+  String get codeTooMany => 'Köp ýalňyş synanyşyk, täze kod iberiň';
+
+  @override
+  String get codeSent => 'Kod iberildi';
+
+  @override
+  String get signInToSeePlayers => 'Beýleki oýunçylary görmek üçin giriň';
+
+  @override
+  String get signInToSeePlayersBody =>
+      'Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar.';
+
+  @override
+  String accountSignedInAs(String email) {
+    return '$email hökmünde girdiňiz';
+  }
+
+  @override
+  String onbStepOf(int step, int total) {
+    return '$total ädimden $step-nji';
+  }
+
+  @override
+  String get onbPreview => 'Beýleki oýunçylar sizi şeýle görer';
+
+  @override
+  String get accountCardTitle => 'Mugt hasap açyň';
+
+  @override
+  String get accountCardBody =>
+      'Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň.';
+
+  @override
+  String get authWelcomeBack => 'Hoş geldiňiz';
+
+  @override
+  String get authSignInSub => 'Küşt ýolyňyzy dowam etmek üçin giriň.';
+
+  @override
+  String get authCreateTitle => 'Hasabyňyzy açyň';
+
+  @override
+  String get authCreateSub =>
+      'Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň.';
+
+  @override
+  String get authNoAccount => 'Hasabyňyz ýokmy?';
+
+  @override
+  String get authHaveAccount => 'Hasabyňyz barmy?';
+
+  @override
+  String get authPasswordTitle => 'Parol saýlaň';
+
+  @override
+  String get authPasswordSub => 'Onuň bilen hasabyňyza girersiňiz.';
+
+  @override
+  String get passwordWeak => 'Parol gaty ýönekeý';
+
+  @override
+  String get pwRuleLength => 'Iň az 8 nyşan';
+
+  @override
+  String get pwRuleUpper => 'Bir baş harp';
+
+  @override
+  String get pwRuleLower => 'Bir kiçi harp';
+
+  @override
+  String get pwRuleDigit => 'Bir sifr';
+
+  @override
+  String get pwRuleNoName => 'Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn';
+
+  @override
+  String get showPassword => 'Paroly görkez';
+
+  @override
+  String get hidePassword => 'Paroly gizle';
+
+  @override
+  String get learnFirstTitle => 'Ilki göçümleri öwreniň';
+
+  @override
+  String get learnFirstBody =>
+      'Siz «Başlangyç» derejesini saýladyňyz. Çöpleriň nähili ýöreýändigi barada 6 sapagy tamamlaň, şonda Küştüň galan ähli bölümleri açylar. Takmynan 10 minut alar.';
+
+  @override
+  String learnFirstProgress(int done) {
+    return '6 sapakdan $done tamamlandy';
+  }
+
+  @override
+  String get learnFirstKeep => 'Öwrenmegi dowam et';
+
+  @override
+  String get learnFirstSkip => 'Çöpleriň nähili ýöreýändigini bilýärin';
+
+  @override
+  String get friendAdd => 'Dost goş';
+
+  @override
+  String get friendRequested => 'Haýyş iberildi';
+
+  @override
+  String get friendAccept => 'Kabul et';
+
+  @override
+  String get friendDecline => 'Ret et';
+
+  @override
+  String get friendFriends => 'Dostlar';
+
+  @override
+  String friendRemoveTitle(String name) {
+    return '$name dostlaryňyzdan aýrylsynmy?';
+  }
+
+  @override
+  String get friendRemove => 'Aýyr';
+
+  @override
+  String get friendCancel => 'Haýyşy ýatyr';
+
+  @override
+  String get messageButton => 'Hat ýaz';
+
+  @override
+  String get messagesSoon => 'Hatlaşmak ýakyn wagtda goşular';
+
+  @override
+  String get friendRequests => 'Dostluk haýyşlary';
+
+  @override
+  String get friendsSection => 'Dostlaryňyz';
+
+  @override
+  String get everyonePlayers => 'Ähli oýunçylar';
+
+  @override
+  String get wantsToBeFriend => 'Siz bilen dost bolmak isleýär';
+
+  @override
+  String get playerMissing => 'Bu oýunçy tapylmady';
+
+  @override
+  String get photoNotUploaded =>
+      'Suraty ýükläp bolmady. Soňrak täzeden synanyşyň.';
 }

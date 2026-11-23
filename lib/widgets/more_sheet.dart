@@ -7,6 +7,8 @@ import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -452,8 +454,9 @@ class _ReportRow extends StatelessWidget {
   }
 }
 
-/// Logs out, after asking: the player becomes a guest again. Shown only
-/// while there is a profile to log out of.
+/// Logs out, after asking: the player becomes a guest again and is signed
+/// out of their account. Shown only while there is something to log out of.
+/// The one place to log out; the profile has no button of its own.
 class _LogOutRow extends StatelessWidget {
   const _LogOutRow();
 
@@ -473,6 +476,11 @@ class _LogOutRow extends StatelessWidget {
               Navigator.of(sheetContext).pop();
               Navigator.of(context).pop();
               AppStorage.instance.logOut();
+              // Signed in too: out of the account on this phone as well.
+              if (AuthService.instance.state.value.isSignedIn) {
+                AuthService.instance.logout();
+                PlayersRepository.instance.clearCache();
+              }
             },
           ),
           const SizedBox(height: 8),
@@ -492,7 +500,8 @@ class _LogOutRow extends StatelessWidget {
     return ValueListenableBuilder(
       valueListenable: AppStorage.instance.profileListenable(),
       builder: (context, _, _) {
-        if (AppStorage.instance.username == null) {
+        if (AppStorage.instance.username == null &&
+            !AuthService.instance.state.value.isSignedIn) {
           return const SizedBox.shrink();
         }
         return Pressable(

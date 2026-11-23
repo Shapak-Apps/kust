@@ -60,6 +60,17 @@ Without that file a release build falls back to the debug key. Never publish suc
 flutter build apk --release --split-per-abi
 ```
 
+## Connect to the server
+
+Builds talk to the live server at `https://kust.merdanusa.online` (accounts, players list, live presence); a guest plays fully offline either way. To use another server, such as one on your computer, set it with compile-time defines:
+
+```bash
+cp env/dev.example.json env/dev.json
+flutter run --dart-define-from-file=env/dev.json
+```
+
+`API_URL` is the server base: the deployed server's address, or for one running on your computer `http://10.0.2.2:8080` in the Android emulator, `http://localhost:8080` in the iOS simulator. On a real Android phone over USB, forward the port with `adb reverse tcp:8080 tcp:8080` and use `http://127.0.0.1:8080` (`10.0.2.2` only exists inside the emulator). `WS_URL` is optional and defaults to `API_URL` with `ws` or `wss` and `/v1/ws`. Leave both out and the app uses the live server, `https://kust.merdanusa.online`; `--dart-define=API_URL=` (empty) turns networking off. Tests never connect. `env/dev.json` is git-ignored.
+
 ## Translations
 
 Texts live in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_tk.arb`. Turkmen strings that need a native speaker's eye are listed in `l10n/REVIEW_tk.md`.

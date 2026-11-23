@@ -1,0 +1,371 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_sheet.dart';
+import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/board_banner.dart';
+
+/// Another player's profile, opened by tapping them anywhere: their board
+/// banner and photo, name, flag, rating and bio, then what can be done with
+/// them: become friends, and (soon) send a message.
+class PlayerProfileScreen extends StatefulWidget {
+  const PlayerProfileScreen({
+    super.key,
+    required this.username,
+    this.initial,
+    this.repository,
+  });
+
+  final String username;
+
+  /// What the list already knew, shown at once while the rest loads.
+  final Player? initial;
+  final PlayersRepository? repository;
+
+  @override
+  State<PlayerProfileScreen> createState() => _PlayerProfileScreenState();
+}
+
+class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
+  late Player? _player = widget.initial;
+  Friendship? _friendship;
+  bool _busy = false;
+  bool _missing = false;
+
+  PlayersRepository get _repo =>
+      widget.repository ?? PlayersRepository.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final got = await _repo.player(widget.username);
+      if (!mounted) return;
+      setState(() {
+        _player = got.player;
+        _friendship = got.friendship;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.status == 404) setState(() => _missing = true);
+    }
+  }
+
+  /// Runs a friend action, showing its answer at once and undoing it if the
+  /// server says no.
+  Future<void> _act(Future<Friendship> Function() call) async {
+    if (_busy) return;
+    HapticFeedback.selectionClick();
+    setState(() => _busy = true);
+    try {
+      final now = await call();
+      if (mounted) setState(() => _friendship = now);
+    } on ApiException catch (e) {
+      if (mounted) {
+        _say(e.isNetwork ? context.t.noInternet : context.t.genericError);
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<Friendship> _remove() async {
+    await _repo.removeFriend(widget.username);
+    return Friendship.none;
+  }
+
+  void _confirmRemove() {
+    final t = context.t;
+    final name = _player?.displayName ?? widget.username;
+    showKustSheet<void>(
+      context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KustSheetHeader(title: t.friendRemoveTitle(name)),
+          KustButton(
+            label: t.friendRemove,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              _act(_remove);
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.keep,
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheet).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _say(String text) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    final player = _player;
+    final square = MediaQuery.sizeOf(context).width / BoardBanner.files;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: k.bg,
+        body: Stack(
+          children: [
+            if (_missing && player == null)
+              Center(
+                child: Text(
+                  t.playerMissing,
+                  style: k.body.copyWith(color: k.muted),
+                ),
+              )
+            else
+              ListView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.paddingOf(context).bottom + 32,
+                ),
+                children: [
+                  Stack(
+                    children: [
+                      Column(
+                        children: [
+                          BoardBanner(height: square * 2),
+                          const SizedBox(height: 60),
+                        ],
+                      ),
+                      Positioned(
+                        left: 20,
+                        right: 20,
+                        bottom: 0,
+                        child: _identity(context, k, player),
+                      ),
+                    ],
+                  ),
+                  if (player != null && player.bio.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                      child: Text(player.bio, style: k.body),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: _stats(context, k, player),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: _actions(context),
+                  ),
+                ],
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x99000000), Color(0x00000000)],
+                  ),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => context.canPop()
+                              ? context.pop()
+                              : context.go('/players'),
+                          tooltip: t.back,
+                          color: Colors.white,
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _identity(BuildContext context, KustTokens k, Player? player) {
+    final name = player?.displayName ?? widget.username;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: k.bg, width: 3),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: PlayerAvatar(
+            size: 88,
+            name: name,
+            photo: avatarImage(avatarUrlFor(player?.avatarKey)),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: k.title,
+              ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      '@${widget.username}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(color: k.muted),
+                    ),
+                  ),
+                  if (player?.country != null) ...[
+                    const SizedBox(width: 8),
+                    CountryFlag(player!.country!, height: 22),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _stats(BuildContext context, KustTokens k, Player? player) {
+    final t = context.t;
+    final joined = player?.createdAt?.toLocal();
+    Widget stat(String value, String label) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: k.body.copyWith(fontWeight: FontWeight.w800),
+          ),
+          Text(label, style: k.caption),
+        ],
+      ),
+    );
+    return Row(
+      children: [
+        if (joined != null)
+          stat(
+            '${t.dateShort(t.monthsShort.split(',')[joined.month - 1], joined.day)} '
+            '${joined.year}',
+            t.joined,
+          ),
+        stat(player == null ? '–' : '${player.rating}', t.rating),
+      ],
+    );
+  }
+
+  /// The friend button, which says where things stand, and Message.
+  Widget _actions(BuildContext context) {
+    final t = context.t;
+    final message = KustButton(
+      label: t.messageButton,
+      icon: Icons.chat_bubble_outline_rounded,
+      style: KustButtonStyle.outline,
+      onTap: () => _say(t.messagesSoon),
+    );
+    final friendship = _friendship;
+    final busy = _busy || friendship == null;
+    if (friendship == Friendship.incoming) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(t.wantsToBeFriend, style: context.k.caption),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: KustButton(
+                  label: t.friendAccept,
+                  icon: Icons.check_rounded,
+                  onTap: busy
+                      ? null
+                      : () => _act(() => _repo.addFriend(widget.username)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: KustButton(
+                  label: t.friendDecline,
+                  style: KustButtonStyle.secondary,
+                  onTap: busy ? null : () => _act(_remove),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          message,
+        ],
+      );
+    }
+    final friend = switch (friendship) {
+      Friendship.friends => KustButton(
+        label: t.friendFriends,
+        icon: Icons.how_to_reg_rounded,
+        style: KustButtonStyle.secondary,
+        onTap: busy ? null : _confirmRemove,
+      ),
+      Friendship.outgoing => KustButton(
+        label: t.friendRequested,
+        icon: Icons.schedule_send_rounded,
+        style: KustButtonStyle.secondary,
+        // Tapping it again takes the request back.
+        onTap: busy ? null : () => _act(_remove),
+      ),
+      _ => KustButton(
+        label: t.friendAdd,
+        icon: Icons.person_add_alt_1_rounded,
+        onTap: busy ? null : () => _act(() => _repo.addFriend(widget.username)),
+      ),
+    };
+    return Row(
+      children: [
+        Expanded(child: friend),
+        const SizedBox(width: 10),
+        Expanded(child: message),
+      ],
+    );
+  }
+}

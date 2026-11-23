@@ -1,0 +1,198 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/features/auth/auth_support.dart';
+import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/kust_button_3d.dart';
+import 'package:kust/ui/code_boxes.dart';
+import 'package:kust/ui/tokens.dart';
+
+class VerifyEmailScreen extends StatefulWidget {
+  const VerifyEmailScreen({super.key, this.initialCooldown = 0, this.next});
+
+  final int initialCooldown;
+
+  /// Where to go once verified; see [goAfterAuth].
+  final String? next;
+
+  @override
+  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
+  final _code = TextEditingController();
+  Timer? _ticker;
+  int _cooldown = 0;
+  bool _busy = false;
+  String? _error;
+  String? _notice;
+  CodeStatus _status = CodeStatus.typing;
+
+  @override
+  void initState() {
+    super.initState();
+    _code.addListener(_onCode);
+    _startCooldown(widget.initialCooldown);
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    _code.dispose();
+    super.dispose();
+  }
+
+  void _onCode() {
+    setState(() {
+      // Typing again clears the red of a wrong code.
+      if (_code.text.isNotEmpty) _error = null;
+    });
+    if (_code.text.length == 6) _verify();
+  }
+
+  void _startCooldown(int seconds) {
+    _ticker?.cancel();
+    setState(() => _cooldown = seconds);
+    if (seconds <= 0) return;
+    _ticker = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      setState(() => _cooldown = _cooldown - 1);
+      if (_cooldown <= 0) timer.cancel();
+    });
+  }
+
+  Future<void> _verify() async {
+    if (_code.text.length != 6 || _busy) return;
+    final t = context.t;
+    setState(() {
+      _busy = true;
+      _error = null;
+      _notice = null;
+    });
+    try {
+      await AuthService.instance.verifyEmail(_code.text);
+      if (!mounted) return;
+      // Let the green wave run across the boxes before moving on.
+      setState(() => _status = CodeStatus.correct);
+      await Future<void>.delayed(
+        CodeBoxes.wave + const Duration(milliseconds: 250),
+      );
+      if (!mounted) return;
+      goAfterAuth(context, widget.next);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      final wrong = e.code == 'wrong_code';
+      setState(() {
+        _error = authErrorMessage(t, e);
+        if (wrong) _status = CodeStatus.wrong;
+      });
+      if (wrong) {
+        // The red wave and shake, then empty boxes to try again.
+        await Future<void>.delayed(
+          CodeBoxes.wave + const Duration(milliseconds: 150),
+        );
+        if (!mounted) return;
+        final message = _error;
+        _code.clear();
+        setState(() {
+          _status = CodeStatus.typing;
+          _error = message;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _resend() async {
+    if (_cooldown > 0 || _busy) return;
+    final t = context.t;
+    setState(() {
+      _busy = true;
+      _error = null;
+      _notice = null;
+    });
+    try {
+      final wait = await AuthService.instance.resendCode();
+      if (!mounted) return;
+      _code.clear();
+      setState(() => _notice = t.codeSent);
+      _startCooldown(wait);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = authErrorMessage(t, e));
+      if (e.retryAfter != null) _startCooldown(e.retryAfter!);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    await AuthService.instance.logout();
+    await PlayersRepository.instance.clearCache();
+    if (mounted) context.pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final k = context.k;
+    return ValueListenableBuilder<AuthState>(
+      valueListenable: AuthService.instance.state,
+      builder: (context, auth, _) {
+        final email = auth.account?.email ?? '';
+        return AuthPage(
+          title: t.verifyTitle,
+          subtitle: t.verifySubtitle(email),
+          footer: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              KustButton3D(
+                expand: true,
+                label: t.verifyButton,
+                onTap: _code.text.length == 6 && !_busy ? _verify : null,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: _cooldown > 0 || _busy ? null : _resend,
+                    child: Text(
+                      _cooldown > 0 ? t.resendIn(_cooldown) : t.resendCode,
+                      style: TextStyle(
+                        color: _cooldown > 0 ? k.muted : KustTokens.gold,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : _signOut,
+                    child: Text(t.signOut, style: TextStyle(color: k.muted)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          children: [
+            Semantics(
+              label: t.verifyCode,
+              child: CodeBoxes(controller: _code, status: _status),
+            ),
+            if (_notice != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
+                child: Text(_notice!, style: k.body.copyWith(color: k.success)),
+              ),
+            ErrorLine(_error),
+          ],
+        );
+      },
+    );
+  }
+}

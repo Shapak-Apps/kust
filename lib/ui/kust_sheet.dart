@@ -135,8 +135,10 @@ class _SheetFrameState extends State<_SheetFrame> {
               constraints: BoxConstraints(maxHeight: maxHeight, maxWidth: 560),
               child: SizedBox(
                 width: double.infinity,
+                // The gesture bar's space or 20, whichever is more; not both.
                 child: SafeArea(
                   top: false,
+                  minimum: const EdgeInsets.only(bottom: 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -152,7 +154,7 @@ class _SheetFrameState extends State<_SheetFrame> {
                       Flexible(
                         child: SingleChildScrollView(
                           physics: const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                           child: widget.child,
                         ),
                       ),

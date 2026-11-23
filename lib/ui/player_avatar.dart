@@ -32,15 +32,15 @@ class PlayerAvatar extends StatelessWidget {
           borderRadius: BorderRadius.circular(3),
           color: k.surfaceAlt,
           border: Border.all(color: k.line),
-          image: photo == null
-              ? null
-              : DecorationImage(image: photo, fit: BoxFit.cover),
         ),
         clipBehavior: Clip.antiAlias,
-        child: photo != null
-            ? null
-            : initial != null
-            ? Center(
+        // The letter (or silhouette) always sits underneath, so a photo
+        // still loading, or one that fails to load, never leaves a hole.
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (initial != null)
+              Center(
                 child: Text(
                   initial,
                   style: k.title.copyWith(
@@ -50,8 +50,9 @@ class PlayerAvatar extends StatelessWidget {
                   ),
                 ),
               )
-            // The ghost: a muted silhouette in the middle.
-            : Align(
+            else
+              // The ghost: a muted silhouette in the middle.
+              Align(
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.person_rounded,
@@ -59,7 +60,25 @@ class PlayerAvatar extends StatelessWidget {
                   color: k.muted.withValues(alpha: 0.55),
                 ),
               ),
+            if (photo != null)
+              Image(
+                image: photo,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                frameBuilder: (context, child, frame, sync) => AnimatedOpacity(
+                  opacity: sync || frame != null ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: child,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
+
+/// A player's photo from the server, or null when they have none.
+ImageProvider? avatarImage(String? url) =>
+    url == null ? null : NetworkImage(url);

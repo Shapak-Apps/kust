@@ -26,6 +26,10 @@ dependencies:
     sdk: flutter
   intl: ^0.20.3
   image_picker: ^1.2.4
+  dio: ^5.11.1
+  web_socket_channel: ^3.0.3
+  connectivity_plus: ^7.3.2
+  flutter_secure_storage: ^11.2.0
 
 dependency_overrides:
   stockfish:

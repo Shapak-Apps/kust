@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:kust/features/learn/learn_screen.dart';
 import 'package:kust/features/learn/lesson_screen.dart';
 import 'package:kust/features/review/retry_screen.dart';
@@ -5,7 +6,14 @@ import 'package:kust/features/review/review_screen.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievements_screen.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/features/auth/login_screen.dart';
+import 'package:kust/features/auth/register_screen.dart';
+import 'package:kust/features/auth/verify_email_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
+import 'package:kust/features/players/player_profile_screen.dart';
+import 'package:kust/core/net/account.dart';
+import 'package:kust/features/players/players_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/play_screen.dart';
@@ -25,7 +33,15 @@ GoRouter createRouter({required bool onboardingCompleted}) {
     routes: [
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => OnboardingScreen(),
+        // Keyed by the step, so coming back from signing in starts afresh.
+        builder: (context, state) => OnboardingScreen(
+          key: ValueKey(state.uri.queryParameters['step']),
+          initialStep: switch (state.uri.queryParameters['step']) {
+            'name' => 1,
+            'level' => 2,
+            _ => 0,
+          },
+        ),
       ),
 
       GoRoute(
@@ -63,6 +79,42 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/login',
+        builder: (context, state) =>
+            LoginScreen(next: state.uri.queryParameters['next']),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) =>
+            RegisterScreen(next: state.uri.queryParameters['next']),
+      ),
+      GoRoute(
+        path: '/verify',
+        builder: (context, state) => VerifyEmailScreen(
+          initialCooldown: state.extra is int ? state.extra as int : 0,
+          next: state.uri.queryParameters['next'],
+        ),
+      ),
+      GoRoute(
+        path: '/players',
+        redirect: (context, state) {
+          final auth = AuthService.instance.state.value;
+          if (auth.status == AuthStatus.signedOut) return '/login';
+          if (auth.isSignedIn && !auth.isVerified) return '/verify';
+          return null;
+        },
+        builder: (context, state) => const PlayersScreen(),
+      ),
+
+      GoRoute(
+        path: '/player/:username',
+        builder: (context, state) => PlayerProfileScreen(
+          username: state.pathParameters['username']!,
+          initial: state.extra is Player ? state.extra as Player : null,
+        ),
       ),
 
       GoRoute(

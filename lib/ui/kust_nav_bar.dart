@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/ui/motion.dart';
+import 'package:kust/widgets/offline_bar.dart';
 
 const double _barHeight = 62;
 
@@ -33,15 +34,19 @@ class KustNavBar extends StatelessWidget {
     required this.selectedIndex,
     required this.items,
     required this.onSelected,
+    this.footer,
   });
 
   final int selectedIndex;
   final List<KustNavItem> items;
   final ValueChanged<int> onSelected;
 
+  /// Shown under the tabs down to the bottom edge; the offline strip.
+  final Widget? footer;
+
   /// Space content must leave at the bottom so nothing hides under the bar.
   static double clearance(BuildContext context) =>
-      MediaQuery.of(context).padding.bottom + 64 + 8 + 12;
+      bottomGap(context, min: 0) + 64 + 8 + 12;
 
   @override
   Widget build(BuildContext context) {
@@ -65,30 +70,38 @@ class KustNavBar extends StatelessWidget {
             stops: const [0, 0.4, 0.7, 1],
           ),
         ),
-        child: SafeArea(
-          top: false,
+        // The offline strip runs to the bottom edge itself; without it the
+        // tabs keep clear of the gesture bar.
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomGap(context, min: 0)),
           child: Padding(
             padding: const EdgeInsets.only(top: 22),
-            child: SizedBox(
-              height: _barHeight,
-              child: Row(
-                children: [
-                  for (var i = 0; i < items.length; i++)
-                    Expanded(
-                      child: _NavButton(
-                        item: items[i],
-                        selected: i == selectedIndex,
-                        dark: isDark,
-                        onTap: () {
-                          if (i != selectedIndex) {
-                            HapticFeedback.selectionClick();
-                          }
-                          onSelected(i);
-                        },
-                      ),
-                    ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: _barHeight,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < items.length; i++)
+                        Expanded(
+                          child: _NavButton(
+                            item: items[i],
+                            selected: i == selectedIndex,
+                            dark: isDark,
+                            onTap: () {
+                              if (i != selectedIndex) {
+                                HapticFeedback.selectionClick();
+                              }
+                              onSelected(i);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                ?footer,
+              ],
             ),
           ),
         ),

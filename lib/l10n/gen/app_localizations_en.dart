@@ -1875,4 +1875,264 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get searchCountries => 'Search countries';
+
+  @override
+  String get offlineBanner => 'You\'re offline';
+
+  @override
+  String get backOnlineBanner => 'Back online';
+
+  @override
+  String get playersTitle => 'Players';
+
+  @override
+  String get playersSearch => 'Search players';
+
+  @override
+  String get playersEmpty => 'No players found';
+
+  @override
+  String get playersLoadFailed => 'Couldn\'t load players';
+
+  @override
+  String get playersSaved => 'Showing your saved list';
+
+  @override
+  String get allPlayers => 'All players';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get haveAccount => 'I already have an account';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get emailOrUsername => 'Email or username';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get confirmPassword => 'Confirm password';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get usernameTaken => 'That username is taken';
+
+  @override
+  String get usernameFree => 'Username is free';
+
+  @override
+  String get usernameReserved => 'That username is reserved';
+
+  @override
+  String get invalidEmail => 'Enter a valid email';
+
+  @override
+  String get passwordShort => 'At least 8 characters';
+
+  @override
+  String get passwordsDiffer => 'Passwords don\'t match';
+
+  @override
+  String get invalidCredentials => 'Wrong email, username or password';
+
+  @override
+  String get emailTaken => 'An account with this email already exists';
+
+  @override
+  String get noInternet => 'No connection. Try again when you\'re online.';
+
+  @override
+  String get genericError => 'Something went wrong. Try again.';
+
+  @override
+  String get rateLimited => 'Too many tries, wait a moment';
+
+  @override
+  String get verifyTitle => 'Verify your email';
+
+  @override
+  String verifySubtitle(String email) {
+    return 'We sent a 6-digit code to $email';
+  }
+
+  @override
+  String get verifyCode => 'Code';
+
+  @override
+  String get verifyButton => 'Verify';
+
+  @override
+  String get resendCode => 'Send a new code';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Send a new code in ${seconds}s';
+  }
+
+  @override
+  String get codeWrong => 'That code doesn\'t match';
+
+  @override
+  String get codeExpired => 'That code expired, send a new one';
+
+  @override
+  String get codeTooMany => 'Too many wrong tries, send a new code';
+
+  @override
+  String get codeSent => 'Code sent';
+
+  @override
+  String get signInToSeePlayers => 'Sign in to see other players';
+
+  @override
+  String get signInToSeePlayersBody =>
+      'Players are visible to signed-in members. Your games and progress stay on your phone either way.';
+
+  @override
+  String accountSignedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String onbStepOf(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get onbPreview => 'How other players will see you';
+
+  @override
+  String get accountCardTitle => 'Get a free account';
+
+  @override
+  String get accountCardBody =>
+      'See who\'s online, find players and keep your profile on any phone.';
+
+  @override
+  String get authWelcomeBack => 'Welcome back';
+
+  @override
+  String get authSignInSub => 'Sign in to continue your chess journey.';
+
+  @override
+  String get authCreateTitle => 'Create your account';
+
+  @override
+  String get authCreateSub =>
+      'Keep your progress safe and play with real people.';
+
+  @override
+  String get authNoAccount => 'Don\'t have an account?';
+
+  @override
+  String get authHaveAccount => 'Already have an account?';
+
+  @override
+  String get authPasswordTitle => 'Choose a password';
+
+  @override
+  String get authPasswordSub => 'You\'ll use it to sign in.';
+
+  @override
+  String get passwordWeak => 'That password is too weak';
+
+  @override
+  String get pwRuleLength => 'At least 8 characters';
+
+  @override
+  String get pwRuleUpper => 'One capital letter';
+
+  @override
+  String get pwRuleLower => 'One small letter';
+
+  @override
+  String get pwRuleDigit => 'One digit';
+
+  @override
+  String get pwRuleNoName => 'Not your username or email';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get learnFirstTitle => 'Learn the moves first';
+
+  @override
+  String get learnFirstBody =>
+      'You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes.';
+
+  @override
+  String learnFirstProgress(int done) {
+    return '$done of 6 done';
+  }
+
+  @override
+  String get learnFirstKeep => 'Continue learning';
+
+  @override
+  String get learnFirstSkip => 'I already know how the pieces move';
+
+  @override
+  String get friendAdd => 'Add friend';
+
+  @override
+  String get friendRequested => 'Request sent';
+
+  @override
+  String get friendAccept => 'Accept';
+
+  @override
+  String get friendDecline => 'Decline';
+
+  @override
+  String get friendFriends => 'Friends';
+
+  @override
+  String friendRemoveTitle(String name) {
+    return 'Remove $name from your friends?';
+  }
+
+  @override
+  String get friendRemove => 'Remove';
+
+  @override
+  String get friendCancel => 'Cancel request';
+
+  @override
+  String get messageButton => 'Message';
+
+  @override
+  String get messagesSoon => 'Messages are coming soon';
+
+  @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get friendsSection => 'Your friends';
+
+  @override
+  String get everyonePlayers => 'Everyone';
+
+  @override
+  String get wantsToBeFriend => 'Wants to be your friend';
+
+  @override
+  String get playerMissing => 'This player can\'t be found';
+
+  @override
+  String get photoNotUploaded =>
+      'Couldn\'t upload your photo. Try again later.';
 }

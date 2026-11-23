@@ -57,6 +57,12 @@ void main() {
     });
   });
 
+  test('a username is suggested from the name', () {
+    expect(suggestUsername('Aýna Şükürowa'), 'ayna_sukurowa');
+    expect(suggestUsername('  Merdan  '), 'merdan');
+    expect(suggestUsername('Мердан'), '');
+  });
+
   group('OnboardingScreen', () {
     Widget app() =>
         MaterialApp(theme: appTheme, home: const OnboardingScreen());

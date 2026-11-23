@@ -8,6 +8,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/core/net/connection_service.dart';
+import 'package:kust/core/net/live_socket.dart';
+import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/warm_up.dart';
@@ -72,5 +77,51 @@ Future<void> _start() async {
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);
   runApp(ProviderScope(child: MyApp(router: router)));
+  if (ServerConfig.enabled) _startServerLink();
   unawaited(warmBoards());
+}
+
+void _startServerLink() {
+  AuthService.instance.state.addListener(_syncLiveSocket);
+  AuthService.instance.state.addListener(_syncRating);
+  PlayerRatingStore.instance.listenable().addListener(_syncRating);
+  unawaited(AuthService.instance.restore());
+}
+
+bool _sendingRating = false;
+
+/// Bot games are played on the phone, so the server learns the player's
+/// rating from here: on sign-in and after every rated game. Each answer
+/// updates the account, which calls this again and stops once they agree.
+void _syncRating() {
+  final auth = AuthService.instance.state.value;
+  final local = PlayerRatingStore.instance.rating.clamp(100, 3500);
+  if (!auth.isSignedIn || _sendingRating || auth.account?.rating == local) {
+    return;
+  }
+  _sendingRating = true;
+  AuthService.instance.updateProfile(rating: local).then<void>(
+    (_) {
+      _sendingRating = false;
+      _syncRating(); // In case it changed while this was on its way.
+    },
+    // Offline or refused: tried again on the next change or sign-in.
+    onError: (Object _) => _sendingRating = false,
+  );
+}
+
+/// Signed in: watch the connection; verified too: join the live server.
+/// Signed out, the app is fully offline and never says so.
+void _syncLiveSocket() {
+  final auth = AuthService.instance.state.value;
+  if (auth.isSignedIn) {
+    ConnectionService.instance.start();
+  } else {
+    ConnectionService.instance.stop();
+  }
+  if (auth.isVerified) {
+    LiveSocket.instance.connect();
+  } else {
+    unawaited(LiveSocket.instance.close());
+  }
 }
