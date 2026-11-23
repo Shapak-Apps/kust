@@ -2044,4 +2044,28 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get authHaveAccount => 'Уже есть аккаунт?';
+
+  @override
+  String get authPasswordTitle => 'Придумайте пароль';
+
+  @override
+  String get authPasswordSub => 'С ним вы будете входить в аккаунт.';
+
+  @override
+  String get passwordWeak => 'Слишком простой пароль';
+
+  @override
+  String get pwRuleLength => 'Не меньше 8 символов';
+
+  @override
+  String get pwRuleUpper => 'Одна заглавная буква';
+
+  @override
+  String get pwRuleLower => 'Одна строчная буква';
+
+  @override
+  String get pwRuleDigit => 'Одна цифра';
+
+  @override
+  String get pwRuleNoName => 'Без имени пользователя и почты';
 }

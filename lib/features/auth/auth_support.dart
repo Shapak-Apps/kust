@@ -38,7 +38,7 @@ String authErrorMessage(AppL10n t, ApiException e) {
     case 'invalid_email':
       return t.invalidEmail;
     case 'invalid_password':
-      return t.passwordShort;
+      return t.passwordWeak;
     case 'rate_limited':
     case 'resend_wait':
       return t.rateLimited;
@@ -91,6 +91,8 @@ class AuthPage extends StatelessWidget {
     this.subtitle,
     this.footer,
     this.onSkip,
+    this.onBack,
+    this.step,
   });
 
   final String title;
@@ -100,6 +102,12 @@ class AuthPage extends StatelessWidget {
 
   /// Shown as "Skip for now" at the top right when set.
   final VoidCallback? onSkip;
+
+  /// Back within the screen (sign-up's second step); else the screen closes.
+  final VoidCallback? onBack;
+
+  /// For sign-up: "Step 1 of 2" over the title.
+  final int? step;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +126,7 @@ class AuthPage extends StatelessWidget {
                   KustIconButton(
                     icon: Icons.arrow_back_rounded,
                     label: context.t.back,
-                    onTap: () => Navigator.of(context).maybePop(),
+                    onTap: onBack ?? () => Navigator.of(context).maybePop(),
                   ),
                   const Spacer(),
                   if (onSkip != null)
@@ -141,6 +149,13 @@ class AuthPage extends StatelessWidget {
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                 children: [
+                  if (step != null) ...[
+                    Text(
+                      context.t.onbStepOf(step!, 2),
+                      style: k.caption.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
                   Text(title, style: k.display),
                   if (subtitle != null) ...[
                     const SizedBox(height: 8),
@@ -239,6 +254,78 @@ class ErrorLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 12, 4, 0),
       child: Text(text!, style: k.body.copyWith(color: k.danger)),
+    );
+  }
+}
+
+/// Whether [password] meets each rule the server checks, in the order the
+/// checklist shows them: length, capital, small letter, digit, and not
+/// built on the username or the email's name.
+List<bool> passwordRules(String password, String username, String email) {
+  final low = password.toLowerCase();
+  final at = email.lastIndexOf('@');
+  final name = at > 0 ? email.substring(0, at) : email;
+  bool holds(String part) =>
+      part.length >= 3 && low.contains(part.toLowerCase());
+  return [
+    password.runes.length >= 8,
+    password.toLowerCase() != password,
+    password.toUpperCase() != password,
+    RegExp(r'\d').hasMatch(password),
+    password.isNotEmpty && !holds(username) && !holds(name),
+  ];
+}
+
+/// The password rules under the field, each ticked green once met.
+class PasswordChecklist extends StatelessWidget {
+  const PasswordChecklist({super.key, required this.rules});
+
+  final List<bool> rules;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    final labels = [
+      t.pwRuleLength,
+      t.pwRuleUpper,
+      t.pwRuleLower,
+      t.pwRuleDigit,
+      t.pwRuleNoName,
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 150),
+                    child: Icon(
+                      rules[i]
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      key: ValueKey(rules[i]),
+                      size: 16,
+                      color: rules[i] ? k.success : k.muted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    labels[i],
+                    style: k.caption.copyWith(
+                      color: rules[i] ? k.ink : k.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

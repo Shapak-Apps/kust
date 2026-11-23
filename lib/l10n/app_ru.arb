@@ -598,5 +598,13 @@
   "authCreateTitle": "Создайте аккаунт",
   "authCreateSub": "Сохраните прогресс и играйте с живыми людьми.",
   "authNoAccount": "Нет аккаунта?",
-  "authHaveAccount": "Уже есть аккаунт?"
+  "authHaveAccount": "Уже есть аккаунт?",
+  "authPasswordTitle": "Придумайте пароль",
+  "authPasswordSub": "С ним вы будете входить в аккаунт.",
+  "passwordWeak": "Слишком простой пароль",
+  "pwRuleLength": "Не меньше 8 символов",
+  "pwRuleUpper": "Одна заглавная буква",
+  "pwRuleLower": "Одна строчная буква",
+  "pwRuleDigit": "Одна цифра",
+  "pwRuleNoName": "Без имени пользователя и почты"
 }

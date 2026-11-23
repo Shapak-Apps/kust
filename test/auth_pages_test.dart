@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/features/auth/login_screen.dart';
 import 'package:kust/theme.dart';
 
@@ -24,5 +25,17 @@ void main() {
     expect(find.textContaining("Don't have an account?"), findsOneWidget);
     expect(find.text("You're offline"), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  test('password rules match the server', () {
+    expect(
+      passwordRules('Kust-Chess-42', 'merdan', 'm@x.io'),
+      everyElement(true),
+    );
+    expect(passwordRules('kustchess42', 'merdan', 'm@x.io')[1], isFalse);
+    expect(passwordRules('KUSTCHESS42', 'merdan', 'm@x.io')[2], isFalse);
+    expect(passwordRules('KustChess', 'merdan', 'm@x.io')[3], isFalse);
+    expect(passwordRules('Merdan2026x', 'merdan', 'm@x.io')[4], isFalse);
+    expect(passwordRules('Short1a', 'merdan', 'm@x.io')[0], isFalse);
   });
 }

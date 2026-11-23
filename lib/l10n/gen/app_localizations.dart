@@ -3692,6 +3692,54 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Already have an account?'**
   String get authHaveAccount;
+
+  /// No description provided for @authPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password'**
+  String get authPasswordTitle;
+
+  /// No description provided for @authPasswordSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll use it to sign in.'**
+  String get authPasswordSub;
+
+  /// No description provided for @passwordWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is too weak'**
+  String get passwordWeak;
+
+  /// No description provided for @pwRuleLength.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get pwRuleLength;
+
+  /// No description provided for @pwRuleUpper.
+  ///
+  /// In en, this message translates to:
+  /// **'One capital letter'**
+  String get pwRuleUpper;
+
+  /// No description provided for @pwRuleLower.
+  ///
+  /// In en, this message translates to:
+  /// **'One small letter'**
+  String get pwRuleLower;
+
+  /// No description provided for @pwRuleDigit.
+  ///
+  /// In en, this message translates to:
+  /// **'One digit'**
+  String get pwRuleDigit;
+
+  /// No description provided for @pwRuleNoName.
+  ///
+  /// In en, this message translates to:
+  /// **'Not your username or email'**
+  String get pwRuleNoName;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

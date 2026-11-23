@@ -2041,4 +2041,28 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get authHaveAccount => 'Hasabyňyz barmy?';
+
+  @override
+  String get authPasswordTitle => 'Parol saýlaň';
+
+  @override
+  String get authPasswordSub => 'Onuň bilen hasabyňyza girersiňiz.';
+
+  @override
+  String get passwordWeak => 'Parol gaty ýönekeý';
+
+  @override
+  String get pwRuleLength => 'Iň az 8 nyşan';
+
+  @override
+  String get pwRuleUpper => 'Bir baş harp';
+
+  @override
+  String get pwRuleLower => 'Bir kiçi harp';
+
+  @override
+  String get pwRuleDigit => 'Bir san';
+
+  @override
+  String get pwRuleNoName => 'Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn';
 }

@@ -88,12 +88,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String get _emailText => _email.text.trim();
   bool get _emailOk => _emailPattern.hasMatch(_emailText);
-  bool get _passwordOk => _password.text.length >= 8;
+  bool get _passwordOk =>
+      passwordRules(_password.text, _username.text, _emailText).every((r) => r);
   bool get _confirmOk => _confirm.text == _password.text;
   bool get _usernameOk =>
       AppStorage.usernamePattern.hasMatch(_username.text) &&
       _check != _UsernameCheck.taken &&
       _check != _UsernameCheck.reserved;
+
+  /// Sign-up comes in two steps, so it never asks for four things at once:
+  /// email and username, then the password.
+  int _stage = 0;
+
+  bool get _firstOk =>
+      _emailOk && _usernameOk && _check != _UsernameCheck.checking;
 
   bool get _valid =>
       _emailOk &&
@@ -120,7 +128,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       context.pushReplacement(withNext('/verify', widget.next), extra: 60);
     } on ApiException catch (e) {
-      if (mounted) setState(() => _error = authErrorMessage(t, e));
+      if (!mounted) return;
+      setState(() {
+        _error = authErrorMessage(t, e);
+        // A problem with the email or username belongs to the first step.
+        if (const {
+          'email_taken',
+          'username_taken',
+          'invalid_email',
+          'invalid_username',
+          'reserved_username',
+        }.contains(e.code)) {
+          _stage = 0;
+        }
+      });
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -135,84 +156,113 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _ => null,
     };
     final next = widget.next;
-    return AuthPage(
-      title: t.authCreateTitle,
-      subtitle: t.authCreateSub,
-      onSkip: next == null ? null : () => context.go(next),
-      footer: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          KustButton3D(
-            expand: true,
-            label: t.createAccount,
-            onTap: _valid && !_busy ? _submit : null,
-          ),
-          AuthSwitch(
-            prompt: t.authHaveAccount,
-            action: t.signIn,
-            onTap: _busy
-                ? null
-                : () => context.pushReplacement(withNext('/login', next)),
-          ),
-        ],
+    final first = _stage == 0;
+    final rules = passwordRules(_password.text, _username.text, _emailText);
+    return PopScope(
+      canPop: first,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _stage = 0);
+      },
+      child: AuthPage(
+        step: _stage + 1,
+        title: first ? t.authCreateTitle : t.authPasswordTitle,
+        subtitle: first ? t.authCreateSub : t.authPasswordSub,
+        onBack: first ? null : () => setState(() => _stage = 0),
+        onSkip: next == null ? null : () => context.go(next),
+        footer: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            KustButton3D(
+              expand: true,
+              label: first ? t.cont : t.createAccount,
+              onTap: _busy
+                  ? null
+                  : first
+                  ? (_firstOk
+                        ? () => setState(() {
+                            _stage = 1;
+                            _error = null;
+                          })
+                        : null)
+                  : (_valid ? _submit : null),
+            ),
+            AuthSwitch(
+              prompt: t.authHaveAccount,
+              action: t.signIn,
+              onTap: _busy
+                  ? null
+                  : () => context.pushReplacement(withNext('/login', next)),
+            ),
+          ],
+        ),
+        children: first
+            ? [
+                KustTextField(
+                  key: const ValueKey('email'),
+                  controller: _email,
+                  maxLength: 254,
+                  autofocus: true,
+                  icon: Icons.mail_outline_rounded,
+                  hint: t.emailLabel,
+                  action: TextInputAction.next,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  errorText: _email.text.isNotEmpty && !_emailOk
+                      ? t.invalidEmail
+                      : null,
+                ),
+                fieldGap,
+                KustTextField.username(
+                  key: const ValueKey('username'),
+                  controller: _username,
+                  icon: Icons.alternate_email_rounded,
+                  hint: t.username,
+                  action: TextInputAction.done,
+                  onChanged: _scheduleCheck,
+                  onSubmitted: (_) {
+                    if (_firstOk) setState(() => _stage = 1);
+                  },
+                  errorText: usernameError,
+                  helper: _check == _UsernameCheck.free
+                      ? t.usernameFree
+                      : t.usernameRule,
+                ),
+                ErrorLine(_error),
+              ]
+            : [
+                KustTextField(
+                  key: const ValueKey('password'),
+                  controller: _password,
+                  maxLength: 128,
+                  obscure: true,
+                  autofocus: true,
+                  icon: Icons.lock_outline_rounded,
+                  hint: t.passwordLabel,
+                  action: TextInputAction.next,
+                  keyboardType: TextInputType.visiblePassword,
+                  autofillHints: const [AutofillHints.newPassword],
+                ),
+                const SizedBox(height: 10),
+                PasswordChecklist(rules: rules),
+                fieldGap,
+                KustTextField(
+                  key: const ValueKey('confirm'),
+                  controller: _confirm,
+                  maxLength: 128,
+                  obscure: true,
+                  icon: Icons.lock_outline_rounded,
+                  hint: t.confirmPassword,
+                  action: TextInputAction.done,
+                  keyboardType: TextInputType.visiblePassword,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onSubmitted: (_) => _submit(),
+                  errorText: _confirm.text.isNotEmpty && !_confirmOk
+                      ? t.passwordsDiffer
+                      : null,
+                ),
+                ErrorLine(_error),
+              ],
       ),
-      children: [
-        KustTextField(
-          controller: _email,
-          maxLength: 254,
-          autofocus: true,
-          icon: Icons.mail_outline_rounded,
-          hint: t.emailLabel,
-          action: TextInputAction.next,
-          keyboardType: TextInputType.emailAddress,
-          autofillHints: const [AutofillHints.email],
-          errorText: _email.text.isNotEmpty && !_emailOk
-              ? t.invalidEmail
-              : null,
-        ),
-        fieldGap,
-        KustTextField.username(
-          controller: _username,
-          icon: Icons.alternate_email_rounded,
-          hint: t.username,
-          action: TextInputAction.next,
-          onChanged: _scheduleCheck,
-          errorText: usernameError,
-          helper: _check == _UsernameCheck.free
-              ? t.usernameFree
-              : t.usernameRule,
-        ),
-        fieldGap,
-        KustTextField(
-          controller: _password,
-          maxLength: 128,
-          obscure: true,
-          icon: Icons.lock_outline_rounded,
-          hint: t.passwordLabel,
-          action: TextInputAction.next,
-          keyboardType: TextInputType.visiblePassword,
-          autofillHints: const [AutofillHints.newPassword],
-          errorText: _password.text.isNotEmpty && !_passwordOk
-              ? t.passwordShort
-              : null,
-        ),
-        fieldGap,
-        KustTextField(
-          controller: _confirm,
-          maxLength: 128,
-          obscure: true,
-          icon: Icons.lock_outline_rounded,
-          hint: t.confirmPassword,
-          action: TextInputAction.done,
-          keyboardType: TextInputType.visiblePassword,
-          autofillHints: const [AutofillHints.newPassword],
-          onSubmitted: (_) => _submit(),
-          errorText: _confirm.text.isNotEmpty && !_confirmOk
-              ? t.passwordsDiffer
-              : null,
-        ),
-        ErrorLine(_error),
-      ],
     );
   }
 }

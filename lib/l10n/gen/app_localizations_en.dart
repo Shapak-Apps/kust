@@ -2036,4 +2036,28 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get authHaveAccount => 'Already have an account?';
+
+  @override
+  String get authPasswordTitle => 'Choose a password';
+
+  @override
+  String get authPasswordSub => 'You\'ll use it to sign in.';
+
+  @override
+  String get passwordWeak => 'That password is too weak';
+
+  @override
+  String get pwRuleLength => 'At least 8 characters';
+
+  @override
+  String get pwRuleUpper => 'One capital letter';
+
+  @override
+  String get pwRuleLower => 'One small letter';
+
+  @override
+  String get pwRuleDigit => 'One digit';
+
+  @override
+  String get pwRuleNoName => 'Not your username or email';
 }
