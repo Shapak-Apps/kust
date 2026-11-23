@@ -67,3 +67,6 @@ android/key.properties
 
 # Engine networks packed by tools/pack_nnue.py. Never commit these (73MB).
 /assets/engine/*.gz
+
+# Gradle output
+/android/build/
