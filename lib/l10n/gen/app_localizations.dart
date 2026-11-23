@@ -3878,6 +3878,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Couldn\'t upload your photo. Try again later.'**
   String get photoNotUploaded;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @notifEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new yet. Friend requests will show up here.'**
+  String get notifEmpty;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

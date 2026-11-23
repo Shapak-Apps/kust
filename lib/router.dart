@@ -11,8 +11,10 @@ import 'package:kust/features/auth/login_screen.dart';
 import 'package:kust/features/auth/register_screen.dart';
 import 'package:kust/features/auth/verify_email_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
+import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/players/player_profile_screen.dart';
 import 'package:kust/core/net/account.dart';
+import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/players/players_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
@@ -110,7 +112,18 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       ),
 
       GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+
+      GoRoute(
         path: '/player/:username',
+        // Me: my own profile; nobody sees themselves as others do.
+        redirect: (context, state) =>
+            state.pathParameters['username'] ==
+                AuthService.instance.state.value.account?.username
+            ? '/profile'
+            : null,
         builder: (context, state) => PlayerProfileScreen(
           username: state.pathParameters['username']!,
           initial: state.extra is Player ? state.extra as Player : null,
@@ -130,6 +143,8 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         path: '/history/:id',
         builder: (context, state) => ReplayScreen(
           gameId: state.pathParameters['id']!,
+          // Another player's game comes with it; mine is read from the phone.
+          record: state.extra is GameRecord ? state.extra as GameRecord : null,
           initialPly: int.tryParse(state.uri.queryParameters['ply'] ?? '') ?? 0,
         ),
       ),

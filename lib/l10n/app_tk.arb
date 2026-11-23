@@ -629,5 +629,7 @@
   "everyonePlayers": "Ähli oýunçylar",
   "wantsToBeFriend": "Siz bilen dost bolmak isleýär",
   "playerMissing": "Bu oýunçy tapylmady",
-  "photoNotUploaded": "Suraty ýükläp bolmady. Soňrak täzeden synanyşyň."
+  "photoNotUploaded": "Suraty ýükläp bolmady. Soňrak täzeden synanyşyň.",
+  "notifications": "Habarnamalar",
+  "notifEmpty": "Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner."
 }

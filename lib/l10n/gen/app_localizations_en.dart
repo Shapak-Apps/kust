@@ -2135,4 +2135,11 @@ class AppL10nEn extends AppL10n {
   @override
   String get photoNotUploaded =>
       'Couldn\'t upload your photo. Try again later.';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get notifEmpty =>
+      'Nothing new yet. Friend requests will show up here.';
 }

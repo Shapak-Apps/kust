@@ -16,6 +16,7 @@ import 'package:kust/features/play/pick_opponent_modal.dart';
 import 'package:kust/features/play/pick_side_modal.dart';
 import 'package:kust/features/play/pick_time_modal.dart';
 import 'package:kust/features/play/play_mode_modal.dart';
+import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_button_3d.dart';
@@ -277,18 +278,28 @@ class _PlayScreenState extends State<PlayScreen> {
                 translucent: scrolled,
                 title: 'Küşt',
                 brand: const KustLogo(height: 22),
-                leading: Semantics(
-                  button: true,
-                  label: context.t.profile,
-                  child: Pressable(
-                    onTap: () => context.push('/profile'),
-                    child: PlayerAvatar(
-                      name: name,
-                      photo: AppStorage.instance.photoPath == null
-                          ? null
-                          : FileImage(io.File(AppStorage.instance.photoPath!)),
+                // My avatar, and beside it the bell for what is waiting.
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Semantics(
+                      button: true,
+                      label: context.t.profile,
+                      child: Pressable(
+                        onTap: () => context.push('/profile'),
+                        child: PlayerAvatar(
+                          name: name,
+                          photo: AppStorage.instance.photoPath == null
+                              ? null
+                              : FileImage(
+                                  io.File(AppStorage.instance.photoPath!),
+                                ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    const NotificationsBell(),
+                  ],
                 ),
                 trailing: [
                   KustIconButton(

@@ -45,6 +45,23 @@ void main() {
           'incoming': [_player('bob')],
           'outgoing': [],
         }),
+        'GET /v1/players/bob/games' => jsonBody({
+          'games': [
+            {
+              'id': 'g1',
+              'playedAt': 1763900000000,
+              'result': 'win',
+              'uci': ['e2e4'],
+              'san': ['e4'],
+              'botName': 'Mark',
+            },
+            {'broken': true},
+          ],
+          'total': 7,
+        }),
+        'GET /v1/players/bob/achievements' => jsonBody({
+          'achievements': {'firstMove': 1763900000000},
+        }),
         'PUT /v1/me/avatar' => jsonBody({
           'user': {
             ..._session()['user'] as Map<String, dynamic>,
@@ -92,5 +109,21 @@ void main() {
     expect(put.headers['Content-Type'] ?? put.contentType, 'image/jpeg');
     expect(put.headers['Authorization'], 'Bearer a');
     expect(adapter.streamed.last, [0xff, 0xd8, 0xff, 1, 2, 3]);
+  });
+
+  test("another player's games and achievements", () async {
+    final g = await repo.games('bob', limit: 10);
+    expect(g.total, 7);
+    expect(g.games.single.id, 'g1');
+    expect(g.games.single.botName, 'Mark');
+    expect(adapter.requests.last.queryParameters['limit'], '10');
+    final a = await repo.achievements('bob');
+    expect(a['firstMove'], DateTime.fromMillisecondsSinceEpoch(1763900000000));
+  });
+
+  test('reading friends fills the bell count', () async {
+    expect(repo.incoming.value, isEmpty);
+    await repo.refreshIncoming();
+    expect(repo.incoming.value.single.username, 'bob');
   });
 }

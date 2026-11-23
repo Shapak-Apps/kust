@@ -1202,5 +1202,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notifications": "Notifications",
+  "notifEmpty": "Nothing new yet. Friend requests will show up here."
 }

@@ -63,6 +63,12 @@ class ApiClient {
     String? token,
   }) => _send('PATCH', path, body: body, token: token);
 
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Object? body,
+    String? token,
+  }) => _send('PUT', path, body: body, token: token);
+
   /// Sends [bytes] as the whole body, such as a photo.
   Future<Map<String, dynamic>> putBytes(
     String path, {

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/presence.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -95,7 +96,12 @@ class _PlayersScreenState extends State<PlayersScreen> {
   Future<void> _refresh() => Future.wait([_load(), _loadFriends()]);
 
   Future<void> _open(Player player) async {
-    await context.push('/player/${player.username}', extra: player);
+    // Me: my own profile, never the view others get of me.
+    final me = AuthService.instance.state.value.account?.username;
+    await context.push(
+      player.username == me ? '/profile' : '/player/${player.username}',
+      extra: player,
+    );
     // Back from a profile: a request may have been sent or answered there.
     if (mounted) _loadFriends();
   }
@@ -408,27 +414,28 @@ class PlayerTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    player.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(fontWeight: FontWeight.w800),
-                  ),
+                  // The name with the country's flag after it.
                   Row(
                     children: [
                       Flexible(
                         child: Text(
-                          '@${player.username}',
+                          player.displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: k.caption,
+                          style: k.body.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ),
                       if (player.country != null) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         CountryFlag(player.country!, height: 14),
                       ],
                     ],
+                  ),
+                  Text(
+                    '@${player.username}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.caption,
                   ),
                 ],
               ),
