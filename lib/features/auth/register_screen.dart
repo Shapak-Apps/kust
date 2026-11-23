@@ -43,16 +43,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _username.text = saved;
       _scheduleCheck(saved);
     }
-    for (final c in [_email, _password, _confirm]) {
+    _email.addListener(_emailChanged);
+    for (final c in [_password, _confirm]) {
       c.addListener(_changed);
     }
   }
 
   void _changed() => setState(() {});
 
+  /// Whether to say the email is wrong: only once the player has stopped
+  /// typing for [_emailPause], so a half-typed address is never scolded.
+  bool _emailSettled = false;
+  Timer? _emailTimer;
+  static const Duration _emailPause = Duration(seconds: 2);
+
+  void _emailChanged() {
+    _emailTimer?.cancel();
+    setState(() => _emailSettled = false);
+    _emailTimer = Timer(_emailPause, () {
+      if (mounted) setState(() => _emailSettled = true);
+    });
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
+    _emailTimer?.cancel();
     _email.dispose();
     _username.dispose();
     _password.dispose();
@@ -207,7 +223,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   action: TextInputAction.next,
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
-                  errorText: _email.text.isNotEmpty && !_emailOk
+                  errorText:
+                      _emailSettled && _email.text.isNotEmpty && !_emailOk
                       ? t.invalidEmail
                       : null,
                 ),
