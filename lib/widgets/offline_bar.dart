@@ -117,12 +117,16 @@ class _Strip extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              base.withValues(alpha: 0.96),
-              base.withValues(alpha: 0.82),
-              base.withValues(alpha: 0.55),
-            ],
-            stops: const [0, 0.55, 1],
+            // Back online: the plain green. Offline: lighter, about two
+            // thirds at the top fading to a third.
+            colors: restored
+                ? [base, base]
+                : [
+                    base.withValues(alpha: 0.67),
+                    base.withValues(alpha: 0.5),
+                    base.withValues(alpha: 0.3),
+                  ],
+            stops: restored ? null : const [0, 0.55, 1],
           ),
         ),
         child: ClipRect(
