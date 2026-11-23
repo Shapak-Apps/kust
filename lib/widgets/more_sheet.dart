@@ -8,6 +8,7 @@ import 'package:kust/core/piece_set.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/net/push_service.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
@@ -477,10 +478,13 @@ class _LogOutRow extends StatelessWidget {
               Navigator.of(sheetContext).pop();
               Navigator.of(context).pop();
               AppStorage.instance.logOut();
-              // Signed in too: out of the account on this phone as well.
+              // Signed in too: out of the account on this phone as well,
+              // after telling the server to stop notifying this phone.
               if (AuthService.instance.state.value.isSignedIn) {
-                AuthService.instance.logout();
-                PlayersRepository.instance.clearCache();
+                PushService.instance.unregister().whenComplete(() {
+                  AuthService.instance.logout();
+                  PlayersRepository.instance.clearCache();
+                });
               }
             },
           ),
