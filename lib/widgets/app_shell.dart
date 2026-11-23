@@ -6,9 +6,10 @@ import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
 
 class AppShell extends StatefulWidget {
-  final Widget child;
+  /// The tabs, kept alive by the router; one of them is shown.
+  final StatefulNavigationShell shell;
 
-  const AppShell({super.key, required this.child});
+  const AppShell({super.key, required this.shell});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -26,20 +27,13 @@ class _AppShellState extends State<AppShell> {
     // second.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.go(const ['/play', '/puzzles', '/learn', '/train'][index]);
+      widget.shell.goBranch(index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    final current = location.startsWith('/puzzles')
-        ? 1
-        : location.startsWith('/learn')
-        ? 2
-        : location.startsWith('/train')
-        ? 3
-        : 0;
+    final current = widget.shell.currentIndex;
     if (_pending == current) _pending = null;
     final selected = _pending ?? current;
 
@@ -49,7 +43,7 @@ class _AppShellState extends State<AppShell> {
       body: BackdropGroup(
         child: Stack(
           children: [
-            Positioned.fill(child: widget.child),
+            Positioned.fill(child: widget.shell),
             Positioned(
               left: 0,
               right: 0,

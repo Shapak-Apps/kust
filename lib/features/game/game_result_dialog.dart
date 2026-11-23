@@ -76,7 +76,22 @@ class GameResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final k = context.k;
-    final game = ref.watch(chessControllerProvider);
+    // Rebuilt only when what it shows changes, not on every update of the
+    // game behind it (the engine, the clocks, analysis in the background).
+    ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          g.status,
+          g.ratingChange,
+          g.accuracy,
+          g.accuracyPending,
+          g.moveCounts,
+          g.savedGameId,
+          g.moves.length,
+        ),
+      ),
+    );
+    final game = ref.read(chessControllerProvider);
     final canReview =
         onReview != null && game.savedGameId != null && game.moves.length >= 5;
     final size = MediaQuery.sizeOf(context);

@@ -28,6 +28,57 @@ class BoardThumbnail extends StatelessWidget {
   static final Map<String, ui.Image> _drawn = {};
   static final Map<String, Future<ui.Image>> _drawing = {};
 
+  static String _key(
+    Position position,
+    bool flipped,
+    List<Square> highlight,
+    int px,
+  ) {
+    final s = AppSettings.instance;
+    return '${position.fen}|$flipped|${highlight.join(',')}|'
+        '${s.boardTheme.value.name}|${s.pieceSet.value.name}|$px';
+  }
+
+  static Future<ui.Image> _draw(
+    Position position,
+    bool flipped,
+    List<Square> highlight,
+    int px,
+  ) {
+    final key = _key(position, flipped, highlight, px);
+    final ready = _drawn[key];
+    if (ready != null) return Future.value(ready);
+    return _drawing.putIfAbsent(
+      key,
+      () =>
+          boardImage(
+            position,
+            flipped: flipped,
+            highlight: highlight,
+            size: px,
+            labels: false,
+          ).then((image) {
+            _drawn[key] = image;
+            _drawing.remove(key);
+            return image;
+          }),
+    );
+  }
+
+  /// Draws the board a [BoardThumbnail] [width] wide will show, ahead of
+  /// time, so it appears at once (e.g. while the splash plays).
+  static Future<void> warm(
+    Position position, {
+    required double width,
+    bool flipped = false,
+    List<Square> highlight = const [],
+  }) {
+    final views = WidgetsBinding.instance.platformDispatcher.views;
+    final dpr = views.isEmpty ? 3.0 : views.first.devicePixelRatio;
+    final px = (width * dpr).round().clamp(64, 1024);
+    return _draw(position, flipped, highlight, px);
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = AppSettings.instance;
@@ -44,28 +95,12 @@ class BoardThumbnail extends StatelessWidget {
               builder: (context, set, _) => LayoutBuilder(
                 builder: (context, box) {
                   final px = (box.maxWidth * dpr).round().clamp(64, 1024);
-                  final key =
-                      '${position.fen}|$flipped|${highlight.join(',')}|'
-                      '${theme.name}|${set.name}|$px';
+                  final key = _key(position, flipped, highlight, px);
                   final ready = _drawn[key];
                   if (ready != null) {
                     return RawImage(image: ready, fit: BoxFit.cover);
                   }
-                  final drawing = _drawing.putIfAbsent(
-                    key,
-                    () =>
-                        boardImage(
-                          position,
-                          flipped: flipped,
-                          highlight: highlight,
-                          size: px,
-                          labels: false,
-                        ).then((image) {
-                          _drawn[key] = image;
-                          _drawing.remove(key);
-                          return image;
-                        }),
-                  );
+                  final drawing = _draw(position, flipped, highlight, px);
                   return FutureBuilder<ui.Image>(
                     future: drawing,
                     builder: (context, snap) => snap.data == null
