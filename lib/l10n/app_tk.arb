@@ -631,5 +631,9 @@
   "playerMissing": "Bu oýunçy tapylmady",
   "photoNotUploaded": "Suraty ýükläp bolmady. Soňrak täzeden synanyşyň.",
   "notifications": "Habarnamalar",
-  "notifEmpty": "Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner."
+  "notifEmpty": "Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner.",
+  "flipBoard": "Tagtany öwür",
+  "flipBoardSub": "Tagta beýleki tarapdan serediň",
+  "friendSent": "Iberildi",
+  "noFriendsYet": "Häzirlikçe dost ýok. Oýunçylary ýer şary nyşany arkaly tapyň."
 }

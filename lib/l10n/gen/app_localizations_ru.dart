@@ -2149,4 +2149,17 @@ class AppL10nRu extends AppL10n {
   @override
   String get notifEmpty =>
       'Пока ничего нового. Здесь появятся заявки в друзья.';
+
+  @override
+  String get flipBoard => 'Перевернуть доску';
+
+  @override
+  String get flipBoardSub => 'Смотреть на доску с другой стороны';
+
+  @override
+  String get friendSent => 'Отправлено';
+
+  @override
+  String get noFriendsYet =>
+      'Пока нет друзей. Ищите игроков через значок глобуса.';
 }

@@ -472,6 +472,7 @@ class _LogOutRow extends StatelessWidget {
           ),
           KustButton(
             label: sheetContext.t.logOut,
+            style: KustButtonStyle.danger,
             onTap: () {
               Navigator.of(sheetContext).pop();
               Navigator.of(context).pop();

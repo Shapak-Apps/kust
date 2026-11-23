@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:kust/features/achievements/achievements.dart';
+import 'package:kust/features/achievements/achievements_screen.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/tokens.dart';
@@ -162,78 +163,149 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
     final a = widget.achievement;
 
     final enter = _interval(0, 0.14);
-    final medal = _interval(0.06, 0.24, Curves.easeOutBack);
-    final bar = _interval(0.22, 0.5);
-    final before = ((widget.earned - 1) / widget.total).clamp(0.0, 1.0);
-    final after = (widget.earned / widget.total).clamp(0.0, 1.0);
+    final medal = _interval(0.05, 0.26, Curves.easeOutBack);
+    final ring = _interval(0.12, 0.62);
+    final text = _interval(0.18, 0.36);
+    final tier = a.tier;
+    final glow = tier.color;
 
+    // The card: the badge itself, as it looks on the profile, standing in
+    // its tier's light; a ring of that colour spreading out once; the tier,
+    // the name, what it was for, and how many are earned.
     final card = Container(
-      width: 300,
-      padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+      width: 304,
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
       decoration: BoxDecoration(
         color: k.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: glow.withValues(alpha: 0.35)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.center,
+          colors: [
+            Color.alphaBlend(glow.withValues(alpha: 0.16), k.surface),
+            k.surface,
+          ],
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ScaleTransition(
-            scale: reduceMotion ? kAlwaysCompleteAnimation : medal,
-            child: Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                color: k.accent,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Icon(a.icon, size: 36, color: k.accentInk),
+          SizedBox(
+            height: 168,
+            child: AnimatedBuilder(
+              animation: _show,
+              builder: (context, _) {
+                final r = reduceMotion ? 1.0 : ring.value;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Soft light behind the badge.
+                    Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            glow.withValues(
+                              alpha: 0.38 * medal.value.clamp(0, 1),
+                            ),
+                            glow.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // The ring, once, wider and fainter as it goes.
+                    if (!reduceMotion && r > 0 && r < 1)
+                      Container(
+                        width: 100 + 70 * r,
+                        height: 100 + 70 * r,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: glow.withValues(alpha: 0.6 * (1 - r)),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    Transform.scale(
+                      scale: reduceMotion ? 1 : medal.value,
+                      child: AchievementIcon(
+                        achievement: a,
+                        earned: true,
+                        size: 96,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          const SizedBox(height: 18),
-          Text(
-            context.t.achUnlocked,
-            style: k.caption.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            a.titleIn(context.t),
-            textAlign: TextAlign.center,
-            style: k.title.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            a.descriptionIn(context.t),
-            textAlign: TextAlign.center,
-            style: k.body.copyWith(color: k.muted),
-          ),
-          const SizedBox(height: 20),
-          // The reward: the count fills up to its new value.
-          AnimatedBuilder(
-            animation: bar,
-            builder: (context, _) {
-              final v = reduceMotion
-                  ? after
-                  : before + (after - before) * bar.value;
-              return Column(
+          FadeTransition(
+            opacity: reduceMotion ? kAlwaysCompleteAnimation : text,
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(0, 0.08),
+                end: Offset.zero,
+              ).animate(text),
+              child: Column(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: LinearProgressIndicator(
-                      value: v,
-                      minHeight: 6,
-                      backgroundColor: k.line,
-                      color: k.accent,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   Text(
-                    context.t.achEarnedOf(widget.earned, widget.total),
+                    context.t.achUnlocked,
                     style: k.caption.copyWith(fontWeight: FontWeight.w700),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    a.titleIn(context.t),
+                    textAlign: TextAlign.center,
+                    style: k.title.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    a.descriptionIn(context.t),
+                    textAlign: TextAlign.center,
+                    style: k.body.copyWith(color: k.muted),
+                  ),
+                  const SizedBox(height: 14),
+                  // The tier in its colour, and how many are earned.
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
+                    runSpacing: 6,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: glow.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          tier.labelIn(context.t).toUpperCase(),
+                          style: k.caption.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                            color: glow,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        context.t.achEarnedOf(widget.earned, widget.total),
+                        style: k.caption,
+                      ),
+                    ],
+                  ),
                 ],
-              );
-            },
+              ),
+            ),
           ),
           const SizedBox(height: 18),
           SizedBox(
@@ -259,7 +331,7 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
             children: [
               FadeTransition(
                 opacity: enter,
-                child: const ColoredBox(color: Color(0x99000000)),
+                child: const ColoredBox(color: Color(0xCC000000)),
               ),
               if (!reduceMotion)
                 IgnorePointer(
@@ -271,7 +343,7 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
                         painter: ConfettiPainter(
                           progress: _show.value,
                           seed: a.id.hashCode,
-                          colours: [k.accent, Colors.white],
+                          colours: [glow, Colors.white],
                         ),
                       ),
                     ),

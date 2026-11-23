@@ -1204,5 +1204,9 @@
     }
   },
   "notifications": "Notifications",
-  "notifEmpty": "Nothing new yet. Friend requests will show up here."
+  "notifEmpty": "Nothing new yet. Friend requests will show up here.",
+  "flipBoard": "Flip board",
+  "flipBoardSub": "See the board from the other side",
+  "friendSent": "Sent",
+  "noFriendsYet": "No friends yet. Find players with the globe."
 }

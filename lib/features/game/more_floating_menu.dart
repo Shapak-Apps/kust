@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:kust/features/game/chess/chess_controller.dart';
@@ -40,6 +42,16 @@ class MoreFloatingMenu extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         KustSheetHeader(title: context.t.gameOptions),
+        ValueListenableBuilder<bool>(
+          valueListenable: boardFlipped,
+          builder: (context, flipped, _) => KustToggleRow(
+            icon: Icons.swap_vert_rounded,
+            title: context.t.flipBoard,
+            subtitle: context.t.flipBoardSub,
+            value: flipped,
+            onChanged: (v) => boardFlipped.value = v,
+          ),
+        ),
         KustToggleRow(
           icon: Icons.align_horizontal_left_rounded,
           title: context.t.evalBar,

@@ -2147,4 +2147,17 @@ class AppL10nTk extends AppL10n {
   @override
   String get notifEmpty =>
       'Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner.';
+
+  @override
+  String get flipBoard => 'Tagtany öwür';
+
+  @override
+  String get flipBoardSub => 'Tagta beýleki tarapdan serediň';
+
+  @override
+  String get friendSent => 'Iberildi';
+
+  @override
+  String get noFriendsYet =>
+      'Häzirlikçe dost ýok. Oýunçylary ýer şary nyşany arkaly tapyň.';
 }

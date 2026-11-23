@@ -218,6 +218,10 @@ class _BoardView {
   );
 }
 
+/// Whether the player turned the board around in the game on screen (the
+/// game menu's Flip board). Cleared when a game screen opens.
+final ValueNotifier<bool> boardFlipped = ValueNotifier(false);
+
 class ChessBoard extends ConsumerStatefulWidget {
   const ChessBoard({super.key});
 
@@ -318,6 +322,8 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     super.initState();
     AppSettings.instance.boardTheme.addListener(_onBoardTheme);
     AppSettings.instance.pieceSet.addListener(_onPieceSet);
+    // Flipping moves every square: the cached ones are built again.
+    boardFlipped.addListener(_onPieceSet);
 
     _moveController = AnimationController(
       vsync: this,
@@ -369,6 +375,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   void dispose() {
     AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
     AppSettings.instance.pieceSet.removeListener(_onPieceSet);
+    boardFlipped.removeListener(_onPieceSet);
     _moveController.dispose();
     _captureController.dispose();
     _snapController.dispose();
@@ -579,9 +586,9 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final view = ref.watch(chessControllerProvider.select(_BoardView.from));
     final displayPosition = view.position;
 
-    _flipped = view.mode == GameMode.local
-        ? false
-        : view.playerSide == Side.black;
+    _flipped =
+        (view.mode == GameMode.local ? false : view.playerSide == Side.black) !=
+        boardFlipped.value;
 
     ref.listen<GameState>(chessControllerProvider, (previous, next) {
       if (previous == null) return;

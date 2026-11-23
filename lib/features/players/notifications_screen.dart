@@ -40,14 +40,17 @@ class NotificationsBell extends StatelessWidget {
                   right: 2,
                   top: 2,
                   child: IgnorePointer(
+                    // A true circle for one digit, a pill only for "9+".
                     child: Container(
-                      constraints: const BoxConstraints(minWidth: 18),
-                      height: 18,
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      width: waiting.length > 9 ? null : 20,
+                      height: 20,
+                      padding: waiting.length > 9
+                          ? const EdgeInsets.symmetric(horizontal: 5)
+                          : null,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: k.danger,
-                        borderRadius: BorderRadius.circular(9),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: k.bg, width: 2),
                       ),
                       child: Text(
@@ -123,65 +126,55 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               onRefresh: _repo.refreshIncoming,
               child: ValueListenableBuilder<List<Player>>(
                 valueListenable: _repo.incoming,
-                builder: (context, waiting, _) => ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 8, bottom: 24),
-                  children: [
-                    if (waiting.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(32, 80, 32, 0),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.notifications_none_rounded,
-                              size: 48,
-                              color: k.muted,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              t.notifEmpty,
-                              textAlign: TextAlign.center,
-                              style: k.body.copyWith(color: k.muted),
-                            ),
-                          ],
-                        ),
-                      )
-                    else ...[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                        child: Text(
-                          t.friendRequests.toUpperCase(),
-                          style: k.caption.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ),
-                      for (final p in waiting)
-                        PlayerTile(
-                          player: p,
-                          onTap: () =>
-                              context.push('/player/${p.username}', extra: p),
-                          trailing: Row(
+                builder: (context, waiting, _) => LayoutBuilder(
+                  builder: (context, box) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 8, bottom: 24),
+                    children: [
+                      if (waiting.isEmpty)
+                        // In the middle of the screen, still pullable.
+                        Container(
+                          height: box.maxHeight - 32,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                onPressed: () => _answer(p, true),
-                                tooltip: t.friendAccept,
-                                color: k.success,
-                                icon: const Icon(Icons.check_circle_rounded),
-                              ),
-                              IconButton(
-                                onPressed: () => _answer(p, false),
-                                tooltip: t.friendDecline,
+                              Icon(
+                                Icons.notifications_none_rounded,
+                                size: 48,
                                 color: k.muted,
-                                icon: const Icon(Icons.cancel_rounded),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                t.notifEmpty,
+                                textAlign: TextAlign.center,
+                                style: k.body.copyWith(color: k.muted),
                               ),
                             ],
                           ),
+                        )
+                      else ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                          child: Text(
+                            t.friendRequests.toUpperCase(),
+                            style: k.caption.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
                         ),
+                        for (final p in waiting)
+                          FriendRequestCard(
+                            player: p,
+                            onOpen: () =>
+                                context.push('/player/${p.username}', extra: p),
+                            onAnswer: (accept) => _answer(p, accept),
+                          ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
