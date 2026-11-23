@@ -2140,4 +2140,11 @@ class AppL10nTk extends AppL10n {
   @override
   String get photoNotUploaded =>
       'Suraty ýükläp bolmady. Soňrak täzeden synanyşyň.';
+
+  @override
+  String get notifications => 'Habarnamalar';
+
+  @override
+  String get notifEmpty =>
+      'Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner.';
 }

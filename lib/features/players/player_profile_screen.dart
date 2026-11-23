@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/features/achievements/achievements.dart';
+import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/profile/profile_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -40,6 +44,12 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   bool _busy = false;
   bool _missing = false;
 
+  /// Their newest games and how many in all; their achievements. Null
+  /// while loading.
+  List<GameRecord>? _games;
+  int _gamesTotal = 0;
+  Map<String, DateTime>? _achievements;
+
   PlayersRepository get _repo =>
       widget.repository ?? PlayersRepository.instance;
 
@@ -50,6 +60,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   Future<void> _load() async {
+    _loadGames();
     try {
       final got = await _repo.player(widget.username);
       if (!mounted) return;
@@ -60,6 +71,26 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       if (e.status == 404) setState(() => _missing = true);
+    }
+  }
+
+  Future<void> _loadGames() async {
+    try {
+      final games = await _repo.games(widget.username, limit: 10);
+      if (mounted) {
+        setState(() {
+          _games = games.games;
+          _gamesTotal = games.total;
+        });
+      }
+    } on ApiException {
+      if (mounted) setState(() => _games = const []);
+    }
+    try {
+      final unlocked = await _repo.achievements(widget.username);
+      if (mounted) setState(() => _achievements = unlocked);
+    } on ApiException {
+      if (mounted) setState(() => _achievements = const {});
     }
   }
 
@@ -176,6 +207,8 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     child: _actions(context),
                   ),
+                  ..._history(context, k),
+                  ..._badges(context, k),
                 ],
               ),
             Positioned(
@@ -237,20 +270,15 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: k.title,
-              ),
+              // The flag goes with the name.
               Row(
                 children: [
                   Flexible(
                     child: Text(
-                      '@${widget.username}',
+                      name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: k.body.copyWith(color: k.muted),
+                      style: k.title,
                     ),
                   ),
                   if (player?.country != null) ...[
@@ -258,6 +286,12 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                     CountryFlag(player!.country!, height: 22),
                   ],
                 ],
+              ),
+              Text(
+                '@${widget.username}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: k.body.copyWith(color: k.muted),
               ),
               const SizedBox(height: 4),
             ],
@@ -367,5 +401,81 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         Expanded(child: message),
       ],
     );
+  }
+
+  Widget _title(KustTokens k, String title, String count) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+    child: Row(
+      children: [
+        Text(title, style: k.title),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: k.surfaceAlt,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            count,
+            style: k.caption.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  /// Their newest games; each opens for watching.
+  List<Widget> _history(BuildContext context, KustTokens k) {
+    final games = _games;
+    return [
+      _title(k, context.t.gameHistory, '$_gamesTotal'),
+      if (games == null)
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: CircularProgressIndicator()),
+        )
+      else if (games.isEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+          child: Text(
+            context.t.histNoGames,
+            style: k.body.copyWith(color: k.muted),
+          ),
+        )
+      else
+        for (final (i, game) in games.indexed) ...[
+          if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
+          GameTile(game: game, readOnly: true),
+        ],
+    ];
+  }
+
+  /// Their achievements, earned ones first and in colour.
+  List<Widget> _badges(BuildContext context, KustTokens k) {
+    final unlocked = _achievements ?? const <String, DateTime>{};
+    final sorted = [
+      ...kAchievements.where((a) => unlocked.containsKey(a.id)),
+      ...kAchievements.where((a) => !unlocked.containsKey(a.id)),
+    ];
+    return [
+      _title(
+        k,
+        context.t.achievements,
+        '${unlocked.length}/${kAchievements.length}',
+      ),
+      SizedBox(
+        height: 120,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: sorted.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (context, i) => AchievementBadge(
+            achievement: sorted[i],
+            earned: unlocked.containsKey(sorted[i].id),
+          ),
+        ),
+      ),
+    ];
   }
 }

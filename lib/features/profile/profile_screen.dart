@@ -265,34 +265,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _store.displayName(context.t),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: k.title,
-                              ),
-                              if (username != null || country != null)
-                                // @username and the flag of the player's
-                                // country after it.
-                                Row(
-                                  children: [
-                                    if (username != null)
-                                      Flexible(
-                                        child: Text(
-                                          '@$username',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: k.body.copyWith(
-                                            color: k.muted,
-                                          ),
-                                        ),
-                                      ),
-                                    if (country != null) ...[
-                                      if (username != null)
-                                        const SizedBox(width: 8),
-                                      CountryFlag(country, height: 22),
-                                    ],
+                              // The name with the country's flag after it.
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      _store.displayName(context.t),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: k.title,
+                                    ),
+                                  ),
+                                  if (country != null) ...[
+                                    const SizedBox(width: 8),
+                                    CountryFlag(country, height: 22),
                                   ],
+                                ],
+                              ),
+                              if (username != null)
+                                Text(
+                                  '@$username',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: k.body.copyWith(color: k.muted),
                                 ),
                               const SizedBox(height: 4),
                             ],
@@ -707,7 +702,7 @@ class _AchievementsSection extends StatelessWidget {
                     excludeSemantics: true,
                     child: Pressable(
                       onTap: () => context.push('/achievements'),
-                      child: _AchievementBadge(
+                      child: AchievementBadge(
                         achievement: a,
                         earned: unlocked.containsKey(a.id),
                       ),
@@ -725,8 +720,12 @@ class _AchievementsSection extends StatelessWidget {
 
 /// One achievement as a badge (see [AchievementIcon]) with its name under
 /// it.
-class _AchievementBadge extends StatelessWidget {
-  const _AchievementBadge({required this.achievement, required this.earned});
+class AchievementBadge extends StatelessWidget {
+  const AchievementBadge({
+    super.key,
+    required this.achievement,
+    required this.earned,
+  });
 
   final Achievement achievement;
   final bool earned;

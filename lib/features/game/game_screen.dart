@@ -577,9 +577,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       name: widget.isLocal
                                           ? context.t.whiteName
                                           : AppStorage.isReady
-                                          ? AppStorage.instance.displayName(
-                                              context.t,
-                                            )
+                                          // In games a player goes by their
+                                          // username (then the flag).
+                                          ? AppStorage.instance.username ??
+                                                AppStorage.instance.displayName(
+                                                  context.t,
+                                                )
                                           : context.t.youName,
                                       subtitle:
                                           widget.isLocal || !AppStorage.isReady

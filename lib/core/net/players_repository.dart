@@ -1,10 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/game_history_store.dart';
 
 class PlayersPage {
   const PlayersPage({required this.players, required this.nextCursor});
@@ -145,6 +148,57 @@ class PlayersRepository {
     (token) => auth.api.delete('/v1/friends/$username', token: token),
   );
 
+  /// A player's newest games, as their app recorded them, and how many
+  /// they have in all.
+  Future<({List<GameRecord> games, int total})> games(
+    String username, {
+    int limit = 20,
+  }) async {
+    final json = await auth.authed(
+      (token) => auth.api.get(
+        '/v1/players/$username/games',
+        query: {'limit': '$limit'},
+        token: token,
+      ),
+    );
+    return (
+      games: [
+        for (final g in (json['games'] as List? ?? const []))
+          ?GameRecord.tryFromMap(g),
+      ],
+      total: (json['total'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  /// A player's achievements and when each was unlocked.
+  Future<Map<String, DateTime>> achievements(String username) async {
+    final json = await auth.authed(
+      (token) =>
+          auth.api.get('/v1/players/$username/achievements', token: token),
+    );
+    final raw = json['achievements'];
+    return {
+      if (raw is Map)
+        for (final e in raw.entries)
+          if (e.key is String && e.value is num)
+            e.key as String: DateTime.fromMillisecondsSinceEpoch(
+              (e.value as num).toInt(),
+            ),
+    };
+  }
+
+  /// Friend requests waiting for me, for the bell on the home screen.
+  /// Refreshed with [refreshIncoming] and whenever [friends] is read.
+  final ValueNotifier<List<Player>> incoming = ValueNotifier(const []);
+
+  Future<void> refreshIncoming() async {
+    try {
+      await friends();
+    } on ApiException {
+      // Kept as it was; tried again next time.
+    }
+  }
+
   /// My friends, the requests waiting for me, and the ones I sent.
   Future<({List<Player> friends, List<Player> incoming, List<Player> outgoing})>
   friends() async {
@@ -155,9 +209,11 @@ class PlayersRepository {
       for (final p in (json[key] as List? ?? const []))
         Player.fromJson(p as Map<String, dynamic>),
     ];
+    final waiting = list('incoming');
+    incoming.value = waiting;
     return (
       friends: list('friends'),
-      incoming: list('incoming'),
+      incoming: waiting,
       outgoing: list('outgoing'),
     );
   }

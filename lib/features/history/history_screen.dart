@@ -128,9 +128,12 @@ class _EmptyHistory extends StatelessWidget {
 /// One finished game as a row: opponent, result, date and accuracy. Opens
 /// the replay; a long press offers to delete it.
 class GameTile extends StatelessWidget {
-  const GameTile({super.key, required this.game});
+  const GameTile({super.key, required this.game, this.readOnly = false});
 
   final GameRecord game;
+
+  /// Someone else's game: it opens for watching and can't be deleted.
+  final bool readOnly;
 
   void _confirmDelete(BuildContext context) {
     showKustSheet<void>(
@@ -176,8 +179,9 @@ class GameTile extends StatelessWidget {
       excludeSemantics: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => context.push('/history/${game.id}'),
-        onLongPress: () => _confirmDelete(context),
+        onTap: () =>
+            context.push('/history/${game.id}', extra: readOnly ? game : null),
+        onLongPress: readOnly ? null : () => _confirmDelete(context),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(

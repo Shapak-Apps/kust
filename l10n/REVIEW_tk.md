@@ -605,3 +605,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `wantsToBeFriend` | Wants to be your friend | Siz bilen dost bolmak isleýär |
 | `playerMissing` | This player can't be found | Bu oýunçy tapylmady |
 | `photoNotUploaded` | Couldn't upload your photo. Try again later. | Suraty ýükläp bolmady. Soňrak täzeden synanyşyň. |
+| `notifications` | Notifications | Habarnamalar |
+| `notifEmpty` | Nothing new yet. Friend requests will show up here. | Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner. |
