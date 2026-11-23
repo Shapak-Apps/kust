@@ -6,7 +6,6 @@ import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/felt_header.dart';
-import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -242,7 +241,8 @@ class _NextLesson extends StatelessWidget {
   }
 }
 
-/// In place of the next lesson once every lesson is done.
+/// In place of the next lesson once every lesson is done: a line and a
+/// Play button under it, with no card around them.
 class _AllDone extends StatelessWidget {
   const _AllDone();
 
@@ -250,23 +250,18 @@ class _AllDone extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final t = context.t;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: k.surface,
-        borderRadius: BorderRadius.circular(KustSpace.rLarge),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: Text(t.learnSummitDone, style: k.title)),
-          KustButton(
-            label: t.play,
-            expand: false,
-            height: 40,
-            onTap: () => context.go('/play'),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(t.learnSummitDone, style: k.title),
+        const SizedBox(height: 12),
+        KustButton3D(
+          label: t.play,
+          icon: Icons.play_arrow_rounded,
+          expand: true,
+          onTap: () => context.go('/play'),
+        ),
+      ],
     );
   }
 }

@@ -70,3 +70,49 @@ class SpeechBubblePainter extends CustomPainter {
   bool shouldRepaint(SpeechBubblePainter old) =>
       old.fill != fill || old.border != border || old.tailAt != tailAt;
 }
+
+/// The one look of every speech bubble in the app, whoever speaks: cream,
+/// with dark words.
+abstract final class BubbleColors {
+  static const Color fill = Color(0xFFF4EDE0);
+
+  /// The main words.
+  static const Color ink = Color(0xFF1E2433);
+
+  /// A second, quieter line.
+  static const Color soft = Color(0xFF6B4A2F);
+
+  /// Right and wrong, readable on [fill].
+  static const Color good = Color(0xFF1F7A4D);
+  static const Color bad = Color(0xFFB3261E);
+}
+
+/// A speech bubble in the app's one style, its tail on the left at
+/// [tailAt] (0 top, 1 bottom), around [child].
+class SpeechBubble extends StatelessWidget {
+  const SpeechBubble({
+    super.key,
+    required this.child,
+    this.tailAt = 0.5,
+    this.padding = const EdgeInsets.fromLTRB(
+      BubbleMetrics.tail + 14,
+      12,
+      14,
+      12,
+    ),
+  });
+
+  final Widget child;
+  final double tailAt;
+  final EdgeInsets padding;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: SpeechBubblePainter(
+      fill: BubbleColors.fill,
+      border: BubbleColors.fill,
+      tailAt: tailAt,
+    ),
+    child: Padding(padding: padding, child: child),
+  );
+}

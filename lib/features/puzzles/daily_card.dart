@@ -87,6 +87,7 @@ class DailyTile extends StatelessWidget {
       title: context.t.dailyPuzzle,
       subtitle: solved ? context.t.solvedToday : subtitle,
       onTap: onTap,
+      done: solved,
       semanticsLabel:
           '${context.t.dailyPuzzle}, ${solved ? context.t.dailySolved : subtitle}'
           '${streak > 0 ? ', ${context.t.dailyStreakSem(days)}' : ''}',

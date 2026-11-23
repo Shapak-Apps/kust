@@ -12,6 +12,7 @@ import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/daily.dart';
 import 'package:kust/features/puzzles/gol.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
+import 'package:kust/features/puzzles/speech_bubble.dart';
 import 'package:kust/features/puzzles/puzzle_coach.dart';
 import 'package:kust/features/puzzles/puzzle_data.dart';
 import 'package:kust/features/puzzles/puzzle_session.dart';
@@ -490,10 +491,10 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                               whiteToMove: _position.turn == Side.white,
                             ),
                             titleColor: _solved
-                                ? const Color(0xFF1F7A4D)
+                                ? BubbleColors.good
                                 : _mistakeFlash
-                                ? const Color(0xFFB3261E)
-                                : LoomColors.indigo,
+                                ? BubbleColors.bad
+                                : BubbleColors.ink,
                           ),
                         ),
                       ),

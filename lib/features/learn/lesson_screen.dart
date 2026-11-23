@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/learn/learn_progress.dart';
+import 'package:kust/features/learn/lesson_moments.dart';
 import 'package:kust/features/learn/lesson_task.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
@@ -52,6 +53,10 @@ class _LessonScreenState extends State<LessonScreen> {
   Position? _beforeLast;
   ({Square from, Square to})? _slide;
   int _slideKey = 0;
+
+  /// The lines of a tactic just played: what the fork hits, what the pin
+  /// or the skewer runs through.
+  List<({Square from, Square to, Color color})> _arrows = const [];
   Square? _hintFrom;
   Square? _hintTo;
   _Note _note = _Note.none;
@@ -76,11 +81,25 @@ class _LessonScreenState extends State<LessonScreen> {
       _solved = false;
       _lastMove = null;
       _slide = null;
+      _arrows = const [];
       _hintFrom = _hintTo = null;
       _runner = step >= 0 && step < lesson.tasks.length
           ? TaskRunner(lesson.tasks[step])
           : null;
     });
+    // A task that starts in check shows the check being given: the piece
+    // slides in, the king's square turns red, and the check sounds.
+    final runner = _runner;
+    final arrival = runner == null ? null : checkArrival(runner.position);
+    if (arrival != null) {
+      setState(() {
+        _lastMove = NormalMove(from: arrival.from, to: arrival.to);
+        _slide = arrival;
+        _slideKey++;
+      });
+      SoundService.instance.playSfx('check.wav');
+      SoundService.instance.buzz(heavy: true);
+    }
     if (step >= lesson.tasks.length) {
       _stars = LearnProgress.starsFor(mistakes: _mistakes, hints: _hints);
       LearnProgress.instance.complete(lesson.id, stars: _stars);
@@ -112,7 +131,14 @@ class _LessonScreenState extends State<LessonScreen> {
       case TaskStep.progress:
       case TaskStep.done:
         final capture = before.board.pieceAt(move.to) != null;
-        SoundService.instance.playSfx(capture ? 'capture.wav' : 'move.wav');
+        final check = runner.position.isCheck;
+        SoundService.instance.playSfx(
+          check
+              ? 'check.wav'
+              : capture
+              ? 'capture.wav'
+              : 'move.wav',
+        );
         if (step == TaskStep.done) {
           // A bright chime for every task done, not only the lesson.
           SoundService.instance.playSfx('correct.wav');
@@ -126,9 +152,35 @@ class _LessonScreenState extends State<LessonScreen> {
           _slide = (from: move.from, to: TaskRunner.landing(move, before));
           _slideKey++;
           _solved = step == TaskStep.done;
+          _arrows = step == TaskStep.done
+              ? _tacticArrows(runner, TaskRunner.landing(move, before))
+              : const [];
         });
         if (step == TaskStep.done) SoundService.instance.buzzMedium();
     }
+  }
+
+  /// Fork: gold arrows to what it hits. Pin and skewer: red arrows
+  /// through the piece in front to the one behind.
+  List<({Square from, Square to, Color color})> _tacticArrows(
+    TaskRunner runner,
+    Square at,
+  ) {
+    final kind = runner.task.kind;
+    if (kind != TaskKind.fork &&
+        kind != TaskKind.pin &&
+        kind != TaskKind.skewer) {
+      return const [];
+    }
+    final fork = kind == TaskKind.fork;
+    return [
+      for (final a in tacticArrows(runner.position, at, throughLine: !fork))
+        (
+          from: a.from,
+          to: a.to,
+          color: fork ? const Color(0xE6F5A524) : const Color(0xE6E5484D),
+        ),
+    ];
   }
 
   void _hint() {
@@ -201,9 +253,9 @@ class _LessonScreenState extends State<LessonScreen> {
         : TaskRunner.landing(_lastMove!, _beforeLast!);
     final (note, noteColor) = switch (_note) {
       _Note.none => (null, null),
-      _Note.wrong => (t.learnWrong, context.k.danger),
-      _Note.stalemate => (t.learnStalemate, context.k.danger),
-      _Note.done => (t.learnCoachDone, context.k.success),
+      _Note.wrong => (t.learnWrong, BubbleColors.bad),
+      _Note.stalemate => (t.learnStalemate, BubbleColors.bad),
+      _Note.done => (t.learnCoachDone, BubbleColors.good),
     };
     // The room for the Continue panel is kept all the time, and the panel
     // slides into it: nothing on the board moves when a task is done.
@@ -223,7 +275,7 @@ class _LessonScreenState extends State<LessonScreen> {
                 builder: (context, box) {
                   // The coach and the board sit together in the middle of the
                   // room left between the top bar and the bottom.
-                  const coach = 112.0;
+                  const coach = _Coach.height + 14;
                   final side = math.min(box.maxWidth, box.maxHeight - coach);
                   return Center(
                     child: Column(
@@ -252,6 +304,7 @@ class _LessonScreenState extends State<LessonScreen> {
                                 hintTo: _hintTo,
                                 slide: _slide,
                                 slideKey: _slideKey,
+                                arrows: _arrows,
                               ),
                               IgnorePointer(
                                 child: _Marks(
@@ -406,54 +459,54 @@ class _Coach extends StatelessWidget {
   final String? note;
   final Color? noteColor;
 
+  /// Always this tall, with room for three lines of task and a note, so
+  /// the board below never moves when the words change.
+  static const double height = 116;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Image.asset(
-            _coachImage,
-            width: 84,
-            height: 84,
-            cacheWidth: 252,
-            fit: BoxFit.cover,
+    return SizedBox(
+      height: height,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              _coachImage,
+              width: 84,
+              height: 84,
+              cacheWidth: 252,
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: CustomPaint(
-            painter: SpeechBubblePainter(fill: k.surface, border: k.line),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                BubbleMetrics.tail + 14,
-                12,
-                14,
-                12,
-              ),
-              // Always room for the note, so the board below never moves
-              // when one appears.
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 84),
+          const SizedBox(width: 6),
+          Expanded(
+            child: SpeechBubble(
+              child: SizedBox(
+                height: height - 24,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       title,
+                      maxLines: note == null ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
                       style: k.body.copyWith(
-                        fontSize: 17,
+                        fontSize: 16,
                         height: 1.25,
                         fontWeight: FontWeight.w800,
+                        color: BubbleColors.ink,
                       ),
                     ),
                     if (note != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         note!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: k.body.copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -466,8 +519,8 @@ class _Coach extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -536,10 +589,11 @@ class _DoneBadge extends StatelessWidget {
         return Stack(
           children: [
             Positioned(
-              left: square.file.value * cell + cell * 0.52,
-              top: (7 - square.rank.value) * cell - cell * 0.08,
-              width: cell * 0.56,
-              height: cell * 0.56,
+              // In the square's top right corner, inside the board.
+              left: square.file.value * cell + cell * 0.5,
+              top: (7 - square.rank.value) * cell + cell * 0.02,
+              width: cell * 0.48,
+              height: cell * 0.48,
               child: TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0, end: 1),
                 duration: motion(context, const Duration(milliseconds: 380)),
@@ -777,10 +831,10 @@ class _Complete extends StatelessWidget {
                       _Stat(
                         label: t.lessonMistakes,
                         value: '$mistakes',
-                        color: mistakes == 0
-                            ? context.k.success
-                            : context.k.danger,
-                        icon: Icons.close_rounded,
+                        // Red even with none: the colour names the thing,
+                        // not the score.
+                        color: context.k.danger,
+                        icon: Icons.cancel_rounded,
                       ),
                       const SizedBox(width: 10),
                       _Stat(
@@ -909,21 +963,13 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 6),
-            Text(value, style: k.title.copyWith(fontWeight: FontWeight.w900)),
-            Text(label, style: k.caption),
-          ],
-        ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 34),
+          const SizedBox(height: 6),
+          Text(value, style: k.title.copyWith(fontWeight: FontWeight.w900)),
+          Text(label, style: k.caption),
+        ],
       ),
     );
   }

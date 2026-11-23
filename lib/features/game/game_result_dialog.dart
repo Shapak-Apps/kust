@@ -173,7 +173,6 @@ class GameResultScreen extends ConsumerWidget {
                             name: botQuote!.name,
                             image: botQuote!.image,
                             text: botQuote!.text,
-                            light: true,
                           ),
                           const SizedBox(height: 12),
                         ],

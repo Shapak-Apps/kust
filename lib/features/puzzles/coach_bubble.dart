@@ -14,7 +14,7 @@ class CoachBubble extends StatelessWidget {
     required this.title,
     required this.tip,
     this.leading,
-    this.titleColor = LoomColors.indigo,
+    this.titleColor = BubbleColors.ink,
     this.size = 64,
     this.standing = false,
   });
@@ -107,48 +107,42 @@ class CoachBubble extends StatelessWidget {
 
   Widget _bubble(BuildContext context, {required double tailAt}) {
     final k = context.k;
-    return CustomPaint(
-      painter: SpeechBubblePainter(
-        fill: LoomColors.cream,
-        border: LoomColors.indigo,
-        tailAt: tailAt,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(BubbleMetrics.tail + 14, 10, 14, 11),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                if (leading != null) ...[leading!, const SizedBox(width: 8)],
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(
-                      color: titleColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                    ),
+    return SpeechBubble(
+      tailAt: tailAt,
+      padding: const EdgeInsets.fromLTRB(BubbleMetrics.tail + 14, 10, 14, 11),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              if (leading != null) ...[leading!, const SizedBox(width: 8)],
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: k.body.copyWith(
+                    color: titleColor,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 1),
-            Text(
-              tip,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: k.caption.copyWith(
-                color: LoomColors.walnut,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
               ),
+            ],
+          ),
+          const SizedBox(height: 1),
+          Text(
+            tip,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: k.caption.copyWith(
+              color: BubbleColors.soft,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
