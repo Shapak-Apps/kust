@@ -38,4 +38,23 @@ void main() {
     expect(passwordRules('Merdan2026x', 'merdan', 'm@x.io')[4], isFalse);
     expect(passwordRules('Short1a', 'merdan', 'm@x.io')[0], isFalse);
   });
+
+  testWidgets('the step label shows the current number in gold', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: const Scaffold(body: StepLabel(step: 2, total: 2)),
+      ),
+    );
+    final rich = tester.widget<RichText>(find.byType(RichText).first);
+    final spans = (rich.text as TextSpan).children!.first as TextSpan;
+    final parts = spans.children!.cast<TextSpan>();
+    expect(parts.map((p) => p.text).join(), 'Step 2 of 2');
+    final numbers = parts.where((p) => p.text == '2').toList();
+    expect(numbers.first.style!.color, const Color(0xFFFFBB00));
+    expect(numbers.last.style!.color, isNot(const Color(0xFFFFBB00)));
+    expect(numbers.first.style!.fontSize, 20);
+  });
 }

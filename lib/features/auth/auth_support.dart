@@ -150,10 +150,7 @@ class AuthPage extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                 children: [
                   if (step != null) ...[
-                    Text(
-                      context.t.onbStepOf(step!, 2),
-                      style: k.caption.copyWith(fontWeight: FontWeight.w700),
-                    ),
+                    StepLabel(step: step!, total: 2),
                     const SizedBox(height: 6),
                   ],
                   Text(title, style: k.display),
@@ -326,6 +323,54 @@ class PasswordChecklist extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// "Step 1 of 2" with the numbers big, the current one in gold, so the
+/// eye finds where it is at once. Works in any language: the sentence is
+/// built with markers in place of the numbers, then cut around them.
+class StepLabel extends StatelessWidget {
+  const StepLabel({super.key, required this.step, required this.total});
+
+  final int step;
+  final int total;
+
+  static const int _stepMark = 900001;
+  static const int _totalMark = 900002;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final words = k.caption.copyWith(fontSize: 14, fontWeight: FontWeight.w700);
+    final number = words.copyWith(
+      fontSize: 20,
+      fontWeight: FontWeight.w900,
+      color: k.ink,
+    );
+    final sentence = context.t.onbStepOf(_stepMark, _totalMark);
+    final spans = <InlineSpan>[];
+    sentence.splitMapJoin(
+      RegExp('$_stepMark|$_totalMark'),
+      onMatch: (m) {
+        final isStep = m[0] == '$_stepMark';
+        spans.add(
+          TextSpan(
+            text: '${isStep ? step : total}',
+            style: isStep ? number.copyWith(color: KustTokens.gold) : number,
+          ),
+        );
+        return '';
+      },
+      onNonMatch: (text) {
+        if (text.isNotEmpty) spans.add(TextSpan(text: text, style: words));
+        return '';
+      },
+    );
+    return Semantics(
+      label: context.t.onbStepOf(step, total),
+      excludeSemantics: true,
+      child: Text.rich(TextSpan(children: spans)),
     );
   }
 }
