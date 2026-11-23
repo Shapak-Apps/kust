@@ -1,3 +1,4 @@
+import 'dart:io' as io;
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -6,6 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
 
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
@@ -571,7 +576,18 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                       side: bottomSide,
                                       name: widget.isLocal
                                           ? context.t.whiteName
+                                          : AppStorage.isReady
+                                          ? AppStorage.instance.displayName(
+                                              context.t,
+                                            )
                                           : context.t.youName,
+                                      subtitle:
+                                          widget.isLocal || !AppStorage.isReady
+                                          ? null
+                                          : context.t.eloValue(
+                                              PlayerRatingStore.instance.rating,
+                                            ),
+                                      isYou: !widget.isLocal,
                                     ),
                                   ],
                                 ),
@@ -857,7 +873,11 @@ class _PlayerBar extends ConsumerWidget {
     this.avatarPath,
     this.thinkingText,
     this.bot,
+    this.isYou = false,
   });
+
+  /// The player's own bar: their photo (or initial) and country flag.
+  final bool isYou;
 
   final Side side;
   final String name;
@@ -913,6 +933,12 @@ class _PlayerBar extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    if (isYou &&
+                        AppStorage.isReady &&
+                        AppStorage.instance.country != null) ...[
+                      const SizedBox(width: 6),
+                      CountryFlag(AppStorage.instance.country!, height: 18),
+                    ],
                     if (subtitle != null && subtitle!.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Text(
@@ -1006,6 +1032,14 @@ class _PlayerBar extends ConsumerWidget {
   }
 
   Widget _buildAvatar(ThemeData theme) {
+    if (isYou && AppStorage.isReady) {
+      final photo = AppStorage.instance.photoPath;
+      return PlayerAvatar(
+        size: 40,
+        name: name,
+        photo: photo == null ? null : FileImage(io.File(photo)),
+      );
+    }
     if (avatarPath != null && avatarPath!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(KustSpace.rSmall),

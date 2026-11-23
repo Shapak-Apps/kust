@@ -110,10 +110,13 @@ class _CountryPickerState extends State<_CountryPicker> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         SizedBox(
-          height: MediaQuery.sizeOf(context).height * 0.5,
+          height: MediaQuery.sizeOf(context).height * 0.55,
           child: ListView(
+            // Not the screen's safe-area padding: the list starts right
+            // under the search field.
+            padding: EdgeInsets.zero,
             children: [
               if (q.isEmpty)
                 row(
