@@ -1157,5 +1157,13 @@
   "authCreateTitle": "Create your account",
   "authCreateSub": "Keep your progress safe and play with real people.",
   "authNoAccount": "Don't have an account?",
-  "authHaveAccount": "Already have an account?"
+  "authHaveAccount": "Already have an account?",
+  "authPasswordTitle": "Choose a password",
+  "authPasswordSub": "You'll use it to sign in.",
+  "passwordWeak": "That password is too weak",
+  "pwRuleLength": "At least 8 characters",
+  "pwRuleUpper": "One capital letter",
+  "pwRuleLower": "One small letter",
+  "pwRuleDigit": "One digit",
+  "pwRuleNoName": "Not your username or email"
 }

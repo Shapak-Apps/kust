@@ -126,8 +126,18 @@ class KustTextField extends StatelessWidget {
                   : Icon(icon, size: 20, color: k.muted),
               filled: true,
               fillColor: k.surfaceAlt,
+              // Slim, with modest corners.
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 20,
+              ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
             ),

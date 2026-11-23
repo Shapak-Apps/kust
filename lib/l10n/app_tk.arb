@@ -598,5 +598,13 @@
   "authCreateTitle": "Hasabyňyzy açyň",
   "authCreateSub": "Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň.",
   "authNoAccount": "Hasabyňyz ýokmy?",
-  "authHaveAccount": "Hasabyňyz barmy?"
+  "authHaveAccount": "Hasabyňyz barmy?",
+  "authPasswordTitle": "Parol saýlaň",
+  "authPasswordSub": "Onuň bilen hasabyňyza girersiňiz.",
+  "passwordWeak": "Parol gaty ýönekeý",
+  "pwRuleLength": "Iň az 8 nyşan",
+  "pwRuleUpper": "Bir baş harp",
+  "pwRuleLower": "Bir kiçi harp",
+  "pwRuleDigit": "Bir san",
+  "pwRuleNoName": "Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn"
 }

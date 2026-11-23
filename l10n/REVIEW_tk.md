@@ -574,3 +574,11 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `authCreateSub` | Keep your progress safe and play with real people. | Öňegidişligiňizi saklaň we hakyky adamlar bilen oýnaň. |
 | `authNoAccount` | Don't have an account? | Hasabyňyz ýokmy? |
 | `authHaveAccount` | Already have an account? | Hasabyňyz barmy? |
+| `authPasswordTitle` | Choose a password | Parol saýlaň |
+| `authPasswordSub` | You'll use it to sign in. | Onuň bilen hasabyňyza girersiňiz. |
+| `passwordWeak` | That password is too weak | Parol gaty ýönekeý |
+| `pwRuleLength` | At least 8 characters | Iň az 8 nyşan |
+| `pwRuleUpper` | One capital letter | Bir baş harp |
+| `pwRuleLower` | One small letter | Bir kiçi harp |
+| `pwRuleDigit` | One digit | Bir san |
+| `pwRuleNoName` | Not your username or email | Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn |
