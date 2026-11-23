@@ -1882,7 +1882,7 @@ class AppL10nTk extends AppL10n {
   String get searchCountries => 'Ýurt gözläň';
 
   @override
-  String get offlineBanner => 'Siz oflaýn';
+  String get offlineBanner => 'Siz onlaýn däl';
 
   @override
   String get backOnlineBanner => 'Ýene onlaýn';
@@ -1933,10 +1933,10 @@ class AppL10nTk extends AppL10n {
   String get usernameTaken => 'Bu ulanyjy ady eýýäm alnan';
 
   @override
-  String get usernameFree => 'Ulanyjy ady erkin';
+  String get usernameFree => 'Ulanyjy ady boş';
 
   @override
-  String get usernameReserved => 'Bu ulanyjy ady rezerw edilen';
+  String get usernameReserved => 'Bu ulanyjy ady elýeterli däl';
 
   @override
   String get invalidEmail => 'Dogry e-poçta giriziň';
@@ -2061,7 +2061,7 @@ class AppL10nTk extends AppL10n {
   String get pwRuleLower => 'Bir kiçi harp';
 
   @override
-  String get pwRuleDigit => 'Bir san';
+  String get pwRuleDigit => 'Bir sifr';
 
   @override
   String get pwRuleNoName => 'Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn';
@@ -2071,4 +2071,22 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get hidePassword => 'Paroly gizle';
+
+  @override
+  String get learnFirstTitle => 'Ilki göçümleri öwreniň';
+
+  @override
+  String get learnFirstBody =>
+      'Siz «Başlangyç» derejesini saýladyňyz. Çöpleriň nähili ýöreýändigi barada 6 sapagy tamamlaň, şonda Küştüň galan ähli bölümleri açylar. Takmynan 10 minut alar.';
+
+  @override
+  String learnFirstProgress(int done) {
+    return '6 sapakdan $done tamamlandy';
+  }
+
+  @override
+  String get learnFirstKeep => 'Öwrenmegi dowam et';
+
+  @override
+  String get learnFirstSkip => 'Çöpleriň nähili ýöreýändigini bilýärin';
 }

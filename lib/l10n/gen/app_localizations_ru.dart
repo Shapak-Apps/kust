@@ -2074,4 +2074,22 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get hidePassword => 'Скрыть пароль';
+
+  @override
+  String get learnFirstTitle => 'Сначала выучите ходы';
+
+  @override
+  String get learnFirstBody =>
+      'Вы выбрали уровень «Новичок». Пройдите 6 уроков о том, как ходят фигуры, — и откроется всё остальное. Это займёт около 10 минут.';
+
+  @override
+  String learnFirstProgress(int done) {
+    return 'Пройдено $done из 6';
+  }
+
+  @override
+  String get learnFirstKeep => 'Продолжить обучение';
+
+  @override
+  String get learnFirstSkip => 'Я уже знаю, как ходят фигуры';
 }

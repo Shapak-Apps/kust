@@ -3752,6 +3752,36 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Hide password'**
   String get hidePassword;
+
+  /// No description provided for @learnFirstTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn the moves first'**
+  String get learnFirstTitle;
+
+  /// No description provided for @learnFirstBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes.'**
+  String get learnFirstBody;
+
+  /// No description provided for @learnFirstProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of 6 done'**
+  String learnFirstProgress(int done);
+
+  /// No description provided for @learnFirstKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue learning'**
+  String get learnFirstKeep;
+
+  /// No description provided for @learnFirstSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'I already know how the pieces move'**
+  String get learnFirstSkip;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

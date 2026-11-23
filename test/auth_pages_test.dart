@@ -99,4 +99,22 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('a judged code runs its wave and settles', (tester) async {
+    final c = TextEditingController(text: '123456');
+    Widget boxes(CodeStatus status) => MaterialApp(
+      theme: appTheme,
+      home: Scaffold(
+        body: CodeBoxes(controller: c, status: status),
+      ),
+    );
+    await tester.pumpWidget(boxes(CodeStatus.typing));
+    for (final status in [CodeStatus.correct, CodeStatus.wrong]) {
+      await tester.pumpWidget(boxes(status));
+      await tester.pump(CodeBoxes.wave ~/ 2);
+      await tester.pump(CodeBoxes.wave);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(boxes(CodeStatus.typing));
+    }
+  });
 }

@@ -31,6 +31,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   bool _busy = false;
   String? _error;
   String? _notice;
+  CodeStatus _status = CodeStatus.typing;
 
   @override
   void initState() {
@@ -76,11 +77,33 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     try {
       await AuthService.instance.verifyEmail(_code.text);
       if (!mounted) return;
+      // Let the green wave run across the boxes before moving on.
+      setState(() => _status = CodeStatus.correct);
+      await Future<void>.delayed(
+        CodeBoxes.wave + const Duration(milliseconds: 250),
+      );
+      if (!mounted) return;
       goAfterAuth(context, widget.next);
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => _error = authErrorMessage(t, e));
-      if (e.code == 'wrong_code') _code.clear();
+      final wrong = e.code == 'wrong_code';
+      setState(() {
+        _error = authErrorMessage(t, e);
+        if (wrong) _status = CodeStatus.wrong;
+      });
+      if (wrong) {
+        // The red wave and shake, then empty boxes to try again.
+        await Future<void>.delayed(
+          CodeBoxes.wave + const Duration(milliseconds: 150),
+        );
+        if (!mounted) return;
+        final message = _error;
+        _code.clear();
+        setState(() {
+          _status = CodeStatus.typing;
+          _error = message;
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -159,7 +182,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           children: [
             Semantics(
               label: t.verifyCode,
-              child: CodeBoxes(controller: _code, error: _error != null),
+              child: CodeBoxes(controller: _code, status: _status),
             ),
             if (_notice != null)
               Padding(

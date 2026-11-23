@@ -2066,4 +2066,22 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get hidePassword => 'Hide password';
+
+  @override
+  String get learnFirstTitle => 'Learn the moves first';
+
+  @override
+  String get learnFirstBody =>
+      'You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes.';
+
+  @override
+  String learnFirstProgress(int done) {
+    return '$done of 6 done';
+  }
+
+  @override
+  String get learnFirstKeep => 'Continue learning';
+
+  @override
+  String get learnFirstSkip => 'I already know how the pieces move';
 }
