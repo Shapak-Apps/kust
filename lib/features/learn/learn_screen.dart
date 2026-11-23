@@ -1,20 +1,24 @@
-import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:kust/core/board_theme.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lessons.dart';
-import 'package:kust/features/learn/garden_map.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/ui/kust_nav_bar.dart';
+import 'package:kust/ui/felt_header.dart';
+import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_button_3d.dart';
+import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/tokens.dart';
 
-/// The Learn tab: a garden map with a raised tile for every lesson, from
-/// the first pawn move at the bottom to checkmate at the top. The header tells
-/// the stars earned and the camp you are in; the card at the bottom starts
-/// the next lesson.
+/// The Learn tab: the lessons in order, from the first pawn move to
+/// checkmate, grouped by camp. Each lesson is a square of the player's board
+/// with its piece standing on it; the squares run down the page like a file
+/// of the board, joined by a line. The next lesson is marked in gold with
+/// its Start button.
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
 
@@ -23,41 +27,28 @@ class LearnScreen extends StatefulWidget {
 }
 
 class _LearnScreenState extends State<LearnScreen> {
-  ScrollController? _scroll;
+  final _nextKey = GlobalKey();
   bool _loaded = false;
-
-  /// Height of the header that floats over the top of the map.
-  static const double _header = 196;
-
-  /// Height of the up-next card over the bottom of the map.
-  static const double _card = 96;
 
   @override
   void initState() {
     super.initState();
     LearnProgress.instance.load().then((_) {
-      if (mounted) setState(() => _loaded = true);
+      if (!mounted) return;
+      setState(() => _loaded = true);
+      // Start with the next lesson in view.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final target = _nextKey.currentContext;
+        if (target != null && target.mounted) {
+          Scrollable.ensureVisible(
+            target,
+            alignment: 0.4,
+            // Only when it is off screen: the top stays put otherwise.
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          );
+        }
+      });
     });
-  }
-
-  @override
-  void dispose() {
-    _scroll?.dispose();
-    super.dispose();
-  }
-
-  /// The trail starts at the foot, scrolled so the next stop is in view.
-  ScrollController _controllerFor(
-    LearnMapLayout layout,
-    double viewport,
-    int next,
-  ) {
-    return _scroll ??= ScrollController(
-      initialScrollOffset: (layout.fromBottom(next) - viewport * 0.45).clamp(
-        0.0,
-        layout.height - viewport,
-      ),
-    );
   }
 
   void _open(Lesson lesson) {
@@ -103,472 +94,312 @@ class _LearnScreenState extends State<LearnScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    final nav = KustNavBar.clearance(context);
-    return ColoredBox(
-      color: GardenColors.ground,
-      child: !_loaded
-          ? const SizedBox.expand()
-          : LayoutBuilder(
-              builder: (context, box) {
-                final layout = LearnMapLayout(
-                  width: box.maxWidth,
-                  count: kLessons.length,
-                  topInset: top + _header - 40,
-                  footRoom: nav + _card + 120,
-                );
-                return ValueListenableBuilder<Set<String>>(
-                  valueListenable: LearnProgress.instance.done,
-                  builder: (context, done, _) {
-                    final progress = LearnProgress.instance;
-                    final nextIndex = kLessons.indexWhere(
-                      (l) => !done.contains(l.id),
-                    );
-                    final controller = _controllerFor(
-                      layout,
-                      box.maxHeight,
-                      nextIndex < 0 ? kLessons.length - 1 : nextIndex,
-                    );
-                    final camp = Camp.of(
-                      nextIndex < 0 ? kLessons.length - 1 : nextIndex,
-                    );
-                    return Stack(
-                      children: [
-                        // Scrolled from the bottom, the way you climb.
-                        SingleChildScrollView(
-                          controller: controller,
-                          reverse: true,
-                          child: LearnMap(
-                            layout: layout,
-                            done: done,
-                            stars: progress.stars,
-                            onOpen: _open,
-                            coachImage: 'assets/bots/Bahar.webp',
-                          ),
-                        ),
-                        // Soft shade along the sides, for depth.
-                        const Positioned.fill(
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0x33000000),
-                                    Color(0x00000000),
-                                    Color(0x00000000),
-                                    Color(0x33000000),
-                                  ],
-                                  stops: [0, 0.16, 0.84, 1],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          child: _Header(
-                            top: top,
-                            stars: progress.totalStars,
-                            maxStars: kLessons.length * 3,
-                            camp: camp,
-                            doneIds: done,
-                          ),
-                        ),
-                        Positioned(
-                          left: 16,
-                          right: 16,
-                          bottom: nav - 4,
-                          child: nextIndex < 0
-                              ? const _SummitCard()
-                              : _UpNextCard(
-                                  index: nextIndex,
-                                  done: done.length,
-                                  onStart: () => _open(kLessons[nextIndex]),
-                                ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.top,
-    required this.stars,
-    required this.maxStars,
-    required this.camp,
-    required this.doneIds,
-  });
-
-  final double top;
-  final int stars;
-  final int maxStars;
-  final Camp camp;
-  final Set<String> doneIds;
-
-  @override
-  Widget build(BuildContext context) {
+    final k = context.k;
     final t = context.t;
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, top + 14, 20, 26),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF10241A), Color(0xEE10241A), Color(0x0010241A)],
-          stops: [0, 0.7, 1],
-        ),
-      ),
+    return ColoredBox(
+      color: k.bg,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.learnTitle,
-                      style: const TextStyle(
-                        fontSize: 30,
-                        height: 1.1,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.6,
-                        color: Color(0xFFF2F0EA),
-                      ),
+          FeltHeader(title: t.learnTitle),
+          Expanded(
+            child: !_loaded
+                ? const SizedBox.expand()
+                : ValueListenableBuilder<Set<String>>(
+                    valueListenable: LearnProgress.instance.done,
+                    builder: (context, done, _) => ValueListenableBuilder(
+                      valueListenable: AppSettings.instance.boardTheme,
+                      builder: (context, board, _) =>
+                          _list(context, done, board),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      t.learnSub,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFAEB6C8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(10, 7, 12, 7),
-                decoration: BoxDecoration(
-                  color: const Color(0xCC0F1320),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 18,
-                      color: GardenColors.gold,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$stars / $maxStars',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFFF2F0EA),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                  ),
           ),
-          const SizedBox(height: 16),
-          _CampBanner(camp: camp, done: doneIds),
         ],
       ),
     );
   }
+
+  Widget _list(BuildContext context, Set<String> done, BoardTheme board) {
+    final k = context.k;
+    final t = context.t;
+    final progress = LearnProgress.instance;
+    final next = kLessons.indexWhere((l) => !done.contains(l.id));
+    return ListView(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, KustNavBar.clearance(context)),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(t.learnSub, style: k.body.copyWith(color: k.muted)),
+            ),
+            const SizedBox(width: 12),
+            Icon(Icons.star_rounded, size: 20, color: k.accent),
+            const SizedBox(width: 4),
+            Text(
+              '${progress.totalStars} / ${kLessons.length * 3}',
+              style: k.body.copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        for (final camp in kCamps) ...[
+          const SizedBox(height: 24),
+          _CampTitle(camp: camp, done: done),
+          const SizedBox(height: 12),
+          for (var i = camp.first; i <= camp.last; i++)
+            _LessonRow(
+              key: i == next ? _nextKey : null,
+              index: i,
+              board: board,
+              state: done.contains(kLessons[i].id)
+                  ? _LessonState.done
+                  : i == next
+                  ? _LessonState.next
+                  : _LessonState.locked,
+              stars: progress.starsOf(kLessons[i].id),
+              // The line runs on to the next square, within the camp.
+              lineBelow: i < camp.last,
+              lineAbove: i > camp.first,
+              onTap: () => _open(kLessons[i]),
+            ),
+        ],
+        if (next < 0) ...[
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: k.surface,
+              borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.emoji_events_rounded, color: k.accent, size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    t.learnSummitDone,
+                    style: k.body.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                KustButton(
+                  label: t.play,
+                  expand: false,
+                  height: 40,
+                  onTap: () => context.go('/play'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
-class _CampBanner extends StatelessWidget {
-  const _CampBanner({required this.camp, required this.done});
+/// "CAMP 1 · 2/6", the camp's name and what it teaches.
+class _CampTitle extends StatelessWidget {
+  const _CampTitle({required this.camp, required this.done});
 
   final Camp camp;
-
-  /// The lessons finished so far, by id.
   final Set<String> done;
 
   @override
   Widget build(BuildContext context) {
+    final k = context.k;
     final t = context.t;
-    final next = kLessons.indexWhere((l) => !done.contains(l.id));
     final count = [
       for (var i = camp.first; i <= camp.last; i++)
         if (done.contains(kLessons[i].id)) i,
     ].length;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 13, 16, 14),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              camp.label(t),
+              style: k.caption.copyWith(
+                color: k.accent,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$count/${camp.length}',
+              style: k.caption.copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(camp.title(t), style: k.title),
+        Text(camp.subtitle(t), style: k.caption),
+      ],
+    );
+  }
+}
+
+enum _LessonState { done, next, locked }
+
+/// One lesson: its square on the board's file, and its number and name;
+/// stars once done, a Start button when it is next, a lock after that.
+class _LessonRow extends StatelessWidget {
+  const _LessonRow({
+    super.key,
+    required this.index,
+    required this.board,
+    required this.state,
+    required this.stars,
+    required this.lineAbove,
+    required this.lineBelow,
+    required this.onTap,
+  });
+
+  final int index;
+  final BoardTheme board;
+  final _LessonState state;
+  final int stars;
+  final bool lineAbove;
+  final bool lineBelow;
+  final VoidCallback onTap;
+
+  static const double _square = 56;
+  static const double _gap = 12;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    final lesson = kLessons[index];
+    final next = state == _LessonState.next;
+    final locked = state == _LessonState.locked;
+    final light = index.isEven;
+
+    final square = Container(
+      width: _square,
+      height: _square,
       decoration: BoxDecoration(
-        color: const Color(0xE60D1A13),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x1AFFFFFF)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+        color: locked
+            ? k.surfaceAlt
+            : light
+            ? board.light
+            : board.dark,
+        borderRadius: BorderRadius.circular(8),
+        border: next ? Border.all(color: k.accent, width: 3) : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+      alignment: Alignment.center,
+      child: Opacity(
+        opacity: locked ? 0.35 : 1,
+        child: lesson.piece != null
+            ? LearnPiece(lesson.piece!, height: _square * 0.78)
+            : Icon(
+                lesson.icon,
+                size: _square * 0.48,
+                color: locked
+                    ? k.muted
+                    : light
+                    ? board.dark
+                    : board.light,
+              ),
+      ),
+    );
+
+    // The line through the squares: the walk done so far in green.
+    Widget line(bool visible, bool lit) => Container(
+      width: 3,
+      height: _gap / 2,
+      color: !visible
+          ? Colors.transparent
+          : lit
+          ? k.success
+          : k.line,
+    );
+
+    return Semantics(
+      button: true,
+      label: '${t.lessonLabel(index + 1)}, ${lesson.title(t)}',
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 0, 12, 0),
+          decoration: BoxDecoration(
+            color: next ? k.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+          ),
+          child: Row(
             children: [
+              Column(
+                children: [
+                  line(lineAbove, state != _LessonState.locked),
+                  square,
+                  line(lineBelow, state == _LessonState.done),
+                ],
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${camp.label(t)} · ${camp.title(t)}'.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                        color: Color(0xFF8FB8A0),
+                      t.lessonLabel(index + 1),
+                      style: k.caption.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.6,
+                        color: next ? k.accent : k.muted,
                       ),
                     ),
-                    const SizedBox(height: 3),
                     Text(
-                      camp.subtitle(t),
+                      lesson.title(t),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.2,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: Color(0xFFF4F1EA),
+                      style: k.body.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: locked ? k.muted : k.ink,
                       ),
                     ),
+                    if (next)
+                      Text(
+                        t.lessonMinutes(
+                          lesson.tasks.length,
+                          (lesson.tasks.length * 0.7).ceil(),
+                        ),
+                        style: k.caption,
+                      ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Text.rich(
-                TextSpan(
+              const SizedBox(width: 8),
+              switch (state) {
+                _LessonState.done => Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextSpan(
-                      text: '$count',
-                      style: const TextStyle(color: Color(0xFFF4F1EA)),
-                    ),
-                    TextSpan(
-                      text: '/${camp.length}',
-                      style: const TextStyle(color: Color(0xFF6F8F7D)),
-                    ),
+                    for (var s = 1; s <= 3; s++)
+                      Icon(
+                        Icons.star_rounded,
+                        size: 18,
+                        color: s <= stars ? k.accent : k.line,
+                      ),
                   ],
                 ),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                _LessonState.next => KustButton3D(
+                  label: t.lessonStart.split(' ').first,
+                  height: 40,
+                  onTap: onTap,
                 ),
-              ),
+                _LessonState.locked => Icon(
+                  Icons.lock_rounded,
+                  size: 18,
+                  color: k.muted,
+                ),
+              },
             ],
           ),
-          const SizedBox(height: 11),
-          // One step per lesson of the camp.
-          Row(
-            children: [
-              for (var i = camp.first; i <= camp.last; i++) ...[
-                if (i > camp.first) const SizedBox(width: 5),
-                Expanded(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3),
-                      color: done.contains(kLessons[i].id)
-                          ? const Color(0xFF4CC283)
-                          : i == next
-                          ? const Color(0xFFF5C344)
-                          : const Color(0x1FFFFFFF),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The middle of each Learn piece's drawing, down its 135-high box. The
-/// pieces stand on the box's floor, so a short one like the pawn sits low.
-const Map<Role, double> _pieceMiddle = {
-  Role.pawn: 80,
-  Role.rook: 72.3,
-  Role.knight: 72.8,
-  Role.bishop: 69.9,
-  Role.queen: 68,
-  Role.king: 66.5,
-};
-
-/// The next lesson, ready to start: a ring for the climb so far, its name
-/// and size, and a big green button.
-class _UpNextCard extends StatelessWidget {
-  const _UpNextCard({
-    required this.index,
-    required this.done,
-    required this.onStart,
-  });
-
-  final int index;
-  final int done;
-  final VoidCallback onStart;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    final lesson = kLessons[index];
-    final piece = lesson.piece;
-    return Pressable(
-      onTap: onStart,
-      haptic: true,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF26221E),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0x10FFFFFF)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x80000000),
-              blurRadius: 28,
-              offset: Offset(0, 10),
-            ),
-          ],
         ),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 54,
-              height: 54,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox.expand(
-                    child: CircularProgressIndicator(
-                      value: done / kLessons.length,
-                      strokeWidth: 4,
-                      backgroundColor: const Color(0x14FFFFFF),
-                      color: const Color(0xFF3CB77C),
-                    ),
-                  ),
-                  if (piece != null)
-                    // Lifted so the drawing, not its box, is centred.
-                    Transform.translate(
-                      offset: Offset(
-                        0,
-                        (67.5 - _pieceMiddle[piece]!) / 135 * 38,
-                      ),
-                      child: LearnPiece(piece, height: 38),
-                    )
-                  else
-                    Icon(lesson.icon, color: const Color(0xFFF2F0EA)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t.learnUpNext(index + 1),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: Color(0xFF9EE7C1),
-                    ),
-                  ),
-                  Text(
-                    lesson.title(t),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFF2F0EA),
-                    ),
-                  ),
-                  Text(
-                    t.lessonMinutes(
-                      lesson.tasks.length,
-                      (lesson.tasks.length * 0.7).ceil(),
-                    ),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF8E8C86),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            KustButton3D(label: t.lessonStart.split(' ').first, onTap: onStart),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SummitCard extends StatelessWidget {
-  const _SummitCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.t;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF26221E),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.emoji_events_rounded,
-            color: GardenColors.gold,
-            size: 36,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              t.learnSummitDone,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFFF2F0EA),
-              ),
-            ),
-          ),
-          KustButton3D(label: t.play, onTap: () => context.go('/play')),
-        ],
       ),
     );
   }
