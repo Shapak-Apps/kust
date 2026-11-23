@@ -2162,4 +2162,55 @@ class AppL10nRu extends AppL10n {
   @override
   String get noFriendsYet =>
       'Пока нет друзей. Ищите игроков через значок глобуса.';
+
+  @override
+  String get chatsTitle => 'Сообщения';
+
+  @override
+  String get chatsEmpty =>
+      'Сообщений пока нет. Откройте профиль друга и нажмите «Написать».';
+
+  @override
+  String chatSayHi(String name) {
+    return 'Скажите $name салам 👋';
+  }
+
+  @override
+  String get chatHint => 'Сообщение';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Ответ $name';
+  }
+
+  @override
+  String get chatYou => 'Вы';
+
+  @override
+  String get chatOnline => 'в сети';
+
+  @override
+  String get chatToday => 'Сегодня';
+
+  @override
+  String get chatYesterday => 'Вчера';
+
+  @override
+  String get chatCopy => 'Копировать';
+
+  @override
+  String get chatReply => 'Ответить';
+
+  @override
+  String get chatCopied => 'Скопировано';
+
+  @override
+  String get chatFriendsOnly =>
+      'Писать можно только друзьям. Сначала добавьте в друзья.';
+
+  @override
+  String get chatNotSent => 'Не отправлено. Нажмите, чтобы повторить.';
+
+  @override
+  String get chatSend => 'Отправить';
 }
