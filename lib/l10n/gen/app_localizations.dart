@@ -3782,6 +3782,102 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'I already know how the pieces move'**
   String get learnFirstSkip;
+
+  /// No description provided for @friendAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friend'**
+  String get friendAdd;
+
+  /// No description provided for @friendRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get friendRequested;
+
+  /// No description provided for @friendAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get friendAccept;
+
+  /// No description provided for @friendDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get friendDecline;
+
+  /// No description provided for @friendFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get friendFriends;
+
+  /// No description provided for @friendRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from your friends?'**
+  String friendRemoveTitle(String name);
+
+  /// No description provided for @friendRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get friendRemove;
+
+  /// No description provided for @friendCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel request'**
+  String get friendCancel;
+
+  /// No description provided for @messageButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messageButton;
+
+  /// No description provided for @messagesSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages are coming soon'**
+  String get messagesSoon;
+
+  /// No description provided for @friendRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend requests'**
+  String get friendRequests;
+
+  /// No description provided for @friendsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friends'**
+  String get friendsSection;
+
+  /// No description provided for @everyonePlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get everyonePlayers;
+
+  /// No description provided for @wantsToBeFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants to be your friend'**
+  String get wantsToBeFriend;
+
+  /// No description provided for @playerMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This player can\'t be found'**
+  String get playerMissing;
+
+  /// No description provided for @photoNotUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t upload your photo. Try again later.'**
+  String get photoNotUploaded;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

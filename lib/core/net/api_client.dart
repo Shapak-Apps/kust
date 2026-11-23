@@ -63,6 +63,26 @@ class ApiClient {
     String? token,
   }) => _send('PATCH', path, body: body, token: token);
 
+  /// Sends [bytes] as the whole body, such as a photo.
+  Future<Map<String, dynamic>> putBytes(
+    String path, {
+    required List<int> bytes,
+    required String contentType,
+    String? token,
+  }) => _send(
+    'PUT',
+    path,
+    body: Stream.value(bytes),
+    token: token,
+    headers: {
+      'Content-Type': contentType,
+      Headers.contentLengthHeader: bytes.length,
+    },
+  );
+
+  Future<Map<String, dynamic>> delete(String path, {String? token}) =>
+      _send('DELETE', path, token: token);
+
   Future<bool> ping({Duration timeout = const Duration(seconds: 5)}) async {
     try {
       final response = await _dio.get<dynamic>('/healthz').timeout(timeout);
@@ -80,6 +100,7 @@ class ApiClient {
     Map<String, String>? query,
     Object? body,
     String? token,
+    Map<String, Object>? headers,
   }) async {
     final Response<dynamic> response;
     try {
@@ -89,7 +110,10 @@ class ApiClient {
         queryParameters: query,
         options: Options(
           method: method,
-          headers: token == null ? null : {'Authorization': 'Bearer $token'},
+          headers: {
+            ...?headers,
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
         ),
       );
     } on DioException catch (e) {

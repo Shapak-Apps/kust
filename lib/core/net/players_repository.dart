@@ -118,4 +118,47 @@ class PlayersRepository {
   }
 
   Future<void> clearCache() => cache.clear();
+
+  /// One player and how they stand to me.
+  Future<({Player player, Friendship friendship})> player(
+    String username,
+  ) async {
+    final json = await auth.authed(
+      (token) => auth.api.get('/v1/players/$username', token: token),
+    );
+    return (
+      player: Player.fromJson(json['player'] as Map<String, dynamic>),
+      friendship: Friendship.parse(json['friendship']),
+    );
+  }
+
+  /// Sends a friend request, or accepts theirs.
+  Future<Friendship> addFriend(String username) async {
+    final json = await auth.authed(
+      (token) => auth.api.post('/v1/friends/$username', token: token),
+    );
+    return Friendship.parse(json['friendship']);
+  }
+
+  /// Cancels a request, declines one, or ends a friendship.
+  Future<void> removeFriend(String username) => auth.authed(
+    (token) => auth.api.delete('/v1/friends/$username', token: token),
+  );
+
+  /// My friends, the requests waiting for me, and the ones I sent.
+  Future<({List<Player> friends, List<Player> incoming, List<Player> outgoing})>
+  friends() async {
+    final json = await auth.authed(
+      (token) => auth.api.get('/v1/friends', token: token),
+    );
+    List<Player> list(String key) => [
+      for (final p in (json[key] as List? ?? const []))
+        Player.fromJson(p as Map<String, dynamic>),
+    ];
+    return (
+      friends: list('friends'),
+      incoming: list('incoming'),
+      outgoing: list('outgoing'),
+    );
+  }
 }

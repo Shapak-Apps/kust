@@ -1179,5 +1179,28 @@
         "type": "int"
       }
     }
+  },
+  "friendAdd": "Add friend",
+  "friendRequested": "Request sent",
+  "friendAccept": "Accept",
+  "friendDecline": "Decline",
+  "friendFriends": "Friends",
+  "friendRemoveTitle": "Remove {name} from your friends?",
+  "friendRemove": "Remove",
+  "friendCancel": "Cancel request",
+  "messageButton": "Message",
+  "messagesSoon": "Messages are coming soon",
+  "friendRequests": "Friend requests",
+  "friendsSection": "Your friends",
+  "everyonePlayers": "Everyone",
+  "wantsToBeFriend": "Wants to be your friend",
+  "playerMissing": "This player can't be found",
+  "photoNotUploaded": "Couldn't upload your photo. Try again later.",
+  "@friendRemoveTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

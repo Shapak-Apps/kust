@@ -613,5 +613,21 @@
   "learnFirstBody": "Вы выбрали уровень «Новичок». Пройдите 6 уроков о том, как ходят фигуры, — и откроется всё остальное. Это займёт около 10 минут.",
   "learnFirstProgress": "Пройдено {done} из 6",
   "learnFirstKeep": "Продолжить обучение",
-  "learnFirstSkip": "Я уже знаю, как ходят фигуры"
+  "learnFirstSkip": "Я уже знаю, как ходят фигуры",
+  "friendAdd": "Добавить в друзья",
+  "friendRequested": "Заявка отправлена",
+  "friendAccept": "Принять",
+  "friendDecline": "Отклонить",
+  "friendFriends": "Друзья",
+  "friendRemoveTitle": "Удалить {name} из друзей?",
+  "friendRemove": "Удалить",
+  "friendCancel": "Отменить заявку",
+  "messageButton": "Написать",
+  "messagesSoon": "Сообщения скоро появятся",
+  "friendRequests": "Заявки в друзья",
+  "friendsSection": "Ваши друзья",
+  "everyonePlayers": "Все игроки",
+  "wantsToBeFriend": "Хочет добавить вас в друзья",
+  "playerMissing": "Игрок не найден",
+  "photoNotUploaded": "Не удалось загрузить фото. Попробуйте позже."
 }
