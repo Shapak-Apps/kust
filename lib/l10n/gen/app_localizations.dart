@@ -3392,6 +3392,246 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Search countries'**
   String get searchCountries;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get offlineBanner;
+
+  /// No description provided for @backOnlineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Back online'**
+  String get backOnlineBanner;
+
+  /// No description provided for @playersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Players'**
+  String get playersTitle;
+
+  /// No description provided for @playersSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search players'**
+  String get playersSearch;
+
+  /// No description provided for @playersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No players found'**
+  String get playersEmpty;
+
+  /// No description provided for @playersLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load players'**
+  String get playersLoadFailed;
+
+  /// No description provided for @playersSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing your saved list'**
+  String get playersSaved;
+
+  /// No description provided for @allPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'All players'**
+  String get allPlayers;
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @haveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get haveAccount;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @emailOrUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or username'**
+  String get emailOrUsername;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPassword;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @usernameTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That username is taken'**
+  String get usernameTaken;
+
+  /// No description provided for @usernameFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Username is free'**
+  String get usernameFree;
+
+  /// No description provided for @usernameReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'That username is reserved'**
+  String get usernameReserved;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email'**
+  String get invalidEmail;
+
+  /// No description provided for @passwordShort.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordShort;
+
+  /// No description provided for @passwordsDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords don\'t match'**
+  String get passwordsDiffer;
+
+  /// No description provided for @invalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email, username or password'**
+  String get invalidCredentials;
+
+  /// No description provided for @emailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists'**
+  String get emailTaken;
+
+  /// No description provided for @noInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Try again when you\'re online.'**
+  String get noInternet;
+
+  /// No description provided for @genericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get genericError;
+
+  /// No description provided for @rateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries, wait a moment'**
+  String get rateLimited;
+
+  /// No description provided for @verifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get verifyTitle;
+
+  /// No description provided for @verifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to {email}'**
+  String verifySubtitle(String email);
+
+  /// No description provided for @verifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get verifyCode;
+
+  /// No description provided for @verifyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verifyButton;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get resendCode;
+
+  /// No description provided for @resendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code in {seconds}s'**
+  String resendIn(int seconds);
+
+  /// No description provided for @codeWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That code doesn\'t match'**
+  String get codeWrong;
+
+  /// No description provided for @codeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'That code expired, send a new one'**
+  String get codeExpired;
+
+  /// No description provided for @codeTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong tries, send a new code'**
+  String get codeTooMany;
+
+  /// No description provided for @codeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent'**
+  String get codeSent;
+
+  /// No description provided for @signInToSeePlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to see other players'**
+  String get signInToSeePlayers;
+
+  /// No description provided for @signInToSeePlayersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Players are visible to signed-in members. Your games and progress stay on your phone either way.'**
+  String get signInToSeePlayersBody;
+
+  /// No description provided for @accountSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String accountSignedInAs(String email);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

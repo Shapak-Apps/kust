@@ -19,6 +19,12 @@ class KustTextField extends StatelessWidget {
     this.onSubmitted,
     this.action,
     this.bare = false,
+    this.obscure = false,
+    this.keyboardType,
+    this.autofillHints,
+    this.onChanged,
+    this.errorText,
+    this.hint,
   });
 
   /// For a username: only what [AppStorage.usernamePattern] allows, in
@@ -31,7 +37,13 @@ class KustTextField extends StatelessWidget {
     this.onSubmitted,
     this.action,
     this.bare = false,
-  }) : maxLength = 20,
+    this.onChanged,
+    this.errorText,
+    this.hint,
+  }) : obscure = false,
+       keyboardType = TextInputType.visiblePassword,
+       autofillHints = const [AutofillHints.username],
+       maxLength = 20,
        maxLines = 1,
        prefix = '@',
        capitalization = TextCapitalization.none,
@@ -60,6 +72,13 @@ class KustTextField extends StatelessWidget {
   /// Without its filled box, for a field that sits in a list row.
   final bool bare;
 
+  final bool obscure;
+  final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onChanged;
+  final String? errorText;
+  final String? hint;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -71,7 +90,12 @@ class KustTextField extends StatelessWidget {
       autofocus: autofocus,
       textCapitalization: capitalization,
       inputFormatters: formatters,
-      autocorrect: prefix == null,
+      autocorrect: prefix == null && !obscure,
+      enableSuggestions: !obscure,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      autofillHints: autofillHints,
+      onChanged: onChanged,
       onSubmitted: onSubmitted,
       textInputAction: action,
       style: k.body,
@@ -88,6 +112,9 @@ class KustTextField extends StatelessWidget {
               counterText: '',
               prefixText: prefix,
               helperText: helper,
+              errorText: errorText,
+              hintText: hint,
+              hintStyle: k.body.copyWith(color: k.muted),
               filled: true,
               fillColor: k.surfaceAlt,
               border: OutlineInputBorder(
