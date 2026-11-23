@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/storage/game_history_store.dart';
@@ -133,13 +135,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickPhoto() async {
     try {
+      // Shrunk on the phone to at most 512 px as a JPEG (around 30–60 KB),
+      // so uploads are quick and the bucket stays small.
       final picked = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
         maxHeight: 512,
-        imageQuality: 85,
+        imageQuality: 80,
       );
-      if (picked != null) await _store.setPhoto(picked.path);
+      if (picked == null) return;
+      await _store.setPhoto(picked.path);
+      if (AuthService.instance.state.value.isSignedIn) {
+        try {
+          await AuthService.instance.uploadAvatar(await picked.readAsBytes());
+        } on ApiException {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(context.t.photoNotUploaded),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      }
     } catch (e, st) {
       ErrorLog.record(e, st);
     }
@@ -194,7 +213,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return PlayerAvatar(
       size: size,
       name: _store.displayName(context.t),
-      photo: path == null ? null : FileImage(File(path)),
+      // The photo on this phone, else the account's (signed in elsewhere).
+      photo: path != null
+          ? FileImage(File(path))
+          : avatarImage(
+              avatarUrlFor(AuthService.instance.state.value.account?.avatarKey),
+            ),
     );
   }
 
@@ -383,7 +407,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (_store.photoPath != null)
         Center(
           child: TextButton(
-            onPressed: () => _store.setPhoto(null),
+            onPressed: () {
+              _store.setPhoto(null);
+              if (AuthService.instance.state.value.isSignedIn) {
+                AuthService.instance.removeAvatar().ignore();
+              }
+            },
             child: Text(t.removePhoto, style: TextStyle(color: k.muted)),
           ),
         )

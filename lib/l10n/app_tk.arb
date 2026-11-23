@@ -613,5 +613,21 @@
   "learnFirstBody": "Siz «Başlangyç» derejesini saýladyňyz. Çöpleriň nähili ýöreýändigi barada 6 sapagy tamamlaň, şonda Küştüň galan ähli bölümleri açylar. Takmynan 10 minut alar.",
   "learnFirstProgress": "6 sapakdan {done} tamamlandy",
   "learnFirstKeep": "Öwrenmegi dowam et",
-  "learnFirstSkip": "Çöpleriň nähili ýöreýändigini bilýärin"
+  "learnFirstSkip": "Çöpleriň nähili ýöreýändigini bilýärin",
+  "friendAdd": "Dost goş",
+  "friendRequested": "Haýyş iberildi",
+  "friendAccept": "Kabul et",
+  "friendDecline": "Ret et",
+  "friendFriends": "Dostlar",
+  "friendRemoveTitle": "{name} dostlaryňyzdan aýrylsynmy?",
+  "friendRemove": "Aýyr",
+  "friendCancel": "Haýyşy ýatyr",
+  "messageButton": "Hat ýaz",
+  "messagesSoon": "Hatlaşmak ýakyn wagtda goşular",
+  "friendRequests": "Dostluk haýyşlary",
+  "friendsSection": "Dostlaryňyz",
+  "everyonePlayers": "Ähli oýunçylar",
+  "wantsToBeFriend": "Siz bilen dost bolmak isleýär",
+  "playerMissing": "Bu oýunçy tapylmady",
+  "photoNotUploaded": "Suraty ýükläp bolmady. Soňrak täzeden synanyşyň."
 }

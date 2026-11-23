@@ -14,6 +14,9 @@ class FakeAdapter implements HttpClientAdapter {
   FakeHandler handler;
   final List<RequestOptions> requests = [];
 
+  /// The raw bodies sent as streams (such as a photo), in order.
+  final List<List<int>> streamed = [];
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -21,6 +24,9 @@ class FakeAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
+    if (requestStream != null) {
+      streamed.add([await for (final chunk in requestStream) ...chunk]);
+    }
     return handler(options);
   }
 

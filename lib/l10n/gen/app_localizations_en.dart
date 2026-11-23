@@ -2084,4 +2084,55 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get learnFirstSkip => 'I already know how the pieces move';
+
+  @override
+  String get friendAdd => 'Add friend';
+
+  @override
+  String get friendRequested => 'Request sent';
+
+  @override
+  String get friendAccept => 'Accept';
+
+  @override
+  String get friendDecline => 'Decline';
+
+  @override
+  String get friendFriends => 'Friends';
+
+  @override
+  String friendRemoveTitle(String name) {
+    return 'Remove $name from your friends?';
+  }
+
+  @override
+  String get friendRemove => 'Remove';
+
+  @override
+  String get friendCancel => 'Cancel request';
+
+  @override
+  String get messageButton => 'Message';
+
+  @override
+  String get messagesSoon => 'Messages are coming soon';
+
+  @override
+  String get friendRequests => 'Friend requests';
+
+  @override
+  String get friendsSection => 'Your friends';
+
+  @override
+  String get everyonePlayers => 'Everyone';
+
+  @override
+  String get wantsToBeFriend => 'Wants to be your friend';
+
+  @override
+  String get playerMissing => 'This player can\'t be found';
+
+  @override
+  String get photoNotUploaded =>
+      'Couldn\'t upload your photo. Try again later.';
 }

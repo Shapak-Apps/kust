@@ -2089,4 +2089,55 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get learnFirstSkip => 'Çöpleriň nähili ýöreýändigini bilýärin';
+
+  @override
+  String get friendAdd => 'Dost goş';
+
+  @override
+  String get friendRequested => 'Haýyş iberildi';
+
+  @override
+  String get friendAccept => 'Kabul et';
+
+  @override
+  String get friendDecline => 'Ret et';
+
+  @override
+  String get friendFriends => 'Dostlar';
+
+  @override
+  String friendRemoveTitle(String name) {
+    return '$name dostlaryňyzdan aýrylsynmy?';
+  }
+
+  @override
+  String get friendRemove => 'Aýyr';
+
+  @override
+  String get friendCancel => 'Haýyşy ýatyr';
+
+  @override
+  String get messageButton => 'Hat ýaz';
+
+  @override
+  String get messagesSoon => 'Hatlaşmak ýakyn wagtda goşular';
+
+  @override
+  String get friendRequests => 'Dostluk haýyşlary';
+
+  @override
+  String get friendsSection => 'Dostlaryňyz';
+
+  @override
+  String get everyonePlayers => 'Ähli oýunçylar';
+
+  @override
+  String get wantsToBeFriend => 'Siz bilen dost bolmak isleýär';
+
+  @override
+  String get playerMissing => 'Bu oýunçy tapylmady';
+
+  @override
+  String get photoNotUploaded =>
+      'Suraty ýükläp bolmady. Soňrak täzeden synanyşyň.';
 }

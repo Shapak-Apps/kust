@@ -37,6 +37,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
   ApiException? _error;
   int _generation = 0;
 
+  /// Friend requests waiting for me, and my friends: shown above everyone
+  /// while not searching.
+  List<Player> _incoming = const [];
+  List<Player> _friends = const [];
+
   PlayersRepository get _repo =>
       widget.repository ?? PlayersRepository.instance;
   PresenceService get _presence => widget.presence ?? PresenceService.instance;
@@ -51,6 +56,48 @@ class _PlayersScreenState extends State<PlayersScreen> {
     }
     _scroll.addListener(_onScroll);
     _load();
+    _loadFriends();
+  }
+
+  Future<void> _loadFriends() async {
+    try {
+      final f = await _repo.friends();
+      if (!mounted) return;
+      setState(() {
+        _incoming = f.incoming;
+        _friends = f.friends;
+      });
+    } on ApiException {
+      // The list of everyone still works; friends show next time.
+    }
+  }
+
+  /// Accepts or declines a request right in the list.
+  Future<void> _answer(Player player, bool accept) async {
+    setState(
+      () => _incoming = [
+        for (final p in _incoming)
+          if (p.username != player.username) p,
+      ],
+    );
+    try {
+      if (accept) {
+        await _repo.addFriend(player.username);
+      } else {
+        await _repo.removeFriend(player.username);
+      }
+    } on ApiException {
+      // Shown again by the reload below if it didn't go through.
+    }
+    await _loadFriends();
+  }
+
+  Future<void> _refresh() => Future.wait([_load(), _loadFriends()]);
+
+  Future<void> _open(Player player) async {
+    await context.push('/player/${player.username}', extra: player);
+    // Back from a profile: a request may have been sent or answered there.
+    if (mounted) _loadFriends();
   }
 
   @override
@@ -215,35 +262,90 @@ class _PlayersScreenState extends State<PlayersScreen> {
         ),
       );
     }
-    if (_players.isEmpty) {
+    final sections =
+        _query.isEmpty && (_incoming.isNotEmpty || _friends.isNotEmpty);
+    if (_players.isEmpty && !sections) {
       return Center(
         child: Text(t.playersEmpty, style: k.body.copyWith(color: k.muted)),
       );
     }
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: _refresh,
       child: ValueListenableBuilder<Set<String>>(
         valueListenable: _presence.online,
-        builder: (context, online, _) => ListView.separated(
-          controller: _scroll,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(top: 8, bottom: 24),
-          itemCount: _players.length + (_loadingMore ? 1 : 0),
-          separatorBuilder: (_, _) =>
-              Divider(height: 1, thickness: 1, color: k.line, indent: 76),
-          itemBuilder: (context, i) {
-            if (i >= _players.length) {
-              return const Padding(
+        builder: (context, online, _) {
+          Widget tile(Player p, {Widget? trailing}) => PlayerTile(
+            player: p,
+            online: online.contains(p.username),
+            onTap: () => _open(p),
+            trailing: trailing,
+          );
+          final rows = <Widget>[
+            if (sections && _incoming.isNotEmpty) ...[
+              _SectionLabel('${t.friendRequests} · ${_incoming.length}'),
+              for (final p in _incoming)
+                tile(
+                  p,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => _answer(p, true),
+                        tooltip: t.friendAccept,
+                        color: k.success,
+                        icon: const Icon(Icons.check_circle_rounded),
+                      ),
+                      IconButton(
+                        onPressed: () => _answer(p, false),
+                        tooltip: t.friendDecline,
+                        color: k.muted,
+                        icon: const Icon(Icons.cancel_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+            if (sections && _friends.isNotEmpty) ...[
+              _SectionLabel(t.friendsSection),
+              for (final p in _friends) tile(p),
+            ],
+            if (sections && _players.isNotEmpty)
+              _SectionLabel(t.everyonePlayers),
+            for (final p in _players) tile(p),
+            if (_loadingMore)
+              const Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            final player = _players[i];
-            return PlayerTile(
-              player: player,
-              online: online.contains(player.username),
-            );
-          },
+              ),
+          ];
+          return ListView(
+            controller: _scroll,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 8, bottom: 24),
+            children: rows,
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// A small title over a part of the list.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      child: Text(
+        text.toUpperCase(),
+        style: k.caption.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -251,74 +353,94 @@ class _PlayersScreenState extends State<PlayersScreen> {
 }
 
 class PlayerTile extends StatelessWidget {
-  const PlayerTile({super.key, required this.player, this.online = false});
+  const PlayerTile({
+    super.key,
+    required this.player,
+    this.online = false,
+    this.onTap,
+    this.trailing,
+  });
 
   final Player player;
   final bool online;
 
+  /// Opens their profile.
+  final VoidCallback? onTap;
+
+  /// In place of the rating, such as accept and decline.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              PlayerAvatar(size: 44, name: player.displayName),
-              if (online)
-                Positioned(
-                  right: -3,
-                  bottom: -3,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: k.success,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: k.bg, width: 2.5),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                Text(
-                  player.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: k.body.copyWith(fontWeight: FontWeight.w800),
+                PlayerAvatar(
+                  size: 44,
+                  name: player.displayName,
+                  photo: avatarImage(avatarUrlFor(player.avatarKey)),
                 ),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '@${player.username}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.caption,
+                if (online)
+                  Positioned(
+                    right: -3,
+                    bottom: -3,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: k.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: k.bg, width: 2.5),
                       ),
                     ),
-                    if (player.country != null) ...[
-                      const SizedBox(width: 8),
-                      CountryFlag(player.country!, height: 14),
-                    ],
-                  ],
-                ),
+                  ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '${player.rating}',
-            style: k.body.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    player.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.body.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '@${player.username}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: k.caption,
+                        ),
+                      ),
+                      if (player.country != null) ...[
+                        const SizedBox(width: 8),
+                        CountryFlag(player.country!, height: 14),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            trailing ??
+                Text(
+                  '${player.rating}',
+                  style: k.body.copyWith(fontWeight: FontWeight.w800),
+                ),
+          ],
+        ),
       ),
     );
   }

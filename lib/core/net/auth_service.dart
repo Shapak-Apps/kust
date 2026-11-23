@@ -181,6 +181,27 @@ class AuthService {
     return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));
   }
 
+  /// Uploads the profile photo (a small JPEG made by the picker) and keeps
+  /// the account it comes back with.
+  Future<Account> uploadAvatar(List<int> jpeg) async {
+    final json = await authed(
+      (token) => api.putBytes(
+        '/v1/me/avatar',
+        bytes: jpeg,
+        contentType: 'image/jpeg',
+        token: token,
+      ),
+    );
+    return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));
+  }
+
+  Future<Account> removeAvatar() async {
+    final json = await authed(
+      (token) => api.delete('/v1/me/avatar', token: token),
+    );
+    return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));
+  }
+
   Future<Map<String, dynamic>> authed(
     Future<Map<String, dynamic>> Function(String token) call,
   ) async {

@@ -2092,4 +2092,54 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get learnFirstSkip => 'Я уже знаю, как ходят фигуры';
+
+  @override
+  String get friendAdd => 'Добавить в друзья';
+
+  @override
+  String get friendRequested => 'Заявка отправлена';
+
+  @override
+  String get friendAccept => 'Принять';
+
+  @override
+  String get friendDecline => 'Отклонить';
+
+  @override
+  String get friendFriends => 'Друзья';
+
+  @override
+  String friendRemoveTitle(String name) {
+    return 'Удалить $name из друзей?';
+  }
+
+  @override
+  String get friendRemove => 'Удалить';
+
+  @override
+  String get friendCancel => 'Отменить заявку';
+
+  @override
+  String get messageButton => 'Написать';
+
+  @override
+  String get messagesSoon => 'Сообщения скоро появятся';
+
+  @override
+  String get friendRequests => 'Заявки в друзья';
+
+  @override
+  String get friendsSection => 'Ваши друзья';
+
+  @override
+  String get everyonePlayers => 'Все игроки';
+
+  @override
+  String get wantsToBeFriend => 'Хочет добавить вас в друзья';
+
+  @override
+  String get playerMissing => 'Игрок не найден';
+
+  @override
+  String get photoNotUploaded => 'Не удалось загрузить фото. Попробуйте позже.';
 }

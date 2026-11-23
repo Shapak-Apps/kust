@@ -589,3 +589,19 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `learnFirstProgress` | {done} of 6 done | 6 sapakdan {done} tamamlandy |
 | `learnFirstKeep` | Continue learning | Öwrenmegi dowam et |
 | `learnFirstSkip` | I already know how the pieces move | Çöpleriň nähili ýöreýändigini bilýärin |
+| `friendAdd` | Add friend | Dost goş |
+| `friendRequested` | Request sent | Haýyş iberildi |
+| `friendAccept` | Accept | Kabul et |
+| `friendDecline` | Decline | Ret et |
+| `friendFriends` | Friends | Dostlar |
+| `friendRemoveTitle` | Remove {name} from your friends? | {name} dostlaryňyzdan aýrylsynmy? |
+| `friendRemove` | Remove | Aýyr |
+| `friendCancel` | Cancel request | Haýyşy ýatyr |
+| `messageButton` | Message | Hat ýaz |
+| `messagesSoon` | Messages are coming soon | Hatlaşmak ýakyn wagtda goşular |
+| `friendRequests` | Friend requests | Dostluk haýyşlary |
+| `friendsSection` | Your friends | Dostlaryňyz |
+| `everyonePlayers` | Everyone | Ähli oýunçylar |
+| `wantsToBeFriend` | Wants to be your friend | Siz bilen dost bolmak isleýär |
+| `playerMissing` | This player can't be found | Bu oýunçy tapylmady |
+| `photoNotUploaded` | Couldn't upload your photo. Try again later. | Suraty ýükläp bolmady. Soňrak täzeden synanyşyň. |
