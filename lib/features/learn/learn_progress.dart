@@ -32,6 +32,20 @@ class LearnProgress {
     done.value = {...?prefs.getStringList(_key)};
   }
 
+  /// The lessons on how each piece moves: a beginner finishes these before
+  /// the rest of the app opens (see the shell).
+  static const List<String> firstSteps = [
+    'pawn',
+    'rook',
+    'bishop',
+    'queen',
+    'knight',
+    'king',
+  ];
+
+  /// How many of [firstSteps] are finished.
+  int get firstStepsDone => firstSteps.where(done.value.contains).length;
+
   /// The stars of lesson [id]: 0 when not finished.
   int starsOf(String id) =>
       done.value.contains(id) ? (_stars[id] ?? 1).clamp(1, 3) : 0;

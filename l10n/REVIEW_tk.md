@@ -524,7 +524,7 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `country` | Country | Ýurt |
 | `countryNone` | Not set | Görkezilmedi |
 | `searchCountries` | Search countries | Ýurt gözläň |
-| `offlineBanner` | You're offline | Siz oflaýn |
+| `offlineBanner` | You're offline | Siz onlaýn däl |
 | `backOnlineBanner` | Back online | Ýene onlaýn |
 | `playersTitle` | Players | Oýunçylar |
 | `playersSearch` | Search players | Oýunçy gözle |
@@ -541,8 +541,8 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `confirmPassword` | Confirm password | Paroly tassykla |
 | `signOut` | Sign out | Çyk |
 | `usernameTaken` | That username is taken | Bu ulanyjy ady eýýäm alnan |
-| `usernameFree` | Username is free | Ulanyjy ady erkin |
-| `usernameReserved` | That username is reserved | Bu ulanyjy ady rezerw edilen |
+| `usernameFree` | Username is free | Ulanyjy ady boş |
+| `usernameReserved` | That username is reserved | Bu ulanyjy ady elýeterli däl |
 | `invalidEmail` | Enter a valid email | Dogry e-poçta giriziň |
 | `passwordShort` | At least 8 characters | Iň az 8 nyşan |
 | `passwordsDiffer` | Passwords don't match | Parollar gabat gelmeýär |
@@ -580,7 +580,12 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `pwRuleLength` | At least 8 characters | Iň az 8 nyşan |
 | `pwRuleUpper` | One capital letter | Bir baş harp |
 | `pwRuleLower` | One small letter | Bir kiçi harp |
-| `pwRuleDigit` | One digit | Bir san |
+| `pwRuleDigit` | One digit | Bir sifr |
 | `pwRuleNoName` | Not your username or email | Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn |
 | `showPassword` | Show password | Paroly görkez |
 | `hidePassword` | Hide password | Paroly gizle |
+| `learnFirstTitle` | Learn the moves first | Ilki göçümleri öwreniň |
+| `learnFirstBody` | You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes. | Siz «Başlangyç» derejesini saýladyňyz. Çöpleriň nähili ýöreýändigi barada 6 sapagy tamamlaň, şonda Küştüň galan ähli bölümleri açylar. Takmynan 10 minut alar. |
+| `learnFirstProgress` | {done} of 6 done | 6 sapakdan {done} tamamlandy |
+| `learnFirstKeep` | Continue learning | Öwrenmegi dowam et |
+| `learnFirstSkip` | I already know how the pieces move | Çöpleriň nähili ýöreýändigini bilýärin |

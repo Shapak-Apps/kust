@@ -1167,5 +1167,17 @@
   "pwRuleDigit": "One digit",
   "pwRuleNoName": "Not your username or email",
   "showPassword": "Show password",
-  "hidePassword": "Hide password"
+  "hidePassword": "Hide password",
+  "learnFirstTitle": "Learn the moves first",
+  "learnFirstBody": "You chose Beginner. Finish the 6 lessons on how the pieces move and the rest of Küşt opens up. It takes about 10 minutes.",
+  "learnFirstProgress": "{done} of 6 done",
+  "learnFirstKeep": "Continue learning",
+  "learnFirstSkip": "I already know how the pieces move",
+  "@learnFirstProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  }
 }
