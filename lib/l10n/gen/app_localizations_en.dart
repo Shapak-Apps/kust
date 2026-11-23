@@ -1454,7 +1454,7 @@ class AppL10nEn extends AppL10n {
   String get lessonTasksDone => 'Tasks';
 
   @override
-  String get lessonBackToMap => 'Back to the map';
+  String get lessonBackToMap => 'Back to lessons';
 
   @override
   String get learnCoachDone => 'That is it! Tap Continue.';

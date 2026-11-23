@@ -1459,7 +1459,7 @@ class AppL10nTk extends AppL10n {
   String get lessonTasksDone => 'Tabşyryklar';
 
   @override
-  String get lessonBackToMap => 'Karta dolan';
+  String get lessonBackToMap => 'Sapaklara dolan';
 
   @override
   String get learnCoachDone => 'Boldy! «Dowam et» basyň.';
