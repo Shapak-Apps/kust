@@ -409,10 +409,10 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   Widget _title(KustTokens k, String title, String count) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 28, 20, 8),
+    padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
     child: Row(
       children: [
-        Text(title, style: k.title),
+        Text(title, style: k.title.copyWith(fontSize: 20, height: 1.2)),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
