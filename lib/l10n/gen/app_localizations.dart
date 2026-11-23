@@ -3890,6 +3890,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Nothing new yet. Friend requests will show up here.'**
   String get notifEmpty;
+
+  /// No description provided for @flipBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip board'**
+  String get flipBoard;
+
+  /// No description provided for @flipBoardSub.
+  ///
+  /// In en, this message translates to:
+  /// **'See the board from the other side'**
+  String get flipBoardSub;
+
+  /// No description provided for @friendSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get friendSent;
+
+  /// No description provided for @noFriendsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet. Find players with the globe.'**
+  String get noFriendsYet;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

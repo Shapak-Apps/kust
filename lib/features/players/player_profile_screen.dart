@@ -129,6 +129,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           KustSheetHeader(title: t.friendRemoveTitle(name)),
           KustButton(
             label: t.friendRemove,
+            style: KustButtonStyle.danger,
             onTap: () {
               Navigator.of(sheet).pop();
               _act(_remove);
@@ -304,7 +305,9 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   Widget _stats(BuildContext context, KustTokens k, Player? player) {
     final t = context.t;
     final joined = player?.createdAt?.toLocal();
-    Widget stat(String value, String label) => Expanded(
+    // Spread across the whole width: first at the left edge, last at the
+    // right.
+    Widget stat(String value, String label) => Flexible(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -319,6 +322,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       ),
     );
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         if (joined != null)
           stat(
@@ -327,6 +331,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
             t.joined,
           ),
         stat(player == null ? '–' : '${player.rating}', t.rating),
+        stat(_games == null ? '–' : '$_gamesTotal', t.games),
       ],
     );
   }
@@ -381,12 +386,12 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         style: KustButtonStyle.secondary,
         onTap: busy ? null : _confirmRemove,
       ),
+      // Sent stays sent: it can't be taken back from here.
       Friendship.outgoing => KustButton(
-        label: t.friendRequested,
-        icon: Icons.schedule_send_rounded,
+        label: t.friendSent,
+        icon: Icons.check_rounded,
         style: KustButtonStyle.secondary,
-        // Tapping it again takes the request back.
-        onTap: busy ? null : () => _act(_remove),
+        onTap: null,
       ),
       _ => KustButton(
         label: t.friendAdd,

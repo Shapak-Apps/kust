@@ -69,6 +69,9 @@ class ReplayScreen extends StatefulWidget {
 }
 
 class _ReplayScreenState extends State<ReplayScreen> {
+  /// Turned around by Flip board, from the side it was played.
+  bool _flip = false;
+
   late final GameRecord? _game =
       widget.record ?? GameHistoryStore.instance.byId(widget.gameId);
   late final _replay = replayPositions(_game?.uciMoves ?? const []);
@@ -365,7 +368,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   onTap: () => showExportSheet(
                     context,
                     position: _replay.positions[_ply],
-                    flipped: !game.isLocal && !game.playerIsWhite,
+                    flipped: (!game.isLocal && !game.playerIsWhite) != _flip,
                     pgn: buildPgn(game),
                   ),
                 ),
@@ -412,18 +415,31 @@ class _ReplayScreenState extends State<ReplayScreen> {
             selected: _ply,
             onTap: _go,
           ),
-          if (loadedOpeningBook case final book?)
-            if (openingOf(book, _replay.positions.take(_ply + 1))
-                case final opening?)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          // The opening's name, in a line that is always there, so the
+          // board doesn't jump when a name appears or goes.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: SizedBox(
+              height: 18,
+              child: Align(
+                alignment: Alignment.centerLeft,
                 child: Text(
-                  opening.nameIn(context.t),
+                  switch (loadedOpeningBook) {
+                    final book? =>
+                      openingOf(
+                            book,
+                            _replay.positions.take(_ply + 1),
+                          )?.nameIn(context.t) ??
+                          '',
+                    null => '',
+                  },
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: k.caption,
                 ),
               ),
+            ),
+          ),
           if (_evalOn)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -441,7 +457,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 aspectRatio: 1,
                 child: PuzzleBoard(
                   position: position,
-                  flipped: !game.isLocal && !game.playerIsWhite,
+                  flipped: (!game.isLocal && !game.playerIsWhite) != _flip,
                   interactive: false,
                   onMove: (_) {},
                   lastMove: _replay.moves[_ply],
@@ -480,6 +496,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   icon: Icons.last_page_rounded,
                   label: context.t.end,
                   onTap: _ply < _last ? () => _go(_last) : null,
+                ),
+                KustAction(
+                  icon: Icons.swap_vert_rounded,
+                  label: context.t.flipBoard,
+                  onTap: () => setState(() => _flip = !_flip),
                 ),
                 if (_last >= 4)
                   KustAction(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/profile_sync.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -15,14 +16,9 @@ String withNext(String path, String? next) =>
     next == null ? path : '$path?next=${Uri.encodeComponent(next)}';
 
 /// After signing in: [next] when the flow started somewhere (the welcome
-/// screen), else the players list.
-void goAfterAuth(BuildContext context, String? next) {
-  if (next != null) {
-    context.go(next);
-  } else {
-    context.pushReplacement('/players');
-  }
-}
+/// screen), else home.
+void goAfterAuth(BuildContext context, String? next) =>
+    context.go(next ?? '/play');
 
 String authErrorMessage(AppL10n t, ApiException e) {
   switch (e.code) {
@@ -63,8 +59,10 @@ Future<void> pullServerProfile(Account account) async {
     bio: account.bio,
   );
   await store.setCountry(account.country);
-  // Signing in on this phone: the account's rating is the player's.
+  // Signing in on this phone: the account's rating is the player's, and
+  // its games and achievements come down.
   await PlayerRatingStore.instance.setStartingRating(account.rating);
+  await ProfileSync.instance.restore(account);
 }
 
 Future<void> pushLocalProfile(AuthService auth) async {

@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/time_control.dart';
@@ -282,20 +285,36 @@ class _PlayScreenState extends State<PlayScreen> {
                 leading: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Semantics(
-                      button: true,
-                      label: context.t.profile,
-                      child: Pressable(
-                        onTap: () => context.push('/profile'),
-                        child: PlayerAvatar(
-                          name: name,
-                          photo: AppStorage.instance.photoPath == null
-                              ? null
-                              : FileImage(
-                                  io.File(AppStorage.instance.photoPath!),
-                                ),
-                        ),
-                      ),
+                    // A guest sees a plain person and is taken to sign up.
+                    ValueListenableBuilder<AuthState>(
+                      valueListenable: AuthService.instance.state,
+                      builder: (context, auth, _) {
+                        final guest =
+                            ServerConfig.enabled &&
+                            auth.status == AuthStatus.signedOut;
+                        return Semantics(
+                          button: true,
+                          label: guest
+                              ? context.t.createAccount
+                              : context.t.profile,
+                          child: Pressable(
+                            onTap: () =>
+                                context.push(guest ? '/register' : '/profile'),
+                            child: PlayerAvatar(
+                              name: guest ? null : name,
+                              photo: guest
+                                  ? null
+                                  : AppStorage.instance.photoPath != null
+                                  ? FileImage(
+                                      io.File(AppStorage.instance.photoPath!),
+                                    )
+                                  : avatarImage(
+                                      avatarUrlFor(auth.account?.avatarKey),
+                                    ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 6),
                     const NotificationsBell(),
