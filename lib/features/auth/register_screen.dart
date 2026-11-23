@@ -10,6 +10,7 @@ import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_text_field.dart';
+import 'package:kust/ui/tokens.dart';
 
 enum _UsernameCheck { idle, checking, free, taken, reserved }
 
@@ -163,6 +164,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  /// Inside the field at the end: a spinner while asking, a green tick
+  /// when the name is free; fading between them.
+  Widget _usernameMark(BuildContext context) {
+    final k = context.k;
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: switch (_check) {
+        _UsernameCheck.checking => Padding(
+          key: const ValueKey('checking'),
+          padding: const EdgeInsets.all(14),
+          child: SizedBox.square(
+            dimension: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: k.muted),
+          ),
+        ),
+        _UsernameCheck.free => Padding(
+          key: const ValueKey('free'),
+          padding: const EdgeInsets.only(right: 12),
+          child: Icon(
+            Icons.check_circle_rounded,
+            color: k.success,
+            size: 22,
+            semanticLabel: context.t.usernameFree,
+          ),
+        ),
+        _ => const SizedBox(key: ValueKey('none'), width: 0, height: 0),
+      },
+    );
+  }
+
+  /// Under the field: the rule while typing, a red cross and why when the
+  /// name can't be had, nothing once it is free; fading between them.
+  Widget _usernameLine(BuildContext context, String? error) {
+    final k = context.k;
+    final t = context.t;
+    final Widget line = error != null
+        ? Row(
+            key: ValueKey(error),
+            children: [
+              Icon(Icons.cancel_rounded, size: 16, color: k.danger),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(error, style: k.caption.copyWith(color: k.danger)),
+              ),
+            ],
+          )
+        : _check == _UsernameCheck.free
+        ? const SizedBox(key: ValueKey('free'), width: double.infinity)
+        : Text(t.usernameRule, key: const ValueKey('rule'), style: k.caption);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        alignment: Alignment.topLeft,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          layoutBuilder: (current, previous) => Stack(
+            alignment: Alignment.topLeft,
+            children: [...previous, ?current],
+          ),
+          child: line,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t;
@@ -239,11 +306,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onSubmitted: (_) {
                     if (_firstOk) setState(() => _stage = 1);
                   },
-                  errorText: usernameError,
-                  helper: _check == _UsernameCheck.free
-                      ? t.usernameFree
-                      : t.usernameRule,
+                  trailing: _usernameMark(context),
                 ),
+                _usernameLine(context, usernameError),
                 ErrorLine(_error),
               ]
             : [
