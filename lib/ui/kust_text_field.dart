@@ -27,6 +27,7 @@ class KustTextField extends StatelessWidget {
     this.errorText,
     this.hint,
     this.icon,
+    this.trailing,
   });
 
   /// For a username: only what [AppStorage.usernamePattern] allows, in
@@ -43,6 +44,7 @@ class KustTextField extends StatelessWidget {
     this.errorText,
     this.hint,
     this.icon,
+    this.trailing,
   }) : obscure = false,
        keyboardType = TextInputType.visiblePassword,
        autofillHints = const [AutofillHints.username],
@@ -86,9 +88,12 @@ class KustTextField extends StatelessWidget {
   /// Shown at the start of the field, in the muted colour.
   final IconData? icon;
 
+  /// Shown at the end of the field, such as a tick once a username is free.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
-    if (!obscure) return _field(context, hidden: false);
+    if (!obscure) return _field(context, hidden: false, suffix: trailing);
     // A password: an eye at the end shows or hides what is typed.
     return _Reveal(
       builder: (hidden, toggle) => _field(
@@ -159,6 +164,8 @@ class KustTextField extends StatelessWidget {
               ),
               // The icon brings its own padding: 14 before, 8 after.
               prefixIconConstraints: const BoxConstraints(),
+              // An end mark takes only its own size, nothing when empty.
+              suffixIconConstraints: const BoxConstraints(),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
