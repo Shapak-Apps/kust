@@ -18,6 +18,7 @@ class KustTextField extends StatelessWidget {
     this.formatters,
     this.onSubmitted,
     this.action,
+    this.bare = false,
   });
 
   /// For a username: only what [AppStorage.usernamePattern] allows, in
@@ -29,6 +30,7 @@ class KustTextField extends StatelessWidget {
     this.autofocus = false,
     this.onSubmitted,
     this.action,
+    this.bare = false,
   }) : maxLength = 20,
        maxLines = 1,
        prefix = '@',
@@ -55,6 +57,9 @@ class KustTextField extends StatelessWidget {
   /// The keyboard's action key, such as next to move to the field below.
   final TextInputAction? action;
 
+  /// Without its filled box, for a field that sits in a list row.
+  final bool bare;
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -70,17 +75,26 @@ class KustTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       textInputAction: action,
       style: k.body,
-      decoration: InputDecoration(
-        counterText: '',
-        prefixText: prefix,
-        helperText: helper,
-        filled: true,
-        fillColor: k.surfaceAlt,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          borderSide: BorderSide.none,
-        ),
-      ),
+      decoration: bare
+          ? InputDecoration(
+              isDense: true,
+              counterText: '',
+              prefixText: prefix,
+              prefixStyle: k.body.copyWith(color: k.muted),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+            )
+          : InputDecoration(
+              counterText: '',
+              prefixText: prefix,
+              helperText: helper,
+              filled: true,
+              fillColor: k.surfaceAlt,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(KustSpace.rMedium),
+                borderSide: BorderSide.none,
+              ),
+            ),
     );
   }
 }

@@ -17,7 +17,6 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
@@ -121,8 +120,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Expanded(
                       child: ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                         children: _form(context, k),
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        child: KustButton(
+                          label: context.t.saveName,
+                          onTap: _valid ? _save : null,
+                        ),
                       ),
                     ),
                   ],
@@ -280,60 +289,159 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   List<Widget> _form(BuildContext context, KustTokens k) {
+    final t = context.t;
+    final country = _store.country;
     return [
+      // The photo, with a camera on its corner: tap to change it.
       Center(
-        child: Pressable(onTap: _pickPhoto, child: _avatar(context)),
+        child: Semantics(
+          button: true,
+          label: t.choosePhoto,
+          child: Pressable(
+            onTap: _pickPhoto,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _avatar(context),
+                Positioned(
+                  right: -6,
+                  bottom: -6,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: k.accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: k.bg, width: 3),
+                    ),
+                    child: Icon(
+                      Icons.photo_camera_rounded,
+                      size: 18,
+                      color: k.accentInk,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
+      if (_store.photoPath != null)
+        Center(
+          child: TextButton(
+            onPressed: () => _store.setPhoto(null),
+            child: Text(t.removePhoto, style: TextStyle(color: k.muted)),
+          ),
+        )
+      else
+        const SizedBox(height: 16),
       const SizedBox(height: 8),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TextButton(onPressed: _pickPhoto, child: Text(context.t.choosePhoto)),
-          if (_store.photoPath != null)
-            TextButton(
-              onPressed: () => _store.setPhoto(null),
-              child: Text(
-                context.t.removePhoto,
-                style: TextStyle(color: k.muted),
+      // One group of rows, label on the left and the value beside it.
+      Container(
+        decoration: BoxDecoration(
+          color: k.surface,
+          borderRadius: BorderRadius.circular(KustSpace.rMedium),
+        ),
+        child: Column(
+          children: [
+            _FormRow(
+              label: t.yourName,
+              child: KustTextField(
+                controller: _name,
+                maxLength: AppStorage.maxNameLength,
+                capitalization: TextCapitalization.words,
+                bare: true,
               ),
             ),
+            _FormRow(
+              label: t.username,
+              child: KustTextField.username(controller: _username, bare: true),
+            ),
+            _FormRow(
+              label: t.country,
+              onTap: () async {
+                final picked = await pickCountry(context, current: country);
+                if (picked != null) {
+                  await _store.setCountry(picked.isEmpty ? null : picked);
+                }
+              },
+              child: Row(
+                children: [
+                  if (country != null) ...[
+                    CountryFlag(country, height: 22),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Text(
+                      country == null ? t.countryNone : kCountries[country]!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(
+                        color: country == null ? k.muted : k.ink,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: k.muted),
+                ],
+              ),
+            ),
+            _FormRow(
+              label: t.bio,
+              last: true,
+              child: KustTextField(
+                controller: _bio,
+                maxLength: AppStorage.maxBioLength,
+                maxLines: 3,
+                capitalization: TextCapitalization.sentences,
+                bare: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+        child: Text(t.usernameRule, style: k.caption),
+      ),
+    ];
+  }
+}
+
+/// A row of the edit form: the label on the left, the value beside it, a
+/// hairline under it unless it is the [last].
+class _FormRow extends StatelessWidget {
+  const _FormRow({
+    required this.label,
+    required this.child,
+    this.onTap,
+    this.last = false,
+  });
+
+  final String label;
+  final Widget child;
+  final VoidCallback? onTap;
+  final bool last;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final row = Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        border: last ? null : Border(bottom: BorderSide(color: k.line)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 104,
+            child: Text(label, style: k.body.copyWith(color: k.muted)),
+          ),
+          Expanded(child: child),
         ],
       ),
-      const SizedBox(height: 24),
-      KustSectionLabel(context.t.yourName),
-      KustTextField(
-        controller: _name,
-        maxLength: AppStorage.maxNameLength,
-        capitalization: TextCapitalization.words,
-      ),
-      const SizedBox(height: 16),
-      KustSectionLabel(context.t.username),
-      KustTextField.username(
-        controller: _username,
-        helper: context.t.usernameRule,
-      ),
-      const SizedBox(height: 16),
-      KustSectionLabel(context.t.country),
-      _CountryField(
-        code: _store.country,
-        onPick: () async {
-          final picked = await pickCountry(context, current: _store.country);
-          if (picked != null) {
-            await _store.setCountry(picked.isEmpty ? null : picked);
-          }
-        },
-      ),
-      const SizedBox(height: 16),
-      KustSectionLabel(context.t.bio),
-      KustTextField(
-        controller: _bio,
-        maxLength: AppStorage.maxBioLength,
-        maxLines: 4,
-        capitalization: TextCapitalization.sentences,
-      ),
-      const SizedBox(height: 24),
-      KustButton(label: context.t.saveName, onTap: _valid ? _save : null),
-    ];
+    );
+    return onTap == null ? row : Pressable(onTap: onTap, child: row);
   }
 }
 
@@ -562,51 +670,6 @@ class _AchievementBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// The country in the edit form: its flag and name, or Not set; tap to
-/// pick another.
-class _CountryField extends StatelessWidget {
-  const _CountryField({required this.code, required this.onPick});
-
-  final String? code;
-  final VoidCallback onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    final name = code == null ? null : kCountries[code];
-    return Semantics(
-      button: true,
-      label: '${context.t.country}, ${name ?? context.t.countryNone}',
-      excludeSemantics: true,
-      child: Pressable(
-        onTap: onPick,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: k.surfaceAlt,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          ),
-          child: Row(
-            children: [
-              if (code != null) ...[
-                CountryFlag(code!, height: 24),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Text(
-                  name ?? context.t.countryNone,
-                  style: k.body.copyWith(color: name == null ? k.muted : k.ink),
-                ),
-              ),
-              Icon(Icons.expand_more_rounded, color: k.muted),
-            ],
-          ),
-        ),
       ),
     );
   }
