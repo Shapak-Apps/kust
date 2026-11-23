@@ -71,7 +71,9 @@ void main() {
     await store.setPhoto(picked.path);
     final photo = store.photoPath!;
 
+    await store.setCountry('TM');
     await store.logOut();
+    expect(store.country, isNull);
     expect(store.username, isNull);
     expect(store.bio, '');
     expect(store.photoPath, isNull);
@@ -80,9 +82,13 @@ void main() {
   });
 
   testWidgets('the profile shows, and edits in place', (tester) async {
-    await tester.runAsync(
-      () => store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi'),
-    );
+    tester.view.physicalSize = const Size(400, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.runAsync(() async {
+      await store.saveProfile(name: 'Ali', username: 'ali', bio: 'Hi');
+      await store.setCountry('TM');
+    });
     await tester.pumpWidget(
       MaterialApp(
         theme: appDarkTheme,
@@ -94,6 +100,8 @@ void main() {
     await tester.pump();
     expect(find.text('Ali'), findsOneWidget);
     expect(find.text('@ali'), findsOneWidget);
+    // The flag of the country follows the username.
+    expect(find.bySemanticsLabel('Turkmenistan'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
     // The real day the app was first opened, not a stand-in.
     final now = DateTime.now();

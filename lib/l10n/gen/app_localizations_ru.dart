@@ -1874,4 +1874,13 @@ class AppL10nRu extends AppL10n {
   @override
   String get opNimzoD =>
       'Чёрные связывают коня c3 слоном и борются за e4 фигурами, а не пешками. Один из самых уважаемых ответов на 1.d4.';
+
+  @override
+  String get country => 'Страна';
+
+  @override
+  String get countryNone => 'Не указана';
+
+  @override
+  String get searchCountries => 'Поиск страны';
 }

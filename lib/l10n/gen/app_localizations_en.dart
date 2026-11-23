@@ -1866,4 +1866,13 @@ class AppL10nEn extends AppL10n {
   @override
   String get opNimzoD =>
       'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.';
+
+  @override
+  String get country => 'Country';
+
+  @override
+  String get countryNone => 'Not set';
+
+  @override
+  String get searchCountries => 'Search countries';
 }
