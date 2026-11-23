@@ -1,10 +1,23 @@
+import 'dart:io';
+
 class ServerConfig {
   ServerConfig._();
 
-  static const String apiUrl = String.fromEnvironment('API_URL');
+  /// The live server unless a build says otherwise: `--dart-define=API_URL=`
+  /// another address for a local one, or empty to turn networking off.
+  static const String apiUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'https://kust.merdanusa.online',
+  );
   static const String _wsUrl = String.fromEnvironment('WS_URL');
 
-  static bool get enabled => apiUrl.isNotEmpty;
+  /// Off in widget tests (`flutter test` sets FLUTTER_TEST), so they never
+  /// reach the live server.
+  static bool get enabled => apiUrl.isNotEmpty && !_underTest;
+
+  static final bool _underTest = Platform.environment.containsKey(
+    'FLUTTER_TEST',
+  );
 
   static String get wsUrl => _wsUrl.isNotEmpty ? _wsUrl : deriveWsUrl(apiUrl);
 
