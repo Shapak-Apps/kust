@@ -1850,4 +1850,9 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get doneButton => 'Taýýar';
+
+  @override
+  String lessonNumber(int n) {
+    return 'Sapak $n';
+  }
 }

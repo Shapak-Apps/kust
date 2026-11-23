@@ -540,5 +540,6 @@
   "discardGame": "Bu oýny aýyr",
   "gameRemoved": "Oýun aýryldy",
   "undo": "Yzyna gaýtar",
-  "doneButton": "Taýýar"
+  "doneButton": "Taýýar",
+  "lessonNumber": "Sapak {n}"
 }

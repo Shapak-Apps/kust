@@ -1,8 +1,7 @@
+import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:kust/core/board_theme.dart';
-import 'package:kust/core/settings.dart';
 import 'package:kust/features/learn/learn_progress.dart';
 import 'package:kust/features/learn/lessons.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -13,12 +12,11 @@ import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/board_thumbnail.dart';
 
-/// The Learn tab: the lessons in order, from the first pawn move to
-/// checkmate, grouped by camp. Each lesson is a square of the player's board
-/// with its piece standing on it; the squares run down the page like a file
-/// of the board, joined by a line. The next lesson is marked in gold with
-/// its Start button.
+/// The Learn tab, laid out like the contents of a chess book: the next
+/// lesson up top with a diagram of one of its positions and a Start
+/// button, then every lesson by chapter.
 class LearnScreen extends StatefulWidget {
   const LearnScreen({super.key});
 
@@ -27,27 +25,13 @@ class LearnScreen extends StatefulWidget {
 }
 
 class _LearnScreenState extends State<LearnScreen> {
-  final _nextKey = GlobalKey();
   bool _loaded = false;
 
   @override
   void initState() {
     super.initState();
     LearnProgress.instance.load().then((_) {
-      if (!mounted) return;
-      setState(() => _loaded = true);
-      // Start with the next lesson in view.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final target = _nextKey.currentContext;
-        if (target != null && target.mounted) {
-          Scrollable.ensureVisible(
-            target,
-            alignment: 0.4,
-            // Only when it is off screen: the top stays put otherwise.
-            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-          );
-        }
-      });
+      if (mounted) setState(() => _loaded = true);
     });
   }
 
@@ -95,22 +79,17 @@ class _LearnScreenState extends State<LearnScreen> {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    final t = context.t;
     return ColoredBox(
       color: k.bg,
       child: Column(
         children: [
-          FeltHeader(title: t.learnTitle),
+          FeltHeader(title: context.t.learnTitle),
           Expanded(
             child: !_loaded
                 ? const SizedBox.expand()
                 : ValueListenableBuilder<Set<String>>(
                     valueListenable: LearnProgress.instance.done,
-                    builder: (context, done, _) => ValueListenableBuilder(
-                      valueListenable: AppSettings.instance.boardTheme,
-                      builder: (context, board, _) =>
-                          _list(context, done, board),
-                    ),
+                    builder: (context, done, _) => _contents(context, done),
                   ),
           ),
         ],
@@ -118,7 +97,7 @@ class _LearnScreenState extends State<LearnScreen> {
     );
   }
 
-  Widget _list(BuildContext context, Set<String> done, BoardTheme board) {
+  Widget _contents(BuildContext context, Set<String> done) {
     final k = context.k;
     final t = context.t;
     final progress = LearnProgress.instance;
@@ -132,74 +111,170 @@ class _LearnScreenState extends State<LearnScreen> {
               child: Text(t.learnSub, style: k.body.copyWith(color: k.muted)),
             ),
             const SizedBox(width: 12),
-            Icon(Icons.star_rounded, size: 20, color: k.accent),
+            Icon(Icons.star_rounded, size: 18, color: k.accent),
             const SizedBox(width: 4),
             Text(
               '${progress.totalStars} / ${kLessons.length * 3}',
               style: k.body.copyWith(
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
         ),
+        const SizedBox(height: 16),
+        if (next >= 0)
+          _NextLesson(index: next, onStart: () => _open(kLessons[next]))
+        else
+          const _AllDone(),
         for (final camp in kCamps) ...[
-          const SizedBox(height: 24),
-          _CampTitle(camp: camp, done: done),
-          const SizedBox(height: 12),
+          const SizedBox(height: 32),
+          _Chapter(camp: camp, done: done),
           for (var i = camp.first; i <= camp.last; i++)
             _LessonRow(
-              key: i == next ? _nextKey : null,
               index: i,
-              board: board,
-              state: done.contains(kLessons[i].id)
-                  ? _LessonState.done
-                  : i == next
-                  ? _LessonState.next
-                  : _LessonState.locked,
               stars: progress.starsOf(kLessons[i].id),
-              // The line runs on to the next square, within the camp.
-              lineBelow: i < camp.last,
-              lineAbove: i > camp.first,
+              isNext: i == next,
+              locked: next >= 0 && i > next,
               onTap: () => _open(kLessons[i]),
             ),
-        ],
-        if (next < 0) ...[
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: k.surface,
-              borderRadius: BorderRadius.circular(KustSpace.rMedium),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.emoji_events_rounded, color: k.accent, size: 32),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    t.learnSummitDone,
-                    style: k.body.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ),
-                KustButton(
-                  label: t.play,
-                  expand: false,
-                  height: 40,
-                  onTap: () => context.go('/play'),
-                ),
-              ],
-            ),
-          ),
         ],
       ],
     );
   }
 }
 
-/// "CAMP 1 · 2/6", the camp's name and what it teaches.
-class _CampTitle extends StatelessWidget {
-  const _CampTitle({required this.camp, required this.done});
+/// The position a lesson is pictured by: its busiest one, with the squares
+/// it asks about marked.
+({Position position, List<Square> marked}) _cover(Lesson lesson) {
+  var best = lesson.tasks.first;
+  var most = 0;
+  for (final task in lesson.tasks) {
+    final pieces = task.fen
+        .split(' ')
+        .first
+        .replaceAll(RegExp('[^a-zA-Z]'), '')
+        .length;
+    if (pieces > most) {
+      most = pieces;
+      best = task;
+    }
+  }
+  return (
+    position: Chess.fromSetup(Setup.parseFen(best.fen)),
+    marked: best.targets.toList(),
+  );
+}
+
+/// The lesson to do now: its diagram, number, name, what it is about, and
+/// a Start button.
+class _NextLesson extends StatelessWidget {
+  const _NextLesson({required this.index, required this.onStart});
+
+  final int index;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    final lesson = kLessons[index];
+    final cover = _cover(lesson);
+    // The whole card starts the lesson, not only its button.
+    return Pressable(
+      onTap: onStart,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: k.surface,
+          borderRadius: BorderRadius.circular(KustSpace.rLarge),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 120,
+                  child: BoardThumbnail(
+                    position: cover.position,
+                    highlight: cover.marked,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${t.lessonNumber(index + 1)} · '
+                        '${Camp.of(index).title(t)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption.copyWith(color: k.accent),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(lesson.title(t), style: k.title),
+                      const SizedBox(height: 6),
+                      Text(
+                        lesson.intro(t),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            KustButton3D(
+              label: t.lessonStart,
+              icon: Icons.play_arrow_rounded,
+              expand: true,
+              onTap: onStart,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// In place of the next lesson once every lesson is done.
+class _AllDone extends StatelessWidget {
+  const _AllDone();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: k.surface,
+        borderRadius: BorderRadius.circular(KustSpace.rLarge),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(t.learnSummitDone, style: k.title)),
+          KustButton(
+            label: t.play,
+            expand: false,
+            height: 40,
+            onTap: () => context.go('/play'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A chapter heading: its name, how many lessons are done, and what it
+/// teaches, over a hairline.
+class _Chapter extends StatelessWidget {
+  const _Chapter({required this.camp, required this.done});
 
   final Camp camp;
   final Set<String> done;
@@ -212,191 +287,101 @@ class _CampTitle extends StatelessWidget {
       for (var i = camp.first; i <= camp.last; i++)
         if (done.contains(kLessons[i].id)) i,
     ].length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              camp.label(t),
-              style: k.caption.copyWith(
-                color: k.accent,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1,
+    return Container(
+      padding: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: k.line)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(child: Text(camp.title(t), style: k.title)),
+              Text(
+                '$count/${camp.length}',
+                style: k.caption.copyWith(
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-            ),
-            const Spacer(),
-            Text(
-              '$count/${camp.length}',
-              style: k.caption.copyWith(
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(camp.title(t), style: k.title),
-        Text(camp.subtitle(t), style: k.caption),
-      ],
+            ],
+          ),
+          Text(camp.subtitle(t), style: k.caption),
+        ],
+      ),
     );
   }
 }
 
-enum _LessonState { done, next, locked }
-
-/// One lesson: its square on the board's file, and its number and name;
-/// stars once done, a Start button when it is next, a lock after that.
+/// One line of the contents: the lesson's number written like a move
+/// ("4."), its name, and its stars once done.
 class _LessonRow extends StatelessWidget {
   const _LessonRow({
-    super.key,
     required this.index,
-    required this.board,
-    required this.state,
     required this.stars,
-    required this.lineAbove,
-    required this.lineBelow,
+    required this.isNext,
+    required this.locked,
     required this.onTap,
   });
 
   final int index;
-  final BoardTheme board;
-  final _LessonState state;
   final int stars;
-  final bool lineAbove;
-  final bool lineBelow;
+  final bool isNext;
+  final bool locked;
   final VoidCallback onTap;
-
-  static const double _square = 56;
-  static const double _gap = 12;
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     final t = context.t;
     final lesson = kLessons[index];
-    final next = state == _LessonState.next;
-    final locked = state == _LessonState.locked;
-    final light = index.isEven;
-
-    final square = Container(
-      width: _square,
-      height: _square,
-      decoration: BoxDecoration(
-        color: locked
-            ? k.surfaceAlt
-            : light
-            ? board.light
-            : board.dark,
-        borderRadius: BorderRadius.circular(8),
-        border: next ? Border.all(color: k.accent, width: 3) : null,
-      ),
-      alignment: Alignment.center,
-      child: Opacity(
-        opacity: locked ? 0.35 : 1,
-        child: lesson.piece != null
-            ? LearnPiece(lesson.piece!, height: _square * 0.78)
-            : Icon(
-                lesson.icon,
-                size: _square * 0.48,
-                color: locked
-                    ? k.muted
-                    : light
-                    ? board.dark
-                    : board.light,
-              ),
-      ),
-    );
-
-    // The line through the squares: the walk done so far in green.
-    Widget line(bool visible, bool lit) => Container(
-      width: 3,
-      height: _gap / 2,
-      color: !visible
-          ? Colors.transparent
-          : lit
-          ? k.success
-          : k.line,
-    );
-
     return Semantics(
       button: true,
       label: '${t.lessonLabel(index + 1)}, ${lesson.title(t)}',
       excludeSemantics: true,
       child: Pressable(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(8, 0, 12, 0),
-          decoration: BoxDecoration(
-            color: next ? k.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
             children: [
-              Column(
-                children: [
-                  line(lineAbove, state != _LessonState.locked),
-                  square,
-                  line(lineBelow, state == _LessonState.done),
-                ],
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t.lessonLabel(index + 1),
-                      style: k.caption.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: next ? k.accent : k.muted,
-                      ),
-                    ),
-                    Text(
-                      lesson.title(t),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.body.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: locked ? k.muted : k.ink,
-                      ),
-                    ),
-                    if (next)
-                      Text(
-                        t.lessonMinutes(
-                          lesson.tasks.length,
-                          (lesson.tasks.length * 0.7).ceil(),
-                        ),
-                        style: k.caption,
-                      ),
-                  ],
+              SizedBox(
+                width: 32,
+                child: Text(
+                  '${index + 1}.',
+                  style: k.body.copyWith(
+                    color: isNext ? k.accent : k.muted,
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              switch (state) {
-                _LessonState.done => Row(
+              Expanded(
+                child: Text(
+                  lesson.title(t),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: k.body.copyWith(
+                    fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                    color: locked ? k.muted : k.ink,
+                  ),
+                ),
+              ),
+              if (stars > 0)
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (var s = 1; s <= 3; s++)
                       Icon(
                         Icons.star_rounded,
-                        size: 18,
+                        size: 16,
                         color: s <= stars ? k.accent : k.line,
                       ),
                   ],
                 ),
-                _LessonState.next => KustButton3D(
-                  label: t.lessonStart.split(' ').first,
-                  height: 40,
-                  onTap: onTap,
-                ),
-                _LessonState.locked => Icon(
-                  Icons.lock_rounded,
-                  size: 18,
-                  color: k.muted,
-                ),
-              },
             ],
           ),
         ),

@@ -62,7 +62,7 @@ void main() {
     // The last camp is further down the list.
     final scroll = find.byType(Scrollable).first;
     await tester.scrollUntilVisible(
-      find.text('SUMMIT'),
+      find.text('Mate patterns'),
       300,
       scrollable: scroll,
     );

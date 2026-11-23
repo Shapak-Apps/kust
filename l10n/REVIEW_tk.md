@@ -505,3 +505,4 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `gameRemoved` | Game removed | Oýun aýryldy |
 | `undo` | Undo | Yzyna gaýtar |
 | `doneButton` | Done | Taýýar |
+| `lessonNumber` | Lesson {n} | Sapak {n} |
