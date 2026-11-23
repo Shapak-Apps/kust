@@ -14,7 +14,6 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/offline_bar.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key, this.repository, this.presence});
@@ -181,7 +180,6 @@ class _PlayersScreenState extends State<PlayersScreen> {
               ),
             ),
           Expanded(child: _body(context)),
-          const OfflineBar(edge: true),
         ],
       ),
     );

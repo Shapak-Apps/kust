@@ -9,7 +9,6 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_nav_bar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
-import 'package:kust/widgets/offline_bar.dart';
 
 class AppShell extends StatefulWidget {
   /// The tabs, kept alive by the router; one of them is shown.
@@ -167,7 +166,6 @@ class _AppShellState extends State<AppShell> {
                   KustNavItem.svg('assets/icons/sword.svg', context.t.navTrain),
                 ],
                 onSelected: _select,
-                footer: const OfflineBar(edge: true),
               ),
             ),
           ],

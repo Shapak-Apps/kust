@@ -25,7 +25,6 @@ import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
-import 'package:kust/widgets/offline_bar.dart';
 
 /// The player's profile: their board and pieces from settings, photo, name,
 /// username and a few words about them, their numbers, recent games and
@@ -293,12 +292,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const _HistorySection(),
               const _AchievementsSection(),
             ],
-          ),
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: OfflineBar(edge: true),
           ),
           // The bar over the board: back, and the QR code and edit buttons.
           Positioned(
