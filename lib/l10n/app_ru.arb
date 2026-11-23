@@ -588,5 +588,11 @@
   "codeSent": "Код отправлен",
   "signInToSeePlayers": "Войдите, чтобы видеть других игроков",
   "signInToSeePlayersBody": "Игроков видят только вошедшие. Ваши партии и прогресс в любом случае остаются на телефоне.",
-  "accountSignedInAs": "Вы вошли как {email}"
+  "accountSignedInAs": "Вы вошли как {email}",
+  "welcomeHaveAccount": "У меня есть аккаунт",
+  "welcomeGuest": "Продолжить как гость",
+  "onbStepOf": "Шаг {step} из {total}",
+  "onbPreview": "Так вас увидят другие игроки",
+  "accountCardTitle": "Бесплатный аккаунт",
+  "accountCardBody": "Смотрите, кто в сети, находите игроков и сохраняйте профиль на любом телефоне."
 }

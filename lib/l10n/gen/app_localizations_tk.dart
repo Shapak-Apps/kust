@@ -2007,4 +2007,25 @@ class AppL10nTk extends AppL10n {
   String accountSignedInAs(String email) {
     return '$email hökmünde girdiňiz';
   }
+
+  @override
+  String get welcomeHaveAccount => 'Hasabym bar';
+
+  @override
+  String get welcomeGuest => 'Myhman hökmünde dowam et';
+
+  @override
+  String onbStepOf(int step, int total) {
+    return '$total ädimden $step-nji';
+  }
+
+  @override
+  String get onbPreview => 'Beýleki oýunçylar sizi şeýle görer';
+
+  @override
+  String get accountCardTitle => 'Mugt hasap açyň';
+
+  @override
+  String get accountCardBody =>
+      'Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň.';
 }

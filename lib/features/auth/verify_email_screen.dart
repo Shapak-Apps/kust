@@ -14,9 +14,12 @@ import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/tokens.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
-  const VerifyEmailScreen({super.key, this.initialCooldown = 0});
+  const VerifyEmailScreen({super.key, this.initialCooldown = 0, this.next});
 
   final int initialCooldown;
+
+  /// Where to go once verified; see [goAfterAuth].
+  final String? next;
 
   @override
   State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
@@ -71,7 +74,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     try {
       await AuthService.instance.verifyEmail(_code.text);
       if (!mounted) return;
-      context.pushReplacement('/players');
+      goAfterAuth(context, widget.next);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _error = authErrorMessage(t, e));

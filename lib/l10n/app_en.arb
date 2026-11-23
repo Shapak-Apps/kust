@@ -1137,5 +1137,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "welcomeHaveAccount": "I have an account",
+  "welcomeGuest": "Continue as guest",
+  "onbStepOf": "Step {step} of {total}",
+  "@onbStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onbPreview": "How other players will see you",
+  "accountCardTitle": "Get a free account",
+  "accountCardBody": "See who's online, find players and keep your profile on any phone."
 }

@@ -2011,4 +2011,25 @@ class AppL10nRu extends AppL10n {
   String accountSignedInAs(String email) {
     return 'Вы вошли как $email';
   }
+
+  @override
+  String get welcomeHaveAccount => 'У меня есть аккаунт';
+
+  @override
+  String get welcomeGuest => 'Продолжить как гость';
+
+  @override
+  String onbStepOf(int step, int total) {
+    return 'Шаг $step из $total';
+  }
+
+  @override
+  String get onbPreview => 'Так вас увидят другие игроки';
+
+  @override
+  String get accountCardTitle => 'Бесплатный аккаунт';
+
+  @override
+  String get accountCardBody =>
+      'Смотрите, кто в сети, находите игроков и сохраняйте профиль на любом телефоне.';
 }

@@ -16,7 +16,10 @@ enum _UsernameCheck { idle, checking, free, taken, reserved }
 final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.next});
+
+  /// Where to go once the email is verified; see [goAfterAuth].
+  final String? next;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -115,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       await pushLocalProfile(auth);
       if (!mounted) return;
-      context.pushReplacement('/verify', extra: 60);
+      context.pushReplacement(withNext('/verify', widget.next), extra: 60);
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = authErrorMessage(t, e));
     } finally {
@@ -144,7 +147,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           KustButton(
             label: t.haveAccount,
             style: KustButtonStyle.secondary,
-            onTap: _busy ? null : () => context.pushReplacement('/login'),
+            onTap: _busy
+                ? null
+                : () =>
+                      context.pushReplacement(withNext('/login', widget.next)),
           ),
         ],
       ),

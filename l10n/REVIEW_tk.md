@@ -564,3 +564,9 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `signInToSeePlayers` | Sign in to see other players | Beýleki oýunçylary görmek üçin giriň |
 | `signInToSeePlayersBody` | Players are visible to signed-in members. Your games and progress stay on your phone either way. | Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar. |
 | `accountSignedInAs` | Signed in as {email} | {email} hökmünde girdiňiz |
+| `welcomeHaveAccount` | I have an account | Hasabym bar |
+| `welcomeGuest` | Continue as guest | Myhman hökmünde dowam et |
+| `onbStepOf` | Step {step} of {total} | {total} ädimden {step}-nji |
+| `onbPreview` | How other players will see you | Beýleki oýunçylar sizi şeýle görer |
+| `accountCardTitle` | Get a free account | Mugt hasap açyň |
+| `accountCardBody` | See who's online, find players and keep your profile on any phone. | Kimiň onlaýndygyny görüň, oýunçy tapyň we profiliňizi islendik telefonda saklaň. |
