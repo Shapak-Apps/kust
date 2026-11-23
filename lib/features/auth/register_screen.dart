@@ -1,0 +1,199 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/features/auth/auth_support.dart';
+import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_text_field.dart';
+
+enum _UsernameCheck { idle, checking, free, taken, reserved }
+
+final RegExp _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _email = TextEditingController();
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  Timer? _debounce;
+  _UsernameCheck _check = _UsernameCheck.idle;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = AppStorage.instance.username;
+    if (saved != null) {
+      _username.text = saved;
+      _scheduleCheck(saved);
+    }
+    for (final c in [_email, _password, _confirm]) {
+      c.addListener(_changed);
+    }
+  }
+
+  void _changed() => setState(() {});
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _email.dispose();
+    _username.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  void _scheduleCheck(String value) {
+    _debounce?.cancel();
+    if (!AppStorage.usernamePattern.hasMatch(value)) {
+      setState(() => _check = _UsernameCheck.idle);
+      return;
+    }
+    setState(() => _check = _UsernameCheck.checking);
+    _debounce = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        final problem = await AuthService.instance.usernameProblem(value);
+        if (!mounted || _username.text != value) return;
+        setState(() {
+          _check = switch (problem) {
+            null => _UsernameCheck.free,
+            'reserved' => _UsernameCheck.reserved,
+            _ => _UsernameCheck.taken,
+          };
+        });
+      } on ApiException {
+        if (mounted && _username.text == value) {
+          setState(() => _check = _UsernameCheck.idle);
+        }
+      }
+    });
+  }
+
+  String get _emailText => _email.text.trim();
+  bool get _emailOk => _emailPattern.hasMatch(_emailText);
+  bool get _passwordOk => _password.text.length >= 8;
+  bool get _confirmOk => _confirm.text == _password.text;
+  bool get _usernameOk =>
+      AppStorage.usernamePattern.hasMatch(_username.text) &&
+      _check != _UsernameCheck.taken &&
+      _check != _UsernameCheck.reserved;
+
+  bool get _valid =>
+      _emailOk &&
+      _usernameOk &&
+      _passwordOk &&
+      _confirm.text.isNotEmpty &&
+      _confirmOk;
+
+  Future<void> _submit() async {
+    if (!_valid || _busy) return;
+    final t = context.t;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final auth = AuthService.instance;
+      await auth.register(
+        email: _emailText,
+        username: _username.text.trim(),
+        password: _password.text,
+      );
+      await pushLocalProfile(auth);
+      if (!mounted) return;
+      context.pushReplacement('/verify', extra: 60);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = authErrorMessage(t, e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.t;
+    final usernameError = switch (_check) {
+      _UsernameCheck.taken => t.usernameTaken,
+      _UsernameCheck.reserved => t.usernameReserved,
+      _ => null,
+    };
+    return AuthPage(
+      title: t.createAccount,
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          KustButton(
+            label: t.createAccount,
+            onTap: _valid && !_busy ? _submit : null,
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.haveAccount,
+            style: KustButtonStyle.secondary,
+            onTap: _busy ? null : () => context.pushReplacement('/login'),
+          ),
+        ],
+      ),
+      children: [
+        FieldLabel(t.emailLabel),
+        KustTextField(
+          controller: _email,
+          maxLength: 254,
+          autofocus: true,
+          action: TextInputAction.next,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          errorText: _email.text.isNotEmpty && !_emailOk ? t.invalidEmail : null,
+        ),
+        FieldLabel(t.username),
+        KustTextField.username(
+          controller: _username,
+          action: TextInputAction.next,
+          onChanged: _scheduleCheck,
+          errorText: usernameError,
+          helper: _check == _UsernameCheck.free ? t.usernameFree : t.usernameRule,
+        ),
+        FieldLabel(t.passwordLabel),
+        KustTextField(
+          controller: _password,
+          maxLength: 128,
+          obscure: true,
+          action: TextInputAction.next,
+          keyboardType: TextInputType.visiblePassword,
+          autofillHints: const [AutofillHints.newPassword],
+          errorText: _password.text.isNotEmpty && !_passwordOk
+              ? t.passwordShort
+              : null,
+        ),
+        FieldLabel(t.confirmPassword),
+        KustTextField(
+          controller: _confirm,
+          maxLength: 128,
+          obscure: true,
+          action: TextInputAction.done,
+          keyboardType: TextInputType.visiblePassword,
+          autofillHints: const [AutofillHints.newPassword],
+          onSubmitted: (_) => _submit(),
+          errorText: _confirm.text.isNotEmpty && !_confirmOk
+              ? t.passwordsDiffer
+              : null,
+        ),
+        ErrorLine(_error),
+      ],
+    );
+  }
+}

@@ -524,3 +524,43 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `country` | Country | Ýurt |
 | `countryNone` | Not set | Görkezilmedi |
 | `searchCountries` | Search countries | Ýurt gözläň |
+| `offlineBanner` | You're offline | Siz oflaýn |
+| `backOnlineBanner` | Back online | Ýene onlaýn |
+| `playersTitle` | Players | Oýunçylar |
+| `playersSearch` | Search players | Oýunçy gözle |
+| `playersEmpty` | No players found | Oýunçy tapylmady |
+| `playersLoadFailed` | Couldn't load players | Oýunçylary ýükläp bolmady |
+| `playersSaved` | Showing your saved list | Saklanan sanaw görkezilýär |
+| `allPlayers` | All players | Ähli oýunçylar |
+| `signIn` | Sign in | Giriş |
+| `createAccount` | Create account | Hasap aç |
+| `haveAccount` | I already have an account | Hasabym bar |
+| `emailLabel` | Email | E-poçta |
+| `emailOrUsername` | Email or username | E-poçta ýa-da ulanyjy ady |
+| `passwordLabel` | Password | Parol |
+| `confirmPassword` | Confirm password | Paroly tassykla |
+| `signOut` | Sign out | Çyk |
+| `usernameTaken` | That username is taken | Bu ulanyjy ady eýýäm alnan |
+| `usernameFree` | Username is free | Ulanyjy ady erkin |
+| `usernameReserved` | That username is reserved | Bu ulanyjy ady rezerw edilen |
+| `invalidEmail` | Enter a valid email | Dogry e-poçta giriziň |
+| `passwordShort` | At least 8 characters | Iň az 8 nyşan |
+| `passwordsDiffer` | Passwords don't match | Parollar gabat gelmeýär |
+| `invalidCredentials` | Wrong email, username or password | E-poçta, ulanyjy ady ýa-da parol nädogry |
+| `emailTaken` | An account with this email already exists | Bu e-poçta bilen hasap eýýäm bar |
+| `noInternet` | No connection. Try again when you're online. | Internet ýok. Birleşenden soň täzeden synanyşyň. |
+| `genericError` | Something went wrong. Try again. | Bir zat nädogry gitdi. Täzeden synanyşyň. |
+| `rateLimited` | Too many tries, wait a moment | Köp synanyşyk, biraz garaşyň |
+| `verifyTitle` | Verify your email | E-poçtaňyzy tassyklaň |
+| `verifySubtitle` | We sent a 6-digit code to {email} | {email} salgysyna 6 sanly kod iberdik |
+| `verifyCode` | Code | Kod |
+| `verifyButton` | Verify | Tassykla |
+| `resendCode` | Send a new code | Täze kod iber |
+| `resendIn` | Send a new code in {seconds}s | Täze kod {seconds} s soň |
+| `codeWrong` | That code doesn't match | Kod gabat gelmedi |
+| `codeExpired` | That code expired, send a new one | Koduň möhleti gutardy, täzesini iberiň |
+| `codeTooMany` | Too many wrong tries, send a new code | Köp ýalňyş synanyşyk, täze kod iberiň |
+| `codeSent` | Code sent | Kod iberildi |
+| `signInToSeePlayers` | Sign in to see other players | Beýleki oýunçylary görmek üçin giriň |
+| `signInToSeePlayersBody` | Players are visible to signed-in members. Your games and progress stay on your phone either way. | Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar. |
+| `accountSignedInAs` | Signed in as {email} | {email} hökmünde girdiňiz |

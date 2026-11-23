@@ -52,7 +52,8 @@ packages/**/android/local.properties
 # Python virtualenv and generator output
 .venv/
 venv/
-env/
+env/*
+!env/dev.example.json
 __pycache__/
 *.egg-info/
 .pytest_cache/

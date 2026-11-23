@@ -1880,4 +1880,131 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get searchCountries => 'Ýurt gözläň';
+
+  @override
+  String get offlineBanner => 'Siz oflaýn';
+
+  @override
+  String get backOnlineBanner => 'Ýene onlaýn';
+
+  @override
+  String get playersTitle => 'Oýunçylar';
+
+  @override
+  String get playersSearch => 'Oýunçy gözle';
+
+  @override
+  String get playersEmpty => 'Oýunçy tapylmady';
+
+  @override
+  String get playersLoadFailed => 'Oýunçylary ýükläp bolmady';
+
+  @override
+  String get playersSaved => 'Saklanan sanaw görkezilýär';
+
+  @override
+  String get allPlayers => 'Ähli oýunçylar';
+
+  @override
+  String get signIn => 'Giriş';
+
+  @override
+  String get createAccount => 'Hasap aç';
+
+  @override
+  String get haveAccount => 'Hasabym bar';
+
+  @override
+  String get emailLabel => 'E-poçta';
+
+  @override
+  String get emailOrUsername => 'E-poçta ýa-da ulanyjy ady';
+
+  @override
+  String get passwordLabel => 'Parol';
+
+  @override
+  String get confirmPassword => 'Paroly tassykla';
+
+  @override
+  String get signOut => 'Çyk';
+
+  @override
+  String get usernameTaken => 'Bu ulanyjy ady eýýäm alnan';
+
+  @override
+  String get usernameFree => 'Ulanyjy ady erkin';
+
+  @override
+  String get usernameReserved => 'Bu ulanyjy ady rezerw edilen';
+
+  @override
+  String get invalidEmail => 'Dogry e-poçta giriziň';
+
+  @override
+  String get passwordShort => 'Iň az 8 nyşan';
+
+  @override
+  String get passwordsDiffer => 'Parollar gabat gelmeýär';
+
+  @override
+  String get invalidCredentials => 'E-poçta, ulanyjy ady ýa-da parol nädogry';
+
+  @override
+  String get emailTaken => 'Bu e-poçta bilen hasap eýýäm bar';
+
+  @override
+  String get noInternet => 'Internet ýok. Birleşenden soň täzeden synanyşyň.';
+
+  @override
+  String get genericError => 'Bir zat nädogry gitdi. Täzeden synanyşyň.';
+
+  @override
+  String get rateLimited => 'Köp synanyşyk, biraz garaşyň';
+
+  @override
+  String get verifyTitle => 'E-poçtaňyzy tassyklaň';
+
+  @override
+  String verifySubtitle(String email) {
+    return '$email salgysyna 6 sanly kod iberdik';
+  }
+
+  @override
+  String get verifyCode => 'Kod';
+
+  @override
+  String get verifyButton => 'Tassykla';
+
+  @override
+  String get resendCode => 'Täze kod iber';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Täze kod $seconds s soň';
+  }
+
+  @override
+  String get codeWrong => 'Kod gabat gelmedi';
+
+  @override
+  String get codeExpired => 'Koduň möhleti gutardy, täzesini iberiň';
+
+  @override
+  String get codeTooMany => 'Köp ýalňyş synanyşyk, täze kod iberiň';
+
+  @override
+  String get codeSent => 'Kod iberildi';
+
+  @override
+  String get signInToSeePlayers => 'Beýleki oýunçylary görmek üçin giriň';
+
+  @override
+  String get signInToSeePlayersBody =>
+      'Oýunçylar diňe girenlere görünýär. Oýunlaryňyz we öňegidişligiňiz telefonyňyzda galýar.';
+
+  @override
+  String accountSignedInAs(String email) {
+    return '$email hökmünde girdiňiz';
+  }
 }

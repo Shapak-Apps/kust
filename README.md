@@ -60,6 +60,17 @@ Without that file a release build falls back to the debug key. Never publish suc
 flutter build apk --release --split-per-abi
 ```
 
+## Connect to the server
+
+The app works fully offline. To turn on accounts, the players list and live presence, point it at a Küşt server with compile-time defines:
+
+```bash
+cp env/dev.example.json env/dev.json
+flutter run --dart-define-from-file=env/dev.json
+```
+
+`API_URL` is the server base, for example `http://10.0.2.2:8080` for the Android emulator or `http://localhost:8080` for iOS. `WS_URL` is optional and defaults to `API_URL` with `ws` or `wss` and `/v1/ws`. Leave both out and the app behaves exactly as before. `env/dev.json` is git-ignored.
+
 ## Translations
 
 Texts live in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_tk.arb`. Turkmen strings that need a native speaker's eye are listed in `l10n/REVIEW_tk.md`.

@@ -1076,5 +1076,66 @@
   "opNimzoD": "Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.",
   "country": "Country",
   "countryNone": "Not set",
-  "searchCountries": "Search countries"
+  "searchCountries": "Search countries",
+  "offlineBanner": "You're offline",
+  "backOnlineBanner": "Back online",
+  "playersTitle": "Players",
+  "playersSearch": "Search players",
+  "playersEmpty": "No players found",
+  "playersLoadFailed": "Couldn't load players",
+  "playersSaved": "Showing your saved list",
+  "allPlayers": "All players",
+  "signIn": "Sign in",
+  "createAccount": "Create account",
+  "haveAccount": "I already have an account",
+  "emailLabel": "Email",
+  "emailOrUsername": "Email or username",
+  "passwordLabel": "Password",
+  "confirmPassword": "Confirm password",
+  "signOut": "Sign out",
+  "usernameTaken": "That username is taken",
+  "usernameFree": "Username is free",
+  "usernameReserved": "That username is reserved",
+  "invalidEmail": "Enter a valid email",
+  "passwordShort": "At least 8 characters",
+  "passwordsDiffer": "Passwords don't match",
+  "invalidCredentials": "Wrong email, username or password",
+  "emailTaken": "An account with this email already exists",
+  "noInternet": "No connection. Try again when you're online.",
+  "genericError": "Something went wrong. Try again.",
+  "rateLimited": "Too many tries, wait a moment",
+  "verifyTitle": "Verify your email",
+  "verifySubtitle": "We sent a 6-digit code to {email}",
+  "@verifySubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyCode": "Code",
+  "verifyButton": "Verify",
+  "resendCode": "Send a new code",
+  "resendIn": "Send a new code in {seconds}s",
+  "@resendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "codeWrong": "That code doesn't match",
+  "codeExpired": "That code expired, send a new one",
+  "codeTooMany": "Too many wrong tries, send a new code",
+  "codeSent": "Code sent",
+  "signInToSeePlayers": "Sign in to see other players",
+  "signInToSeePlayersBody": "Players are visible to signed-in members. Your games and progress stay on your phone either way.",
+  "accountSignedInAs": "Signed in as {email}",
+  "@accountSignedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  }
 }

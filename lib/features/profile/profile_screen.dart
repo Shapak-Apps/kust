@@ -7,6 +7,8 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
@@ -17,11 +19,13 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
+import 'package:kust/widgets/offline_bar.dart';
 
 /// The player's profile: their board and pieces from settings, photo, name,
 /// username and a few words about them, their numbers, recent games and
@@ -74,6 +78,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _edit() => setState(_fill);
+
+  void _openPlayers() {
+    final auth = AuthService.instance.state.value;
+    if (!auth.isSignedIn) {
+      _showSignInSheet();
+    } else if (!auth.isVerified) {
+      context.push('/verify');
+    } else {
+      context.push('/players');
+    }
+  }
+
+  void _showSignInSheet() {
+    final t = context.t;
+    showKustSheet<void>(
+      context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KustSheetHeader(
+            title: t.signInToSeePlayers,
+            subtitle: t.signInToSeePlayersBody,
+          ),
+          KustButton(
+            label: t.signIn,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              context.push('/login');
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.createAccount,
+            style: KustButtonStyle.secondary,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              context.push('/register');
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _save() async {
     final saved = await _store.saveProfile(
@@ -243,7 +291,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const _HistorySection(),
               const _AchievementsSection(),
+              const _AccountSection(),
             ],
+          ),
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(top: false, child: OfflineBar()),
           ),
           // The bar over the board: back, and the QR code and edit buttons.
           Positioned(
@@ -271,6 +326,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         icon: const Icon(Icons.arrow_back_rounded),
                       ),
                       const Spacer(),
+                      IconButton(
+                        onPressed: _openPlayers,
+                        tooltip: context.t.allPlayers,
+                        color: Colors.white,
+                        icon: const Icon(Icons.public_rounded),
+                      ),
                       IconButton(
                         onPressed: _edit,
                         tooltip: context.t.editProfile,
@@ -671,6 +732,50 @@ class _AchievementBadge extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AccountSection extends StatelessWidget {
+  const _AccountSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    return ValueListenableBuilder<AuthState>(
+      valueListenable: AuthService.instance.state,
+      builder: (context, auth, _) {
+        if (auth.status == AuthStatus.unknown) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+          child: auth.isSignedIn
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t.accountSignedInAs(auth.account?.email ?? ''),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await AuthService.instance.logout();
+                        await PlayersRepository.instance.clearCache();
+                      },
+                      child: Text(t.signOut),
+                    ),
+                  ],
+                )
+              : KustButton(
+                  label: t.signIn,
+                  style: KustButtonStyle.secondary,
+                  onTap: () => context.push('/login'),
+                ),
+        );
+      },
     );
   }
 }

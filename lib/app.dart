@@ -7,6 +7,7 @@ import 'package:kust/core/settings.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_splash.dart';
+import 'package:kust/widgets/offline_bar.dart';
 
 /// Bouncy scrolling everywhere, no Android glow.
 class _KustScrollBehavior extends MaterialScrollBehavior {
@@ -65,7 +66,11 @@ class MyApp extends StatelessWidget {
                 value: isDark
                     ? SystemUiOverlayStyle.light
                     : SystemUiOverlayStyle.dark,
-                child: KustSplash(child: AchievementToastHost(child: child!)),
+                child: OfflineInsetHost(
+                  child: KustSplash(
+                    child: AchievementToastHost(child: child!),
+                  ),
+                ),
               ),
             );
           },

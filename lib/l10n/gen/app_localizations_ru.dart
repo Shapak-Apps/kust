@@ -1883,4 +1883,132 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get searchCountries => 'Поиск страны';
+
+  @override
+  String get offlineBanner => 'Вы не в сети';
+
+  @override
+  String get backOnlineBanner => 'Снова в сети';
+
+  @override
+  String get playersTitle => 'Игроки';
+
+  @override
+  String get playersSearch => 'Поиск игроков';
+
+  @override
+  String get playersEmpty => 'Игроки не найдены';
+
+  @override
+  String get playersLoadFailed => 'Не удалось загрузить игроков';
+
+  @override
+  String get playersSaved => 'Показан сохранённый список';
+
+  @override
+  String get allPlayers => 'Все игроки';
+
+  @override
+  String get signIn => 'Войти';
+
+  @override
+  String get createAccount => 'Создать аккаунт';
+
+  @override
+  String get haveAccount => 'У меня уже есть аккаунт';
+
+  @override
+  String get emailLabel => 'Эл. почта';
+
+  @override
+  String get emailOrUsername => 'Эл. почта или имя';
+
+  @override
+  String get passwordLabel => 'Пароль';
+
+  @override
+  String get confirmPassword => 'Повторите пароль';
+
+  @override
+  String get signOut => 'Выйти';
+
+  @override
+  String get usernameTaken => 'Это имя уже занято';
+
+  @override
+  String get usernameFree => 'Имя свободно';
+
+  @override
+  String get usernameReserved => 'Это имя зарезервировано';
+
+  @override
+  String get invalidEmail => 'Введите корректную почту';
+
+  @override
+  String get passwordShort => 'Минимум 8 символов';
+
+  @override
+  String get passwordsDiffer => 'Пароли не совпадают';
+
+  @override
+  String get invalidCredentials => 'Неверная почта, имя или пароль';
+
+  @override
+  String get emailTaken => 'Аккаунт с такой почтой уже есть';
+
+  @override
+  String get noInternet => 'Нет связи. Попробуйте, когда будете в сети.';
+
+  @override
+  String get genericError => 'Что-то пошло не так. Попробуйте ещё раз.';
+
+  @override
+  String get rateLimited => 'Слишком много попыток, подождите';
+
+  @override
+  String get verifyTitle => 'Подтвердите почту';
+
+  @override
+  String verifySubtitle(String email) {
+    return 'Мы отправили 6-значный код на $email';
+  }
+
+  @override
+  String get verifyCode => 'Код';
+
+  @override
+  String get verifyButton => 'Подтвердить';
+
+  @override
+  String get resendCode => 'Отправить новый код';
+
+  @override
+  String resendIn(int seconds) {
+    return 'Новый код через $seconds с';
+  }
+
+  @override
+  String get codeWrong => 'Код не подходит';
+
+  @override
+  String get codeExpired => 'Срок кода истёк, отправьте новый';
+
+  @override
+  String get codeTooMany =>
+      'Слишком много неверных попыток, отправьте новый код';
+
+  @override
+  String get codeSent => 'Код отправлен';
+
+  @override
+  String get signInToSeePlayers => 'Войдите, чтобы видеть других игроков';
+
+  @override
+  String get signInToSeePlayersBody =>
+      'Игроков видят только вошедшие. Ваши партии и прогресс в любом случае остаются на телефоне.';
+
+  @override
+  String accountSignedInAs(String email) {
+    return 'Вы вошли как $email';
+  }
 }

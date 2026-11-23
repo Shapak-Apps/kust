@@ -8,6 +8,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/connection_service.dart';
+import 'package:kust/core/net/live_socket.dart';
+import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/warm_up.dart';
@@ -72,5 +76,20 @@ Future<void> _start() async {
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);
   runApp(ProviderScope(child: MyApp(router: router)));
+  if (ServerConfig.enabled) _startServerLink();
   unawaited(warmBoards());
+}
+
+void _startServerLink() {
+  ConnectionService.instance.start();
+  AuthService.instance.state.addListener(_syncLiveSocket);
+  unawaited(AuthService.instance.restore());
+}
+
+void _syncLiveSocket() {
+  if (AuthService.instance.state.value.isVerified) {
+    LiveSocket.instance.connect();
+  } else {
+    unawaited(LiveSocket.instance.close());
+  }
 }

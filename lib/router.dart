@@ -5,7 +5,12 @@ import 'package:kust/features/review/review_screen.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/features/achievements/achievements_screen.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/features/auth/login_screen.dart';
+import 'package:kust/features/auth/register_screen.dart';
+import 'package:kust/features/auth/verify_email_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
+import 'package:kust/features/players/players_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
 import 'package:kust/features/game/game_args.dart';
 import 'package:kust/features/play/play_screen.dart';
@@ -63,6 +68,28 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/verify',
+        builder: (context, state) => VerifyEmailScreen(
+          initialCooldown: state.extra is int ? state.extra as int : 0,
+        ),
+      ),
+      GoRoute(
+        path: '/players',
+        redirect: (context, state) {
+          final auth = AuthService.instance.state.value;
+          if (auth.status == AuthStatus.signedOut) return '/login';
+          if (auth.isSignedIn && !auth.isVerified) return '/verify';
+          return null;
+        },
+        builder: (context, state) => const PlayersScreen(),
       ),
 
       GoRoute(
