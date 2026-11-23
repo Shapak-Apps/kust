@@ -78,6 +78,7 @@ flutter:
     - assets/icons/moves/
     - assets/bots/
     - assets/images/
+    - assets/flags/
     - assets/pieces/
     - assets/pieces/graphite/
     - assets/pieces/shaded/

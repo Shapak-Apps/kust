@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:kust/core/countries.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
@@ -13,6 +14,7 @@ import 'package:kust/features/achievements/achievements_screen.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
@@ -143,6 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _view(BuildContext context, KustTokens k) {
     final username = _store.username;
     final bio = _store.bio;
+    final country = _store.country;
     final square = MediaQuery.sizeOf(context).width / BoardBanner.files;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -188,12 +191,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: k.title,
                               ),
-                              if (username != null)
-                                Text(
-                                  '@$username',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: k.body.copyWith(color: k.muted),
+                              if (username != null || country != null)
+                                // @username and the flag of the player's
+                                // country after it.
+                                Row(
+                                  children: [
+                                    if (username != null)
+                                      Flexible(
+                                        child: Text(
+                                          '@$username',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: k.body.copyWith(
+                                            color: k.muted,
+                                          ),
+                                        ),
+                                      ),
+                                    if (country != null) ...[
+                                      if (username != null)
+                                        const SizedBox(width: 8),
+                                      CountryFlag(country, height: 22),
+                                    ],
+                                  ],
                                 ),
                               const SizedBox(height: 4),
                             ],
@@ -294,6 +313,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         helper: context.t.usernameRule,
       ),
       const SizedBox(height: 16),
+      KustSectionLabel(context.t.country),
+      _CountryField(
+        code: _store.country,
+        onPick: () async {
+          final picked = await pickCountry(context, current: _store.country);
+          if (picked != null) {
+            await _store.setCountry(picked.isEmpty ? null : picked);
+          }
+        },
+      ),
+      const SizedBox(height: 16),
       KustSectionLabel(context.t.bio),
       KustTextField(
         controller: _bio,
@@ -370,21 +400,40 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 20, 8, 4),
       child: Row(
         children: [
-          Text(title, style: k.title),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-            decoration: BoxDecoration(
-              color: k.surfaceAlt,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              count,
-              style: k.caption.copyWith(fontWeight: FontWeight.w800),
+          // The title takes the room up to View all, and only then is cut.
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: k.title,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: k.surfaceAlt,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    count,
+                    style: k.caption.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          TextButton(onPressed: onViewAll, child: Text(context.t.viewAll)),
+          TextButton(
+            onPressed: onViewAll,
+            child: Text(context.t.viewAll, maxLines: 1),
+          ),
         ],
       ),
     );
@@ -513,6 +562,51 @@ class _AchievementBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The country in the edit form: its flag and name, or Not set; tap to
+/// pick another.
+class _CountryField extends StatelessWidget {
+  const _CountryField({required this.code, required this.onPick});
+
+  final String? code;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final name = code == null ? null : kCountries[code];
+    return Semantics(
+      button: true,
+      label: '${context.t.country}, ${name ?? context.t.countryNone}',
+      excludeSemantics: true,
+      child: Pressable(
+        onTap: onPick,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          decoration: BoxDecoration(
+            color: k.surfaceAlt,
+            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+          ),
+          child: Row(
+            children: [
+              if (code != null) ...[
+                CountryFlag(code!, height: 24),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(
+                  name ?? context.t.countryNone,
+                  style: k.body.copyWith(color: name == null ? k.muted : k.ink),
+                ),
+              ),
+              Icon(Icons.expand_more_rounded, color: k.muted),
+            ],
+          ),
+        ),
       ),
     );
   }

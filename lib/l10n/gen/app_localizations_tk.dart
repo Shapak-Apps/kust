@@ -1871,4 +1871,13 @@ class AppL10nTk extends AppL10n {
   @override
   String get opNimzoD =>
       'Gara c3-däki aty pil bilen baglaýar we e4 üçin peşkalar bilen däl-de, çöpler bilen göreşýär. 1.d4-e iň abraýly jogaplaryň biri.';
+
+  @override
+  String get country => 'Ýurt';
+
+  @override
+  String get countryNone => 'Görkezilmedi';
+
+  @override
+  String get searchCountries => 'Ýurt gözläň';
 }

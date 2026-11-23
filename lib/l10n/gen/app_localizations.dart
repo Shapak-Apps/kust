@@ -3374,6 +3374,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.'**
   String get opNimzoD;
+
+  /// No description provided for @country.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get country;
+
+  /// No description provided for @countryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get countryNone;
+
+  /// No description provided for @searchCountries.
+  ///
+  /// In en, this message translates to:
+  /// **'Search countries'**
+  String get searchCountries;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

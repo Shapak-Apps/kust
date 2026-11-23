@@ -22,6 +22,7 @@ class AppStorage {
   static const String _usernameKey = 'username';
   static const String _bioKey = 'bio';
   static const String _photoKey = 'photo_path';
+  static const String _countryKey = 'country';
 
   static const List<String> _guestNames = [
     'Guest Knight',
@@ -137,6 +138,13 @@ class AppStorage {
   String? get username => _user.get(_usernameKey) as String?;
   String get bio => _user.get(_bioKey, defaultValue: '') as String;
 
+  /// The country the player picked (a code of [kCountries]), or null.
+  String? get country => _user.get(_countryKey) as String?;
+
+  /// Sets the player's country, or clears it with null.
+  Future<void> setCountry(String? code) =>
+      code == null ? _user.delete(_countryKey) : _user.put(_countryKey, code);
+
   /// Where the profile photo is kept; set at start (the app's support
   /// folder). Only the file name is stored, because on iOS the folder's path
   /// changes when the app is updated.
@@ -149,8 +157,9 @@ class AppStorage {
     return file == null || dir == null ? null : '$dir/$file';
   }
 
-  ValueListenable profileListenable() =>
-      _user.listenable(keys: [_guestNameKey, _usernameKey, _bioKey, _photoKey]);
+  ValueListenable profileListenable() => _user.listenable(
+    keys: [_guestNameKey, _usernameKey, _bioKey, _photoKey, _countryKey],
+  );
 
   /// Saves the profile. Returns false, saving nothing, when the name is empty
   /// or the username does not match [usernamePattern].
@@ -176,7 +185,7 @@ class AppStorage {
   /// a guest name again. Games, rating and progress stay.
   Future<void> logOut() async {
     await setPhoto(null);
-    await _user.deleteAll([_usernameKey, _bioKey]);
+    await _user.deleteAll([_usernameKey, _bioKey, _countryKey]);
     await _user.put(
       _guestNameKey,
       _guestNames[Random().nextInt(_guestNames.length)],
