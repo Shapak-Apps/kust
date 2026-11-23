@@ -89,6 +89,12 @@ class ApiClient {
   Future<Map<String, dynamic>> delete(String path, {String? token}) =>
       _send('DELETE', path, token: token);
 
+  Future<Map<String, dynamic>> deleteJson(
+    String path, {
+    Object? body,
+    String? token,
+  }) => _send('DELETE', path, body: body, token: token);
+
   Future<bool> ping({Duration timeout = const Duration(seconds: 5)}) async {
     try {
       final response = await _dio.get<dynamic>('/healthz').timeout(timeout);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The K of the Küşt logo, one colour, for the status bar. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="402.5"
+    android:viewportHeight="402.5">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M40.25,0.00h80.5v80.5h-80.5zM40.25,80.50h80.5v80.5h-80.5zM40.25,161.00h80.5v80.5h-80.5zM40.25,241.50h80.5v80.5h-80.5zM40.25,322.00h80.5v80.5h-80.5zM120.75,161.00h80.5v80.5h-80.5zM201.25,80.50h80.5v80.5h-80.5zM281.75,0.00h80.5v80.5h-80.5zM201.25,241.50h80.5v80.5h-80.5z" />
+</vector>
