@@ -1,4 +1,3 @@
-import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -143,28 +142,6 @@ class _LearnScreenState extends State<LearnScreen> {
   }
 }
 
-/// The position a lesson is pictured by: its busiest one, with the squares
-/// it asks about marked.
-({Position position, List<Square> marked}) _cover(Lesson lesson) {
-  var best = lesson.tasks.first;
-  var most = 0;
-  for (final task in lesson.tasks) {
-    final pieces = task.fen
-        .split(' ')
-        .first
-        .replaceAll(RegExp('[^a-zA-Z]'), '')
-        .length;
-    if (pieces > most) {
-      most = pieces;
-      best = task;
-    }
-  }
-  return (
-    position: Chess.fromSetup(Setup.parseFen(best.fen)),
-    marked: best.targets.toList(),
-  );
-}
-
 /// The lesson to do now: its diagram, number, name, what it is about, and
 /// a Start button.
 class _NextLesson extends StatelessWidget {
@@ -178,7 +155,7 @@ class _NextLesson extends StatelessWidget {
     final k = context.k;
     final t = context.t;
     final lesson = kLessons[index];
-    final cover = _cover(lesson);
+    final cover = lessonCover(lesson);
     // The whole card starts the lesson, not only its button.
     return Pressable(
       onTap: onStart,

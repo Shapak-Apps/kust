@@ -329,6 +329,10 @@ void _paintWarp(Canvas canvas, List<GolKind> gols) {
 /// weft thread with its shuttle, and the ragged edge where weaving has
 /// reached. The art itself is drawn once and reused, so the weave animation
 /// is cheap.
+/// Draws the carpet art for [gols] ahead of time, so the Puzzles tab opens
+/// at once. Run while the native splash still shows: it takes a moment.
+void warmLoom(List<GolKind> gols) => _RunnerArt.of(gols, LoomPainter._scale);
+
 class LoomPainter extends CustomPainter {
   const LoomPainter({required this.gols, required this.woven});
 

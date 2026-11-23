@@ -10,6 +10,7 @@ import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/core/warm_up.dart';
 import 'package:kust/features/game/chess/board/svg_precache.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/features/game/chess/openings.dart';
@@ -62,10 +63,14 @@ Future<void> _start() async {
     ChessEngine.instance.warmUp();
   }
   SoundService.instance.warmUp();
+  // Heavy art drawn while the native splash still shows, so the tabs open
+  // at once; the boards follow in the background during the splash.
+  warmBeforeStart();
   unawaited(precacheGameSvgs());
   unawaited(openingBook());
   final prefs = await SharedPreferences.getInstance();
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);
   runApp(ProviderScope(child: MyApp(router: router)));
+  unawaited(warmBoards());
 }

@@ -19,7 +19,21 @@ class MoreFloatingMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final game = ref.watch(chessControllerProvider);
+    // Only what the switches show.
+    ref.watch(
+      chessControllerProvider.select(
+        (g) => (
+          g.evaluationEnabled,
+          g.moveFeedbackEnabled,
+          g.showBestEnabled,
+          g.practiceMode,
+          g.mode,
+          g.moves.length,
+          g.lineLength,
+        ),
+      ),
+    );
+    final game = ref.read(chessControllerProvider);
     final controller = ref.read(chessControllerProvider.notifier);
 
     return Column(
