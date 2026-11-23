@@ -3350,6 +3350,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Lesson {n}'**
   String lessonNumber(int n);
+
+  /// No description provided for @opViennaD.
+  ///
+  /// In en, this message translates to:
+  /// **'White brings the queen\'s knight out first and keeps f4 in reserve: a quiet start that can turn into a King\'s Gambit with the knight already in play.'**
+  String get opViennaD;
+
+  /// No description provided for @opPircD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black lets White build a big centre, fianchettoes the bishop to g7 and waits to strike at it later. Flexible and full of counterplay.'**
+  String get opPircD;
+
+  /// No description provided for @opDutchD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black answers 1.d4 with f5, grabbing e4 and aiming at the kingside. Unbalanced from the first move, for players who want to fight.'**
+  String get opDutchD;
+
+  /// No description provided for @opNimzoD.
+  ///
+  /// In en, this message translates to:
+  /// **'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.'**
+  String get opNimzoD;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

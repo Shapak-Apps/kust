@@ -1850,4 +1850,20 @@ class AppL10nEn extends AppL10n {
   String lessonNumber(int n) {
     return 'Lesson $n';
   }
+
+  @override
+  String get opViennaD =>
+      'White brings the queen\'s knight out first and keeps f4 in reserve: a quiet start that can turn into a King\'s Gambit with the knight already in play.';
+
+  @override
+  String get opPircD =>
+      'Black lets White build a big centre, fianchettoes the bishop to g7 and waits to strike at it later. Flexible and full of counterplay.';
+
+  @override
+  String get opDutchD =>
+      'Black answers 1.d4 with f5, grabbing e4 and aiming at the kingside. Unbalanced from the first move, for players who want to fight.';
+
+  @override
+  String get opNimzoD =>
+      'Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4.';
 }

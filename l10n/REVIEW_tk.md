@@ -507,3 +507,12 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `doneButton` | Done | Taýýar |
 | `lessonNumber` | Lesson {n} | Sapak {n} |
 | `lessonBackToMap` | Back to lessons | Sapaklara dolan |
+
+## Train: more openings
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `opViennaD` | White brings the queen's knight out first and keeps f4 in reserve: a quiet start that can turn into a King's Gambit with the knight already in play. | Ak ilki bilen wezir atyny çykarýar we f4-i ätiýaçda saklaýar: asuda başlangyç, at eýýäm oýunda bolan şa gambitine öwrülip biler. |
+| `opPircD` | Black lets White build a big centre, fianchettoes the bishop to g7 and waits to strike at it later. Flexible and full of counterplay. | Gara aga uly merkez gurmaga ýol berýär, pili g7-e goýýar we soňra merkeze urýar. Çeýe we garşy hüjüme baý. |
+| `opDutchD` | Black answers 1.d4 with f5, grabbing e4 and aiming at the kingside. Unbalanced from the first move, for players who want to fight. | Gara 1.d4-e f5 bilen jogap berýär, e4-i eýeleýär we şa ganatyna nyşana alýar. Ilkinji göçümden deň däl oýun, göreşmek isleýänler üçin. |
+| `opNimzoD` | Black pins the knight on c3 with the bishop and fights for e4 with pieces, not pawns. One of the most respected answers to 1.d4. | Gara c3-däki aty pil bilen baglaýar we e4 üçin peşkalar bilen däl-de, çöpler bilen göreşýär. 1.d4-e iň abraýly jogaplaryň biri. |

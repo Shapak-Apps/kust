@@ -1855,4 +1855,20 @@ class AppL10nTk extends AppL10n {
   String lessonNumber(int n) {
     return 'Sapak $n';
   }
+
+  @override
+  String get opViennaD =>
+      'Ak ilki bilen wezir atyny çykarýar we f4-i ätiýaçda saklaýar: asuda başlangyç, at eýýäm oýunda bolan şa gambitine öwrülip biler.';
+
+  @override
+  String get opPircD =>
+      'Gara aga uly merkez gurmaga ýol berýär, pili g7-e goýýar we soňra merkeze urýar. Çeýe we garşy hüjüme baý.';
+
+  @override
+  String get opDutchD =>
+      'Gara 1.d4-e f5 bilen jogap berýär, e4-i eýeleýär we şa ganatyna nyşana alýar. Ilkinji göçümden deň däl oýun, göreşmek isleýänler üçin.';
+
+  @override
+  String get opNimzoD =>
+      'Gara c3-däki aty pil bilen baglaýar we e4 üçin peşkalar bilen däl-de, çöpler bilen göreşýär. 1.d4-e iň abraýly jogaplaryň biri.';
 }
