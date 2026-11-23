@@ -10,6 +10,7 @@ import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
@@ -309,6 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const _AccountCard(),
               const _HistorySection(),
+              const _FriendsSection(),
               const _AchievementsSection(),
             ],
           ),
@@ -532,7 +534,9 @@ class _Stats extends StatelessWidget {
     final k = context.k;
     final t = context.t;
     final joined = AppStorage.isReady ? AppStorage.instance.joinedAt : null;
-    Widget stat(String value, String label) => Expanded(
+    // Spread across the whole width: first at the left edge, last at the
+    // right.
+    Widget stat(String value, String label) => Flexible(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -551,6 +555,7 @@ class _Stats extends StatelessWidget {
       builder: (context, _, _) => ValueListenableBuilder(
         valueListenable: PlayerRatingStore.instance.listenable(),
         builder: (context, _, _) => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             if (joined != null)
               stat(
@@ -845,6 +850,110 @@ class _AccountCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// My friends in a row: photo the size of an achievement badge, then the
+/// username and flag. Tapping one opens their profile. Only when signed in.
+class _FriendsSection extends StatefulWidget {
+  const _FriendsSection();
+
+  @override
+  State<_FriendsSection> createState() => _FriendsSectionState();
+}
+
+class _FriendsSectionState extends State<_FriendsSection> {
+  List<Player>? _friends;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (!AuthService.instance.state.value.isVerified) return;
+    try {
+      final f = await PlayersRepository.instance.friends();
+      if (mounted) setState(() => _friends = f.friends);
+    } on ApiException {
+      if (mounted) setState(() => _friends = const []);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final friends = _friends;
+    if (friends == null) return const SizedBox.shrink();
+    final k = context.k;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionTitle(
+          title: context.t.friendFriends,
+          count: '${friends.length}',
+          onViewAll: () => context.push('/players'),
+        ),
+        if (friends.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Text(
+              context.t.noFriendsYet,
+              style: k.body.copyWith(color: k.muted),
+            ),
+          )
+        else
+          SizedBox(
+            height: 112,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: friends.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final p = friends[i];
+                return Pressable(
+                  onTap: () => context.push('/player/${p.username}', extra: p),
+                  child: SizedBox(
+                    width: 80,
+                    child: Column(
+                      children: [
+                        PlayerAvatar(
+                          size: 72,
+                          name: p.displayName,
+                          photo: avatarImage(avatarUrlFor(p.avatarKey)),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                p.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: k.caption.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: k.ink,
+                                ),
+                              ),
+                            ),
+                            if (p.country != null) ...[
+                              const SizedBox(width: 4),
+                              CountryFlag(p.country!, height: 11),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1,4 +1,10 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'package:kust/core/storage/app_storage.dart';
 
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/tokens.dart';
@@ -81,4 +87,69 @@ class PlayerAvatar extends StatelessWidget {
 
 /// A player's photo from the server, or null when they have none.
 ImageProvider? avatarImage(String? url) =>
-    url == null ? null : NetworkImage(url);
+    url == null ? null : CachedAvatar(url);
+
+/// A profile photo kept on the phone after the first download. Photo
+/// addresses never change (a new photo gets a new one), so a saved copy is
+/// always right and is shown at once, without the network.
+@immutable
+class CachedAvatar extends ImageProvider<CachedAvatar> {
+  const CachedAvatar(this.url);
+
+  final String url;
+
+  @override
+  Future<CachedAvatar> obtainKey(ImageConfiguration configuration) =>
+      SynchronousFuture(this);
+
+  @override
+  ImageStreamCompleter loadImage(
+    CachedAvatar key,
+    ImageDecoderCallback decode,
+  ) => MultiFrameImageStreamCompleter(codec: _load(decode), scale: 1);
+
+  /// The saved copy: named after the photo's address, which is unique.
+  File _file() {
+    final dir = AppStorage.filesDir ?? Directory.systemTemp.path;
+    final name = url
+        .split('/v1/')
+        .last
+        .replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    return File('$dir/avatar_cache/$name');
+  }
+
+  Future<ui.Codec> _load(ImageDecoderCallback decode) async {
+    final file = _file();
+    Uint8List bytes;
+    if (await file.exists()) {
+      bytes = await file.readAsBytes();
+    } else {
+      final client = HttpClient();
+      try {
+        final response = await (await client.getUrl(Uri.parse(url))).close();
+        if (response.statusCode != 200) {
+          throw HttpException(
+            'avatar ${response.statusCode}',
+            uri: Uri.parse(url),
+          );
+        }
+        bytes = await consolidateHttpClientResponseBytes(response);
+      } finally {
+        client.close();
+      }
+      try {
+        await file.parent.create(recursive: true);
+        await file.writeAsBytes(bytes, flush: true);
+      } on FileSystemException {
+        // Shown anyway; saved next time.
+      }
+    }
+    return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
+  }
+
+  @override
+  bool operator ==(Object other) => other is CachedAvatar && other.url == url;
+
+  @override
+  int get hashCode => url.hashCode;
+}

@@ -290,25 +290,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
             if (sections && _incoming.isNotEmpty) ...[
               _SectionLabel('${t.friendRequests} · ${_incoming.length}'),
               for (final p in _incoming)
-                tile(
-                  p,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () => _answer(p, true),
-                        tooltip: t.friendAccept,
-                        color: k.success,
-                        icon: const Icon(Icons.check_circle_rounded),
-                      ),
-                      IconButton(
-                        onPressed: () => _answer(p, false),
-                        tooltip: t.friendDecline,
-                        color: k.muted,
-                        icon: const Icon(Icons.cancel_rounded),
-                      ),
-                    ],
-                  ),
+                FriendRequestCard(
+                  player: p,
+                  onOpen: () => _open(p),
+                  onAnswer: (accept) => _answer(p, accept),
                 ),
             ],
             if (sections && _friends.isNotEmpty) ...[
@@ -327,7 +312,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           return ListView(
             controller: _scroll,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(top: 8, bottom: 24),
+            padding: const EdgeInsets.only(bottom: 24),
             children: rows,
           );
         },
@@ -346,7 +331,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
       child: Text(
         text.toUpperCase(),
         style: k.caption.copyWith(
@@ -448,6 +433,111 @@ class PlayerTile extends StatelessWidget {
                 ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A friend request: who, with their flag and rating, a line saying what
+/// they want, and Accept / Decline under it. Tapping the person opens
+/// their profile.
+class FriendRequestCard extends StatelessWidget {
+  const FriendRequestCard({
+    super.key,
+    required this.player,
+    required this.onOpen,
+    required this.onAnswer,
+  });
+
+  final Player player;
+  final VoidCallback onOpen;
+  final ValueChanged<bool> onAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final t = context.t;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: k.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: k.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: onOpen,
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                PlayerAvatar(
+                  size: 48,
+                  name: player.displayName,
+                  photo: avatarImage(avatarUrlFor(player.avatarKey)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              player.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: k.body.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          if (player.country != null) ...[
+                            const SizedBox(width: 6),
+                            CountryFlag(player.country!, height: 14),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '@${player.username} · ${player.rating}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.caption,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(t.wantsToBeFriend, style: k.caption),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: KustButton(
+                  label: t.friendAccept,
+                  height: 40,
+                  onTap: () => onAnswer(true),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: KustButton(
+                  label: t.friendDecline,
+                  height: 40,
+                  style: KustButtonStyle.secondary,
+                  onTap: () => onAnswer(false),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

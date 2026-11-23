@@ -607,3 +607,7 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `photoNotUploaded` | Couldn't upload your photo. Try again later. | Suraty ýükläp bolmady. Soňrak täzeden synanyşyň. |
 | `notifications` | Notifications | Habarnamalar |
 | `notifEmpty` | Nothing new yet. Friend requests will show up here. | Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner. |
+| `flipBoard` | Flip board | Tagtany öwür |
+| `flipBoardSub` | See the board from the other side | Tagta beýleki tarapdan serediň |
+| `friendSent` | Sent | Iberildi |
+| `noFriendsYet` | No friends yet. Find players with the globe. | Häzirlikçe dost ýok. Oýunçylary ýer şary nyşany arkaly tapyň. |

@@ -14,6 +14,7 @@ import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/players/player_profile_screen.dart';
 import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/server_config.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/players/players_screen.dart';
 import 'package:kust/features/game/game_screen.dart';
@@ -80,6 +81,12 @@ GoRouter createRouter({required bool onboardingCompleted}) {
 
       GoRoute(
         path: '/profile',
+        // No profile without an account: a guest is asked to sign up.
+        redirect: (context, state) =>
+            ServerConfig.enabled &&
+                AuthService.instance.state.value.status == AuthStatus.signedOut
+            ? '/register'
+            : null,
         builder: (context, state) => const ProfileScreen(),
       ),
 

@@ -89,6 +89,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    boardFlipped.value = false; // each game starts the right way up
     SoundService.instance.warmUp();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = ref.read(chessControllerProvider.notifier);
@@ -545,10 +546,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: SizedBox(
                                 width: side,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _PlayerBar(
+                                // Flip board swaps the two players too.
+                                child: ValueListenableBuilder<bool>(
+                                  valueListenable: boardFlipped,
+                                  builder: (context, flip, _) {
+                                    final top = _PlayerBar(
                                       side: topSide,
                                       name: widget.isLocal
                                           ? context.t.blackName
@@ -561,18 +563,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                           : widget.bot!.imagePath,
                                       thinkingText: context.t.thinking,
                                       bot: widget.isLocal ? null : widget.bot,
-                                    ),
-                                    SizedBox(
-                                      width: side,
-                                      height: side,
-                                      child: status == GameStatus.loading
-                                          ? const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            )
-                                          : const ChessBoard(),
-                                    ),
-                                    _PlayerBar(
+                                    );
+                                    final bottom = _PlayerBar(
                                       side: bottomSide,
                                       name: widget.isLocal
                                           ? context.t.whiteName
@@ -591,8 +583,25 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                               PlayerRatingStore.instance.rating,
                                             ),
                                       isYou: !widget.isLocal,
-                                    ),
-                                  ],
+                                    );
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        flip ? bottom : top,
+                                        SizedBox(
+                                          width: side,
+                                          height: side,
+                                          child: status == GameStatus.loading
+                                              ? const Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                )
+                                              : const ChessBoard(),
+                                        ),
+                                        flip ? top : bottom,
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
                             ),

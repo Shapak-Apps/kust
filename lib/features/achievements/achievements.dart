@@ -319,6 +319,19 @@ class AchievementStore {
     };
   }
 
+  /// Puts back what an account had earned (signing in on this phone),
+  /// without celebrating any of it.
+  Future<void> restore(Map<String, DateTime> earned) async {
+    final have = unlocked();
+    await _box.put(_key, {
+      for (final e in {...earned, ...have}.entries)
+        e.key: e.value.millisecondsSinceEpoch,
+    });
+  }
+
+  /// Forgets every achievement on this phone (signing out).
+  Future<void> clear() => _box.delete(_key);
+
   /// Unlocks [ids]; returns the ones that are new. The first new one is
   /// announced through [justUnlocked].
   Future<List<Achievement>> unlock(Iterable<String> ids) async {

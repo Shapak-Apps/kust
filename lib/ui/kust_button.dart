@@ -12,6 +12,9 @@ enum KustButtonStyle {
 
   /// The felt green of the app's headers, for the quieter main action.
   green,
+
+  /// Something that can't be undone lightly, such as logging out.
+  danger,
 }
 
 class KustButton extends StatelessWidget {
@@ -59,6 +62,9 @@ class KustButton extends StatelessWidget {
         bg = Colors.transparent;
         fg = enabled ? k.ink : k.muted;
         border = Border.all(color: k.line, width: 1.5);
+      case KustButtonStyle.danger:
+        bg = enabled ? k.danger : k.surfaceAlt;
+        fg = enabled ? Colors.white : k.muted;
       case KustButtonStyle.green:
         bg = enabled ? const Color(0xFF145A3F) : k.surfaceAlt;
         fg = enabled ? const Color(0xFFBFF0D6) : k.muted;

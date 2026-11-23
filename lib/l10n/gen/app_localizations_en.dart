@@ -2142,4 +2142,16 @@ class AppL10nEn extends AppL10n {
   @override
   String get notifEmpty =>
       'Nothing new yet. Friend requests will show up here.';
+
+  @override
+  String get flipBoard => 'Flip board';
+
+  @override
+  String get flipBoardSub => 'See the board from the other side';
+
+  @override
+  String get friendSent => 'Sent';
+
+  @override
+  String get noFriendsYet => 'No friends yet. Find players with the globe.';
 }

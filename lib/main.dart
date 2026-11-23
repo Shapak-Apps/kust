@@ -115,8 +115,16 @@ void _syncRating() {
 
 /// Signed in: watch the connection; verified too: join the live server.
 /// Signed out, the app is fully offline and never says so.
+bool _wasSignedIn = false;
+
 void _syncLiveSocket() {
   final auth = AuthService.instance.state.value;
+  // Signed out (by hand or because the session ended): the phone forgets
+  // that account's games and achievements.
+  if (_wasSignedIn && auth.status == AuthStatus.signedOut) {
+    unawaited(ProfileSync.instance.forget());
+  }
+  if (auth.status != AuthStatus.unknown) _wasSignedIn = auth.isSignedIn;
   if (auth.isSignedIn) {
     ConnectionService.instance.start();
   } else {
