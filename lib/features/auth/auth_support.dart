@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
@@ -8,6 +9,20 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/offline_bar.dart';
+
+/// [path] with the screen to open after signing in, when there is one.
+String withNext(String path, String? next) =>
+    next == null ? path : '$path?next=${Uri.encodeComponent(next)}';
+
+/// After signing in: [next] when the flow started somewhere (the welcome
+/// screen), else the players list.
+void goAfterAuth(BuildContext context, String? next) {
+  if (next != null) {
+    context.go(next);
+  } else {
+    context.pushReplacement('/players');
+  }
+}
 
 String authErrorMessage(AppL10n t, ApiException e) {
   switch (e.code) {

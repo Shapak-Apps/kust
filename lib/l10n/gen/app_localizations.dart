@@ -3632,6 +3632,42 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Signed in as {email}'**
   String accountSignedInAs(String email);
+
+  /// No description provided for @welcomeHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I have an account'**
+  String get welcomeHaveAccount;
+
+  /// No description provided for @welcomeGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue as guest'**
+  String get welcomeGuest;
+
+  /// No description provided for @onbStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String onbStepOf(int step, int total);
+
+  /// No description provided for @onbPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'How other players will see you'**
+  String get onbPreview;
+
+  /// No description provided for @accountCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a free account'**
+  String get accountCardTitle;
+
+  /// No description provided for @accountCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See who\'s online, find players and keep your profile on any phone.'**
+  String get accountCardBody;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

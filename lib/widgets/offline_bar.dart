@@ -5,7 +5,8 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/tokens.dart';
 
-const double kOfflineBarHeight = 26;
+/// The pill and the gap under it.
+const double kOfflineBarHeight = 38;
 
 class OfflineInset extends InheritedWidget {
   const OfflineInset({super.key, required this.visible, required super.child});
@@ -79,18 +80,53 @@ class _OfflineBarState extends State<OfflineBar> {
               child: SizedBox(
                 height: kOfflineBarHeight,
                 width: double.infinity,
-                child: Center(
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: k.caption.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0,
-                        color: restored ? k.success : k.muted,
+                child: Align(
+                  alignment: const Alignment(0, -0.4),
+                  // A small pill, as on Spotify: dark while offline, green
+                  // for a moment when the connection comes back.
+                  child: AnimatedContainer(
+                    duration: motion(
+                      context,
+                      const Duration(milliseconds: 200),
+                    ),
+                    height: 30,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: restored ? k.success : k.ink,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Semantics(
+                      liveRegion: true,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            restored
+                                ? Icons.wifi_rounded
+                                : Icons.cloud_off_rounded,
+                            size: 15,
+                            color: restored ? Colors.white : k.bg,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            text,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: k.caption.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0,
+                              color: restored ? Colors.white : k.bg,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

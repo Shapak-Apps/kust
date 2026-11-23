@@ -41,7 +41,7 @@ class KustNavBar extends StatelessWidget {
   final List<KustNavItem> items;
   final ValueChanged<int> onSelected;
 
-  /// Shown under the tabs, inside the bottom safe area; the offline strip.
+  /// Shown just above the tabs; the offline pill.
   final Widget? footer;
 
   /// Space content must leave at the bottom so nothing hides under the bar.
@@ -81,6 +81,7 @@ class KustNavBar extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                ?footer,
                 SizedBox(
                   height: _barHeight,
                   child: Row(
@@ -102,7 +103,6 @@ class KustNavBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                ?footer,
               ],
             ),
           ),

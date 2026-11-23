@@ -2002,4 +2002,25 @@ class AppL10nEn extends AppL10n {
   String accountSignedInAs(String email) {
     return 'Signed in as $email';
   }
+
+  @override
+  String get welcomeHaveAccount => 'I have an account';
+
+  @override
+  String get welcomeGuest => 'Continue as guest';
+
+  @override
+  String onbStepOf(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get onbPreview => 'How other players will see you';
+
+  @override
+  String get accountCardTitle => 'Get a free account';
+
+  @override
+  String get accountCardBody =>
+      'See who\'s online, find players and keep your profile on any phone.';
 }

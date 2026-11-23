@@ -69,7 +69,7 @@ void main() {
     service.dispose();
   });
 
-  testWidgets('the nav bar shows the footer under its tabs', (tester) async {
+  testWidgets('the nav bar shows the footer above its tabs', (tester) async {
     await tester.pumpWidget(
       _app(
         KustNavBar(
@@ -83,9 +83,9 @@ void main() {
         ),
       ),
     );
-    final tab = tester.getBottomLeft(find.text('Home')).dy;
-    final footer = tester.getTopLeft(find.text('footer here')).dy;
-    expect(footer, greaterThan(tab));
+    final tab = tester.getTopLeft(find.text('Home')).dy;
+    final footer = tester.getBottomLeft(find.text('footer here')).dy;
+    expect(footer, lessThan(tab));
   });
 
   testWidgets('clearance grows by the strip height only while it shows', (

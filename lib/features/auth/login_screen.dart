@@ -9,7 +9,10 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.next});
+
+  /// Where to go once signed in; see [goAfterAuth].
+  final String? next;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -54,7 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       await pullServerProfile(account);
       if (!mounted) return;
-      context.pushReplacement(account.emailVerified ? '/players' : '/verify');
+      if (account.emailVerified) {
+        goAfterAuth(context, widget.next);
+      } else {
+        context.pushReplacement(withNext('/verify', widget.next));
+      }
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = authErrorMessage(t, e));
     } finally {
@@ -75,7 +82,11 @@ class _LoginScreenState extends State<LoginScreen> {
           KustButton(
             label: t.createAccount,
             style: KustButtonStyle.secondary,
-            onTap: _busy ? null : () => context.pushReplacement('/register'),
+            onTap: _busy
+                ? null
+                : () => context.pushReplacement(
+                    withNext('/register', widget.next),
+                  ),
           ),
         ],
       ),
