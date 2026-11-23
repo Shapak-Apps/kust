@@ -40,7 +40,8 @@ class PresenceService {
   }
 
   void _onState() {
-    if (_socket.state.value != LiveState.connected && _online.value.isNotEmpty) {
+    if (_socket.state.value != LiveState.connected &&
+        _online.value.isNotEmpty) {
       _online.value = const {};
     }
   }

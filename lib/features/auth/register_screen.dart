@@ -157,7 +157,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           action: TextInputAction.next,
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.email],
-          errorText: _email.text.isNotEmpty && !_emailOk ? t.invalidEmail : null,
+          errorText: _email.text.isNotEmpty && !_emailOk
+              ? t.invalidEmail
+              : null,
         ),
         FieldLabel(t.username),
         KustTextField.username(
@@ -165,7 +167,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           action: TextInputAction.next,
           onChanged: _scheduleCheck,
           errorText: usernameError,
-          helper: _check == _UsernameCheck.free ? t.usernameFree : t.usernameRule,
+          helper: _check == _UsernameCheck.free
+              ? t.usernameFree
+              : t.usernameRule,
         ),
         FieldLabel(t.passwordLabel),
         KustTextField(

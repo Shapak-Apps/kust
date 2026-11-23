@@ -107,7 +107,8 @@ class AuthService {
 
   Future<Account> verifyEmail(String code) async {
     final json = await authed(
-      (token) => api.post('/v1/auth/verify-email', body: {'code': code}, token: token),
+      (token) =>
+          api.post('/v1/auth/verify-email', body: {'code': code}, token: token),
     );
     return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));
   }
@@ -142,11 +143,7 @@ class AuthService {
       (token) => api.patch(
         '/v1/me',
         token: token,
-        body: {
-          'display_name': ?displayName,
-          'bio': ?bio,
-          'country': ?country,
-        },
+        body: {'display_name': ?displayName, 'bio': ?bio, 'country': ?country},
       ),
     );
     return _setAccount(Account.fromJson(json['user'] as Map<String, dynamic>));
@@ -213,7 +210,9 @@ class AuthService {
     final account = Account.fromJson(json['user'] as Map<String, dynamic>);
     final expiresIn = (json['expires_in'] as num?)?.toInt() ?? 900;
     _access = json['access_token'] as String;
-    _accessExpiry = _now().add(Duration(seconds: expiresIn > 60 ? expiresIn - 30 : expiresIn ~/ 2));
+    _accessExpiry = _now().add(
+      Duration(seconds: expiresIn > 60 ? expiresIn - 30 : expiresIn ~/ 2),
+    );
     await storage.write(json['refresh_token'] as String);
     return _setAccount(account);
   }

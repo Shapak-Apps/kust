@@ -70,10 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       footer: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          KustButton(
-            label: t.signIn,
-            onTap: _valid && !_busy ? _submit : null,
-          ),
+          KustButton(label: t.signIn, onTap: _valid && !_busy ? _submit : null),
           const SizedBox(height: 8),
           KustButton(
             label: t.createAccount,

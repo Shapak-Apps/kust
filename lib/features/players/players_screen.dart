@@ -38,7 +38,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
   ApiException? _error;
   int _generation = 0;
 
-  PlayersRepository get _repo => widget.repository ?? PlayersRepository.instance;
+  PlayersRepository get _repo =>
+      widget.repository ?? PlayersRepository.instance;
   PresenceService get _presence => widget.presence ?? PresenceService.instance;
 
   @override
@@ -158,7 +159,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
         children: [
           FeltHeader(
             title: t.playersTitle,
-            onBack: () => context.canPop() ? context.pop() : context.go('/play'),
+            onBack: () =>
+                context.canPop() ? context.pop() : context.go('/play'),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),

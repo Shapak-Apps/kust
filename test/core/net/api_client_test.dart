@@ -95,7 +95,9 @@ void main() {
     final t = testApi(networkDown);
     await expectLater(
       t.api.get('/v1/me'),
-      throwsA(isA<ApiException>().having((e) => e.isNetwork, 'isNetwork', true)),
+      throwsA(
+        isA<ApiException>().having((e) => e.isNetwork, 'isNetwork', true),
+      ),
     );
   });
 
@@ -108,7 +110,9 @@ void main() {
     );
     await expectLater(
       t.api.get('/v1/me'),
-      throwsA(isA<ApiException>().having((e) => e.isNetwork, 'isNetwork', true)),
+      throwsA(
+        isA<ApiException>().having((e) => e.isNetwork, 'isNetwork', true),
+      ),
     );
   });
 

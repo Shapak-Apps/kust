@@ -69,7 +69,7 @@ cp env/dev.example.json env/dev.json
 flutter run --dart-define-from-file=env/dev.json
 ```
 
-`API_URL` is the server base, for example `http://10.0.2.2:8080` for the Android emulator or `http://localhost:8080` for iOS. `WS_URL` is optional and defaults to `API_URL` with `ws` or `wss` and `/v1/ws`. Leave both out and the app behaves exactly as before. `env/dev.json` is git-ignored.
+`API_URL` is the server base: the deployed server's address, or for one running on your computer `http://10.0.2.2:8080` in the Android emulator, `http://localhost:8080` in the iOS simulator. On a real Android phone over USB, forward the port with `adb reverse tcp:8080 tcp:8080` and use `http://127.0.0.1:8080` (`10.0.2.2` only exists inside the emulator). `WS_URL` is optional and defaults to `API_URL` with `ws` or `wss` and `/v1/ws`. Leave both out and the app behaves exactly as before. `env/dev.json` is git-ignored.
 
 ## Translations
 

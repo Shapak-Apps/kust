@@ -80,7 +80,11 @@ void main() {
     await expectLater(
       rig.service.login(identifier: 'x', password: 'y'),
       throwsA(
-        isA<ApiException>().having((e) => e.code, 'code', 'invalid_credentials'),
+        isA<ApiException>().having(
+          (e) => e.code,
+          'code',
+          'invalid_credentials',
+        ),
       ),
     );
     expect(rig.service.state.value.status, AuthStatus.unknown);
@@ -133,7 +137,10 @@ void main() {
     await rig.service.refreshAccount();
 
     expect(rig.count('/v1/auth/refresh'), 1);
-    expect(rig.adapter.requests.last.headers['Authorization'], 'Bearer access-2');
+    expect(
+      rig.adapter.requests.last.headers['Authorization'],
+      'Bearer access-2',
+    );
     expect(await rig.storage.read(), 'refresh-2');
   });
 
@@ -193,7 +200,10 @@ void main() {
     await rig.service.login(identifier: 'dev_one', password: 'password123');
     rig.clock = rig.clock.add(const Duration(hours: 1));
 
-    await expectLater(rig.service.refreshAccount(), throwsA(isA<ApiException>()));
+    await expectLater(
+      rig.service.refreshAccount(),
+      throwsA(isA<ApiException>()),
+    );
 
     expect(rig.service.state.value.status, AuthStatus.signedOut);
     expect(await rig.storage.read(), isNull);
@@ -211,10 +221,8 @@ void main() {
     final rig = _Rig(networkDown);
     await rig.storage.write('refresh-1');
     await rig.cache.write(
-      (await _Rig((o) => jsonBody(_session())).service.login(
-        identifier: 'a',
-        password: 'b',
-      )),
+      (await _Rig((o) => jsonBody(_session())).service
+          .login(identifier: 'a', password: 'b')),
     );
 
     await rig.service.restore();
@@ -224,13 +232,16 @@ void main() {
     expect(await rig.storage.read(), 'refresh-1');
   });
 
-  test('restore offline with nothing cached falls back to signed out', () async {
-    final rig = _Rig(networkDown);
-    await rig.storage.write('refresh-1');
-    await rig.service.restore();
-    expect(rig.service.state.value.status, AuthStatus.signedOut);
-    expect(await rig.storage.read(), 'refresh-1');
-  });
+  test(
+    'restore offline with nothing cached falls back to signed out',
+    () async {
+      final rig = _Rig(networkDown);
+      await rig.storage.write('refresh-1');
+      await rig.service.restore();
+      expect(rig.service.state.value.status, AuthStatus.signedOut);
+      expect(await rig.storage.read(), 'refresh-1');
+    },
+  );
 
   test('restore online refreshes the session', () async {
     final rig = _Rig(

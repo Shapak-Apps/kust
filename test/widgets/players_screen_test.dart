@@ -13,16 +13,19 @@ import 'package:kust/theme.dart';
 
 import '../core/net/fake_adapter.dart';
 
-Map<String, dynamic> _player(String name, {String? country, int rating = 1200}) =>
-    {
-      'id': 'id-$name',
-      'username': name,
-      'display_name': name[0].toUpperCase() + name.substring(1),
-      'bio': '',
-      'country': country,
-      'avatar_key': null,
-      'rating': rating,
-    };
+Map<String, dynamic> _player(
+  String name, {
+  String? country,
+  int rating = 1200,
+}) => {
+  'id': 'id-$name',
+  'username': name,
+  'display_name': name[0].toUpperCase() + name.substring(1),
+  'bio': '',
+  'country': country,
+  'avatar_key': null,
+  'rating': rating,
+};
 
 Map<String, dynamic> _session() => {
   'user': {
@@ -123,7 +126,9 @@ void main() {
     final rig = _Rig((o) {
       final q = o.queryParameters['q'];
       return jsonBody({
-        'players': q == 'br' ? [_player('bravo')] : [_player('alpha'), _player('bravo')],
+        'players': q == 'br'
+            ? [_player('bravo')]
+            : [_player('alpha'), _player('bravo')],
         'next_cursor': '',
       });
     });
@@ -141,7 +146,10 @@ void main() {
 
   testWidgets('offline, it shows the saved list and says so', (tester) async {
     final rig = _Rig(networkDown);
-    await rig.cache.write([_player('alpha'), _player('bravo')].map(Player.fromJson).toList(), DateTime(2026));
+    await rig.cache.write(
+      [_player('alpha'), _player('bravo')].map(Player.fromJson).toList(),
+      DateTime(2026),
+    );
     await rig.pump(tester);
 
     expect(find.text('Alpha'), findsOneWidget);
@@ -153,7 +161,10 @@ void main() {
     final rig = _Rig(networkDown);
     await rig.pump(tester);
 
-    expect(find.text("No connection. Try again when you're online."), findsOneWidget);
+    expect(
+      find.text("No connection. Try again when you're online."),
+      findsOneWidget,
+    );
     expect(find.text('Retry'), findsOneWidget);
     rig.dispose();
   });

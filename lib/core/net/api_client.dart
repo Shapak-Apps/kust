@@ -65,9 +65,7 @@ class ApiClient {
 
   Future<bool> ping({Duration timeout = const Duration(seconds: 5)}) async {
     try {
-      final response = await _dio
-          .get<dynamic>('/healthz')
-          .timeout(timeout);
+      final response = await _dio.get<dynamic>('/healthz').timeout(timeout);
       return response.statusCode == 200;
     } on Exception {
       return false;
@@ -127,7 +125,9 @@ class ApiClient {
     if (data is Map<String, dynamic> && data['error'] is Map) {
       final error = data['error'] as Map;
       throw ApiException(
-        code: error['code'] is String ? error['code'] as String : 'http_$status',
+        code: error['code'] is String
+            ? error['code'] as String
+            : 'http_$status',
         message: error['message'] is String
             ? error['message'] as String
             : 'Request failed.',

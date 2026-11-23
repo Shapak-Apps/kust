@@ -119,7 +119,12 @@ class LiveSocket {
         cancelOnError: true,
       );
       _heartbeat = Timer.periodic(pingEvery, (_) => _beat(channel!));
-      channel.sink.add(jsonEncode({'type': 'auth', 'data': {'token': token}}));
+      channel.sink.add(
+        jsonEncode({
+          'type': 'auth',
+          'data': {'token': token},
+        }),
+      );
     } catch (_) {
       _lost(channel);
     }

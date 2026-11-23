@@ -84,7 +84,10 @@ class AuthPage extends StatelessWidget {
       resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          FeltHeader(title: title, onBack: () => Navigator.of(context).maybePop()),
+          FeltHeader(
+            title: title,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
           Expanded(
             child: ListView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

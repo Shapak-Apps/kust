@@ -6,11 +6,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kust/core/net/connection_service.dart';
 
 class _Harness {
-  _Harness({bool reachable = true}) : this.reachable = reachable {
+  _Harness({this.reachable = true}) {
     service = ConnectionService(
       probe: () async {
         probes++;
-        return this.reachable;
+        return reachable;
       },
       connectivity: events.stream,
     );

@@ -12,7 +12,9 @@ Widget _app(Widget child, {Locale locale = const Locale('en')}) => MaterialApp(
   locale: locale,
   supportedLocales: kSupportedLocales,
   localizationsDelegates: kLocalizationDelegates,
-  home: Scaffold(body: Align(alignment: Alignment.bottomCenter, child: child)),
+  home: Scaffold(
+    body: Align(alignment: Alignment.bottomCenter, child: child),
+  ),
 );
 
 double _height(WidgetTester tester) =>

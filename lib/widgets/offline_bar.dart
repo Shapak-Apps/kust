@@ -53,7 +53,8 @@ class OfflineBar extends StatefulWidget {
 class _OfflineBarState extends State<OfflineBar> {
   ConnectionStatus _shown = ConnectionStatus.offline;
 
-  ConnectionService get _service => widget.service ?? ConnectionService.instance;
+  ConnectionService get _service =>
+      widget.service ?? ConnectionService.instance;
 
   @override
   Widget build(BuildContext context) {
