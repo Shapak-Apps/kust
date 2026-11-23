@@ -33,7 +33,7 @@ class MoreFloatingMenu extends ConsumerWidget {
           value: game.evaluationEnabled,
           onChanged: controller.setEvaluationEnabled,
         ),
-        if (game.practiceMode)
+        if (game.practiceMode && game.mode != GameMode.local)
           KustToggleRow(
             icon: Icons.insights_rounded,
             title: context.t.moveFeedback,

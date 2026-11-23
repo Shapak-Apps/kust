@@ -185,6 +185,9 @@ void main() {
     testWidgets('solving it counts for the streak', (tester) async {
       await solve(tester, daily: true);
       expect(store.days, hasLength(1));
+      // It ends there: Done, not on to the next puzzle of the level.
+      expect(find.text('Done'), findsOneWidget);
+      expect(find.text('Next puzzle'), findsNothing);
       expect(
         DateTime.now().difference(store.days.single).inSeconds,
         lessThan(60),

@@ -513,7 +513,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       ),
                     const _HistorySlot(),
                     const _OpeningSlot(),
-                    if (screen.practice && screen.feedback)
+                    if (screen.practice && screen.feedback && !widget.isLocal)
                       const SizedBox(
                         height: 24,
                         child: Stack(children: [_FeedbackSlot()]),
@@ -740,9 +740,13 @@ class _OpeningSlot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = ref.watch(chessControllerProvider.select((g) => g.history));
+    // Every position the game went through, the one on the board too, as
+    // Review reads them: history holds only those before each move.
+    final g = ref.watch(
+      chessControllerProvider.select((g) => (g.history, g.position)),
+    );
     final book = loadedOpeningBook;
-    final opening = book == null ? null : openingOf(book, history);
+    final opening = book == null ? null : openingOf(book, [...g.$1, g.$2]);
     return SizedBox(
       height: 22,
       child: opening == null
