@@ -394,8 +394,9 @@ class _ContinueCard extends StatelessWidget {
             ),
             child: Row(
               children: [
+                // As tall as the card's content, so the board fills the card.
                 SizedBox(
-                  width: 88,
+                  width: 112,
                   child: Pressable(
                     onTap: () => onContinue(game),
                     child: BoardThumbnail(
@@ -407,6 +408,7 @@ class _ContinueCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
