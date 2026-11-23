@@ -1047,5 +1047,19 @@
     }
   },
   "trainLineDone": "Line done! Play on from here.",
-  "showBestAfterLine": "Unlocks when you finish the opening line"
+  "showBestAfterLine": "Unlocks when you finish the opening line",
+  "yourMove": "Your move",
+  "sideToMove": "{name} to move",
+  "@sideToMove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "continueButton": "Continue",
+  "discardGame": "Remove this game",
+  "gameRemoved": "Game removed",
+  "undo": "Undo",
+  "doneButton": "Done"
 }

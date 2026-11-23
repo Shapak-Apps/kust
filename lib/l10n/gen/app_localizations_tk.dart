@@ -1827,4 +1827,27 @@ class AppL10nTk extends AppL10n {
   @override
   String get showBestAfterLine =>
       'Debýut wariantyny tamamlanyňyzdan soň açylar';
+
+  @override
+  String get yourMove => 'Siziň gezegiňiz';
+
+  @override
+  String sideToMove(String name) {
+    return 'Gezek: $name';
+  }
+
+  @override
+  String get continueButton => 'Dowam et';
+
+  @override
+  String get discardGame => 'Bu oýny aýyr';
+
+  @override
+  String get gameRemoved => 'Oýun aýryldy';
+
+  @override
+  String get undo => 'Yzyna gaýtar';
+
+  @override
+  String get doneButton => 'Taýýar';
 }

@@ -1822,4 +1822,27 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get showBestAfterLine => 'Unlocks when you finish the opening line';
+
+  @override
+  String get yourMove => 'Your move';
+
+  @override
+  String sideToMove(String name) {
+    return '$name to move';
+  }
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get discardGame => 'Remove this game';
+
+  @override
+  String get gameRemoved => 'Game removed';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get doneButton => 'Done';
 }

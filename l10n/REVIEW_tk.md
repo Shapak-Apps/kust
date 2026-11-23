@@ -493,3 +493,15 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `trainLineWrong` | Not the line. Play {san} | Wariant boýunça däl. {san} oýnaň |
 | `trainLineDone` | Line done! Play on from here. | Wariant tamam! Indi dowam ediň. |
 | `showBestAfterLine` | Unlocks when you finish the opening line | Debýut wariantyny tamamlanyňyzdan soň açylar |
+
+## Continue your game
+
+| Key | English | Turkmen (to review) |
+|---|---|---|
+| `yourMove` | Your move | Siziň gezegiňiz |
+| `sideToMove` | {name} to move | Gezek: {name} |
+| `continueButton` | Continue | Dowam et |
+| `discardGame` | Remove this game | Bu oýny aýyr |
+| `gameRemoved` | Game removed | Oýun aýryldy |
+| `undo` | Undo | Yzyna gaýtar |
+| `doneButton` | Done | Taýýar |

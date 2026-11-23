@@ -922,6 +922,8 @@ class ChessController extends Notifier<GameState> {
   Future<void> _analyzeMoveAt(int moveIndex) async {
     if (_isDisposed) return;
     if (!state.practiceMode || !state.moveFeedbackEnabled) return;
+    // Pass and play: two people at one phone, no ratings for either.
+    if (state.mode == GameMode.local) return;
     if (moveIndex < 0 || moveIndex >= state.moves.length) return;
     if (moveIndex >= state.history.length) return;
 

@@ -533,5 +533,12 @@
   "trainLineProgress": "{name} · ход {done} из {total}",
   "trainLineWrong": "Не по варианту. Ходите {san}",
   "trainLineDone": "Вариант пройден! Играйте дальше.",
-  "showBestAfterLine": "Откроется, когда пройдёте вариант дебюта"
+  "showBestAfterLine": "Откроется, когда пройдёте вариант дебюта",
+  "yourMove": "Ваш ход",
+  "sideToMove": "Ход: {name}",
+  "continueButton": "Продолжить",
+  "discardGame": "Убрать эту партию",
+  "gameRemoved": "Партия убрана",
+  "undo": "Вернуть",
+  "doneButton": "Готово"
 }

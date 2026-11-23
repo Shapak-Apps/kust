@@ -1830,4 +1830,27 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get showBestAfterLine => 'Откроется, когда пройдёте вариант дебюта';
+
+  @override
+  String get yourMove => 'Ваш ход';
+
+  @override
+  String sideToMove(String name) {
+    return 'Ход: $name';
+  }
+
+  @override
+  String get continueButton => 'Продолжить';
+
+  @override
+  String get discardGame => 'Убрать эту партию';
+
+  @override
+  String get gameRemoved => 'Партия убрана';
+
+  @override
+  String get undo => 'Вернуть';
+
+  @override
+  String get doneButton => 'Готово';
 }

@@ -3302,6 +3302,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Unlocks when you finish the opening line'**
   String get showBestAfterLine;
+
+  /// No description provided for @yourMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Your move'**
+  String get yourMove;
+
+  /// No description provided for @sideToMove.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} to move'**
+  String sideToMove(String name);
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @discardGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this game'**
+  String get discardGame;
+
+  /// No description provided for @gameRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Game removed'**
+  String get gameRemoved;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @doneButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get doneButton;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

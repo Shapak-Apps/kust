@@ -533,5 +533,12 @@
   "trainLineProgress": "{name} · {done}/{total} göçüm",
   "trainLineWrong": "Wariant boýunça däl. {san} oýnaň",
   "trainLineDone": "Wariant tamam! Indi dowam ediň.",
-  "showBestAfterLine": "Debýut wariantyny tamamlanyňyzdan soň açylar"
+  "showBestAfterLine": "Debýut wariantyny tamamlanyňyzdan soň açylar",
+  "yourMove": "Siziň gezegiňiz",
+  "sideToMove": "Gezek: {name}",
+  "continueButton": "Dowam et",
+  "discardGame": "Bu oýny aýyr",
+  "gameRemoved": "Oýun aýryldy",
+  "undo": "Yzyna gaýtar",
+  "doneButton": "Taýýar"
 }
