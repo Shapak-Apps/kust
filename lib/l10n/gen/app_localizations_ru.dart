@@ -2068,4 +2068,10 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get pwRuleNoName => 'Без имени пользователя и почты';
+
+  @override
+  String get showPassword => 'Показать пароль';
+
+  @override
+  String get hidePassword => 'Скрыть пароль';
 }

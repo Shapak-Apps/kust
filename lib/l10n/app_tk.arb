@@ -606,5 +606,7 @@
   "pwRuleUpper": "Bir baş harp",
   "pwRuleLower": "Bir kiçi harp",
   "pwRuleDigit": "Bir san",
-  "pwRuleNoName": "Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn"
+  "pwRuleNoName": "Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn",
+  "showPassword": "Paroly görkez",
+  "hidePassword": "Paroly gizle"
 }

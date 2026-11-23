@@ -3740,6 +3740,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Not your username or email'**
   String get pwRuleNoName;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -2060,4 +2060,10 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get pwRuleNoName => 'Not your username or email';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
 }

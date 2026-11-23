@@ -2065,4 +2065,10 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get pwRuleNoName => 'Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn';
+
+  @override
+  String get showPassword => 'Paroly görkez';
+
+  @override
+  String get hidePassword => 'Paroly gizle';
 }

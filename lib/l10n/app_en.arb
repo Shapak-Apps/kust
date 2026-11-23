@@ -1165,5 +1165,7 @@
   "pwRuleUpper": "One capital letter",
   "pwRuleLower": "One small letter",
   "pwRuleDigit": "One digit",
-  "pwRuleNoName": "Not your username or email"
+  "pwRuleNoName": "Not your username or email",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:kust/core/storage/app_storage.dart';
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// A filled text field with no outline, as in the app's sheets.
@@ -87,6 +88,26 @@ class KustTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!obscure) return _field(context, hidden: false);
+    // A password: an eye at the end shows or hides what is typed.
+    return _Reveal(
+      builder: (hidden, toggle) => _field(
+        context,
+        hidden: hidden,
+        suffix: IconButton(
+          onPressed: toggle,
+          tooltip: hidden ? context.t.showPassword : context.t.hidePassword,
+          icon: Icon(
+            hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: 20,
+            color: context.k.muted,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _field(BuildContext context, {required bool hidden, Widget? suffix}) {
     final k = context.k;
     return TextField(
       controller: controller,
@@ -98,7 +119,7 @@ class KustTextField extends StatelessWidget {
       inputFormatters: formatters,
       autocorrect: prefix == null && formatters == null && !obscure,
       enableSuggestions: !obscure,
-      obscureText: obscure,
+      obscureText: hidden,
       keyboardType: keyboardType,
       autofillHints: autofillHints,
       onChanged: onChanged,
@@ -127,6 +148,7 @@ class KustTextField extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 14, right: 8),
                       child: Icon(icon, size: 20, color: k.muted),
                     ),
+              suffixIcon: suffix,
               filled: true,
               fillColor: k.surfaceAlt,
               // Slim, with modest corners.
@@ -144,4 +166,22 @@ class KustTextField extends StatelessWidget {
             ),
     );
   }
+}
+
+/// Keeps whether a password is hidden; hidden at first.
+class _Reveal extends StatefulWidget {
+  const _Reveal({required this.builder});
+
+  final Widget Function(bool hidden, VoidCallback toggle) builder;
+
+  @override
+  State<_Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<_Reveal> {
+  bool _hidden = true;
+
+  @override
+  Widget build(BuildContext context) =>
+      widget.builder(_hidden, () => setState(() => _hidden = !_hidden));
 }
