@@ -70,7 +70,7 @@ class _AppShellState extends State<AppShell> {
                   KustNavItem.svg('assets/icons/sword.svg', context.t.navTrain),
                 ],
                 onSelected: _select,
-                footer: const OfflineBar(),
+                footer: const OfflineBar(edge: true),
               ),
             ),
           ],

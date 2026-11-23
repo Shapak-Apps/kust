@@ -5,16 +5,21 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/tokens.dart';
 
-/// The line of text under the tabs.
-const double kOfflineBarHeight = 24;
+/// The line of text under the tabs, and the most room kept under it.
+const double kOfflineBarHeight = 26;
+const double kOfflineMinUnder = 14;
 
 /// Space to leave under the last line on screen: the gesture bar's, read
 /// from the window so a parent that took the padding away cannot hide it,
 /// and never less than [min].
 double bottomGap(BuildContext context, {double min = 8}) {
-  final view = MediaQuery.viewPaddingOf(context).bottom;
-  final pad = MediaQuery.paddingOf(context).bottom;
-  final gap = view > pad ? view : pad;
+  final window = View.of(context);
+  final gap = [
+    MediaQuery.viewPaddingOf(context).bottom,
+    MediaQuery.paddingOf(context).bottom,
+    window.viewPadding.bottom / window.devicePixelRatio,
+    window.padding.bottom / window.devicePixelRatio,
+  ].reduce((a, b) => a > b ? a : b);
   return gap < min ? min : gap;
 }
 
@@ -25,7 +30,9 @@ class OfflineInset extends InheritedWidget {
 
   static double of(BuildContext context) {
     final inset = context.dependOnInheritedWidgetOfExactType<OfflineInset>();
-    return inset != null && inset.visible ? kOfflineBarHeight : 0;
+    return inset != null && inset.visible
+        ? kOfflineBarHeight + kOfflineMinUnder
+        : 0;
   }
 
   @override
@@ -93,11 +100,22 @@ class _OfflineBarState extends State<OfflineBar> {
             duration: motion(context, const Duration(milliseconds: 250)),
             curve: Curves.easeOutCubic,
             child: ClipRect(
+              // A solid strip, as on Spotify, so the page never shows
+              // through the words.
               child: ColoredBox(
-                color: widget.edge ? k.bg : Colors.transparent,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF121110)
+                    : k.bg,
                 child: Padding(
+                  // At least [kOfflineMinUnder] under the words: some phones
+                  // report no bottom inset yet draw the gesture bar there.
                   padding: EdgeInsets.only(
-                    bottom: widget.edge ? bottomGap(context) : 0,
+                    bottom: widget.edge
+                        ? bottomGap(context, min: kOfflineMinUnder)
+                        : (kOfflineMinUnder - bottomGap(context, min: 0)).clamp(
+                            0,
+                            kOfflineMinUnder,
+                          ),
                   ),
                   child: SizedBox(
                     height: kOfflineBarHeight,
@@ -110,10 +128,15 @@ class _OfflineBarState extends State<OfflineBar> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: k.body.copyWith(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0,
-                            color: restored ? k.success : k.ink,
+                            color: restored
+                                ? k.success
+                                : Theme.of(context).brightness ==
+                                      Brightness.dark
+                                ? Colors.white
+                                : k.ink,
                           ),
                         ),
                       ),
