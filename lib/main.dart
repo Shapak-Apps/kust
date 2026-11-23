@@ -11,6 +11,7 @@ import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/profile_sync.dart';
+import 'package:kust/core/net/push_service.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/core/net/connection_service.dart';
 import 'package:kust/core/net/live_socket.dart';
@@ -79,7 +80,10 @@ Future<void> _start() async {
   final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
   final router = createRouter(onboardingCompleted: onboardingCompleted);
   runApp(ProviderScope(child: MyApp(router: router)));
-  if (ServerConfig.enabled) _startServerLink();
+  if (ServerConfig.enabled) {
+    _startServerLink();
+    PushService.instance.start(router);
+  }
   unawaited(warmBoards());
 }
 
