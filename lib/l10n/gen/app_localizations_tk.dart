@@ -2160,4 +2160,55 @@ class AppL10nTk extends AppL10n {
   @override
   String get noFriendsYet =>
       'Häzirlikçe dost ýok. Oýunçylary ýer şary nyşany arkaly tapyň.';
+
+  @override
+  String get chatsTitle => 'Hatlar';
+
+  @override
+  String get chatsEmpty =>
+      'Häzirlikçe hat ýok. Dostuňyzyň profilini açyp, «Hat ýaz» basyň.';
+
+  @override
+  String chatSayHi(String name) {
+    return '$name bilen salamlaşyň 👋';
+  }
+
+  @override
+  String get chatHint => 'Hat';
+
+  @override
+  String chatReplyingTo(String name) {
+    return '$name jogap';
+  }
+
+  @override
+  String get chatYou => 'Siz';
+
+  @override
+  String get chatOnline => 'onlaýn';
+
+  @override
+  String get chatToday => 'Şu gün';
+
+  @override
+  String get chatYesterday => 'Düýn';
+
+  @override
+  String get chatCopy => 'Göçür';
+
+  @override
+  String get chatReply => 'Jogap ber';
+
+  @override
+  String get chatCopied => 'Göçürildi';
+
+  @override
+  String get chatFriendsOnly =>
+      'Diňe dostlaryňyza hat ýazyp bilersiňiz. Ilki dost goşuň.';
+
+  @override
+  String get chatNotSent => 'Iberilmedi. Gaýtadan synanyşmak üçin basyň.';
+
+  @override
+  String get chatSend => 'Iber';
 }

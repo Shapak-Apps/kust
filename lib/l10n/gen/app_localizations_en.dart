@@ -2154,4 +2154,54 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get noFriendsYet => 'No friends yet. Find players with the globe.';
+
+  @override
+  String get chatsTitle => 'Messages';
+
+  @override
+  String get chatsEmpty =>
+      'No messages yet. Open a friend\'s profile and tap Message.';
+
+  @override
+  String chatSayHi(String name) {
+    return 'Say salam to $name 👋';
+  }
+
+  @override
+  String get chatHint => 'Message';
+
+  @override
+  String chatReplyingTo(String name) {
+    return 'Replying to $name';
+  }
+
+  @override
+  String get chatYou => 'You';
+
+  @override
+  String get chatOnline => 'online';
+
+  @override
+  String get chatToday => 'Today';
+
+  @override
+  String get chatYesterday => 'Yesterday';
+
+  @override
+  String get chatCopy => 'Copy';
+
+  @override
+  String get chatReply => 'Reply';
+
+  @override
+  String get chatCopied => 'Copied';
+
+  @override
+  String get chatFriendsOnly => 'You can message friends only. Add them first.';
+
+  @override
+  String get chatNotSent => 'Not sent. Tap to try again.';
+
+  @override
+  String get chatSend => 'Send';
 }

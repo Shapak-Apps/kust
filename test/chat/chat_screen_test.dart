@@ -1,0 +1,139 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/chat_repository.dart';
+import 'package:kust/core/net/live_socket.dart';
+import 'package:kust/core/net/token_storage.dart';
+import 'package:kust/features/chat/chat_screen.dart';
+import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/theme.dart';
+
+import '../core/net/fake_adapter.dart';
+
+Map<String, dynamic> _msg(int id, String from, String to, String body) => {
+  'id': id,
+  'from': from,
+  'to': to,
+  'body': body,
+  'reply_to': null,
+  'created_at': DateTime.now().toUtc().toIso8601String(),
+  'read': false,
+  'reactions': <String, String>{},
+};
+
+void main() {
+  late FakeAdapter adapter;
+  late ChatRepository repo;
+
+  setUp(() async {
+    final t = testApi((o) {
+      final key = '${o.method} ${o.path}';
+      if (key == 'POST /v1/auth/login') {
+        return jsonBody({
+          'user': {
+            'id': 'me',
+            'email': 'me@example.com',
+            'username': 'me',
+            'display_name': 'Me',
+            'bio': '',
+            'rating': 1200,
+            'email_verified': true,
+          },
+          'access_token': 'a',
+          'refresh_token': 'r',
+          'expires_in': 900,
+        });
+      }
+      if (key == 'GET /v1/chats/ann/messages') {
+        return jsonBody({
+          'messages': [
+            _msg(2, 'ann', 'me', 'Oýun oýnaýarysmy?'),
+            _msg(1, 'me', 'ann', 'Salam!'),
+          ],
+          'more': false,
+        });
+      }
+      if (key == 'POST /v1/chats/ann/messages') {
+        return jsonBody({
+          'message': _msg(3, 'me', 'ann', (o.data as Map)['body'] as String),
+        }, status: 201);
+      }
+      return jsonBody({'read': 1});
+    });
+    adapter = t.adapter;
+    final auth = AuthService(
+      api: t.api,
+      storage: MemoryTokenStorage(),
+      cache: MemoryAccountCache(),
+    );
+    await auth.login(identifier: 'me', password: 'Password123');
+    repo = ChatRepository(
+      auth: auth,
+      socket: LiveSocket(
+        url: Uri.parse('ws://localhost'),
+        tokenProvider: () async => null,
+      ),
+    );
+  });
+
+  Widget app() => MaterialApp(
+    theme: appTheme,
+    supportedLocales: kSupportedLocales,
+    localizationsDelegates: kLocalizationDelegates,
+    home: ChatScreen(
+      username: 'ann',
+      repository: repo,
+      player: const Player(
+        id: 'ann',
+        username: 'ann',
+        displayName: 'Ann',
+        bio: '',
+        country: 'TM',
+        rating: 1500,
+      ),
+    ),
+  );
+
+  testWidgets('shows the chat, sends at once, swipes to reply', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    expect(find.text('Salam!'), findsOneWidget);
+    expect(find.text('Oýun oýnaýarysmy?'), findsOneWidget);
+    expect(find.text('Today'), findsOneWidget);
+    // Opening the chat marks Ann's message read.
+    expect(adapter.requests.any((r) => r.path == '/v1/chats/ann/read'), isTrue);
+
+    // Swipe her message right: the reply preview shows.
+    await tester.drag(find.text('Oýun oýnaýarysmy?'), const Offset(120, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Replying to Ann'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Hawa, gel!');
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+    await tester.pump();
+    expect(find.text('Hawa, gel!'), findsOneWidget);
+    expect(find.text('Replying to Ann'), findsNothing);
+    await tester.pumpAndSettle();
+    final sent = adapter.requests.lastWhere(
+      (r) => r.method == 'POST' && r.path == '/v1/chats/ann/messages',
+    );
+    expect((sent.data as Map)['reply_to'], 2);
+    expect(find.text('Hawa, gel!'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('holding a message offers reactions', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.longPress(find.text('Salam!'));
+    await tester.pumpAndSettle();
+    for (final e in kQuickReactions) {
+      expect(find.text(e), findsOneWidget);
+    }
+    expect(find.text('Reply'), findsOneWidget);
+    expect(find.text('Copy'), findsOneWidget);
+  });
+}

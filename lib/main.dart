@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/chat_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/profile_sync.dart';
 import 'package:kust/core/net/push_service.dart';
@@ -137,6 +138,7 @@ void _syncLiveSocket() {
   if (auth.isVerified) {
     // The bell on the home screen counts friend requests waiting.
     unawaited(PlayersRepository.instance.refreshIncoming());
+    unawaited(ChatRepository.instance.refreshUnread());
     LiveSocket.instance.connect();
   } else {
     unawaited(LiveSocket.instance.close());

@@ -611,3 +611,18 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `flipBoardSub` | See the board from the other side | Tagta beýleki tarapdan serediň |
 | `friendSent` | Sent | Iberildi |
 | `noFriendsYet` | No friends yet. Find players with the globe. | Häzirlikçe dost ýok. Oýunçylary ýer şary nyşany arkaly tapyň. |
+| `chatsTitle` | Messages | Hatlar |
+| `chatsEmpty` | No messages yet. Open a friend's profile and tap Message. | Häzirlikçe hat ýok. Dostuňyzyň profilini açyp, «Hat ýaz» basyň. |
+| `chatSayHi` | Say salam to {name} 👋 | {name} bilen salamlaşyň 👋 |
+| `chatHint` | Message | Hat |
+| `chatReplyingTo` | Replying to {name} | {name} jogap |
+| `chatYou` | You | Siz |
+| `chatOnline` | online | onlaýn |
+| `chatToday` | Today | Şu gün |
+| `chatYesterday` | Yesterday | Düýn |
+| `chatCopy` | Copy | Göçür |
+| `chatReply` | Reply | Jogap ber |
+| `chatCopied` | Copied | Göçürildi |
+| `chatFriendsOnly` | You can message friends only. Add them first. | Diňe dostlaryňyza hat ýazyp bilersiňiz. Ilki dost goşuň. |
+| `chatNotSent` | Not sent. Tap to try again. | Iberilmedi. Gaýtadan synanyşmak üçin basyň. |
+| `chatSend` | Send | Iber |
