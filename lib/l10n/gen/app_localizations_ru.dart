@@ -1853,4 +1853,9 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get doneButton => 'Готово';
+
+  @override
+  String lessonNumber(int n) {
+    return 'Урок $n';
+  }
 }

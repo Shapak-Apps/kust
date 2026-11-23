@@ -1845,4 +1845,9 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get doneButton => 'Done';
+
+  @override
+  String lessonNumber(int n) {
+    return 'Lesson $n';
+  }
 }

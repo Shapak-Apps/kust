@@ -540,5 +540,6 @@
   "discardGame": "Убрать эту партию",
   "gameRemoved": "Партия убрана",
   "undo": "Вернуть",
-  "doneButton": "Готово"
+  "doneButton": "Готово",
+  "lessonNumber": "Урок {n}"
 }

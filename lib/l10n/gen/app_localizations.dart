@@ -3344,6 +3344,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Done'**
   String get doneButton;
+
+  /// No description provided for @lessonNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson {n}'**
+  String lessonNumber(int n);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

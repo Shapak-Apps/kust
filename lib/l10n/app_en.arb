@@ -1061,5 +1061,13 @@
   "discardGame": "Remove this game",
   "gameRemoved": "Game removed",
   "undo": "Undo",
-  "doneButton": "Done"
+  "doneButton": "Done",
+  "lessonNumber": "Lesson {n}",
+  "@lessonNumber": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }
