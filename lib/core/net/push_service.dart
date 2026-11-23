@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/chat_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/l10n/app_locale.dart';
 
@@ -66,9 +67,12 @@ class PushService {
         // ignore: deprecated_member_use
         messaging.onTokenRefresh.listen((t) => unawaited(_send(t)));
         // In the app: no banner from the system, so the bell updates.
-        FirebaseMessaging.onMessage.listen(
-          (_) => unawaited(PlayersRepository.instance.refreshIncoming()),
-        );
+        FirebaseMessaging.onMessage.listen((m) {
+          unawaited(PlayersRepository.instance.refreshIncoming());
+          if (m.data['type'] == 'chat_message') {
+            unawaited(ChatRepository.instance.refreshUnread());
+          }
+        });
         FirebaseMessaging.onMessageOpenedApp.listen(_open);
         final first = await messaging.getInitialMessage();
         if (first != null) _open(first);
@@ -121,7 +125,9 @@ class PushService {
     final username = message.data['username'];
     final go = router;
     if (go == null) return;
-    if (type == 'friend_accepted' && username is String) {
+    if (type == 'chat_message' && username is String) {
+      go.push('/chat/$username');
+    } else if (type == 'friend_accepted' && username is String) {
       go.push('/player/$username');
     } else if (type == 'friend_request') {
       go.push('/notifications');

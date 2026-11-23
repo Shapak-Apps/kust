@@ -1208,5 +1208,34 @@
   "flipBoard": "Flip board",
   "flipBoardSub": "See the board from the other side",
   "friendSent": "Sent",
-  "noFriendsYet": "No friends yet. Find players with the globe."
+  "noFriendsYet": "No friends yet. Find players with the globe.",
+  "chatsTitle": "Messages",
+  "chatsEmpty": "No messages yet. Open a friend's profile and tap Message.",
+  "chatSayHi": "Say salam to {name} 👋",
+  "chatHint": "Message",
+  "chatReplyingTo": "Replying to {name}",
+  "chatYou": "You",
+  "chatOnline": "online",
+  "chatToday": "Today",
+  "chatYesterday": "Yesterday",
+  "chatCopy": "Copy",
+  "chatReply": "Reply",
+  "chatCopied": "Copied",
+  "chatFriendsOnly": "You can message friends only. Add them first.",
+  "chatNotSent": "Not sent. Tap to try again.",
+  "chatSend": "Send",
+  "@chatSayHi": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@chatReplyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

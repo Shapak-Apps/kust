@@ -343,7 +343,10 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       label: t.messageButton,
       icon: Icons.chat_bubble_outline_rounded,
       style: KustButtonStyle.outline,
-      onTap: () => _say(t.messagesSoon),
+      // Friends chat; anyone else is told to add them first.
+      onTap: () => _friendship == Friendship.friends
+          ? context.push('/chat/${widget.username}', extra: _player)
+          : _say(t.chatFriendsOnly),
     );
     final friendship = _friendship;
     final busy = _busy || friendship == null;

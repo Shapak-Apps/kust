@@ -11,6 +11,8 @@ import 'package:kust/features/auth/login_screen.dart';
 import 'package:kust/features/auth/register_screen.dart';
 import 'package:kust/features/auth/verify_email_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
+import 'package:kust/features/chat/chat_screen.dart';
+import 'package:kust/features/chat/chats_screen.dart';
 import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/players/player_profile_screen.dart';
 import 'package:kust/core/net/account.dart';
@@ -116,6 +118,15 @@ GoRouter createRouter({required bool onboardingCompleted}) {
           return null;
         },
         builder: (context, state) => const PlayersScreen(),
+      ),
+
+      GoRoute(path: '/chats', builder: (context, state) => const ChatsScreen()),
+      GoRoute(
+        path: '/chat/:username',
+        builder: (context, state) => ChatScreen(
+          username: state.pathParameters['username']!,
+          player: state.extra is Player ? state.extra as Player : null,
+        ),
       ),
 
       GoRoute(
