@@ -606,5 +606,7 @@
   "pwRuleUpper": "Одна заглавная буква",
   "pwRuleLower": "Одна строчная буква",
   "pwRuleDigit": "Одна цифра",
-  "pwRuleNoName": "Без имени пользователя и почты"
+  "pwRuleNoName": "Без имени пользователя и почты",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль"
 }

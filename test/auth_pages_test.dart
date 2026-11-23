@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/features/auth/login_screen.dart';
 import 'package:kust/theme.dart';
+import 'package:kust/ui/code_boxes.dart';
+import 'package:kust/ui/kust_text_field.dart';
 
 void main() {
   testWidgets('sign in is bare: title, two fields, button, link, skip', (
@@ -56,5 +58,45 @@ void main() {
     expect(numbers.first.style!.color, const Color(0xFFFFBB00));
     expect(numbers.last.style!.color, isNot(const Color(0xFFFFBB00)));
     expect(numbers.first.style!.fontSize, 20);
+  });
+
+  testWidgets('the eye shows and hides a password', (tester) async {
+    final c = TextEditingController(text: 'Secret123');
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: Scaffold(
+          body: KustTextField(controller: c, maxLength: 128, obscure: true),
+        ),
+      ),
+    );
+    bool hidden() =>
+        tester.widget<TextField>(find.byType(TextField)).obscureText;
+    expect(hidden(), isTrue);
+    await tester.tap(find.byIcon(Icons.visibility_outlined));
+    await tester.pump();
+    expect(hidden(), isFalse);
+    await tester.tap(find.byIcon(Icons.visibility_off_outlined));
+    await tester.pump();
+    expect(hidden(), isTrue);
+  });
+
+  testWidgets('the code shows one digit per box and takes a paste', (
+    tester,
+  ) async {
+    final c = TextEditingController();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: appTheme,
+        home: Scaffold(body: CodeBoxes(controller: c)),
+      ),
+    );
+    await tester.enterText(find.byType(TextField), '12a3456789');
+    await tester.pump();
+    expect(c.text, '123456');
+    for (final d in ['1', '2', '3', '4', '5', '6']) {
+      expect(find.text(d), findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
   });
 }

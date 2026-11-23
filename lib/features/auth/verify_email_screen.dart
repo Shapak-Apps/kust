@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/api_client.dart';
@@ -10,7 +9,7 @@ import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/features/auth/auth_support.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
-import 'package:kust/ui/kust_text_field.dart';
+import 'package:kust/ui/code_boxes.dart';
 import 'package:kust/ui/tokens.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
@@ -48,7 +47,10 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   }
 
   void _onCode() {
-    setState(() {});
+    setState(() {
+      // Typing again clears the red of a wrong code.
+      if (_code.text.isNotEmpty) _error = null;
+    });
     if (_code.text.length == 6) _verify();
   }
 
@@ -155,15 +157,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
             ],
           ),
           children: [
-            KustTextField(
-              controller: _code,
-              maxLength: 6,
-              autofocus: true,
-              icon: Icons.pin_outlined,
-              hint: t.verifyCode,
-              keyboardType: TextInputType.number,
-              autofillHints: const [AutofillHints.oneTimeCode],
-              formatters: [FilteringTextInputFormatter.digitsOnly],
+            Semantics(
+              label: t.verifyCode,
+              child: CodeBoxes(controller: _code, error: _error != null),
             ),
             if (_notice != null)
               Padding(

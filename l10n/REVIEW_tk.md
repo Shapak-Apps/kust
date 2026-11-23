@@ -582,3 +582,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `pwRuleLower` | One small letter | Bir kiçi harp |
 | `pwRuleDigit` | One digit | Bir san |
 | `pwRuleNoName` | Not your username or email | Ulanyjy adyňyz ýa-da e-poçtaňyz bolmasyn |
+| `showPassword` | Show password | Paroly görkez |
+| `hidePassword` | Hide password | Paroly gizle |
