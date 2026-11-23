@@ -2658,7 +2658,7 @@ abstract class AppL10n {
   /// No description provided for @lessonBackToMap.
   ///
   /// In en, this message translates to:
-  /// **'Back to the map'**
+  /// **'Back to lessons'**
   String get lessonBackToMap;
 
   /// No description provided for @learnCoachDone.

@@ -15,14 +15,12 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/static_board.dart';
 import 'package:kust/ui/kust_top_bar.dart' show kMinTap;
 import 'package:kust/ui/motion.dart';
 
 /// The guide who explains every lesson.
 const String _coachImage = 'assets/bots/Bahar.webp';
-
-const Color _green = Color(0xFF3CB77C);
-const Color _gold = Color(0xFFFFBB00);
 
 /// One lesson: an introduction from the coach, the tasks one after the
 /// other, and the stars at the end.
@@ -153,7 +151,7 @@ class _LessonScreenState extends State<LessonScreen> {
   Widget build(BuildContext context) {
     final lesson = _lesson;
     return Scaffold(
-      backgroundColor: const Color(0xFF151311),
+      backgroundColor: context.k.bg,
       body: SafeArea(
         child: lesson == null
             ? const SizedBox.shrink()
@@ -203,9 +201,9 @@ class _LessonScreenState extends State<LessonScreen> {
         : TaskRunner.landing(_lastMove!, _beforeLast!);
     final (note, noteColor) = switch (_note) {
       _Note.none => (null, null),
-      _Note.wrong => (t.learnWrong, const Color(0xFFFF8A80)),
-      _Note.stalemate => (t.learnStalemate, const Color(0xFFFF8A80)),
-      _Note.done => (t.learnCoachDone, const Color(0xFF9EE7C1)),
+      _Note.wrong => (t.learnWrong, context.k.danger),
+      _Note.stalemate => (t.learnStalemate, context.k.danger),
+      _Note.done => (t.learnCoachDone, context.k.success),
     };
     // The room for the Continue panel is kept all the time, and the panel
     // slides into it: nothing on the board moves when a task is done.
@@ -321,7 +319,7 @@ class _TopBar extends StatelessWidget {
           IconButton(
             onPressed: onClose,
             tooltip: context.t.close,
-            icon: const Icon(Icons.close_rounded, color: Color(0xFF8E8C86)),
+            icon: Icon(Icons.close_rounded, color: context.k.muted),
           ),
           Expanded(
             child: ClipRRect(
@@ -332,13 +330,13 @@ class _TopBar extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 builder: (context, v, _) => Stack(
                   children: [
-                    Container(height: 14, color: const Color(0xFF2E2A26)),
+                    Container(height: 14, color: context.k.surfaceAlt),
                     FractionallySizedBox(
                       widthFactor: v.clamp(0.02, 1.0),
                       child: Container(
                         height: 14,
                         decoration: BoxDecoration(
-                          color: _green,
+                          color: context.k.success,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         alignment: Alignment.topCenter,
@@ -373,13 +371,15 @@ class _TopBar extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: _gold.withValues(alpha: 0.14),
+                        color: context.k.accent.withValues(alpha: 0.14),
                         shape: BoxShape.circle,
-                        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+                        border: Border.all(
+                          color: context.k.accent.withValues(alpha: 0.5),
+                        ),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.lightbulb_rounded,
-                        color: _gold,
+                        color: context.k.accent,
                         size: 22,
                       ),
                     ),
@@ -425,10 +425,7 @@ class _Coach extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: CustomPaint(
-            painter: SpeechBubblePainter(
-              fill: const Color(0xFF26221E),
-              border: const Color(0xFF3A3530),
-            ),
+            painter: SpeechBubblePainter(fill: k.surface, border: k.line),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
                 BubbleMetrics.tail + 14,
@@ -488,9 +485,9 @@ class _DonePanel extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-      decoration: const BoxDecoration(
-        color: Color(0xFF16352A),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.k.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -500,8 +497,8 @@ class _DonePanel extends StatelessWidget {
               Container(
                 width: 36,
                 height: 36,
-                decoration: const BoxDecoration(
-                  color: _green,
+                decoration: BoxDecoration(
+                  color: context.k.success,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.check_rounded, color: Colors.white),
@@ -509,10 +506,10 @@ class _DonePanel extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 t.learnWellDone,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF9EE7C1),
+                  color: context.k.success,
                 ),
               ),
             ],
@@ -551,7 +548,7 @@ class _DoneBadge extends StatelessWidget {
                     Transform.scale(scale: v, child: child),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: _green,
+                    color: context.k.success,
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 1.5),
                   ),
@@ -594,7 +591,7 @@ class _Marks extends StatelessWidget {
                     ? Icon(
                         Icons.star_rounded,
                         size: cell * 0.78,
-                        color: _gold,
+                        color: context.k.accent,
                         shadows: const [
                           Shadow(color: Color(0x66000000), blurRadius: 4),
                         ],
@@ -618,52 +615,6 @@ class _Marks extends StatelessWidget {
 }
 
 /// The lesson's piece standing in a soft glow, or its icon on a round badge.
-class _Badge extends StatelessWidget {
-  const _Badge({required this.lesson});
-
-  final Lesson lesson;
-
-  @override
-  Widget build(BuildContext context) {
-    final piece = lesson.piece;
-    return SizedBox(
-      width: 220,
-      height: 190,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 190,
-            height: 190,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [Color(0x553CB77C), Color(0x003CB77C)],
-              ),
-            ),
-          ),
-          if (piece == null)
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: _green,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  width: 3,
-                ),
-              ),
-              child: Icon(lesson.icon, size: 56, color: Colors.white),
-            )
-          else
-            LearnPiece(piece, height: 168),
-        ],
-      ),
-    );
-  }
-}
-
 class _Intro extends StatelessWidget {
   const _Intro({
     required this.lesson,
@@ -691,7 +642,7 @@ class _Intro extends StatelessWidget {
             child: IconButton(
               onPressed: onClose,
               tooltip: t.close,
-              icon: const Icon(Icons.close_rounded, color: Color(0xFF8E8C86)),
+              icon: Icon(Icons.close_rounded, color: context.k.muted),
             ),
           ),
         ),
@@ -702,63 +653,33 @@ class _Intro extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _Badge(lesson: lesson),
-                  const SizedBox(height: 22),
-                  Text(
-                    '${camp.label(t)} · ${t.lessonLabel(number)}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: Color(0xFF9EE7C1),
+                  // The first position of the lesson, the squares it asks
+                  // about marked: what the lesson starts with.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 260),
+                    child: StaticBoard(
+                      position: Chess.fromSetup(
+                        Setup.parseFen(lesson.tasks.first.fen),
+                      ),
+                      highlight: lesson.tasks.first.targets.toList(),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 24),
+                  Text(
+                    '${t.lessonNumber(number)} · ${camp.title(t)}',
+                    style: k.caption.copyWith(color: k.accent),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     lesson.title(t),
                     textAlign: TextAlign.center,
                     style: k.display.copyWith(fontSize: 32),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.asset(
-                          _coachImage,
-                          width: 84,
-                          height: 84,
-                          cacheWidth: 252,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: CustomPaint(
-                          painter: const SpeechBubblePainter(
-                            fill: Color(0xFF26221E),
-                            border: Color(0xFF3A3530),
-                            tailAt: 0.25,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              BubbleMetrics.tail + 14,
-                              12,
-                              14,
-                              14,
-                            ),
-                            child: Text(
-                              lesson.intro(t),
-                              style: k.body.copyWith(
-                                height: 1.45,
-                                color: const Color(0xFFD9D6CE),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 12),
+                  Text(
+                    lesson.intro(t),
+                    textAlign: TextAlign.center,
+                    style: k.body.copyWith(height: 1.45, color: k.muted),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -840,7 +761,7 @@ class _Complete extends StatelessWidget {
                     Text(
                       t.learnAllDone,
                       textAlign: TextAlign.center,
-                      style: k.body.copyWith(color: const Color(0xFF9EE7C1)),
+                      style: k.body.copyWith(color: context.k.success),
                     ),
                   ],
                   const SizedBox(height: 26),
@@ -849,21 +770,23 @@ class _Complete extends StatelessWidget {
                       _Stat(
                         label: t.lessonTasksDone,
                         value: '${lesson.tasks.length}/${lesson.tasks.length}',
-                        color: _green,
+                        color: context.k.success,
                         icon: Icons.check_circle_rounded,
                       ),
                       const SizedBox(width: 10),
                       _Stat(
                         label: t.lessonMistakes,
                         value: '$mistakes',
-                        color: mistakes == 0 ? _green : const Color(0xFFFF8A80),
+                        color: mistakes == 0
+                            ? context.k.success
+                            : context.k.danger,
                         icon: Icons.close_rounded,
                       ),
                       const SizedBox(width: 10),
                       _Stat(
                         label: t.lessonHintsUsed,
                         value: '$hints',
-                        color: _gold,
+                        color: context.k.accent,
                         icon: Icons.lightbulb_rounded,
                       ),
                     ],
@@ -887,10 +810,10 @@ class _Complete extends StatelessWidget {
           onPressed: onClose,
           child: Text(
             t.lessonBackToMap,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF8E8C86),
+              color: context.k.muted,
             ),
           ),
         ),
@@ -956,7 +879,7 @@ class _PopStarState extends State<_PopStar>
               child: Icon(
                 Icons.star_rounded,
                 size: widget.size,
-                color: widget.on ? _gold : const Color(0xFF3A3632),
+                color: widget.on ? context.k.accent : context.k.line,
                 shadows: widget.on
                     ? const [Shadow(color: Color(0x88FFBB00), blurRadius: 18)]
                     : null,
@@ -989,7 +912,7 @@ class _Stat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF221F1C),
+          color: k.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
         ),

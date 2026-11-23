@@ -506,3 +506,4 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `undo` | Undo | Yzyna gaýtar |
 | `doneButton` | Done | Taýýar |
 | `lessonNumber` | Lesson {n} | Sapak {n} |
+| `lessonBackToMap` | Back to lessons | Sapaklara dolan |

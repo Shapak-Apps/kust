@@ -1460,7 +1460,7 @@ class AppL10nRu extends AppL10n {
   String get lessonTasksDone => 'Задания';
 
   @override
-  String get lessonBackToMap => 'К карте';
+  String get lessonBackToMap => 'К урокам';
 
   @override
   String get learnCoachDone => 'Получилось! Нажмите «Продолжить».';
