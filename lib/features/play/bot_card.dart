@@ -59,7 +59,7 @@ class BotCard extends StatelessWidget {
             color: selected
                 ? k.accent.withValues(alpha: 0.14)
                 : Color.alphaBlend(const Color(0x0DFFFFFF), k.surface),
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            borderRadius: BorderRadius.circular(KustSpace.rCard),
             border: Border.all(
               color: selected ? k.accent : const Color(0x14FFFFFF),
               width: selected ? 2 : 1,
@@ -75,7 +75,7 @@ class BotCard extends StatelessWidget {
                     Positioned.fill(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(
-                          KustSpace.rMedium - 4,
+                          KustSpace.rCard - 4,
                         ),
                         child: DecoratedBox(
                           decoration: BoxDecoration(

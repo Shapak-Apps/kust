@@ -18,6 +18,7 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/kust_section_header.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
 import 'package:kust/ui/skeleton.dart';
@@ -444,37 +445,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     String title,
     String count, {
     VoidCallback? onViewAll,
-  }) => Padding(
-    padding: EdgeInsets.fromLTRB(20, 22, onViewAll == null ? 20 : 8, 6),
-    child: Row(
-      children: [
-        Text(title, style: k.title.copyWith(fontSize: 20, height: 1.2)),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: k.surfaceAlt,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            count,
-            style: k.caption.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ),
-        if (onViewAll != null) ...[
-          const Spacer(),
-          TextButton(
-            onPressed: onViewAll,
-            style: TextButton.styleFrom(
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Text(context.t.viewAll, maxLines: 1),
-          ),
-        ],
-      ],
-    ),
-  );
+  }) => KustSectionHeader(title: title, count: count, onViewAll: onViewAll);
 
   /// Their newest games; each opens for watching.
   List<Widget> _history(BuildContext context, KustTokens k) {
