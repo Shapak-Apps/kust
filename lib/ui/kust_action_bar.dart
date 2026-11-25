@@ -56,9 +56,13 @@ class KustActionBar extends StatelessWidget {
             Flexible(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: _maxItemWidth),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: _Item(action: action),
+                // A little room between neighbours, so labels never touch.
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: _Item(action: action),
+                  ),
                 ),
               ),
             ),
@@ -77,10 +81,10 @@ class _Item extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final enabled = action.onTap != null && !action.busy;
-    // A touch softer than the text white.
-    final colour = enabled
-        ? k.ink.withValues(alpha: 0.95)
-        : k.muted.withValues(alpha: 0.35);
+    // A touch softer than the text white. A greyed-out action is the same
+    // icon and weight, only faded (see the Opacity below), so every icon in
+    // the bar keeps one weight.
+    final colour = k.ink.withValues(alpha: 0.95);
 
     final Widget icon = action.busy
         // As tall as an icon, so the label does not move while it spins.
@@ -97,7 +101,7 @@ class _Item extends StatelessWidget {
               action.icon,
               size: 24,
               color: colour,
-              weight: 0.005,
+              weight: 0.012,
             ),
           );
 
@@ -135,7 +139,7 @@ class _Item extends StatelessWidget {
       child: Pressable(
         onTap: enabled ? action.onTap : null,
         scale: 0.92,
-        child: body,
+        child: Opacity(opacity: enabled ? 1 : 0.3, child: body),
       ),
     );
   }

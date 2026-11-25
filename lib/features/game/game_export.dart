@@ -150,16 +150,23 @@ Future<ui.Image> boardImage(
   }
 
   final inset = square * 0.02;
+  // The recording only points at each piece's picture or image: they are
+  // let go once the board is rasterized, not before (freed early, squares
+  // came out as noise).
+  final keep = <void Function()>[];
   for (final s in Square.values) {
     final piece = position.board.pieceAt(s);
     if (piece == null) continue;
     final rect = (originOf(s) & Size(square, square)).deflate(inset);
-    await _drawPiece(canvas, assetForPiece(piece), rect);
+    keep.add(await _drawPiece(canvas, assetForPiece(piece), rect));
   }
 
   final picture = recorder.endRecording();
   final image = await picture.toImage(size, size);
   picture.dispose();
+  for (final free in keep) {
+    free();
+  }
   return image;
 }
 
@@ -188,7 +195,13 @@ void _label(
   painter.dispose();
 }
 
-Future<void> _drawPiece(Canvas canvas, String asset, Rect rect) async {
+/// Draws one piece into [canvas]; returns what frees it, to call once the
+/// recording has been rasterized.
+Future<void Function()> _drawPiece(
+  Canvas canvas,
+  String asset,
+  Rect rect,
+) async {
   if (asset.endsWith('.svg')) {
     final info = await vg.loadPicture(SvgAssetLoader(asset), null);
     canvas.save();
@@ -196,8 +209,7 @@ Future<void> _drawPiece(Canvas canvas, String asset, Rect rect) async {
     canvas.scale(rect.width / info.size.width, rect.height / info.size.height);
     canvas.drawPicture(info.picture);
     canvas.restore();
-    info.picture.dispose();
-    return;
+    return info.picture.dispose;
   }
   final data = await rootBundle.load(asset);
   final codec = await ui.instantiateImageCodec(
@@ -211,8 +223,10 @@ Future<void> _drawPiece(Canvas canvas, String asset, Rect rect) async {
     rect,
     Paint()..filterQuality = FilterQuality.medium,
   );
-  image.dispose();
-  codec.dispose();
+  return () {
+    image.dispose();
+    codec.dispose();
+  };
 }
 
 /// The export choices for one game: share the board as an image, or copy

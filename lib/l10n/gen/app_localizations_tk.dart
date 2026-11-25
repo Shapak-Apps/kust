@@ -1462,7 +1462,7 @@ class AppL10nTk extends AppL10n {
   String get lessonBackToMap => 'Sapaklara dolan';
 
   @override
-  String get learnCoachDone => 'Boldy! «Dowam et» basyň.';
+  String get learnCoachDone => 'Boldy!';
 
   @override
   String get lessonPerfect => 'Kemsiz sapak!';
@@ -1771,6 +1771,9 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get trainTryFirst => 'Birinji warianty synap görüň';
+
+  @override
+  String get trainTry => 'Synap gör';
 
   @override
   String trainLines(int count) {
@@ -2117,6 +2120,9 @@ class AppL10nTk extends AppL10n {
   String get friendFriends => 'Dostlar';
 
   @override
+  String get friendsSearch => 'Dost gözle';
+
+  @override
   String friendRemoveTitle(String name) {
     return '$name dostlaryňyzdan aýrylsynmy?';
   }
@@ -2160,7 +2166,13 @@ class AppL10nTk extends AppL10n {
       'Häzirlikçe täze zat ýok. Dostluk haýyşlary şu ýerde görüner.';
 
   @override
+  String get notifClearAll => 'Hemmesini arassala';
+
+  @override
   String get flipBoard => 'Tagtany öwür';
+
+  @override
+  String get flipShort => 'Öwür';
 
   @override
   String get flipBoardSub => 'Tagta beýleki tarapdan serediň';

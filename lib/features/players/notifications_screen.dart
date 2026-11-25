@@ -8,6 +8,7 @@ import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/chat_repository.dart';
+import 'package:kust/core/storage/notice_dismissals.dart';
 import 'package:kust/features/players/players_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/felt_header.dart';
@@ -118,9 +119,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   PlayersRepository get _repo => PlayersRepository.instance;
   ChatRepository get _chats => ChatRepository.instance;
 
+  NoticeDismissals get _closed => NoticeDismissals.instance;
+
   @override
   void initState() {
     super.initState();
+    _closed.load();
     _refresh();
   }
 
@@ -180,6 +184,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   listenable: Listenable.merge([
                     _chats.summaries,
                     OnlineRepository.instance.open,
+                    _closed.closed,
                   ]),
                   builder: (context, _) {
                     final chats = _chats.summaries.value;
@@ -193,9 +198,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       for (final g in games)
                         if (g.active) g,
                     ];
+                    // A friend's message stays, read or not, until closed.
                     final texts = [
                       for (final c in chats)
-                        if (c.unread > 0) c,
+                        if (c.unread > 0 ||
+                            (c.last.from == c.player.username &&
+                                !_closed.isClosed(
+                                  c.player.username,
+                                  c.last.id,
+                                )))
+                          c,
                     ];
                     return LayoutBuilder(
                       builder: (context, box) => ListView(
@@ -257,10 +269,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ),
                           ],
                           if (texts.isNotEmpty) ...[
-                            _label(k, t.chatsTitle),
+                            Row(
+                              children: [
+                                Expanded(child: _label(k, t.chatsTitle)),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    right: 4,
+                                  ),
+                                  child: TextButton(
+                                    onPressed: () => _closed.close({
+                                      for (final c in texts)
+                                        c.player.username: c.last.id,
+                                    }),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: k.accent,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    child: Text(t.notifClearAll),
+                                  ),
+                                ),
+                              ],
+                            ),
                             for (final c in texts)
                               _MessageNotice(
                                 chat: c,
+                                onClose: () => _closed.close({
+                                  c.player.username: c.last.id,
+                                }),
                                 onTap: () async {
                                   await context.push(
                                     '/chat/${c.player.username}',
@@ -299,10 +335,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 /// "merdan texted you": who, their last message, how many, and the time.
 /// Tapping opens the chat.
 class _MessageNotice extends StatelessWidget {
-  const _MessageNotice({required this.chat, required this.onTap});
+  const _MessageNotice({
+    required this.chat,
+    required this.onTap,
+    required this.onClose,
+  });
 
   final ChatSummary chat;
   final VoidCallback onTap;
+
+  /// Takes it off the list; only a newer message brings it back.
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -341,29 +384,47 @@ class _MessageNotice extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: k.caption,
       ),
-      trailing: Column(
+      trailing: Row(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(when, style: k.caption.copyWith(color: KustTokens.gold)),
-          const SizedBox(height: 4),
-          Container(
-            constraints: const BoxConstraints(minWidth: 20),
-            height: 20,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3CB77C),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '${chat.unread}',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                when,
+                style: k.caption.copyWith(
+                  color: chat.unread > 0 ? KustTokens.gold : k.muted,
+                ),
               ),
-            ),
+              if (chat.unread > 0) ...[
+                const SizedBox(height: 4),
+                Container(
+                  constraints: const BoxConstraints(minWidth: 20),
+                  height: 20,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3CB77C),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${chat.unread}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          IconButton(
+            onPressed: onClose,
+            tooltip: context.t.close,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(Icons.close_rounded, size: 20, color: k.muted),
           ),
         ],
       ),

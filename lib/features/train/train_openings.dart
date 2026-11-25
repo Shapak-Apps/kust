@@ -84,6 +84,28 @@ class TrainOpening {
 
   String nameIn(AppL10n t) => t.localeName == 'en' ? en : ru;
 
+  /// The name without the word its kind chip already says ("Caro-Kann"
+  /// beside DEFENCE, not "Caro-Kann Defence"), where it still reads as a
+  /// name; otherwise the full name ("Queen's Gambit" stays).
+  String shortNameIn(AppL10n t) {
+    final short = _short[id];
+    if (short == null) return nameIn(t);
+    return t.localeName == 'en' ? short.$1 : short.$2;
+  }
+
+  static const Map<String, (String, String)> _short = {
+    'fried_liver': ('Fried Liver', 'Фегателло'),
+    'sicilian': ('Sicilian', 'Сицилианская'),
+    'french': ('French', 'Французская'),
+    'caro_kann': ('Caro-Kann', 'Каро — Канн'),
+    'kings_indian': ('King’s Indian', 'Староиндийская'),
+    'scandinavian': ('Scandinavian', 'Скандинавская'),
+    'budapest': ('Budapest', 'Будапештский'),
+    'pirc': ('Pirc', 'Пирц'),
+    'dutch': ('Dutch', 'Голландская'),
+    'nimzo': ('Nimzo-Indian', 'Нимцо-индийская'),
+  };
+
   String originIn(AppL10n t) => t.localeName == 'en' ? origin : originRu;
 
   String descriptionIn(AppL10n t) => switch (id) {

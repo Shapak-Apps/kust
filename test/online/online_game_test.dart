@@ -132,7 +132,7 @@ void main() {
     // Playing: draw and resign by the moves, Back, Forward and Flip.
     expect(find.text('Draw'), findsOneWidget);
     expect(find.text('Resign'), findsOneWidget);
-    expect(find.text('Flip board'), findsOneWidget);
+    expect(find.text('Flip'), findsOneWidget);
     expect(find.text('3:00'), findsWidgets);
     await tester.tap(find.text('Draw'));
     await tester.pump();

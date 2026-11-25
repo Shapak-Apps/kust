@@ -23,12 +23,12 @@ void main() {
     await tester.pumpWidget(_app(const TrainScreen()));
     await tester.pump();
     expect(find.text('Italian Game'), findsOneWidget);
-    expect(find.text('Sicilian Defence'), findsOneWidget);
-    expect(find.text('Try the first line'), findsWidgets);
+    expect(find.text('Sicilian'), findsOneWidget);
+    expect(find.text('Try'), findsWidgets);
 
     await tester.enterText(find.byType(TextField), 'najdorf');
     await tester.pump();
-    expect(find.text('Sicilian Defence'), findsOneWidget);
+    expect(find.text('Sicilian'), findsOneWidget);
     expect(find.text('Italian Game'), findsNothing);
 
     await tester.enterText(find.byType(TextField), '');
