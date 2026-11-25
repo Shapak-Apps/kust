@@ -598,6 +598,9 @@ class AppL10nTk extends AppL10n {
   String get boardWood => 'Agaç';
 
   @override
+  String get boardSoft => 'Ýumşak';
+
+  @override
   String get pieceClassic => 'Klassiki';
 
   @override
@@ -608,6 +611,9 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get pieceBrushed => 'Çotgalanan';
+
+  @override
+  String get pieceFlat => 'Tekiz';
 
   @override
   String get histNoGames => 'Heniz oýun ýok';

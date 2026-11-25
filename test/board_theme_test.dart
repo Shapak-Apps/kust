@@ -20,12 +20,13 @@ void main() {
   });
 
   group('themes', () {
-    test('there are four, each with distinct light and dark squares', () {
+    test('there are five, each with distinct light and dark squares', () {
       expect(BoardTheme.values.map((t) => t.label), [
         'Brown',
         'Green',
         'Dark Blue',
         'Wood',
+        'Soft',
       ]);
       for (final t in BoardTheme.values) {
         expect(t.light, isNot(t.dark), reason: t.label);

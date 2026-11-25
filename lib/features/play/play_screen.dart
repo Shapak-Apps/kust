@@ -513,13 +513,9 @@ class _HeroCard extends StatelessWidget {
     final k = context.k;
     final total = kInternationalBots.length + kTkmBots.length;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: k.surface,
-        borderRadius: BorderRadius.circular(KustSpace.rLarge),
-        border: Border.all(color: k.line),
-      ),
+    // No card around it: the greeting and Play stand on the page.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

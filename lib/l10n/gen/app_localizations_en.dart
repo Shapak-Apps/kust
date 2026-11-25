@@ -597,6 +597,9 @@ class AppL10nEn extends AppL10n {
   String get boardWood => 'Wood';
 
   @override
+  String get boardSoft => 'Soft';
+
+  @override
   String get pieceClassic => 'Classic';
 
   @override
@@ -607,6 +610,9 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get pieceBrushed => 'Brushed';
+
+  @override
+  String get pieceFlat => 'Flat';
 
   @override
   String get histNoGames => 'No games yet';
