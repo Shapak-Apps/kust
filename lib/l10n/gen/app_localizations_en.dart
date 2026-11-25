@@ -2204,4 +2204,13 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get chatSend => 'Send';
+
+  @override
+  String chatTextedYou(String name) {
+    return '$name texted you';
+  }
+
+  @override
+  String get chatBeKind =>
+      'Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.';
 }

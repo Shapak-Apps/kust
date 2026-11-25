@@ -1237,5 +1237,14 @@
         "type": "String"
       }
     }
+  },
+  "chatTextedYou": "{name} texted you",
+  "chatBeKind": "Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.",
+  "@chatTextedYou": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

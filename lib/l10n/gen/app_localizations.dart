@@ -4004,6 +4004,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Send'**
   String get chatSend;
+
+  /// No description provided for @chatTextedYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} texted you'**
+  String chatTextedYou(String name);
+
+  /// No description provided for @chatBeKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.'**
+  String get chatBeKind;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

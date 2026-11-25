@@ -126,8 +126,12 @@ class ChatRepository {
   final AuthService auth;
   final LiveSocket _socket;
 
-  /// Messages I haven't read, across all chats: the badge on Play.
+  /// Messages I haven't read, across all chats.
   final ValueNotifier<int> unread = ValueNotifier(0);
+
+  /// The conversations as last fetched; the ones with unread messages
+  /// show in Notifications.
+  final ValueNotifier<List<ChatSummary>> summaries = ValueNotifier(const []);
 
   /// The chat on screen, so its messages don't count as unread.
   String? openWith;
@@ -152,7 +156,7 @@ class ChatRepository {
     if (e.type == 'chat_message' &&
         e.data['to'] == me &&
         e.data['from'] != openWith) {
-      unread.value = unread.value + 1;
+      unawaited(refreshUnread());
     }
   }
 
@@ -165,6 +169,7 @@ class ChatRepository {
         ChatSummary.fromJson(c as Map<String, dynamic>),
     ];
     unread.value = list.fold(0, (sum, c) => sum + c.unread);
+    summaries.value = list;
     return list;
   }
 
@@ -172,6 +177,7 @@ class ChatRepository {
   Future<void> refreshUnread() async {
     if (!auth.state.value.isVerified) {
       unread.value = 0;
+      summaries.value = const [];
       return;
     }
     try {

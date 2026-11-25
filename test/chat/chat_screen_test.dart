@@ -99,14 +99,14 @@ void main() {
   testWidgets('shows the chat, sends at once, swipes to reply', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
-    expect(find.text('Salam!'), findsOneWidget);
-    expect(find.text('Oýun oýnaýarysmy?'), findsOneWidget);
+    expect(find.textContaining('Salam!'), findsOneWidget);
+    expect(find.textContaining('Oýun oýnaýarysmy?'), findsOneWidget);
     expect(find.text('Today'), findsOneWidget);
     // Opening the chat marks Ann's message read.
     expect(adapter.requests.any((r) => r.path == '/v1/chats/ann/read'), isTrue);
 
     // Swipe her message right: the reply preview shows.
-    await tester.drag(find.text('Oýun oýnaýarysmy?'), const Offset(120, 0));
+    await tester.drag(find.textContaining('Oýun oýnaýarysmy?'), const Offset(120, 0));
     await tester.pumpAndSettle();
     expect(find.text('Replying to Ann'), findsOneWidget);
 
@@ -114,21 +114,21 @@ void main() {
     await tester.pump();
     await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
     await tester.pump();
-    expect(find.text('Hawa, gel!'), findsOneWidget);
+    expect(find.textContaining('Hawa, gel!'), findsOneWidget);
     expect(find.text('Replying to Ann'), findsNothing);
     await tester.pumpAndSettle();
     final sent = adapter.requests.lastWhere(
       (r) => r.method == 'POST' && r.path == '/v1/chats/ann/messages',
     );
     expect((sent.data as Map)['reply_to'], 2);
-    expect(find.text('Hawa, gel!'), findsOneWidget);
+    expect(find.textContaining('Hawa, gel!'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('holding a message offers reactions', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
-    await tester.longPress(find.text('Salam!'));
+    await tester.longPress(find.textContaining('Salam!'));
     await tester.pumpAndSettle();
     for (final e in kQuickReactions) {
       expect(find.text(e), findsOneWidget);
