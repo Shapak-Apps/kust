@@ -2973,6 +2973,12 @@ abstract class AppL10n {
   /// **'Game history'**
   String get gameHistory;
 
+  /// No description provided for @playerGamesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s games'**
+  String playerGamesTitle(String name);
+
   /// No description provided for @viewAll.
   ///
   /// In en, this message translates to:

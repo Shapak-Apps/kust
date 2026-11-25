@@ -108,7 +108,7 @@ void main() {
     expect(find.byType(MoveFeedbackBadge), findsOneWidget);
 
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch).at(1)); // move feedback
+    await tester.tap(find.byType(KustSwitch).at(2)); // move feedback
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
@@ -321,7 +321,7 @@ void main() {
     expect(find.byType(EvaluationBar), findsNothing);
 
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch).first); // evaluation bar
+    await tester.tap(find.byType(KustSwitch).at(1)); // evaluation bar
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(200, 20)); // close the sheet
     await tester.pumpAndSettle();
@@ -346,7 +346,7 @@ void main() {
       _app(evaluator: (_) async => throw StateError('x')),
     );
     await _openSettings(tester);
-    await tester.tap(find.byType(KustSwitch).first); // evaluation bar
+    await tester.tap(find.byType(KustSwitch).at(1)); // evaluation bar
     await tester.pumpAndSettle();
     await tester.tapAt(const Offset(200, 20));
     await tester.pumpAndSettle();

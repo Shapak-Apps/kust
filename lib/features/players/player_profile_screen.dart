@@ -574,7 +574,10 @@ class _PlayerGamesScreenState extends State<PlayerGamesScreen> {
       backgroundColor: k.bg,
       body: Column(
         children: [
-          FeltHeader(title: context.t.gameHistory, onBack: () => context.pop()),
+          FeltHeader(
+            title: context.t.playerGamesTitle(widget.username),
+            onBack: () => context.pop(),
+          ),
           Expanded(
             child: games == null
                 ? const Center(child: CircularProgressIndicator())

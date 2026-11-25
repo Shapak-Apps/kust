@@ -662,3 +662,4 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `onlineDrawOffered` | {name} offers a draw | {name} deňe deň teklip edýär |
 | `onlineReconnecting` | Reconnecting… | Täzeden birikdirilýär… |
 | `onlineConnection` | Connection | Baglanyşyk |
+| `playerGamesTitle` | {name}'s games | {name} oýunlary |
