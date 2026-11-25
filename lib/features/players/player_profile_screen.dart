@@ -13,6 +13,7 @@ import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/profile/profile_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/player_avatar.dart';
@@ -81,7 +82,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
 
   Future<void> _loadGames() async {
     try {
-      final games = await _repo.games(widget.username, limit: 10);
+      final games = await _repo.games(widget.username, limit: 5);
       if (mounted) {
         setState(() {
           _games = games.games;
@@ -433,8 +434,13 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     );
   }
 
-  Widget _title(KustTokens k, String title, String count) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 22, 20, 6),
+  Widget _title(
+    KustTokens k,
+    String title,
+    String count, {
+    VoidCallback? onViewAll,
+  }) => Padding(
+    padding: EdgeInsets.fromLTRB(20, 22, onViewAll == null ? 20 : 8, 6),
     child: Row(
       children: [
         Text(title, style: k.title.copyWith(fontSize: 20, height: 1.2)),
@@ -450,6 +456,17 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
             style: k.caption.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
+        if (onViewAll != null) ...[
+          const Spacer(),
+          TextButton(
+            onPressed: onViewAll,
+            style: TextButton.styleFrom(
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            child: Text(context.t.viewAll, maxLines: 1),
+          ),
+        ],
       ],
     ),
   );
@@ -458,7 +475,15 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   List<Widget> _history(BuildContext context, KustTokens k) {
     final games = _games;
     return [
-      _title(k, context.t.gameHistory, '$_gamesTotal'),
+      _title(
+        k,
+        context.t.gameHistory,
+        '$_gamesTotal',
+        // The last five here; all of them a tap away.
+        onViewAll: _gamesTotal > 5
+            ? () => context.push('/player/${widget.username}/games')
+            : null,
+      ),
       if (games == null)
         const Padding(
           padding: EdgeInsets.all(16),
@@ -507,5 +532,66 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         ),
       ),
     ];
+  }
+}
+
+/// All of another player's games (up to the 200 the server keeps), each
+/// opening for watching.
+class PlayerGamesScreen extends StatefulWidget {
+  const PlayerGamesScreen({super.key, required this.username});
+
+  final String username;
+
+  @override
+  State<PlayerGamesScreen> createState() => _PlayerGamesScreenState();
+}
+
+class _PlayerGamesScreenState extends State<PlayerGamesScreen> {
+  List<GameRecord>? _games;
+
+  @override
+  void initState() {
+    super.initState();
+    PlayersRepository.instance
+        .games(widget.username, limit: 200)
+        .then((g) {
+          if (mounted) setState(() => _games = g.games);
+        })
+        .catchError((Object _) {
+          if (mounted) setState(() => _games = const []);
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    final games = _games;
+    return Scaffold(
+      backgroundColor: k.bg,
+      body: Column(
+        children: [
+          FeltHeader(title: context.t.gameHistory, onBack: () => context.pop()),
+          Expanded(
+            child: games == null
+                ? const Center(child: CircularProgressIndicator())
+                : games.isEmpty
+                ? Center(
+                    child: Text(
+                      context.t.histNoGames,
+                      style: k.body.copyWith(color: k.muted),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    itemCount: games.length,
+                    separatorBuilder: (_, _) =>
+                        Divider(height: 1, thickness: 1, color: k.line),
+                    itemBuilder: (context, i) =>
+                        GameTile(game: games[i], readOnly: true),
+                  ),
+          ),
+        ],
+      ),
+    );
   }
 }
