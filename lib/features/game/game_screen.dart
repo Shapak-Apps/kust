@@ -873,6 +873,14 @@ class _ControlsBar extends ConsumerWidget {
             label: context.t.forward,
             onTap: s.analysisActive ? controller.analysisMoveNext : null,
           ),
+          // Rated games have no options menu: Flip sits by Back and Forward
+          // (in practice it is in the menu).
+          if (!isLocal && !practiceMode)
+            KustAction(
+              icon: Icons.swap_vert_rounded,
+              label: context.t.flipBoard,
+              onTap: () => boardFlipped.value = !boardFlipped.value,
+            ),
         ],
       ),
     );
