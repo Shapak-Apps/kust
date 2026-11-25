@@ -2249,4 +2249,69 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get chatSentState => 'Sent';
+
+  @override
+  String challengeTitle(String name) {
+    return 'Challenge $name';
+  }
+
+  @override
+  String get challengeSend => 'Send challenge';
+
+  @override
+  String onlineWaiting(String name) {
+    return 'Waiting for $name to accept…';
+  }
+
+  @override
+  String get onlineCancel => 'Cancel challenge';
+
+  @override
+  String onlineInvite(String name) {
+    return '$name challenges you';
+  }
+
+  @override
+  String onlineYouPlay(String side, String clock) {
+    return 'You play $side · $clock';
+  }
+
+  @override
+  String get onlineYourMove => 'Your move';
+
+  @override
+  String onlineTheirMove(String name) {
+    return '$name to move';
+  }
+
+  @override
+  String get onlineDraw => 'Draw';
+
+  @override
+  String onlineDeclined(String name) {
+    return '$name declined the challenge';
+  }
+
+  @override
+  String get onlineCancelled => 'The challenge was cancelled';
+
+  @override
+  String get challengesSection => 'Challenges';
+
+  @override
+  String get onlineGamesSection => 'Your games';
+
+  @override
+  String onlinePlaying(String name) {
+    return 'Game with $name';
+  }
+
+  @override
+  String get onlineOpen => 'Open';
+
+  @override
+  String get onlineNotLegal => 'That move isn\'t allowed';
+
+  @override
+  String get onlineFriendsOnly => 'You can challenge friends only';
 }

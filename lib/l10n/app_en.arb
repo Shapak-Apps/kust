@@ -1258,5 +1258,74 @@
   "chatEdited": "edited",
   "chatEditTooLate": "Messages can be edited for one day only",
   "chatRead": "Read",
-  "chatSentState": "Sent"
+  "chatSentState": "Sent",
+  "challengeTitle": "Challenge {name}",
+  "challengeSend": "Send challenge",
+  "onlineWaiting": "Waiting for {name} to accept…",
+  "onlineCancel": "Cancel challenge",
+  "onlineInvite": "{name} challenges you",
+  "onlineYouPlay": "You play {side} · {clock}",
+  "onlineYourMove": "Your move",
+  "onlineTheirMove": "{name} to move",
+  "onlineDraw": "Draw",
+  "onlineDeclined": "{name} declined the challenge",
+  "onlineCancelled": "The challenge was cancelled",
+  "challengesSection": "Challenges",
+  "onlineGamesSection": "Your games",
+  "onlinePlaying": "Game with {name}",
+  "onlineOpen": "Open",
+  "onlineNotLegal": "That move isn't allowed",
+  "onlineFriendsOnly": "You can challenge friends only",
+  "@challengeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineWaiting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineInvite": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineYouPlay": {
+    "placeholders": {
+      "side": {
+        "type": "String"
+      },
+      "clock": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineTheirMove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineDeclined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlinePlaying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

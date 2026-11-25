@@ -2259,4 +2259,69 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get chatSentState => 'Отправлено';
+
+  @override
+  String challengeTitle(String name) {
+    return 'Вызов: $name';
+  }
+
+  @override
+  String get challengeSend => 'Отправить вызов';
+
+  @override
+  String onlineWaiting(String name) {
+    return 'Ждём, пока $name примет вызов…';
+  }
+
+  @override
+  String get onlineCancel => 'Отменить вызов';
+
+  @override
+  String onlineInvite(String name) {
+    return '$name вызывает вас';
+  }
+
+  @override
+  String onlineYouPlay(String side, String clock) {
+    return 'Вы играете $side · $clock';
+  }
+
+  @override
+  String get onlineYourMove => 'Ваш ход';
+
+  @override
+  String onlineTheirMove(String name) {
+    return 'Ход: $name';
+  }
+
+  @override
+  String get onlineDraw => 'Ничья';
+
+  @override
+  String onlineDeclined(String name) {
+    return '$name отклонил(а) вызов';
+  }
+
+  @override
+  String get onlineCancelled => 'Вызов отменён';
+
+  @override
+  String get challengesSection => 'Вызовы';
+
+  @override
+  String get onlineGamesSection => 'Ваши партии';
+
+  @override
+  String onlinePlaying(String name) {
+    return 'Партия с $name';
+  }
+
+  @override
+  String get onlineOpen => 'Открыть';
+
+  @override
+  String get onlineNotLegal => 'Такой ход невозможен';
+
+  @override
+  String get onlineFriendsOnly => 'Вызывать можно только друзей';
 }

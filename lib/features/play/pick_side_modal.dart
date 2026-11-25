@@ -3,14 +3,11 @@ import 'dart:math';
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
-import 'package:kust/widgets/piece_image.dart';
-import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/play/bot_time_row.dart';
 import 'package:kust/features/play/bots.dart';
 import 'package:kust/features/play/practice_mode_checkbox.dart';
 import 'package:kust/ui/kust_button.dart';
-import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -80,43 +77,16 @@ class _PickSideModalState extends State<PickSideModal> {
           ],
         ),
         const SizedBox(height: 24),
-        KustSectionLabel(context.t.playAs),
-        KustOption(
-          title: context.t.whiteName,
-          subtitle: context.t.youMoveFirst,
-          leading: PieceImage(
-            AppSettings.instance.pieceSet.value.asset('w', 'K'),
-            width: 36,
-            height: 36,
-          ),
-          selected: _side == Side.white,
-          onTap: () => setState(() => _side = Side.white),
-        ),
-        const SizedBox(height: 8),
-        KustOption(
-          title: context.t.blackName,
-          subtitle: context.t.botMovesFirst(bot.name),
-          leading: PieceImage(
-            AppSettings.instance.pieceSet.value.asset('b', 'K'),
-            width: 36,
-            height: 36,
-          ),
-          selected: _side == Side.black,
-          onTap: () => setState(() => _side = Side.black),
-        ),
-        const SizedBox(height: 8),
-        KustOption(
-          title: context.t.random,
-          subtitle: context.t.letFateDecide,
-          leading: const KustIconTile(
-            Icons.shuffle_rounded,
-            color: Color(0xFFB78CF2),
-          ),
-          selected: _side == null,
-          onTap: () => setState(() => _side = null),
+        SidePicker(
+          side: _side,
+          opponent: bot.name,
+          onChanged: (v) => setState(() => _side = v),
         ),
         const SizedBox(height: 16),
-        BotTimeRow(value: _time, onChanged: (v) => setState(() => _time = v)),
+        TimeControlRow(
+          value: _time,
+          onChanged: (v) => setState(() => _time = v),
+        ),
         const SizedBox(height: 8),
         PracticeModeCheckbox(
           value: _practice,

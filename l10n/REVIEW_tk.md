@@ -640,3 +640,20 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `chatEditTooLate` | Messages can be edited for one day only | Haty diňe bir günüň dowamynda üýtgedip bolýar |
 | `chatRead` | Read | Okaldy |
 | `chatSentState` | Sent | Iberildi |
+| `challengeTitle` | Challenge {name} | {name} oýna çagyr |
+| `challengeSend` | Send challenge | Çagyryş iber |
+| `onlineWaiting` | Waiting for {name} to accept… | {name} kabul etmegine garaşylýar… |
+| `onlineCancel` | Cancel challenge | Çagyryşy ýatyr |
+| `onlineInvite` | {name} challenges you | {name} sizi oýna çagyrýar |
+| `onlineYouPlay` | You play {side} · {clock} | Siz {side} oýnaýarsyňyz · {clock} |
+| `onlineYourMove` | Your move | Siziň gezegiňiz |
+| `onlineTheirMove` | {name} to move | {name} gezegi |
+| `onlineDraw` | Draw | Deňe deň |
+| `onlineDeclined` | {name} declined the challenge | {name} çagyryşy ret etdi |
+| `onlineCancelled` | The challenge was cancelled | Çagyryş ýatyryldy |
+| `challengesSection` | Challenges | Çagyryşlar |
+| `onlineGamesSection` | Your games | Oýunlaryňyz |
+| `onlinePlaying` | Game with {name} | {name} bilen oýun |
+| `onlineOpen` | Open | Aç |
+| `onlineNotLegal` | That move isn't allowed | Bu göçüm bolmaýar |
+| `onlineFriendsOnly` | You can challenge friends only | Diňe dostlaryňyzy çagyryp bilersiňiz |

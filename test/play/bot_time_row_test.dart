@@ -19,7 +19,7 @@ void main() {
         localizationsDelegates: kLocalizationDelegates,
         home: Scaffold(
           body: StatefulBuilder(
-            builder: (context, setState) => BotTimeRow(
+            builder: (context, setState) => TimeControlRow(
               value: picked,
               onChanged: (v) => setState(() {
                 picked = v;
