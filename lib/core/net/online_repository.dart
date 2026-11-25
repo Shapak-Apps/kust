@@ -25,7 +25,11 @@ class OnlineGame {
     required this.result,
     required this.reason,
     required this.clockOffset,
+    this.drawOffer,
   });
+
+  /// Who offers a draw now (username), if anyone.
+  final String? drawOffer;
 
   final int id;
   final String white;
@@ -97,6 +101,7 @@ class OnlineGame {
       ),
       result: json['result'] as String?,
       reason: json['reason'] as String?,
+      drawOffer: json['draw_offer'] as String?,
       clockOffset: serverNow == null
           ? Duration.zero
           : serverNow.difference(DateTime.now()),
@@ -218,6 +223,10 @@ class OnlineRepository {
   Future<OnlineGame> decline(int id) => _action(id, 'decline');
   Future<OnlineGame> resign(int id) => _action(id, 'resign');
   Future<OnlineGame> flag(int id) => _action(id, 'flag');
+
+  /// Offers a draw, or accepts the friend's offer.
+  Future<OnlineGame> draw(int id) => _action(id, 'draw');
+  Future<OnlineGame> declineDraw(int id) => _action(id, 'draw/decline');
 
   /// Plays [uci] as move [ply]; [end] says how it ends the game, if it
   /// does: checkmate, stalemate or draw.

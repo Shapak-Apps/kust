@@ -51,7 +51,8 @@ enum EndReason {
 
 enum GameStatus { loading, playing, checkmate, draw, resigned, timeout }
 
-enum GameMode { bot, local }
+/// online: a friend on another phone; their moves come from the server.
+enum GameMode { bot, local, online }
 
 class GameState {
   const GameState({
@@ -202,7 +203,7 @@ class GameState {
   /// move. (The setting is checked by the controller.)
   bool get canPremove =>
       status == GameStatus.playing &&
-      mode == GameMode.bot &&
+      mode != GameMode.local &&
       position.turn != playerSide &&
       !isSelfAnalysisActive;
 
@@ -621,6 +622,11 @@ class ChessController extends Notifier<GameState> {
   void _flagFell(Side fellSide) {
     if (_isDisposed) return;
     _stopClock();
+    // Online the server keeps time and says how it ends.
+    if (state.mode == GameMode.online) {
+      onOnlineFlag?.call();
+      return;
+    }
     // A bot still thinking has nothing left to play.
     _moveRequestId++;
     _engine.stopThinking();
@@ -1301,6 +1307,163 @@ class ChessController extends Notifier<GameState> {
     return true;
   }
 
+  /// Called with each move I make in an online game (and its 0-based ply),
+  /// to send it to the server.
+  void Function(NormalMove move, int ply)? onOnlineMove;
+
+  /// Called when a clock reaches zero online: the server decides.
+  void Function()? onOnlineFlag;
+
+  /// An online game against a friend: like a rated bot game (no help, no
+  /// take-backs, premoves, Back and Forward), but the other side's moves
+  /// come from [applyOnlineMove]. [uciMoves] are the moves already played.
+  void startOnlineGame({
+    required Side playerSide,
+    required TimeControl timeControl,
+    List<String> uciMoves = const [],
+  }) {
+    _line = const [];
+    _moveRequestId++;
+    _evalRequestId++;
+    _accuracyEpoch++;
+    _resetFeedbackQueue();
+    _initClocks(timeControl);
+    final base = timeControl.base;
+    state = GameState(
+      position: Chess.fromSetup(Setup.parseFen(kStartFen)),
+      mode: GameMode.online,
+      bot: null,
+      playerSide: playerSide,
+      moves: const [],
+      status: GameStatus.playing,
+      timeControl: timeControl,
+      whiteTimeLeft: base,
+      blackTimeLeft: base,
+      practiceMode: false,
+      evaluationEnabled: false,
+      moveFeedbackEnabled: false,
+      showBestEnabled: false,
+    );
+    _rebuildRepetitions(const <Position>[], state.position);
+    for (final uci in uciMoves) {
+      applyOnlineMove(uci, quiet: true);
+    }
+    _playSound('game-start.wav');
+  }
+
+  /// Plays a move that came from the server (the friend's, or mine from
+  /// another phone), with its sound; then my premove, if one is queued.
+  /// [quiet] replays without sound, clock or premove (opening a game).
+  void applyOnlineMove(String uci, {bool quiet = false}) {
+    if (state.mode != GameMode.online || state.status != GameStatus.playing) {
+      return;
+    }
+    final move = _parseUciMove(uci, state.position);
+    if (!state.position.isLegal(move)) return;
+    if (!quiet && !_chargeElapsed(publish: false)) return;
+    final before = state.position;
+    final after = before.play(move);
+    final capturedSquare = _capturedSquareFor(before, move);
+    final capturedPiece = capturedSquare == null
+        ? null
+        : before.board.pieceAt(capturedSquare);
+    final san = moveToSan(
+      before: before,
+      move: move,
+      after: after,
+      capturedSquare: capturedSquare,
+    );
+    if (!quiet) _playMoveSound(move, before, after, true);
+    final repetitions = _registerPosition(after);
+    final status = _statusFor(after, repetitions);
+    state = state.copyWith(
+      position: after,
+      history: [...state.history, before],
+      moves: [
+        ...state.moves,
+        MoveRecord(
+          side: before.turn,
+          san: san,
+          move: move,
+          capturedPiece: capturedPiece,
+        ),
+      ],
+      moveSquares: [move.from, move.to],
+      status: status,
+      lastMove: move,
+      lastMoveInstant: quiet,
+      capturedPiece: capturedPiece,
+      capturedSquare: capturedSquare,
+      clearCapture: capturedPiece == null,
+      wasUndo: false,
+      endReason: _getEndReason(after, repetitions, status),
+      clearAnalysis: true,
+    );
+    if (quiet) return;
+    if (state.status != GameStatus.playing) {
+      _stopClock();
+      _playGameEndSound(after);
+      state = state.copyWith(premoves: const []);
+    } else {
+      _addIncrement(before.turn);
+      _playPremove();
+    }
+  }
+
+  /// The server's clocks, so both phones show the same time.
+  void syncOnlineClocks({required Duration white, required Duration black}) {
+    if (state.mode != GameMode.online) return;
+    _whiteClock = white;
+    _blackClock = black;
+    _lastTick = DateTime.now();
+    _publishClock();
+  }
+
+  /// The server ended the game: resign, time, agreement, or a mate or
+  /// draw seen on the other phone. [winner] is null for a draw.
+  void endOnline({required Side? winner, required String reason}) {
+    if (state.mode != GameMode.online || state.status != GameStatus.playing) {
+      return;
+    }
+    _stopClock();
+    final me = state.playerSide;
+    state = switch (reason) {
+      'resign' => state.copyWith(
+        status: GameStatus.resigned,
+        resignedSide: winner?.opposite,
+        premoves: const [],
+        clearSelection: true,
+      ),
+      'timeout' => state.copyWith(
+        status: GameStatus.timeout,
+        flagFell: winner?.opposite,
+        premoves: const [],
+        clearSelection: true,
+      ),
+      _ when winner == null => state.copyWith(
+        status: GameStatus.draw,
+        endReason: EndReason.drawn,
+        premoves: const [],
+        clearSelection: true,
+      ),
+      _ => state.copyWith(
+        status: GameStatus.checkmate,
+        premoves: const [],
+        clearSelection: true,
+      ),
+    };
+    SoundService.instance.playJingle(
+      winner == null
+          ? 'game-draw.wav'
+          : winner == me
+          ? 'game-win.wav'
+          : 'game-end.wav',
+    );
+  }
+
+  /// The finished online game is in the history as [id], for Review.
+  void markOnlineSaved(String id) => state = state.copyWith(savedGameId: id);
+
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _line = const [];
     _moveRequestId++;
@@ -1839,7 +2002,9 @@ class ChessController extends Notifier<GameState> {
   /// Keeps the game in progress on disk, so it can be continued after the
   /// app was closed. Written after each move, cleared when the game ends.
   void _keepLiveGame(GameState previous, GameState next) {
-    if (next.status == GameStatus.loading) return;
+    if (next.status == GameStatus.loading || next.mode == GameMode.online) {
+      return;
+    }
     final store = LiveGameStore.instance;
     if (next.status != GameStatus.playing || next.moves.isEmpty) {
       if (previous.status == GameStatus.playing || previous.moves.isNotEmpty) {
@@ -1877,7 +2042,8 @@ class ChessController extends Notifier<GameState> {
   Future<void> _recordFinishedGame(GameState game) async {
     // Not tied to this controller staying alive: a finished game is saved
     // even if the screen was left in the same moment.
-    if (game.moves.isEmpty) return;
+    // An online game is saved by its own screen, with the friend's name.
+    if (game.moves.isEmpty || game.mode == GameMode.online) return;
     final isLocal = game.mode == GameMode.local;
 
     final String result;
@@ -2282,6 +2448,10 @@ class ChessController extends Notifier<GameState> {
     );
 
     _cancelSuggestion();
+    // Online, every move of mine (premoves too) goes to the friend's phone.
+    if (state.mode == GameMode.online) {
+      onOnlineMove?.call(move, state.moves.length - 1);
+    }
     if (state.status == GameStatus.playing) {
       _addIncrement(oldPosition.turn);
       // The engine works one request at a time, in order: rate the move

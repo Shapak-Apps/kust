@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/game_history_store.dart';
+import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/features/history/history_analysis.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_controls.dart';
@@ -374,6 +377,18 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A game with a friend: their own photo.
+    if (game.botId == 'online' && game.botName != null) {
+      final name = game.botName!;
+      return FutureBuilder<String?>(
+        future: PlayersRepository.instance.avatarKeyOf(name),
+        builder: (_, snap) => PlayerAvatar(
+          size: 44,
+          name: name,
+          photo: avatarImage(avatarUrlFor(snap.data)),
+        ),
+      );
+    }
     final path = game.botId == null ? null : 'assets/bots/${_asset(game)}.webp';
     // Avatars here are square: no corner rounding.
     if (path == null) {

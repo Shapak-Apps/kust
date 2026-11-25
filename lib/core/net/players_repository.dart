@@ -135,6 +135,18 @@ class PlayersRepository {
     );
   }
 
+  final Map<String, Future<String?>> _avatars = {};
+
+  /// A player's photo key, asked once per run (for lists of games).
+  Future<String?> avatarKeyOf(String username) =>
+      _avatars[username] ??= player(username).then(
+        (p) => p.player.avatarKey,
+        onError: (_) {
+          _avatars.remove(username);
+          return null;
+        },
+      );
+
   /// Sends a friend request, or accepts theirs.
   Future<Friendship> addFriend(String username) async {
     final json = await auth.authed(
