@@ -26,6 +26,7 @@ import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/skeleton.dart';
 
 const Duration _opponentDelay = Duration(milliseconds: 350);
 const Duration _mistakeDelay = Duration(milliseconds: 700);
@@ -438,7 +439,7 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
       );
     }
     if (_session == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: KustLoader());
     }
 
     final finished = _s.isFinished;

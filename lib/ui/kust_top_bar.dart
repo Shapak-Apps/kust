@@ -41,6 +41,52 @@ class KustTopBar extends StatelessWidget {
   /// chess.com. The screen lays its content out under the bar.
   final bool translucent;
 
+  /// The old layout, for a bar showing the logo: it sits in the middle.
+  Widget _centred(KustTokens k) => Row(
+    children: [
+      SizedBox(
+        width: kMinTap * 2 + 8,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: leading ?? const SizedBox.shrink(),
+        ),
+      ),
+      Expanded(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Semantics(header: true, label: title, child: brand),
+            if (subtitle != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: k.caption,
+              ),
+            ],
+          ],
+        ),
+      ),
+      SizedBox(
+        width: kMinTap * 2 + 8,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < trailing.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                trailing[i],
+              ],
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final k = context.k;
@@ -73,58 +119,52 @@ class KustTopBar extends StatelessWidget {
         // At least 44 high, and taller when big text needs the room.
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44),
-          child: Row(
-            children: [
-              SizedBox(
-                width: kMinTap * 2 + 8,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: leading ?? const SizedBox.shrink(),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
+          child: brand != null
+              ? _centred(k)
+              : Row(
                   children: [
-                    if (brand != null)
-                      Semantics(header: true, label: title, child: brand)
-                    else
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.body.copyWith(fontWeight: FontWeight.w800),
+                    // The title starts after the back button, as on
+                    // chess.com; with no button it starts at the edge.
+                    if (leading != null) ...[
+                      leading!,
+                      const SizedBox(width: 16),
+                    ],
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // A long title shrinks to fit; a short one keeps
+                          // its size.
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              style: k.body.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ),
+                          if (subtitle != null)
+                            Text(
+                              subtitle!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: k.caption,
+                            ),
+                        ],
                       ),
-                    if (subtitle != null) ...[
-                      if (brand != null) const SizedBox(height: 10),
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.caption,
-                      ),
+                    ),
+                    for (var i = 0; i < trailing.length; i++) ...[
+                      SizedBox(width: i == 0 ? 12 : 8),
+                      trailing[i],
                     ],
                   ],
                 ),
-              ),
-              SizedBox(
-                width: kMinTap * 2 + 8,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < trailing.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        trailing[i],
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       );
     }

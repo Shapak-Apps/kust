@@ -26,6 +26,7 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
 
@@ -521,7 +522,7 @@ class _FormRow extends StatelessWidget {
         ],
       ),
     );
-    return onTap == null ? row : Pressable(onTap: onTap, child: row);
+    return onTap == null ? row : PressHighlight(onTap: onTap, child: row);
   }
 }
 

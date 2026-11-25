@@ -11,7 +11,7 @@ class KustButton3D extends StatefulWidget {
     required this.onTap,
     this.expand = false,
     this.icon,
-    this.height = 52,
+    this.height = 50,
     this.colors = green,
   });
 
@@ -52,7 +52,7 @@ class KustButton3D extends StatefulWidget {
 class _KustButton3DState extends State<KustButton3D> {
   bool _down = false;
 
-  static const double _lip = 5;
+  static const double _lip = 4;
 
   void _set(bool down) {
     if (_down != down) setState(() => _down = down);
@@ -67,7 +67,7 @@ class _KustButton3DState extends State<KustButton3D> {
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 17,
-        fontWeight: FontWeight.w900,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
         color: enabled ? widget.colors.ink : const Color(0xFF8E8C86),
         shadows: enabled
@@ -94,12 +94,14 @@ class _KustButton3DState extends State<KustButton3D> {
         // The face stands on a darker lip; pressed, it sinks onto it and
         // the lip disappears, keeping the same overall height.
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 70),
+          // Sinks fast, comes back a little slower.
+          duration: Duration(milliseconds: _down ? 70 : 120),
+          curve: _down ? Curves.easeOut : Curves.easeOutCubic,
           margin: EdgeInsets.only(top: _down ? _lip : 0),
           padding: EdgeInsets.only(bottom: _down ? 0 : _lip),
           decoration: BoxDecoration(
             color: enabled ? widget.colors.lip : const Color(0xFF2A2724),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Container(
             height: widget.height,
@@ -113,7 +115,7 @@ class _KustButton3DState extends State<KustButton3D> {
                     )
                   : null,
               color: enabled ? null : const Color(0xFF3A3632),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,

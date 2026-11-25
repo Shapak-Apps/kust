@@ -11,6 +11,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/felt_header.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
 
@@ -180,8 +181,7 @@ class GameTile extends StatelessWidget {
           '${describeResult(game, context.t)}'
           '${accuracy == null ? '' : ', ${context.t.semAccuracy(accuracy.toStringAsFixed(1))}'}',
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: PressHighlight(
         onTap: () =>
             context.push('/history/${game.id}', extra: readOnly ? game : null),
         onLongPress: readOnly ? null : () => _confirmDelete(context),

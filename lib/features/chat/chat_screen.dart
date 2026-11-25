@@ -17,6 +17,7 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/skeleton.dart';
 
 /// My bubbles: the app's deep green, with white text.
 const Color _mine = Color(0xFF1E6B47);
@@ -600,7 +601,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _list(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: KustLoader());
     }
     if (_messages.isEmpty) {
       // Nothing said yet: the note sits just above the input, as quiet text.

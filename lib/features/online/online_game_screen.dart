@@ -31,6 +31,7 @@ import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
+import 'package:kust/ui/skeleton.dart';
 
 /// A live game with a friend, on the same board as a game against a bot
 /// (no practice help): the same sounds, premoves, Back and Forward, Flip
@@ -355,7 +356,7 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
             ),
             const _ReconnectingStrip(),
             if (g == null)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
+              const Expanded(child: Center(child: KustLoader()))
             else ...[
               MoveStrip(
                 labels: [
