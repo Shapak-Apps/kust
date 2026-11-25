@@ -165,30 +165,54 @@ class _MessageMenuState extends State<_MessageMenu>
     // low on the screen and down when it is high. A message too wide to
     // leave room beside gets the card under it (or over the bar).
     final below = rect.bottom + widget.belowBubble;
-    final barAbove = rect.top - _gap - _barHeight >= top;
-    final barTop = (barAbove ? rect.top - _gap - _barHeight : below + _gap)
-        .clamp(top, bottom - _barHeight);
     double side(double width) => mine
         ? (rect.right - width).clamp(_margin, size.width - width - _margin)
         : rect.left.clamp(_margin, size.width - width - _margin);
-    final barLeft = side(barWidth);
-
     final room = mine ? rect.left - _margin : size.width - rect.right - _margin;
     final beside = room >= _menuWidth + _gap;
     final low = rect.center.dy > (top + bottom) / 2;
+
+    double barTop;
+    double barLeft;
     final double menuLeft;
     final double menuTop;
     final Alignment opensFrom;
     if (beside) {
-      menuLeft = mine ? rect.left - _gap - _menuWidth : rect.right + _gap;
-      menuTop = (low ? below - menuHeight : rect.top).clamp(
+      // As on Telegram: one stack beside the message, the reactions on
+      // top, then the card; it grows up from the message when the message
+      // is low on the screen, down when it is high. The bar lines up with
+      // the card's edge nearest the message.
+      final stack = _barHeight + _gap + menuHeight;
+      final stackTop = (low ? below - stack : rect.top).clamp(
         top,
-        bottom - menuHeight,
+        bottom - stack,
       );
+      barTop = stackTop;
+      menuTop = stackTop + _barHeight + _gap;
+      menuLeft = mine ? rect.left - _gap - _menuWidth : rect.right + _gap;
+      barLeft = (mine ? menuLeft + _menuWidth - barWidth : menuLeft).clamp(
+        _margin,
+        size.width - barWidth - _margin,
+      );
+      // A bar wider than the room beside can't sit on the message: then
+      // it goes just above the message instead.
+      final bar = Rect.fromLTWH(barLeft, barTop, barWidth, _barHeight);
+      if (bar.overlaps(rect)) {
+        barTop = (rect.top - _gap - _barHeight).clamp(top, bottom - _barHeight);
+        barLeft = side(barWidth);
+      }
       opensFrom = mine
           ? (low ? Alignment.bottomRight : Alignment.topRight)
           : (low ? Alignment.bottomLeft : Alignment.topLeft);
     } else {
+      // Too wide for room beside: the bar over the message, the card under
+      // it (or over the bar when there's no room under).
+      final barAbove = rect.top - _gap - _barHeight >= top;
+      barTop = (barAbove ? rect.top - _gap - _barHeight : below + _gap).clamp(
+        top,
+        bottom - _barHeight,
+      );
+      barLeft = side(barWidth);
       menuLeft = side(_menuWidth);
       final under = (barAbove ? below : barTop + _barHeight) + _gap;
       final over = (barAbove ? barTop : rect.top) - _gap - menuHeight;
