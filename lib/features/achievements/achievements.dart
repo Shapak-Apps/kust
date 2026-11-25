@@ -9,9 +9,10 @@ import 'package:kust/l10n/app_locale.dart';
 /// common ones most players get, yellow for rare ones that take a
 /// challenge, red for mythic ones only a few reach.
 enum AchievementTier {
-  common(Color(0xFF4CAF50), Colors.white),
-  rare(Color(0xFFFFBB00), Color(0xFF17181A)),
-  mythic(Color(0xFFE5484D), Colors.white);
+  // Calm, slightly muted: they read as a tier, not as decoration.
+  common(Color(0xFF5DAE7E), Colors.white),
+  rare(Color(0xFFD9A441), Color(0xFF17181A)),
+  mythic(Color(0xFFD9655D), Colors.white);
 
   const AchievementTier(this.color, this.onColor);
 
