@@ -12,7 +12,26 @@ class KustButton3D extends StatefulWidget {
     this.expand = false,
     this.icon,
     this.height = 52,
+    this.colors = green,
   });
+
+  /// Face top, face and lip; green by default.
+  final ({Color top, Color face, Color lip, Color ink}) colors;
+
+  static const green = (
+    top: faceTop,
+    face: KustButton3D.face,
+    lip: lipColor,
+    ink: Colors.white,
+  );
+
+  /// The brand's gold, with dark text (Challenge).
+  static const gold = (
+    top: Color(0xFFFFCB3D),
+    face: Color(0xFFFFBB00),
+    lip: Color(0xFFB57F00),
+    ink: Color(0xFF17181A),
+  );
 
   final String label;
   final VoidCallback? onTap;
@@ -48,7 +67,7 @@ class _KustButton3DState extends State<KustButton3D> {
         fontSize: 17,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
-        color: enabled ? Colors.white : const Color(0xFF8E8C86),
+        color: enabled ? widget.colors.ink : const Color(0xFF8E8C86),
         shadows: enabled
             ? const [Shadow(color: Color(0x55000000), offset: Offset(0, 1.5))]
             : null,
@@ -77,7 +96,7 @@ class _KustButton3DState extends State<KustButton3D> {
           margin: EdgeInsets.only(top: _down ? _lip : 0),
           padding: EdgeInsets.only(bottom: _down ? 0 : _lip),
           decoration: BoxDecoration(
-            color: enabled ? KustButton3D.lipColor : const Color(0xFF2A2724),
+            color: enabled ? widget.colors.lip : const Color(0xFF2A2724),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
@@ -85,10 +104,10 @@ class _KustButton3DState extends State<KustButton3D> {
             padding: const EdgeInsets.symmetric(horizontal: 22),
             decoration: BoxDecoration(
               gradient: enabled
-                  ? const LinearGradient(
+                  ? LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [KustButton3D.faceTop, KustButton3D.face],
+                      colors: [widget.colors.top, widget.colors.face],
                     )
                   : null,
               color: enabled ? null : const Color(0xFF3A3632),
@@ -99,7 +118,7 @@ class _KustButton3DState extends State<KustButton3D> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (widget.icon != null) ...[
-                  Icon(widget.icon, color: Colors.white, size: 22),
+                  Icon(widget.icon, color: widget.colors.ink, size: 22),
                   const SizedBox(width: 8),
                 ],
                 Flexible(child: label),
