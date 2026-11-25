@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/features/auth/auth_support.dart';
+import 'package:kust/features/onboarding/onboarding_level.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button_3d.dart';
 import 'package:kust/ui/kust_text_field.dart';
@@ -58,7 +61,18 @@ class _LoginScreenState extends State<LoginScreen> {
       await pullServerProfile(account);
       if (!mounted) return;
       if (account.emailVerified) {
-        goAfterAuth(context, widget.next);
+        // An existing account has its name, username and rating already:
+        // no onboarding, straight home.
+        var next = widget.next;
+        if (next != null && next.startsWith('/onboarding')) {
+          await completeOnboarding(
+            prefs: await SharedPreferences.getInstance(),
+            ratingStore: PlayerRatingStore.instance,
+          );
+          next = null;
+        }
+        if (!mounted) return;
+        goAfterAuth(context, next);
       } else {
         context.pushReplacement(withNext('/verify', widget.next));
       }

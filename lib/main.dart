@@ -13,6 +13,7 @@ import 'package:kust/core/net/chat_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/profile_sync.dart';
 import 'package:kust/core/net/push_service.dart';
+import 'package:kust/core/net/token_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/core/net/connection_service.dart';
 import 'package:kust/core/net/live_socket.dart';
@@ -78,7 +79,10 @@ Future<void> _start() async {
   unawaited(precacheGameSvgs());
   unawaited(openingBook());
   final prefs = await SharedPreferences.getInstance();
-  final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+  // Signed in already (an account on this phone): never the welcome again.
+  final onboardingCompleted =
+      (prefs.getBool('onboarding_completed') ?? false) ||
+      (ServerConfig.enabled && HiveAccountCache().read() != null);
   final router = createRouter(onboardingCompleted: onboardingCompleted);
   runApp(ProviderScope(child: MyApp(router: router)));
   if (ServerConfig.enabled) {
