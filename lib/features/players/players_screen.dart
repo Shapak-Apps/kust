@@ -14,6 +14,7 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/kust_list_row.dart';
 import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/ui/skeleton.dart';
@@ -366,76 +367,40 @@ class PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return PressHighlight(
+    return KustListRow(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                PlayerAvatar(
-                  size: 44,
-                  name: player.displayName,
-                  photo: avatarImage(avatarUrlFor(player.avatarKey)),
-                ),
-                if (online)
-                  Positioned(
-                    right: -3,
-                    bottom: -3,
-                    child: Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: k.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: k.bg, width: 2.5),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // The name with the country's flag after it.
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          player.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      if (player.country != null) ...[
-                        const SizedBox(width: 6),
-                        CountryFlag(player.country!, height: 18),
-                      ],
-                    ],
-                  ),
-                  Text(
-                    '@${player.username}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.caption,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            trailing ??
-                Text(
-                  '${player.rating}',
-                  style: k.body.copyWith(fontWeight: FontWeight.w800),
-                ),
-          ],
+      leading: OnlineDot(
+        online: online,
+        child: PlayerAvatar(
+          size: 36,
+          name: player.displayName,
+          photo: avatarImage(avatarUrlFor(player.avatarKey)),
         ),
       ),
+      // The name with the country's flag after it.
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              player.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: k.rowTitle,
+            ),
+          ),
+          if (player.country != null) ...[
+            const SizedBox(width: 6),
+            CountryFlag(player.country!, height: 14),
+          ],
+        ],
+      ),
+      meta: Text(
+        '@${player.username}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: k.caption,
+      ),
+      trailing: trailing ?? Text('${player.rating}', style: k.number),
     );
   }
 }
@@ -464,8 +429,7 @@ class FriendRequestCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
         color: k.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: k.line),
+        borderRadius: BorderRadius.circular(KustSpace.rCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

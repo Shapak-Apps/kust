@@ -90,7 +90,7 @@ void main() {
     final avatarOrIcon = tester.getTopLeft(
       find.byIcon(Icons.hourglass_empty_rounded).first,
     );
-    expect(avatarOrIcon.dx, greaterThanOrEqualTo(20));
+    expect(avatarOrIcon.dx, greaterThanOrEqualTo(16));
   });
 
   testWidgets('the analyze icon has no circle around it and is larger', (

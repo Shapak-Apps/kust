@@ -206,7 +206,7 @@ class _LineChoice extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            borderRadius: BorderRadius.circular(KustSpace.rCard),
             border: Border.all(
               color: selected ? k.accent : k.line,
               width: selected ? 2 : 1,

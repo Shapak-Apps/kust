@@ -14,7 +14,7 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/player_avatar.dart';
-import 'package:kust/ui/press_highlight.dart';
+import 'package:kust/ui/kust_list_row.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// The bell on the home screen, beside the avatar: a red count of what is
@@ -312,76 +312,60 @@ class _MessageNotice extends StatelessWidget {
     final d = chat.last.createdAt;
     final when =
         '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-    return PressHighlight(
+    return KustListRow(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            PlayerAvatar(
-              size: 48,
-              name: p.displayName,
-              photo: avatarImage(avatarUrlFor(p.avatarKey)),
+      leading: PlayerAvatar(
+        size: 36,
+        name: p.displayName,
+        photo: avatarImage(avatarUrlFor(p.avatarKey)),
+      ),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              t.chatTextedYou(p.displayName),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: k.rowTitle,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          t.chatTextedYou(p.displayName),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      if (p.country != null) ...[
-                        const SizedBox(width: 6),
-                        CountryFlag(p.country!, height: 14),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    chat.last.body,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.caption,
-                  ),
-                ],
+          ),
+          if (p.country != null) ...[
+            const SizedBox(width: 6),
+            CountryFlag(p.country!, height: 14),
+          ],
+        ],
+      ),
+      meta: Text(
+        chat.last.body,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: k.caption,
+      ),
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(when, style: k.caption.copyWith(color: KustTokens.gold)),
+          const SizedBox(height: 4),
+          Container(
+            constraints: const BoxConstraints(minWidth: 20),
+            height: 20,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3CB77C),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${chat.unread}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
               ),
             ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(when, style: k.caption.copyWith(color: KustTokens.gold)),
-                const SizedBox(height: 4),
-                Container(
-                  constraints: const BoxConstraints(minWidth: 22),
-                  height: 22,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3CB77C),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Text(
-                    '${chat.unread}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -402,44 +386,29 @@ class _GameNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return PressHighlight(
+    return KustListRow(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFFDE9C14).withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.sports_esports_rounded,
-                color: Color(0xFFDE9C14),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: k.caption),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: k.muted),
-          ],
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: const Color(0xFFDE9C14).withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: const Icon(
+          Icons.sports_esports_rounded,
+          size: 20,
+          color: Color(0xFFDE9C14),
         ),
       ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: k.rowTitle,
+      ),
+      meta: Text(subtitle, style: k.caption),
+      trailing: Icon(Icons.chevron_right_rounded, color: k.muted),
     );
   }
 }

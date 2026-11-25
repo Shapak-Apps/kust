@@ -139,7 +139,11 @@ class KustIconTile extends StatelessWidget {
     super.key,
     this.radius = KustSpace.rSmall,
     this.color,
+    this.size = 44,
   });
+
+  /// The tile's side.
+  final double size;
 
   final IconData icon;
 
@@ -154,14 +158,14 @@ class KustIconTile extends StatelessWidget {
     final k = context.k;
     if (color case final c?) {
       return SizedBox(
-        width: 44,
-        height: 44,
+        width: size,
+        height: size,
         child: Icon(icon, size: 32, color: c),
       );
     }
     return Container(
-      width: 44,
-      height: 44,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: k.surfaceAlt,
         borderRadius: BorderRadius.circular(radius),
@@ -396,8 +400,11 @@ class KustCard extends StatelessWidget {
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: k.surface,
-        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-        border: Border.all(color: k.line),
+        borderRadius: BorderRadius.circular(KustSpace.rCard),
+        // The dark surface stands out from the page by itself.
+        border: Theme.of(context).brightness == Brightness.dark
+            ? null
+            : Border.all(color: k.line),
       ),
       child: child,
     );
