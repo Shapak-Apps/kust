@@ -406,93 +406,91 @@ class _ContinueCard extends StatelessWidget {
             : position.turn == playerSide
             ? t.yourMove
             : t.sideToMove(bot!.name);
+        // No card: a section of the page like the rest, its title with a
+        // close button, the game in a row, and a full-width Continue.
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: k.surface,
-              borderRadius: BorderRadius.circular(KustSpace.rLarge),
-              border: Border.all(color: k.line),
-            ),
-            child: Row(
-              children: [
-                // As tall as the card's content, so the board fills the card.
-                SizedBox(
-                  width: 112,
-                  child: Pressable(
-                    onTap: () => onContinue(game),
-                    child: BoardThumbnail(
-                      position: position,
-                      flipped: !game.isLocal && playerSide == Side.black,
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      t.continueGame,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.section,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                  Semantics(
+                    button: true,
+                    label: t.discardGame,
+                    excludeSemantics: true,
+                    child: Pressable(
+                      onTap: () => _remove(context, game),
+                      child: SizedBox.square(
+                        dimension: 36,
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 22,
+                          color: k.muted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Pressable(
+                onTap: () => onContinue(game),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 72,
+                      child: BoardThumbnail(
+                        position: position,
+                        flipped: !game.isLocal && playerSide == Side.black,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              t.continueGame,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: k.body.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          Text(
+                            t.continueGameSub(
+                              who,
+                              (game.uciMoves.length + 1) ~/ 2,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: k.rowTitle,
                           ),
-                          Semantics(
-                            button: true,
-                            label: t.discardGame,
-                            excludeSemantics: true,
-                            child: Pressable(
-                              onTap: () => _remove(context, game),
-                              child: SizedBox.square(
-                                dimension: 32,
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 20,
-                                  color: k.muted,
-                                ),
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            toMove,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: k.captionStrong.copyWith(
+                              color: position.turn == playerSide || game.isLocal
+                                  ? k.success
+                                  : k.muted,
                             ),
                           ),
                         ],
                       ),
-                      Text(
-                        t.continueGameSub(who, (game.uciMoves.length + 1) ~/ 2),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.caption,
-                      ),
-                      Text(
-                        toMove,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.caption.copyWith(
-                          color: position.turn == playerSide || game.isLocal
-                              ? k.success
-                              : k.muted,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      KustButton(
-                        label: t.continueButton,
-                        icon: Icons.play_arrow_rounded,
-                        height: 40,
-                        onTap: () => onContinue(game),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 14),
+              KustButton(
+                label: t.continueButton,
+                icon: Icons.play_arrow_rounded,
+                onTap: () => onContinue(game),
+              ),
+            ],
           ),
         );
       },
