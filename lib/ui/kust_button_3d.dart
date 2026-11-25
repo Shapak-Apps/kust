@@ -28,9 +28,10 @@ class KustButton3D extends StatefulWidget {
   /// The quiet second action (Message, Cancel): the dark surface grey,
   /// standing on its own darker lip like the others.
   static const dark = (
-    top: Color(0xFF3B3733),
-    face: Color(0xFF34302C),
-    lip: Color(0xFF1F1C19),
+    top: Color(0xFF45403B),
+    face: Color(0xFF3A3632),
+    // Darker than the page, so the lip shows.
+    lip: Color(0xFF0F0E0D),
     ink: Color(0xFFF2F0EA),
   );
 
@@ -70,10 +71,10 @@ class _KustButton3DState extends State<KustButton3D> {
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null;
+    // A long label in a narrow button gets smaller instead of "…".
     final label = Text(
       widget.label,
       maxLines: 1,
-      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 17,
         fontWeight: FontWeight.w700,
@@ -134,7 +135,9 @@ class _KustButton3DState extends State<KustButton3D> {
                   Icon(widget.icon, color: widget.colors.ink, size: 22),
                   const SizedBox(width: 8),
                 ],
-                Flexible(child: label),
+                Flexible(
+                  child: FittedBox(fit: BoxFit.scaleDown, child: label),
+                ),
               ],
             ),
           ),

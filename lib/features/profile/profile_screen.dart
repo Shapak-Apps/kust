@@ -924,8 +924,10 @@ class _WholeWords extends StatelessWidget {
       painter.dispose();
     }
     final size = style.fontSize ?? 12;
-    final fitted = widest > width
-        ? (size * width / widest).clamp(8.0, size)
+    // A little room to spare: a word that only just fits can still wrap.
+    final room = width * 0.92;
+    final fitted = widest > room
+        ? (size * room / widest).clamp(8.0, size)
         : size;
     return Text(
       text,
