@@ -25,12 +25,12 @@ class KustButton3D extends StatefulWidget {
     ink: Colors.white,
   );
 
-  /// The brand's gold, with dark text (Challenge).
+  /// The brand's gold, with white text like the green (Challenge).
   static const gold = (
     top: Color(0xFFFFCB3D),
     face: Color(0xFFFFBB00),
     lip: Color(0xFFB57F00),
-    ink: Color(0xFF17181A),
+    ink: Colors.white,
   );
 
   final String label;
