@@ -130,7 +130,15 @@ class GamePlayerBar extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (flag != null) ...[const SizedBox(width: 6), flag!],
+                      if (flag != null) ...[
+                        const SizedBox(width: 6),
+                        // Flags draw from their top edge; a touch lower
+                        // they sit on the middle of the name.
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: flag!,
+                        ),
+                      ],
                       if (thinking != null) ...[
                         const SizedBox(width: 8),
                         Flexible(child: thinking!),
@@ -144,7 +152,11 @@ class GamePlayerBar extends StatelessWidget {
                         Text(
                           rating!,
                           maxLines: 1,
-                          style: k.caption.copyWith(fontSize: 13),
+                          style: k.caption.copyWith(
+                            fontSize: 13,
+                            height: 1.2,
+                            leadingDistribution: TextLeadingDistribution.even,
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
