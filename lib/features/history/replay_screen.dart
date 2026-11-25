@@ -430,9 +430,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
             child: SizedBox(
               height: 18,
+              // Centred, as in a game.
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: Alignment.center,
                 child: Text(
+                  textAlign: TextAlign.center,
                   switch (loadedOpeningBook) {
                     final book? =>
                       openingOf(

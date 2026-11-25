@@ -21,12 +21,13 @@ void main() {
   });
 
   group('sets', () {
-    test('there are four: two drawn and two textured', () {
+    test('there are five: three drawn and two textured', () {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
         'Shaded',
         'Graphite',
         'Brushed',
+        'Flat',
       ]);
       expect(PieceSet.classic.asset('w', 'K'), 'assets/pieces/wK.svg');
       expect(
@@ -56,6 +57,7 @@ void main() {
             anyOf(
               contains('viewBox="0 0 45 45"'),
               contains('viewBox="2 1.5 41 41"'),
+              contains('viewBox="2 1.2 20 20"'),
             ),
             reason: asset,
           );
@@ -182,7 +184,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('PIECES'), findsOneWidget);
-      expect(find.byType(PieceSetSwatch), findsNWidgets(4));
+      expect(find.byType(PieceSetSwatch), findsNWidgets(5));
       bool selected(PieceSet set) => tester
           .widget<PieceSetSwatch>(
             find.byWidgetPredicate((w) => w is PieceSetSwatch && w.set == set),

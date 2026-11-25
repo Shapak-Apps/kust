@@ -25,6 +25,15 @@ class KustButton3D extends StatefulWidget {
     ink: Colors.white,
   );
 
+  /// The quiet second action (Message, Cancel): the dark surface grey,
+  /// standing on its own darker lip like the others.
+  static const dark = (
+    top: Color(0xFF3B3733),
+    face: Color(0xFF34302C),
+    lip: Color(0xFF1F1C19),
+    ink: Color(0xFFF2F0EA),
+  );
+
   /// The brand's gold, with white text like the green (Challenge).
   static const gold = (
     // A warm, slightly deeper gold than the logo's, easy on the eye with

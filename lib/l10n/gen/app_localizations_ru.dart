@@ -598,6 +598,9 @@ class AppL10nRu extends AppL10n {
   String get boardWood => 'Дерево';
 
   @override
+  String get boardSoft => 'Мягкая';
+
+  @override
   String get pieceClassic => 'Классические';
 
   @override
@@ -608,6 +611,9 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get pieceBrushed => 'Шлифованные';
+
+  @override
+  String get pieceFlat => 'Плоские';
 
   @override
   String get histNoGames => 'Партий пока нет';

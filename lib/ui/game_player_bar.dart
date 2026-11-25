@@ -72,17 +72,17 @@ class GamePlayerBar extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: SizedBox(
-                width: 14 + 6.0 * (group.length - 1),
-                height: 14,
+                width: 18 + 8.0 * (group.length - 1),
+                height: 18,
                 child: Stack(
                   children: [
                     for (var i = 0; i < group.length; i++)
                       Positioned(
-                        left: 6.0 * i,
+                        left: 8.0 * i,
                         child: PieceImage(
                           capturedAsset(group[i]),
-                          width: 14,
-                          height: 14,
+                          width: 18,
+                          height: 18,
                         ),
                       ),
                   ],
@@ -122,7 +122,12 @@ class GamePlayerBar extends StatelessWidget {
                           name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: k.rowTitle,
+                          // Even leading, so the flag beside it sits on
+                          // the middle of the letters, not below it.
+                          style: k.rowTitle.copyWith(
+                            height: 1.2,
+                            leadingDistribution: TextLeadingDistribution.even,
+                          ),
                         ),
                       ),
                       if (flag != null) ...[const SizedBox(width: 6), flag!],

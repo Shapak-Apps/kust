@@ -9,7 +9,11 @@ enum PieceSet {
   classic('Classic', ''),
   shaded('Shaded', 'shaded/'),
   graphite('Graphite', 'graphite/', textured: true),
-  brushed('Brushed', 'brushed/', textured: true);
+  brushed('Brushed', 'brushed/', textured: true),
+
+  /// Flat figurines drawn in Figma, the same shapes as the captured pieces
+  /// in the player bars, coloured for the board.
+  flat('Flat', 'flat/');
 
   const PieceSet(this.label, this._folder, {this.textured = false});
 
@@ -21,6 +25,7 @@ enum PieceSet {
     PieceSet.shaded => t.pieceShaded,
     PieceSet.graphite => t.pieceGraphite,
     PieceSet.brushed => t.pieceBrushed,
+    PieceSet.flat => t.pieceFlat,
   };
   final String _folder;
 

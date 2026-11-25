@@ -9,7 +9,10 @@ enum BoardTheme {
   brown('Brown', Color(0xFFF0E6D2), Color(0xFFB58863)),
   green('Green', Color(0xFFEEEED2), Color(0xFF769656)),
   blue('Dark Blue', Color(0xFFEEEED2), Color(0xFF4D6F99)),
-  wood('Wood', Color(0xFFE6CB9E), Color(0xFF9A6B3C), grain: true);
+  wood('Wood', Color(0xFFE6CB9E), Color(0xFF9A6B3C), grain: true),
+
+  /// Easy on the eyes: warm cream and a muted sage, low contrast.
+  soft('Soft', Color(0xFFEAE6DA), Color(0xFF8FA588));
 
   const BoardTheme(this.label, this.light, this.dark, {this.grain = false});
 
@@ -22,6 +25,7 @@ enum BoardTheme {
     BoardTheme.green => t.boardGreen,
     BoardTheme.blue => t.boardDarkBlue,
     BoardTheme.wood => t.boardWood,
+    BoardTheme.soft => t.boardSoft,
   };
   final Color light;
   final Color dark;

@@ -668,3 +668,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `notifClearAll` | Clear all | Hemmesini arassala |
 | `trainTry` | Try | Synap gör |
 | `flipShort` | Flip | Öwür |
+| `pieceFlat` | Flat | Tekiz |
+| `boardSoft` | Soft | Ýumşak |

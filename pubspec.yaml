@@ -94,6 +94,7 @@ flutter:
     - assets/pieces/graphite/
     - assets/pieces/shaded/
     - assets/pieces/brushed/
+    - assets/pieces/flat/
     - assets/pieces/learn/
     - assets/captured/
     - assets/sounds/

@@ -51,18 +51,14 @@ class _SettingsSheet extends StatelessWidget {
         KustSectionLabel(context.t.boardSection),
         ValueListenableBuilder<BoardTheme>(
           valueListenable: s.boardTheme,
-          builder: (_, selected, _) => Row(
+          builder: (_, selected, _) => _SwatchStrip(
             children: [
-              for (final theme in BoardTheme.values) ...[
-                if (theme != BoardTheme.values.first) const SizedBox(width: 10),
-                Expanded(
-                  child: BoardThemeSwatch(
-                    theme: theme,
-                    selected: theme == selected,
-                    onTap: () => s.setBoardTheme(theme),
-                  ),
+              for (final theme in BoardTheme.values)
+                BoardThemeSwatch(
+                  theme: theme,
+                  selected: theme == selected,
+                  onTap: () => s.setBoardTheme(theme),
                 ),
-              ],
             ],
           ),
         ),
@@ -72,19 +68,15 @@ class _SettingsSheet extends StatelessWidget {
           valueListenable: s.boardTheme,
           builder: (_, board, _) => ValueListenableBuilder<PieceSet>(
             valueListenable: s.pieceSet,
-            builder: (_, selected, _) => Row(
+            builder: (_, selected, _) => _SwatchStrip(
               children: [
-                for (final set in PieceSet.values) ...[
-                  if (set != PieceSet.values.first) const SizedBox(width: 10),
-                  Expanded(
-                    child: PieceSetSwatch(
-                      set: set,
-                      board: board,
-                      selected: set == selected,
-                      onTap: () => s.setPieceSet(set),
-                    ),
+                for (final set in PieceSet.values)
+                  PieceSetSwatch(
+                    set: set,
+                    board: board,
+                    selected: set == selected,
+                    onTap: () => s.setPieceSet(set),
                   ),
-                ],
               ],
             ),
           ),
@@ -532,6 +524,43 @@ class _LogOutRow extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// A row of choices four wide; more scroll in from the right, the next one
+/// peeking at the edge so it is plain there are more.
+class _SwatchStrip extends StatelessWidget {
+  const _SwatchStrip({required this.children});
+
+  final List<Widget> children;
+
+  static const double _gap = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        final fits = children.length <= 4;
+        final width = fits
+            ? (box.maxWidth - _gap * (children.length - 1)) / children.length
+            : (box.maxWidth - _gap * 3) / 4.3;
+        final row = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) const SizedBox(width: _gap),
+              SizedBox(width: width, child: children[i]),
+            ],
+          ],
+        );
+        if (fits) return row;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: row,
         );
       },
     );
