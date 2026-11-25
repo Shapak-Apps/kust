@@ -464,7 +464,8 @@ class _ChatScreenState extends State<ChatScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_messages.isEmpty) {
-      return const Align(alignment: Alignment.topCenter, child: _BeKind());
+      // Nothing said yet: the note sits just above the input, as quiet text.
+      return const Align(alignment: Alignment.bottomLeft, child: _BeKind());
     }
     return ListView.builder(
       controller: _scroll,
@@ -486,8 +487,6 @@ class _ChatScreenState extends State<ChatScreen> {
         final newDay = older == null || !_sameDay(older.createdAt, m.createdAt);
         return Column(
           children: [
-            // At the very top of the conversation, like WhatsApp's notice.
-            if (older == null && !_more) const _BeKind(),
             if (newDay) _DayLabel(date: m.createdAt),
             Padding(
               padding: EdgeInsets.only(
@@ -604,7 +603,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           vertical: 12,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(14),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -643,7 +642,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-/// The note at the top of every chat: be kind.
+/// Before the first message: a quiet line asking to be kind.
 class _BeKind extends StatelessWidget {
   const _BeKind();
 
@@ -651,29 +650,13 @@ class _BeKind extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        decoration: BoxDecoration(
-          color: KustTokens.gold.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(
-              Icons.favorite_rounded,
-              size: 15,
-              color: KustTokens.gold,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                context.t.chatBeKind,
-                style: k.caption.copyWith(color: KustTokens.gold, height: 1.35),
-              ),
-            ),
-          ],
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Text(
+        context.t.chatBeKind,
+        style: k.body.copyWith(
+          color: k.muted,
+          fontWeight: FontWeight.w700,
+          height: 1.45,
         ),
       ),
     );

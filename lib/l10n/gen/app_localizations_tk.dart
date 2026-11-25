@@ -2219,5 +2219,11 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get chatBeKind =>
-      'Biri-biriňize mähirli boluň. Dostlukly gürleşiň, gödek sözler we kemsitmeler bolmasyn. Hormat oýny has gowy edýär.';
+      'Hatlaryňyzda mähirli we hormatly boluň. Gödek sözler we kemsitmeler bolmasyn.';
+
+  @override
+  String get challengeButton => 'Çagyr';
+
+  @override
+  String get challengeSoon => 'Oýna çagyrmak ýakyn wagtda goşular';
 }
