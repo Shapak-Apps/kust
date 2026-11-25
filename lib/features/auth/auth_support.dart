@@ -115,7 +115,9 @@ class AuthPage extends StatelessWidget {
     final k = context.k;
     return Scaffold(
       backgroundColor: k.bg,
-      resizeToAvoidBottomInset: true,
+      // The button and the link stay at the bottom, under the keyboard,
+      // so they never crowd the fields while typing.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
