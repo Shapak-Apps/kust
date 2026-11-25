@@ -2664,7 +2664,7 @@ abstract class AppL10n {
   /// No description provided for @learnCoachDone.
   ///
   /// In en, this message translates to:
-  /// **'That is it! Tap Continue.'**
+  /// **'That\'s it!'**
   String get learnCoachDone;
 
   /// No description provided for @lessonPerfect.
@@ -3218,6 +3218,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Try the first line'**
   String get trainTryFirst;
+
+  /// No description provided for @trainTry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try'**
+  String get trainTry;
 
   /// No description provided for @trainLines.
   ///
@@ -3831,6 +3837,12 @@ abstract class AppL10n {
   /// **'Friends'**
   String get friendFriends;
 
+  /// No description provided for @friendsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search friends'**
+  String get friendsSearch;
+
   /// No description provided for @friendRemoveTitle.
   ///
   /// In en, this message translates to:
@@ -3909,11 +3921,23 @@ abstract class AppL10n {
   /// **'Nothing new yet. Friend requests will show up here.'**
   String get notifEmpty;
 
+  /// No description provided for @notifClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get notifClearAll;
+
   /// No description provided for @flipBoard.
   ///
   /// In en, this message translates to:
   /// **'Flip board'**
   String get flipBoard;
+
+  /// No description provided for @flipShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip'**
+  String get flipShort;
 
   /// No description provided for @flipBoardSub.
   ///

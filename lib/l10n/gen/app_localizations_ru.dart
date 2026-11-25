@@ -1463,7 +1463,7 @@ class AppL10nRu extends AppL10n {
   String get lessonBackToMap => 'К урокам';
 
   @override
-  String get learnCoachDone => 'Получилось! Нажмите «Продолжить».';
+  String get learnCoachDone => 'Получилось!';
 
   @override
   String get lessonPerfect => 'Идеальный урок!';
@@ -1773,6 +1773,9 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get trainTryFirst => 'Попробовать первый вариант';
+
+  @override
+  String get trainTry => 'Попробовать';
 
   @override
   String trainLines(int count) {
@@ -2120,6 +2123,9 @@ class AppL10nRu extends AppL10n {
   String get friendFriends => 'Друзья';
 
   @override
+  String get friendsSearch => 'Поиск друзей';
+
+  @override
   String friendRemoveTitle(String name) {
     return 'Удалить $name из друзей?';
   }
@@ -2162,7 +2168,13 @@ class AppL10nRu extends AppL10n {
       'Пока ничего нового. Здесь появятся заявки в друзья.';
 
   @override
+  String get notifClearAll => 'Очистить всё';
+
+  @override
   String get flipBoard => 'Перевернуть доску';
+
+  @override
+  String get flipShort => 'Перевернуть';
 
   @override
   String get flipBoardSub => 'Смотреть на доску с другой стороны';

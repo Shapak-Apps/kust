@@ -27,24 +27,27 @@ class AchievementsScreen extends StatelessWidget {
               valueListenable: AchievementStore.instance.listenable(),
               builder: (context, _, _) {
                 final unlocked = AchievementStore.instance.unlocked();
+                // Flat rows with a hairline between them, as tall as their
+                // text: no cards of different heights side by side.
                 return ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
                   children: [
-                    Text(
-                      context.t.achEarnedOf(
-                        unlocked.length,
-                        kAchievements.length,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        context.t.achEarnedOf(
+                          unlocked.length,
+                          kAchievements.length,
+                        ),
+                        style: k.caption.copyWith(fontWeight: FontWeight.w700),
                       ),
-                      style: k.caption.copyWith(fontWeight: FontWeight.w700),
                     ),
-                    const SizedBox(height: 12),
-                    for (final a in kAchievements) ...[
+                    const SizedBox(height: 4),
+                    for (final a in kAchievements)
                       AchievementTile(
                         achievement: a,
                         earned: unlocked.containsKey(a.id),
                       ),
-                      const SizedBox(height: 8),
-                    ],
                   ],
                 );
               },
@@ -76,14 +79,13 @@ class AchievementTile extends StatelessWidget {
           '${earned ? context.t.achEarned : context.t.achNotEarned}',
       excludeSemantics: true,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rCard),
+          border: Border(bottom: BorderSide(color: k.line)),
         ),
         child: Row(
           children: [
-            AchievementIcon(achievement: achievement, earned: earned, size: 48),
+            AchievementIcon(achievement: achievement, earned: earned, size: 44),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -91,10 +93,7 @@ class AchievementTile extends StatelessWidget {
                 children: [
                   Text(
                     achievement.titleIn(context.t),
-                    style: k.body.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: earned ? k.ink : k.muted,
-                    ),
+                    style: k.rowTitle.copyWith(color: earned ? k.ink : k.muted),
                   ),
                   Text(achievement.descriptionIn(context.t), style: k.caption),
                 ],

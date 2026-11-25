@@ -150,7 +150,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _store.setPhoto(picked.path);
       if (AuthService.instance.state.value.isSignedIn) {
         try {
-          await AuthService.instance.uploadAvatar(await picked.readAsBytes());
+          final bytes = await picked.readAsBytes();
+          final account = await AuthService.instance.uploadAvatar(bytes);
+          // Saved under its new address, so it shows at once everywhere
+          // (the players list, chats) instead of downloading again.
+          final url = avatarUrlFor(account.avatarKey);
+          if (url != null) await CachedAvatar.store(url, bytes);
         } on ApiException {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -687,11 +692,9 @@ class AchievementBadge extends StatelessWidget {
         children: [
           AchievementIcon(achievement: achievement, earned: earned),
           const SizedBox(height: 8),
-          Text(
+          _WholeWords(
             achievement.titleIn(context.t),
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
+            width: 80,
             style: k.caption.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -831,7 +834,7 @@ class _FriendsSectionState extends State<_FriendsSection> {
         KustSectionHeader(
           title: context.t.friendFriends,
           count: '${friends.length}',
-          onViewAll: () => context.push('/players'),
+          onViewAll: () => context.push('/friends'),
         ),
         if (friends.isEmpty)
           Padding(
@@ -892,6 +895,44 @@ class _FriendsSectionState extends State<_FriendsSection> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Up to two centred lines that never break inside a word: when the
+/// longest word is wider than [width], the text gets smaller until it fits
+/// (so "Brilliant!" never leaves its "!" alone on a line).
+class _WholeWords extends StatelessWidget {
+  const _WholeWords(this.text, {required this.width, required this.style});
+
+  final String text;
+  final double width;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    var widest = 0.0;
+    for (final word in text.split(' ')) {
+      final painter = TextPainter(
+        text: TextSpan(text: word, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      if (painter.width > widest) widest = painter.width;
+      painter.dispose();
+    }
+    final size = style.fontSize ?? 12;
+    final fitted = widest > width
+        ? (size * width / widest).clamp(8.0, size)
+        : size;
+    return Text(
+      text,
+      maxLines: 2,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+      style: style.copyWith(fontSize: fitted.floorToDouble()),
     );
   }
 }

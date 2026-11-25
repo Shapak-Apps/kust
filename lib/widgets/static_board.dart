@@ -17,7 +17,7 @@ class StaticBoard extends StatelessWidget {
     required this.position,
     this.flipped = false,
     this.highlight = const [],
-    this.radius = 10,
+    this.radius = 4,
     this.shadow = true,
   });
 

@@ -75,15 +75,8 @@ class _PlayScreenState extends State<PlayScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: k.accent,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-              ),
-              child: Icon(Icons.auto_awesome_rounded, color: k.accentInk),
-            ),
+            // The app's own mark, bare: the Square K with its gold move.
+            const KustSymbol(height: 52),
             const SizedBox(height: 20),
             Text(sheetContext.t.welcomeTitle, style: k.display),
             const SizedBox(height: 8),

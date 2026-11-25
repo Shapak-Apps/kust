@@ -1,9 +1,15 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 
-import 'package:kust/features/game/chess/chess_helpers.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
+
+/// The small figurine of a taken piece (designed in Figma for the bars):
+/// light pieces cream with a grey edge, dark ones near-black with a light
+/// edge, so both are easy on the eye on the dark bar and on light.
+String capturedAsset(Piece piece) =>
+    'assets/captured/${piece.color == Side.white ? 'w' : 'b'}'
+    '${piece.role.uppercaseLetter}.svg';
 
 /// The strip over and under the board in every game: a 40 px avatar, the
 /// name with a flag, the rating, what has been taken and who is ahead, and
@@ -74,7 +80,7 @@ class GamePlayerBar extends StatelessWidget {
                       Positioned(
                         left: 6.0 * i,
                         child: PieceImage(
-                          assetForPiece(group[i]),
+                          capturedAsset(group[i]),
                           width: 14,
                           height: 14,
                         ),

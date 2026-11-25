@@ -505,7 +505,7 @@ class _Coach extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         note!,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: k.body.copyWith(
                           fontSize: 14,

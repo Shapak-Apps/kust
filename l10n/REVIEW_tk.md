@@ -663,3 +663,8 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `onlineReconnecting` | Reconnecting… | Täzeden birikdirilýär… |
 | `onlineConnection` | Connection | Baglanyşyk |
 | `playerGamesTitle` | {name}'s games | {name} oýunlary |
+| `friendsSearch` | Search friends | Dost gözle |
+| `learnCoachDone` | That's it! | Boldy! |
+| `notifClearAll` | Clear all | Hemmesini arassala |
+| `trainTry` | Try | Synap gör |
+| `flipShort` | Flip | Öwür |

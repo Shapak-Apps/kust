@@ -14,6 +14,7 @@ import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/chat/chat_screen.dart';
 import 'package:kust/features/chat/chats_screen.dart';
 import 'package:kust/features/online/online_game_screen.dart';
+import 'package:kust/features/players/friends_screen.dart';
 import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/players/player_profile_screen.dart';
 import 'package:kust/core/net/account.dart';
@@ -141,6 +142,10 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         builder: (context, state) => const NotificationsScreen(),
       ),
 
+      GoRoute(
+        path: '/friends',
+        builder: (context, state) => const FriendsScreen(),
+      ),
       GoRoute(
         path: '/player/:username/games',
         builder: (context, state) =>
