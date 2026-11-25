@@ -57,7 +57,7 @@ void main() {
             anyOf(
               contains('viewBox="0 0 45 45"'),
               contains('viewBox="2 1.5 41 41"'),
-              contains('viewBox="2 1.2 20 20"'),
+              
             ),
             reason: asset,
           );
