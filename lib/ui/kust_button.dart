@@ -27,7 +27,7 @@ class KustButton extends StatelessWidget {
     required this.onTap,
     this.style = KustButtonStyle.primary,
     this.icon,
-    this.height = 52,
+    this.height = 50,
     this.expand = true,
   });
 
@@ -89,7 +89,7 @@ class KustButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         border: border,
-        borderRadius: BorderRadius.circular(KustSpace.rMedium),
+        borderRadius: BorderRadius.circular(KustSpace.rCard),
       ),
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
@@ -104,7 +104,7 @@ class KustButton extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: k.body.copyWith(color: fg, fontWeight: FontWeight.w800),
+              style: k.body.copyWith(color: fg, fontWeight: FontWeight.w700),
             ),
           ),
         ],

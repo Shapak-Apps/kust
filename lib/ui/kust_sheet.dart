@@ -35,10 +35,10 @@ class _KustSheetRoute<T> extends PopupRoute<T> {
   String? get barrierLabel => AppText.now.dismiss;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 300);
+  Duration get transitionDuration => const Duration(milliseconds: 240);
 
   @override
-  Duration get reverseTransitionDuration => const Duration(milliseconds: 220);
+  Duration get reverseTransitionDuration => const Duration(milliseconds: 180);
 
   @override
   Widget buildPage(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:kust/ui/kust_controls.dart';
-import 'package:kust/ui/pressable.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// A one-row card for a shortcut: an icon, a title with a line under it,
@@ -32,7 +32,7 @@ class KustTile extends StatelessWidget {
   final bool done;
 
   /// The tile's height.
-  static const double height = 72;
+  static const double height = 64;
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +41,15 @@ class KustTile extends StatelessWidget {
       button: true,
       label: semanticsLabel,
       excludeSemantics: true,
-      child: Pressable(
+      child: PressHighlight(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(KustSpace.rCard),
         child: Container(
           height: height,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            borderRadius: BorderRadius.circular(KustSpace.rCard),
             border: Border.all(
               color: done ? k.success.withValues(alpha: 0.6) : k.line,
             ),
@@ -81,7 +82,7 @@ class KustTile extends StatelessWidget {
                       title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: k.body.copyWith(fontWeight: FontWeight.w800),
+                      style: k.rowTitle,
                     ),
                     Text(
                       subtitle,

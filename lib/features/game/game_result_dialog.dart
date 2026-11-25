@@ -10,6 +10,7 @@ import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/kust_button.dart';
+import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/widgets/static_board.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
@@ -406,8 +407,8 @@ void showGameStartModal(
       ? AppSettings.instance.pieceSet.value.asset('w', 'K')
       : AppSettings.instance.pieceSet.value.asset('b', 'K');
 
-  showDialog(
-    context: context,
+  showKustDialog<void>(
+    context,
     barrierDismissible: false,
     builder: (dialogContext) {
       Future.delayed(const Duration(milliseconds: 1500), () {

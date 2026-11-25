@@ -42,6 +42,7 @@ import 'package:kust/ui/kust_logo.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/skeleton.dart';
 
 const double kBoardMaxWidth = 480;
 const double kPlayerBarHeight = 56;
@@ -548,8 +549,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                           height: side,
                                           child: status == GameStatus.loading
                                               ? const Center(
-                                                  child:
-                                                      CircularProgressIndicator(),
+                                                  child: KustLoader(),
                                                 )
                                               : const ChessBoard(),
                                         ),

@@ -511,11 +511,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     final controller = ref.read(_provider.notifier);
     if (!controller.pickUp(square)) return;
     // Where the queued premoves left the pieces, as the board shows them.
-    final piece = ref
-        .read(_provider)
-        .boardPosition
-        .board
-        .pieceAt(square);
+    final piece = ref.read(_provider).boardPosition.board.pieceAt(square);
     if (piece == null) return;
     SoundService.instance.buzz();
     _snapController.stop();
@@ -1119,9 +1115,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                   Positioned.fill(
                     key: const ValueKey('paused'),
                     child: _PausedCover(
-                      onResume: ref
-                          .read(_provider.notifier)
-                          .resumeClock,
+                      onResume: ref.read(_provider.notifier).resumeClock,
                     ),
                   ),
 
@@ -1142,12 +1136,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                       squareSize: _squareSize,
                       col: files.indexOf(fileOf(view.pendingPromotion!.to)),
                       row: ranks.indexOf(rankOf(view.pendingPromotion!.to)),
-                      onPick: (role) => ref
-                          .read(_provider.notifier)
-                          .completePromotion(role),
-                      onCancel: () => ref
-                          .read(_provider.notifier)
-                          .cancelPromotion(),
+                      onPick: (role) =>
+                          ref.read(_provider.notifier).completePromotion(role),
+                      onCancel: () =>
+                          ref.read(_provider.notifier).cancelPromotion(),
                     ),
                   ),
 

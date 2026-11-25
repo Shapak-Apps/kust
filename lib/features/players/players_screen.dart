@@ -14,7 +14,9 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/skeleton.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key, this.repository, this.presence});
@@ -242,7 +244,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
     final t = context.t;
     final k = context.k;
     if (_loading && _players.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const KustSkeletonRows();
     }
     if (_error != null && _players.isEmpty) {
       return Center(
@@ -364,7 +366,7 @@ class PlayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return InkWell(
+    return PressHighlight(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -468,7 +470,7 @@ class FriendRequestCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InkWell(
+          PressHighlight(
             onTap: onOpen,
             borderRadius: BorderRadius.circular(8),
             child: Row(
