@@ -165,66 +165,29 @@ class _MessageMenuState extends State<_MessageMenu>
     // low on the screen and down when it is high. A message too wide to
     // leave room beside gets the card under it (or over the bar).
     final below = rect.bottom + widget.belowBubble;
-    double side(double width) => mine
-        ? (rect.right - width).clamp(_margin, size.width - width - _margin)
-        : rect.left.clamp(_margin, size.width - width - _margin);
-    final room = mine ? rect.left - _margin : size.width - rect.right - _margin;
-    final beside = room >= _menuWidth + _gap;
-    final low = rect.center.dy > (top + bottom) / 2;
 
-    double barTop;
-    double barLeft;
-    final double menuLeft;
-    final double menuTop;
-    final Alignment opensFrom;
-    if (beside) {
-      // As on Telegram: one stack beside the message, the reactions on
-      // top, then the card; it grows up from the message when the message
-      // is low on the screen, down when it is high. The bar lines up with
-      // the card's edge nearest the message.
-      final stack = _barHeight + _gap + menuHeight;
-      final stackTop = (low ? below - stack : rect.top).clamp(
-        top,
-        bottom - stack,
-      );
-      barTop = stackTop;
-      menuTop = stackTop + _barHeight + _gap;
-      menuLeft = mine ? rect.left - _gap - _menuWidth : rect.right + _gap;
-      barLeft = (mine ? menuLeft + _menuWidth - barWidth : menuLeft).clamp(
-        _margin,
-        size.width - barWidth - _margin,
-      );
-      // A bar wider than the room beside can't sit on the message: then
-      // it goes just above the message instead.
-      final bar = Rect.fromLTWH(barLeft, barTop, barWidth, _barHeight);
-      if (bar.overlaps(rect)) {
-        barTop = (rect.top - _gap - _barHeight).clamp(top, bottom - _barHeight);
-        barLeft = side(barWidth);
-      }
-      opensFrom = mine
-          ? (low ? Alignment.bottomRight : Alignment.topRight)
-          : (low ? Alignment.bottomLeft : Alignment.topLeft);
-    } else {
-      // Too wide for room beside: the bar over the message, the card under
-      // it (or over the bar when there's no room under).
-      final barAbove = rect.top - _gap - _barHeight >= top;
-      barTop = (barAbove ? rect.top - _gap - _barHeight : below + _gap).clamp(
-        top,
-        bottom - _barHeight,
-      );
-      barLeft = side(barWidth);
-      menuLeft = side(_menuWidth);
-      final under = (barAbove ? below : barTop + _barHeight) + _gap;
-      final over = (barAbove ? barTop : rect.top) - _gap - menuHeight;
-      menuTop = (under + menuHeight <= bottom ? under : over).clamp(
-        top,
-        bottom - menuHeight,
-      );
-      final down = menuTop >= rect.top;
-      opensFrom = mine
-          ? (down ? Alignment.topRight : Alignment.bottomRight)
-          : (down ? Alignment.topLeft : Alignment.bottomLeft);
-    }
+    // As on Telegram the menu sits over the message, not apart from it:
+    // the card starts at the message's own start edge (left edge of mine,
+    // right edge of theirs) and is drawn on top of it, ending just past
+    // its bottom when the message is low on the screen (just inside its
+    // top when high); the reactions ride right above the card, centred on
+    // it. All kept inside the safe area and above the keyboard.
+    const overhang = 12.0;
+    final low = rect.center.dy > (top + bottom) / 2;
+    final stack = _barHeight + _gap + menuHeight;
+    final stackTop = (low ? below + overhang - stack : rect.top + overhang)
+        .clamp(top, bottom - stack);
+    final barTop = stackTop;
+    final menuTop = stackTop + _barHeight + _gap;
+    final menuLeft = (mine ? rect.left : rect.right - _menuWidth).clamp(
+      _margin,
+      size.width - _menuWidth - _margin,
+    );
+    final barLeft = (menuLeft + (_menuWidth - barWidth) / 2).clamp(
+      _margin,
+      size.width - barWidth - _margin,
+    );
+    final opensFrom = low ? Alignment.bottomCenter : Alignment.topCenter;
     final from = mine ? Alignment.centerRight : Alignment.centerLeft;
 
     final fade = _part(0, 0.6, Curves.easeOut);
