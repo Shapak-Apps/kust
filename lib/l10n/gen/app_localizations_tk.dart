@@ -2256,4 +2256,69 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get chatSentState => 'Iberildi';
+
+  @override
+  String challengeTitle(String name) {
+    return '$name oýna çagyr';
+  }
+
+  @override
+  String get challengeSend => 'Çagyryş iber';
+
+  @override
+  String onlineWaiting(String name) {
+    return '$name kabul etmegine garaşylýar…';
+  }
+
+  @override
+  String get onlineCancel => 'Çagyryşy ýatyr';
+
+  @override
+  String onlineInvite(String name) {
+    return '$name sizi oýna çagyrýar';
+  }
+
+  @override
+  String onlineYouPlay(String side, String clock) {
+    return 'Siz $side oýnaýarsyňyz · $clock';
+  }
+
+  @override
+  String get onlineYourMove => 'Siziň gezegiňiz';
+
+  @override
+  String onlineTheirMove(String name) {
+    return '$name gezegi';
+  }
+
+  @override
+  String get onlineDraw => 'Deňe deň';
+
+  @override
+  String onlineDeclined(String name) {
+    return '$name çagyryşy ret etdi';
+  }
+
+  @override
+  String get onlineCancelled => 'Çagyryş ýatyryldy';
+
+  @override
+  String get challengesSection => 'Çagyryşlar';
+
+  @override
+  String get onlineGamesSection => 'Oýunlaryňyz';
+
+  @override
+  String onlinePlaying(String name) {
+    return '$name bilen oýun';
+  }
+
+  @override
+  String get onlineOpen => 'Aç';
+
+  @override
+  String get onlineNotLegal => 'Bu göçüm bolmaýar';
+
+  @override
+  String get onlineFriendsOnly => 'Diňe dostlaryňyzy çagyryp bilersiňiz';
 }

@@ -10,6 +10,7 @@ import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
 import 'package:kust/features/history/history_screen.dart';
+import 'package:kust/features/online/challenge_sheet.dart';
 import 'package:kust/features/profile/profile_screen.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
@@ -374,7 +375,10 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       label: t.challengeButton,
       icon: Icons.sports_esports_rounded,
       style: KustButtonStyle.gold,
-      onTap: () => _say(t.challengeSoon),
+      // Friends get the challenge sheet; anyone else is told to add them.
+      onTap: () => friends && _player != null
+          ? showChallengeSheet(context, _player!)
+          : _say(t.onlineFriendsOnly),
     );
     final Widget? top = switch (friendship) {
       Friendship.friends => null,

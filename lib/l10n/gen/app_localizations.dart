@@ -4088,6 +4088,108 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Sent'**
   String get chatSentState;
+
+  /// No description provided for @challengeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge {name}'**
+  String challengeTitle(String name);
+
+  /// No description provided for @challengeSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send challenge'**
+  String get challengeSend;
+
+  /// No description provided for @onlineWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to accept…'**
+  String onlineWaiting(String name);
+
+  /// No description provided for @onlineCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel challenge'**
+  String get onlineCancel;
+
+  /// No description provided for @onlineInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} challenges you'**
+  String onlineInvite(String name);
+
+  /// No description provided for @onlineYouPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'You play {side} · {clock}'**
+  String onlineYouPlay(String side, String clock);
+
+  /// No description provided for @onlineYourMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Your move'**
+  String get onlineYourMove;
+
+  /// No description provided for @onlineTheirMove.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} to move'**
+  String onlineTheirMove(String name);
+
+  /// No description provided for @onlineDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get onlineDraw;
+
+  /// No description provided for @onlineDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} declined the challenge'**
+  String onlineDeclined(String name);
+
+  /// No description provided for @onlineCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'The challenge was cancelled'**
+  String get onlineCancelled;
+
+  /// No description provided for @challengesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenges'**
+  String get challengesSection;
+
+  /// No description provided for @onlineGamesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Your games'**
+  String get onlineGamesSection;
+
+  /// No description provided for @onlinePlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Game with {name}'**
+  String onlinePlaying(String name);
+
+  /// No description provided for @onlineOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get onlineOpen;
+
+  /// No description provided for @onlineNotLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'That move isn\'t allowed'**
+  String get onlineNotLegal;
+
+  /// No description provided for @onlineFriendsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'You can challenge friends only'**
+  String get onlineFriendsOnly;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

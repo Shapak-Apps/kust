@@ -664,5 +664,22 @@
   "chatEdited": "изменено",
   "chatEditTooLate": "Сообщение можно изменить только в течение суток",
   "chatRead": "Прочитано",
-  "chatSentState": "Отправлено"
+  "chatSentState": "Отправлено",
+  "challengeTitle": "Вызов: {name}",
+  "challengeSend": "Отправить вызов",
+  "onlineWaiting": "Ждём, пока {name} примет вызов…",
+  "onlineCancel": "Отменить вызов",
+  "onlineInvite": "{name} вызывает вас",
+  "onlineYouPlay": "Вы играете {side} · {clock}",
+  "onlineYourMove": "Ваш ход",
+  "onlineTheirMove": "Ход: {name}",
+  "onlineDraw": "Ничья",
+  "onlineDeclined": "{name} отклонил(а) вызов",
+  "onlineCancelled": "Вызов отменён",
+  "challengesSection": "Вызовы",
+  "onlineGamesSection": "Ваши партии",
+  "onlinePlaying": "Партия с {name}",
+  "onlineOpen": "Открыть",
+  "onlineNotLegal": "Такой ход невозможен",
+  "onlineFriendsOnly": "Вызывать можно только друзей"
 }
