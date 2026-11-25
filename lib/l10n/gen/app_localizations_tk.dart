@@ -2211,4 +2211,13 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get chatSend => 'Iber';
+
+  @override
+  String chatTextedYou(String name) {
+    return '$name size hat ýazdy';
+  }
+
+  @override
+  String get chatBeKind =>
+      'Biri-biriňize mähirli boluň. Dostlukly gürleşiň, gödek sözler we kemsitmeler bolmasyn. Hormat oýny has gowy edýär.';
 }

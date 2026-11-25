@@ -2213,4 +2213,13 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get chatSend => 'Отправить';
+
+  @override
+  String chatTextedYou(String name) {
+    return '$name написал(а) вам';
+  }
+
+  @override
+  String get chatBeKind =>
+      'Будьте добры друг к другу. Общайтесь дружелюбно, без грубых слов и оскорблений. Уважение делает игру лучше.';
 }

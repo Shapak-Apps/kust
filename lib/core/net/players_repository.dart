@@ -187,6 +187,21 @@ class PlayersRepository {
     };
   }
 
+  /// My friends as last fetched (null before the first time): shown at
+  /// once while a fresh list loads, and used to know who is a friend.
+  final ValueNotifier<List<Player>?> friendsCache = ValueNotifier(null);
+
+  /// How [username] stands to me, as far as the cache knows.
+  Friendship? knownFriendship(String username) {
+    if (friendsCache.value?.any((p) => p.username == username) ?? false) {
+      return Friendship.friends;
+    }
+    if (incoming.value.any((p) => p.username == username)) {
+      return Friendship.incoming;
+    }
+    return null;
+  }
+
   /// Friend requests waiting for me, for the bell on the home screen.
   /// Refreshed with [refreshIncoming] and whenever [friends] is read.
   final ValueNotifier<List<Player>> incoming = ValueNotifier(const []);
@@ -211,10 +226,8 @@ class PlayersRepository {
     ];
     final waiting = list('incoming');
     incoming.value = waiting;
-    return (
-      friends: list('friends'),
-      incoming: waiting,
-      outgoing: list('outgoing'),
-    );
+    final mine = list('friends');
+    friendsCache.value = mine;
+    return (friends: mine, incoming: waiting, outgoing: list('outgoing'));
   }
 }

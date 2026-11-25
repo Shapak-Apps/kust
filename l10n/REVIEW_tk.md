@@ -626,3 +626,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `chatFriendsOnly` | You can message friends only. Add them first. | Diňe dostlaryňyza hat ýazyp bilersiňiz. Ilki dost goşuň. |
 | `chatNotSent` | Not sent. Tap to try again. | Iberilmedi. Gaýtadan synanyşmak üçin basyň. |
 | `chatSend` | Send | Iber |
+| `chatTextedYou` | {name} texted you | {name} size hat ýazdy |
+| `chatBeKind` | Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better. | Biri-biriňize mähirli boluň. Dostlukly gürleşiň, gödek sözler we kemsitmeler bolmasyn. Hormat oýny has gowy edýär. |

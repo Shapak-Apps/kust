@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +42,10 @@ class PlayerProfileScreen extends StatefulWidget {
 
 class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   late Player? _player = widget.initial;
-  Friendship? _friendship;
+
+  /// Known at once when they are in my cached friends (or asked me), so
+  /// Message works before the profile has loaded.
+  late Friendship? _friendship = _repo.knownFriendship(widget.username);
   bool _busy = false;
   bool _missing = false;
 
@@ -103,6 +108,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
     try {
       final now = await call();
       if (mounted) setState(() => _friendship = now);
+      unawaited(_repo.refreshIncoming()); // the cached friends follow
     } on ApiException catch (e) {
       if (mounted) {
         _say(e.isNetwork ? context.t.noInternet : context.t.genericError);

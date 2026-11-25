@@ -19,7 +19,6 @@ import 'package:kust/features/play/pick_opponent_modal.dart';
 import 'package:kust/features/play/pick_side_modal.dart';
 import 'package:kust/features/play/pick_time_modal.dart';
 import 'package:kust/features/play/play_mode_modal.dart';
-import 'package:kust/features/chat/chats_screen.dart';
 import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/puzzles/daily_card.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -322,7 +321,6 @@ class _PlayScreenState extends State<PlayScreen> {
                   ],
                 ),
                 trailing: [
-                  const ChatsButton(),
                   KustIconButton(
                     icon: Icons.tune_rounded,
                     label: context.t.settings,

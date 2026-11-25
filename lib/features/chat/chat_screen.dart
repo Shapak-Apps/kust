@@ -460,22 +460,11 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _list(BuildContext context) {
-    final k = context.k;
-    final t = context.t;
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_messages.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(
-            t.chatSayHi(_player?.displayName ?? widget.username),
-            textAlign: TextAlign.center,
-            style: k.body.copyWith(color: k.muted),
-          ),
-        ),
-      );
+      return const Align(alignment: Alignment.topCenter, child: _BeKind());
     }
     return ListView.builder(
       controller: _scroll,
@@ -497,6 +486,8 @@ class _ChatScreenState extends State<ChatScreen> {
         final newDay = older == null || !_sameDay(older.createdAt, m.createdAt);
         return Column(
           children: [
+            // At the very top of the conversation, like WhatsApp's notice.
+            if (older == null && !_more) const _BeKind(),
             if (newDay) _DayLabel(date: m.createdAt),
             Padding(
               padding: EdgeInsets.only(
@@ -613,7 +604,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           vertical: 12,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(22),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
                         ),
                       ),
@@ -643,6 +634,43 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The note at the top of every chat: be kind.
+class _BeKind extends StatelessWidget {
+  const _BeKind();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        decoration: BoxDecoration(
+          color: KustTokens.gold.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.favorite_rounded,
+              size: 15,
+              color: KustTokens.gold,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.t.chatBeKind,
+                style: k.caption.copyWith(color: KustTokens.gold, height: 1.35),
               ),
             ),
           ],
@@ -818,6 +846,39 @@ class _Bubble extends StatelessWidget {
       bottomRight: mine && tail ? sharp : r,
     );
     final reply = m.replyTo;
+    final timeStyle = k.caption.copyWith(fontSize: 11, color: soft);
+    final meta = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(_clock(m.createdAt), style: timeStyle),
+        if (mine) ...[
+          const SizedBox(width: 3),
+          Icon(
+            m.failed
+                ? Icons.error_rounded
+                : m.pending
+                ? Icons.schedule_rounded
+                : m.read
+                ? Icons.done_all_rounded
+                : Icons.done_rounded,
+            size: 15,
+            color: m.failed
+                ? k.danger
+                : m.read
+                ? KustTokens.gold
+                : soft,
+          ),
+        ],
+      ],
+    );
+    final painter = TextPainter(
+      text: TextSpan(text: _clock(m.createdAt), style: timeStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final timeWidth = painter.width;
+    painter.dispose();
+    final metaWidth = 8 + timeWidth + (mine ? 18 : 0);
     final bubble = Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.78,
@@ -865,33 +926,22 @@ class _Bubble extends StatelessWidget {
                   ],
                 ),
               ),
-            Text(m.body, style: k.body.copyWith(color: fg, height: 1.3)),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // As Telegram does: the time (and ticks) sit at the end of the
+            // last line when they fit, else on a line of their own. An
+            // invisible gap their width ends the text, so they never cover
+            // it.
+            Stack(
               children: [
-                Text(
-                  _clock(m.createdAt),
-                  style: k.caption.copyWith(fontSize: 11, color: soft),
-                ),
-                if (mine) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    m.failed
-                        ? Icons.error_rounded
-                        : m.pending
-                        ? Icons.schedule_rounded
-                        : m.read
-                        ? Icons.done_all_rounded
-                        : Icons.done_rounded,
-                    size: 15,
-                    color: m.failed
-                        ? k.danger
-                        : m.read
-                        ? KustTokens.gold
-                        : soft,
+                Text.rich(
+                  TextSpan(
+                    text: m.body,
+                    children: [
+                      WidgetSpan(child: SizedBox(width: metaWidth, height: 1)),
+                    ],
                   ),
-                ],
+                  style: k.body.copyWith(color: fg, height: 1.3),
+                ),
+                Positioned(right: 0, bottom: 0, child: meta),
               ],
             ),
           ],

@@ -309,8 +309,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: _Stats(),
               ),
               const _AccountCard(),
-              const _HistorySection(),
               const _FriendsSection(),
+              const _HistorySection(),
               const _AchievementsSection(),
             ],
           ),
@@ -870,27 +870,22 @@ class _FriendsSection extends StatefulWidget {
 }
 
 class _FriendsSectionState extends State<_FriendsSection> {
-  List<Player>? _friends;
-
   @override
   void initState() {
     super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    if (!AuthService.instance.state.value.isVerified) return;
-    try {
-      final f = await PlayersRepository.instance.friends();
-      if (mounted) setState(() => _friends = f.friends);
-    } on ApiException {
-      // Offline: no row at all, rather than a wrong "no friends yet".
+    // The cached list shows at once; a fresh one replaces it quietly.
+    if (AuthService.instance.state.value.isVerified) {
+      PlayersRepository.instance.refreshIncoming();
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final friends = _friends;
+  Widget build(BuildContext context) => ValueListenableBuilder<List<Player>?>(
+    valueListenable: PlayersRepository.instance.friendsCache,
+    builder: (context, friends, _) => _row(context, friends),
+  );
+
+  Widget _row(BuildContext context, List<Player>? friends) {
     if (friends == null) return const SizedBox.shrink();
     final k = context.k;
     return Column(
