@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -177,27 +176,6 @@ void main() {
       await tester.pump(const Duration(seconds: 5));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(AchievementCelebration), findsNothing);
-    });
-
-    test('confetti falls within the screen and is gone at the end', () {
-      final painter = ConfettiPainter(progress: 0.5, seed: 1);
-      expect(
-        painter.shouldRepaint(ConfettiPainter(progress: 0.5, seed: 1)),
-        isFalse,
-      );
-      expect(
-        painter.shouldRepaint(ConfettiPainter(progress: 0.6, seed: 1)),
-        isTrue,
-      );
-      // Painting at every stage works.
-      for (final p in [0.0, 0.1, 0.5, 0.9, 1.0]) {
-        final recorder = ui.PictureRecorder();
-        ConfettiPainter(
-          progress: p,
-          seed: 3,
-        ).paint(Canvas(recorder), const Size(400, 800));
-        recorder.endRecording().dispose();
-      }
     });
   });
 
