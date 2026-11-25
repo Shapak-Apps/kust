@@ -2243,4 +2243,10 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get chatEditTooLate => 'Messages can be edited for one day only';
+
+  @override
+  String get chatRead => 'Read';
+
+  @override
+  String get chatSentState => 'Sent';
 }

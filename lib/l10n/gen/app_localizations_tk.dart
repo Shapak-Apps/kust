@@ -2250,4 +2250,10 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get chatEditTooLate => 'Haty diňe bir günüň dowamynda üýtgedip bolýar';
+
+  @override
+  String get chatRead => 'Okaldy';
+
+  @override
+  String get chatSentState => 'Iberildi';
 }

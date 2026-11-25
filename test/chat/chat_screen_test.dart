@@ -175,4 +175,30 @@ void main() {
       isTrue,
     );
   });
+
+  testWidgets('the hold menu stays on a small screen', (tester) async {
+    tester.view.physicalSize = const Size(720, 1280); // 360 x 640
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    // The newest message sits at the very bottom, over the input.
+    await tester.longPress(find.textContaining('Oýun'));
+    await tester.pumpAndSettle();
+    final screen = Offset.zero & const Size(360, 640);
+    for (final f in [
+      ...kQuickReactions.map(find.text),
+      find.text('Reply'),
+      find.text('Copy'),
+      find.text('Delete'),
+    ]) {
+      final r = tester.getRect(f.last);
+      expect(
+        screen.contains(r.topLeft) && screen.contains(r.bottomRight),
+        isTrue,
+        reason: '$f at $r',
+      );
+    }
+    expect(tester.takeException(), isNull);
+  });
 }
