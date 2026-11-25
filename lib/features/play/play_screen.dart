@@ -240,7 +240,7 @@ class _PlayScreenState extends State<PlayScreen> {
                     ),
                   ),
                   const SliverPadding(
-                    padding: EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
                     sliver: SliverToBoxAdapter(child: DailyPuzzleCard()),
                   ),
                   SliverToBoxAdapter(
