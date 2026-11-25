@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' as io;
+import 'dart:ui' show ImageFilter;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/live_socket.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
@@ -23,10 +25,13 @@ import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/game_clock.dart';
+import 'package:kust/ui/game_player_bar.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
@@ -399,7 +404,11 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
                                 SizedBox(
                                   width: side,
                                   height: side,
-                                  child: g.pending
+                                  child: g.pending && g.challenger == _me
+                                      // Waiting for the friend: the board
+                                      // blurred, a piece changing over it.
+                                      ? const _WaitingBoard()
+                                      : g.pending
                                       ? const IgnorePointer(child: ChessBoard())
                                       : const ChessBoard(),
                                 ),
@@ -429,7 +438,6 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
     GameState s, {
     required bool white,
   }) {
-    final k = context.k;
     final username = white ? g.white : g.black;
     final isMe = username == _me;
     final p = isMe ? null : _opponent;
@@ -440,126 +448,33 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         s.status == GameStatus.playing &&
         g.active &&
         s.position.turn == side;
-    final low = left < const Duration(seconds: 20);
-    final captured = s.mode == GameMode.online
-        ? piecesCapturedBy(side, s.moves)
-        : const <Piece>[];
-    final advantage = s.mode == GameMode.online
-        ? boardMaterialAdvantageFor(s.position, side)
-        : 0;
-    final byRole = <Role, List<Piece>>{};
-    for (final piece in captured) {
-      (byRole[piece.role] ??= []).add(piece);
-    }
-    return Container(
-      height: 56,
-      // A little room at the sides for the photo and the clock.
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          PlayerAvatar(
-            size: 36,
-            name: p?.displayName ?? username,
-            // Mine: the photo on this phone, else my account's.
-            photo: isMe
-                ? (AppStorage.isReady && AppStorage.instance.photoPath != null
-                      ? FileImage(io.File(AppStorage.instance.photoPath!))
-                      : avatarImage(
-                          avatarUrlFor(
-                            AuthService.instance.state.value.account?.avatarKey,
-                          ),
-                        ))
-                : avatarImage(avatarUrlFor(p?.avatarKey)),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        username,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.body.copyWith(fontWeight: FontWeight.w800),
+    final online = s.mode == GameMode.online;
+    final rating = isMe
+        ? AuthService.instance.state.value.account?.rating
+        : p?.rating;
+    return GamePlayerBar(
+      avatar: PlayerAvatar(
+        size: 40,
+        name: p?.displayName ?? username,
+        // Mine: the photo on this phone, else my account's.
+        photo: isMe
+            ? (AppStorage.isReady && AppStorage.instance.photoPath != null
+                  ? FileImage(io.File(AppStorage.instance.photoPath!))
+                  : avatarImage(
+                      avatarUrlFor(
+                        AuthService.instance.state.value.account?.avatarKey,
                       ),
-                    ),
-                    if (p?.country != null) ...[
-                      const SizedBox(width: 6),
-                      CountryFlag(p!.country!, height: 14),
-                    ],
-                  ],
-                ),
-                if (captured.isNotEmpty || advantage > 0)
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final group in byRole.values)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: SizedBox(
-                              width: 14 + 6.0 * (group.length - 1),
-                              height: 14,
-                              child: Stack(
-                                children: [
-                                  for (var i = 0; i < group.length; i++)
-                                    Positioned(
-                                      left: 6.0 * i,
-                                      child: PieceImage(
-                                        assetForPiece(group[i]),
-                                        width: 14,
-                                        height: 14,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (advantage > 0)
-                          Text(
-                            '+$advantage',
-                            style: k.caption.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: running
-                  ? (low ? k.danger : const Color(0xFFF2EFE8))
-                  : k.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              TimeControl.format(
-                TimeControl.display(
-                  g.pending ? Duration(milliseconds: g.baseMs) : left,
-                ),
-              ),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
-                color: running
-                    ? (low ? Colors.white : const Color(0xFF17181A))
-                    : k.muted,
-              ),
-            ),
-          ),
-        ],
+                    ))
+            : avatarImage(avatarUrlFor(p?.avatarKey)),
+      ),
+      name: username,
+      flag: p?.country != null ? CountryFlag(p!.country!, height: 14) : null,
+      rating: rating == null ? null : '$rating',
+      captured: online ? piecesCapturedBy(side, s.moves) : const [],
+      advantage: online ? boardMaterialAdvantageFor(s.position, side) : 0,
+      clock: GameClock(
+        time: g.pending ? Duration(milliseconds: g.baseMs) : left,
+        active: running,
       ),
     );
   }
@@ -856,6 +771,65 @@ class _ReconnectingStrip extends StatelessWidget {
                 ),
               ),
       ),
+    );
+  }
+}
+
+/// The board of a challenge not yet answered: blurred, with a piece over it
+/// that turns into the next every 600 ms (queen, knight, bishop).
+class _WaitingBoard extends StatefulWidget {
+  const _WaitingBoard();
+
+  @override
+  State<_WaitingBoard> createState() => _WaitingBoardState();
+}
+
+class _WaitingBoardState extends State<_WaitingBoard> {
+  static const _roles = ['Q', 'N', 'B'];
+  int _i = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 600), (_) {
+      if (mounted) setState(() => _i = (_i + 1) % _roles.length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final set = AppSettings.instance.pieceSet.value;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: const IgnorePointer(child: ChessBoard()),
+        ),
+        AnimatedSwitcher(
+          duration: motion(context, const Duration(milliseconds: 250)),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween(begin: 0.9, end: 1.0).animate(animation),
+              child: child,
+            ),
+          ),
+          child: PieceImage(
+            set.asset('w', _roles[_i]),
+            key: ValueKey(_i),
+            width: 48,
+            height: 48,
+          ),
+        ),
+      ],
     );
   }
 }

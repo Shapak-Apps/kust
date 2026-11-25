@@ -253,7 +253,7 @@ void main() {
     expect(find.byIcon(Icons.copy_rounded), findsNothing);
   });
 
-  testWidgets('the focused move is gold text, not a bubble', (tester) async {
+  testWidgets('the focused move sits in a small pill', (tester) async {
     await tester.pumpWidget(_app());
     await tester.tap(find.text('1. e4'));
     await tester.pumpAndSettle();
@@ -261,20 +261,23 @@ void main() {
     final focused = tester.widget<Text>(find.text('1. e4').first);
     final other = tester.widget<Text>(find.text('2. Nf3'));
     expect(focused.style!.color, isNot(other.style!.color));
-    expect(focused.style!.fontWeight, FontWeight.w800);
-    // Plain text only: the strip has no decorated containers around moves.
-    expect(
-      find.ancestor(
-        of: find.text('1. e4').first,
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration as BoxDecoration).border != null,
-        ),
-      ),
-      findsNothing,
-    );
+    expect(focused.style!.fontWeight, FontWeight.w700);
+    // Only the focused move has a filled pill behind it.
+    Container? pillOf(String label) => tester
+        .widgetList<Container>(
+          find.ancestor(
+            of: find.text(label).first,
+            matching: find.byType(Container),
+          ),
+        )
+        .where(
+          (c) =>
+              c.decoration is BoxDecoration &&
+              (c.decoration as BoxDecoration).borderRadius != null,
+        )
+        .firstOrNull;
+    expect((pillOf('1. e4')!.decoration as BoxDecoration).color, isNotNull);
+    expect((pillOf('2. Nf3')!.decoration as BoxDecoration).color, isNull);
   });
 
   testWidgets('settings sheet copies the PGN', (tester) async {
@@ -389,14 +392,15 @@ void _layoutTests() {
 
     await tester.pumpWidget(_app());
     final startX = tester.getTopLeft(find.text('1. e4').first).dx;
-    expect(startX, closeTo(20, 1));
+    // 16 at the edge and 6 inside the move's pill.
+    expect(startX, closeTo(22, 1));
 
     for (var i = 0; i < 4; i++) {
       await tester.tap(find.byIcon(Icons.chevron_right_rounded));
       await tester.pumpAndSettle();
     }
     // Everything fits, so nothing scrolled.
-    expect(tester.getTopLeft(find.text('1. e4').first).dx, closeTo(20, 1));
+    expect(tester.getTopLeft(find.text('1. e4').first).dx, closeTo(22, 1));
   });
 
   testWidgets('the board uses the full width', (tester) async {

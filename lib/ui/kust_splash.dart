@@ -20,11 +20,12 @@ class KustSplash extends StatefulWidget {
 
 class _KustSplashState extends State<KustSplash>
     with SingleTickerProviderStateMixin {
-  // The art plays for 1250 ms, holds, then fades from 1350 to 1650.
+  // The art plays for 1250 ms, holds, then fades out from 1350 to 1600 ms
+  // while growing 6 %, so it dissolves into the app instead of cutting.
   late final AnimationController _c =
       AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 1650),
+        duration: const Duration(milliseconds: 1600),
       )..addStatusListener((s) {
         if (s == AnimationStatus.completed) setState(() => _done = true);
       });
@@ -64,10 +65,14 @@ class _KustSplashState extends State<KustSplash>
                 child: AnimatedBuilder(
                   animation: _c,
                   builder: (context, _) {
-                    final ms = _c.value * 1650;
+                    final ms = _c.value * 1600;
+                    final out = _at(ms, 1350, 1600, Curves.easeIn);
                     return Opacity(
-                      opacity: 1 - _at(ms, 1350, 1650, Curves.easeIn),
-                      child: SplashArt(t: ms / 1250),
+                      opacity: 1 - out,
+                      child: Transform.scale(
+                        scale: 1 + 0.06 * out,
+                        child: SplashArt(t: ms / 1250),
+                      ),
                     );
                   },
                 ),

@@ -35,7 +35,7 @@ class PlayerAvatar extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(4),
           color: k.surfaceAlt,
           border: Border.all(color: k.line),
         ),
