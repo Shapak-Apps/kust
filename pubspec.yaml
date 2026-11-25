@@ -79,6 +79,11 @@ flutter:
   generate: true
   uses-material-design: true
 
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/InterVariable.ttf
+
   assets:
     - assets/icons/
     - assets/icons/moves/

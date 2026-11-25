@@ -24,6 +24,7 @@ ThemeData _build(KustTokens k, Brightness brightness) {
 
   return ThemeData(
     useMaterial3: true,
+    fontFamily: 'Inter',
     brightness: brightness,
     colorScheme: scheme,
     scaffoldBackgroundColor: k.bg,
