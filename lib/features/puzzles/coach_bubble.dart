@@ -118,28 +118,51 @@ class CoachBubble extends StatelessWidget {
             children: [
               if (leading != null) ...[leading!, const SizedBox(width: 8)],
               Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: k.body.copyWith(
-                    color: titleColor,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                // A new line fades in over the old one, not a cut.
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 150),
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [...previous, ?current],
+                  ),
+                  child: Align(
+                    key: ValueKey(title),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: k.body.copyWith(
+                        color: titleColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 1),
-          Text(
-            tip,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: k.caption.copyWith(
-              color: BubbleColors.soft,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topLeft,
+              children: [...previous, ?current],
+            ),
+            child: Align(
+              key: ValueKey(tip),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                tip,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: k.caption.copyWith(
+                  color: BubbleColors.soft,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ),
         ],

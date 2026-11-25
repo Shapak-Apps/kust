@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io' as io;
+import 'dart:ui' show ImageFilter;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/live_socket.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/settings.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
@@ -29,9 +31,11 @@ import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/ui/skeleton.dart';
 
 /// A live game with a friend, on the same board as a game against a bot
@@ -400,7 +404,11 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
                                 SizedBox(
                                   width: side,
                                   height: side,
-                                  child: g.pending
+                                  child: g.pending && g.challenger == _me
+                                      // Waiting for the friend: the board
+                                      // blurred, a piece changing over it.
+                                      ? const _WaitingBoard()
+                                      : g.pending
                                       ? const IgnorePointer(child: ChessBoard())
                                       : const ChessBoard(),
                                 ),
@@ -763,6 +771,65 @@ class _ReconnectingStrip extends StatelessWidget {
                 ),
               ),
       ),
+    );
+  }
+}
+
+/// The board of a challenge not yet answered: blurred, with a piece over it
+/// that turns into the next every 600 ms (queen, knight, bishop).
+class _WaitingBoard extends StatefulWidget {
+  const _WaitingBoard();
+
+  @override
+  State<_WaitingBoard> createState() => _WaitingBoardState();
+}
+
+class _WaitingBoardState extends State<_WaitingBoard> {
+  static const _roles = ['Q', 'N', 'B'];
+  int _i = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 600), (_) {
+      if (mounted) setState(() => _i = (_i + 1) % _roles.length);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final set = AppSettings.instance.pieceSet.value;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: const IgnorePointer(child: ChessBoard()),
+        ),
+        AnimatedSwitcher(
+          duration: motion(context, const Duration(milliseconds: 250)),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: ScaleTransition(
+              scale: Tween(begin: 0.9, end: 1.0).animate(animation),
+              child: child,
+            ),
+          ),
+          child: PieceImage(
+            set.asset('w', _roles[_i]),
+            key: ValueKey(_i),
+            width: 48,
+            height: 48,
+          ),
+        ),
+      ],
     );
   }
 }
