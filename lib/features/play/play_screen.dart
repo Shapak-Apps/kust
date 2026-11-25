@@ -401,6 +401,7 @@ class _ContinueCard extends StatelessWidget {
         final turn = game.isLocal
             ? (position.turn == Side.white ? t.whiteName : t.blackName)
             : null;
+        final mine = game.isLocal || position.turn == playerSide;
         final toMove = game.isLocal
             ? t.sideToMove(turn!)
             : position.turn == playerSide
@@ -459,24 +460,44 @@ class _ContinueCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            t.continueGameSub(
-                              who,
-                              (game.uciMoves.length + 1) ~/ 2,
-                            ),
-                            maxLines: 2,
+                            who,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: k.rowTitle,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            toMove,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: k.captionStrong.copyWith(
-                              color: position.turn == playerSide || game.isLocal
-                                  ? k.success
-                                  : k.muted,
-                            ),
+                          const SizedBox(height: 6),
+                          // The move, then whose turn in its own pill: two
+                          // things side by side, no dot between them.
+                          Row(
+                            children: [
+                              Text(
+                                t.reviewMoveNo((game.uciMoves.length + 1) ~/ 2),
+                                style: k.caption,
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: mine
+                                        ? k.success.withValues(alpha: 0.16)
+                                        : k.surfaceAlt,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    toMove,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: k.captionStrong.copyWith(
+                                      color: mine ? k.success : k.muted,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
