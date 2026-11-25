@@ -226,5 +226,10 @@ void main() {
     expect(tester.getRect(find.textContaining('Salam!').last), before);
     // Mine is on the right: the card opens on its left.
     expect(tester.getRect(find.text('Reply')).right, lessThan(before.left));
+    // Telegram's order: reactions on top, right above the card.
+    final bar = tester.getRect(find.text('❤️'));
+    final header = tester.getRect(find.textContaining('Sent'));
+    expect(bar.bottom, lessThan(header.top));
+    expect(header.top - bar.bottom, lessThan(40));
   });
 }
