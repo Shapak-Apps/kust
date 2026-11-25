@@ -280,7 +280,13 @@ class PieceSetSwatch extends StatelessWidget {
                           child: ColoredBox(
                             color: light ? board.light : board.dark,
                             child: Center(
-                              child: PieceImage(set.asset(color, role)),
+                              // Flat is drawn slimmer than the others: a
+                              // little larger here so the previews match.
+                              // (On the board it keeps its own size.)
+                              child: Transform.scale(
+                                scale: set == PieceSet.flat ? 1.13 : 1,
+                                child: PieceImage(set.asset(color, role)),
+                              ),
                             ),
                           ),
                         ),
