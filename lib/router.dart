@@ -181,6 +181,7 @@ GoRouter createRouter({required bool onboardingCompleted}) {
           // Another player's game comes with it; mine is read from the phone.
           record: state.extra is GameRecord ? state.extra as GameRecord : null,
           initialPly: int.tryParse(state.uri.queryParameters['ply'] ?? '') ?? 0,
+          owner: state.uri.queryParameters['owner'],
         ),
       ),
       GoRoute(
