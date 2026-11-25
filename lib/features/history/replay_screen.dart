@@ -279,6 +279,15 @@ class _ReplayScreenState extends State<ReplayScreen> {
             children: [
               KustSheetHeader(title: context.t.replaySettings),
               KustToggleRow(
+                icon: Icons.swap_vert_rounded,
+                title: context.t.flipBoard,
+                value: _flip,
+                onChanged: (v) {
+                  setState(() => _flip = v);
+                  setSheet(() {});
+                },
+              ),
+              KustToggleRow(
                 icon: Icons.align_horizontal_left_rounded,
                 title: context.t.evalBar,
                 subtitle: canEvaluate
@@ -496,11 +505,6 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   icon: Icons.last_page_rounded,
                   label: context.t.end,
                   onTap: _ply < _last ? () => _go(_last) : null,
-                ),
-                KustAction(
-                  icon: Icons.swap_vert_rounded,
-                  label: context.t.flipBoard,
-                  onTap: () => setState(() => _flip = !_flip),
                 ),
                 if (_last >= 4)
                   KustAction(

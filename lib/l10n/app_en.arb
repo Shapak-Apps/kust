@@ -952,6 +952,8 @@
   "rating": "Rating",
   "games": "Games",
   "gameHistory": "Game history",
+  "playerGamesTitle": "{name}'s games",
+  "@playerGamesTitle": {"placeholders": {"name": {"type": "String"}}},
   "viewAll": "View all",
   "qrCode": "QR code",
   "trainSoonSub": "A new way to practise is on its way. Until then, keep sharp with puzzles.",

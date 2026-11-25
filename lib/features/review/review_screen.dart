@@ -314,7 +314,7 @@ class _ReviewBody extends StatelessWidget {
         const SizedBox(height: 28),
         KustButton(
           label: t.reviewOpenReplay,
-          style: KustButtonStyle.green,
+          style: KustButtonStyle.primary,
           onTap: () => onOpen(),
         ),
       ],
