@@ -10,6 +10,7 @@ import 'package:kust/core/net/chat_repository.dart';
 import 'package:kust/core/net/live_socket.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/presence.dart';
+import 'package:kust/features/chat/message_menu.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/kust_button.dart';
@@ -402,80 +403,81 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _menu(ChatMessage m) {
+  /// The message whose hold menu is open: hidden in the list, since its
+  /// lifted copy is on top.
+  int? _menuFor;
+
+  Future<void> _menu(ChatMessage m, Rect rect) async {
     if (m.id <= 0) return;
-    HapticFeedback.mediumImpact();
     final t = context.t;
     final k = context.k;
-    showKustSheet<void>(
+    final mine = m.from == _me;
+    final soft = k.muted;
+    setState(() => _menuFor = m.id);
+    await showMessageMenu(
       context,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      bubbleRect: rect,
+      mine: mine,
+      bubble: _Bubble(
+        message: m,
+        mine: mine,
+        me: _me,
+        tail: true,
+        theirName: _player?.displayName ?? widget.username,
+        onLongPress: (_) {},
+        onDoubleTap: () {},
+        onReactionTap: () {},
+      ),
+      reactions: kQuickReactions,
+      myReaction: m.reactions[_me],
+      onReact: (e) => _react(m, e),
+      header: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (final e in kQuickReactions)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(sheet).pop();
-                    _react(m, e);
-                  },
-                  child: Container(
-                    width: 46,
-                    height: 46,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: m.reactions[_me] == e
-                          ? KustTokens.gold.withValues(alpha: 0.25)
-                          : k.surfaceAlt,
-                    ),
-                    child: Text(e, style: const TextStyle(fontSize: 24)),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _MenuRow(
-            icon: Icons.reply_rounded,
-            label: t.chatReply,
-            onTap: () {
-              Navigator.of(sheet).pop();
-              _reply(m);
-            },
-          ),
-          _MenuRow(
-            icon: Icons.copy_rounded,
-            label: t.chatCopy,
-            onTap: () {
-              Navigator.of(sheet).pop();
-              Clipboard.setData(ClipboardData(text: m.body));
-              _say(t.chatCopied);
-            },
-          ),
-          if (m.from == _me && m.editableNow)
-            _MenuRow(
-              icon: Icons.edit_outlined,
-              label: t.chatEdit,
-              onTap: () {
-                Navigator.of(sheet).pop();
-                _startEdit(m);
-              },
+          if (mine) ...[
+            Icon(
+              m.read ? Icons.done_all_rounded : Icons.done_rounded,
+              size: 16,
+              color: m.read ? KustTokens.gold : soft,
             ),
-          _MenuRow(
-            icon: Icons.delete_outline_rounded,
-            label: t.chatDelete,
-            danger: true,
-            onTap: () {
-              Navigator.of(sheet).pop();
-              _confirmDelete(m);
-            },
+            const SizedBox(width: 6),
+          ],
+          Text(
+            '${mine ? '${m.read ? t.chatRead : t.chatSentState} · ' : ''}'
+            '${_clock(m.createdAt)}'
+            '${m.edited ? ' · ${t.chatEdited}' : ''}',
+            style: k.caption.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
+      actions: [
+        MessageMenuAction(
+          icon: Icons.reply_rounded,
+          label: t.chatReply,
+          onTap: () => _reply(m),
+        ),
+        MessageMenuAction(
+          icon: Icons.copy_rounded,
+          label: t.chatCopy,
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: m.body));
+            _say(t.chatCopied);
+          },
+        ),
+        if (mine && m.editableNow)
+          MessageMenuAction(
+            icon: Icons.edit_outlined,
+            label: t.chatEdit,
+            onTap: () => _startEdit(m),
+          ),
+        MessageMenuAction(
+          icon: Icons.delete_outline_rounded,
+          label: t.chatDelete,
+          danger: true,
+          onTap: () => _confirmDelete(m),
+        ),
+      ],
     );
+    if (mounted) setState(() => _menuFor = null);
   }
 
   void _say(String text) {
@@ -628,18 +630,25 @@ class _ChatScreenState extends State<ChatScreen> {
                 top: newDay || together(m, older) ? 2 : 10,
                 bottom: (m.reactions.isNotEmpty) ? 22 : 0,
               ),
-              child: _Swipe(
-                onReply: () => _reply(m),
-                child: _Bubble(
-                  message: m,
-                  mine: m.from == _me,
-                  me: _me,
-                  tail: !together(m, newer),
-                  theirName: _player?.displayName ?? widget.username,
-                  onLongPress: () => _menu(m),
-                  onDoubleTap: () => _react(m, '❤️'),
-                  onRetry: m.failed ? () => _send(retry: m) : null,
-                  onReactionTap: () => _menu(m),
+              child: Opacity(
+                opacity: _menuFor == m.id ? 0 : 1,
+                child: _Swipe(
+                  onReply: () => _reply(m),
+                  child: _Bubble(
+                    message: m,
+                    mine: m.from == _me,
+                    me: _me,
+                    tail: !together(m, newer),
+                    theirName: _player?.displayName ?? widget.username,
+                    onLongPress: (rect) => _menu(m, rect),
+                    onDoubleTap: () => _react(m, '❤️'),
+                    onRetry: m.failed ? () => _send(retry: m) : null,
+                    // Tapping the reactions takes mine back, if I reacted.
+                    onReactionTap: () {
+                      final mineR = m.reactions[_me];
+                      if (mineR != null) _react(m, mineR);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -961,7 +970,9 @@ class _Bubble extends StatelessWidget {
   /// The last of a run: its corner on the sender's side is sharp.
   final bool tail;
   final String theirName;
-  final VoidCallback onLongPress;
+
+  /// With where the bubble is on screen, for the hold menu.
+  final ValueChanged<Rect> onLongPress;
   final VoidCallback onDoubleTap;
   final VoidCallback onReactionTap;
   final VoidCallback? onRetry;
@@ -1097,41 +1108,47 @@ class _Bubble extends StatelessWidget {
             : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onLongPress: onLongPress,
-            onDoubleTap: onDoubleTap,
-            onTap: onRetry,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                bubble,
-                // Under the bubble, as on WhatsApp: hanging off its bottom
-                // edge on the inner side, clear of the text and the time.
-                if (m.reactions.isNotEmpty)
-                  Positioned(
-                    bottom: -22,
-                    right: mine ? 10 : null,
-                    left: mine ? null : 10,
-                    child: GestureDetector(
-                      onTap: onReactionTap,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: k.surfaceAlt,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: k.bg, width: 2),
-                        ),
-                        child: Text(
-                          m.reactions.values.toSet().join(' '),
-                          style: const TextStyle(fontSize: 14),
+          Builder(
+            builder: (bubbleContext) => GestureDetector(
+              onLongPress: () {
+                final box = bubbleContext.findRenderObject() as RenderBox?;
+                if (box == null || !box.hasSize) return;
+                onLongPress(box.localToGlobal(Offset.zero) & box.size);
+              },
+              onDoubleTap: onDoubleTap,
+              onTap: onRetry,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  bubble,
+                  // Under the bubble, as on WhatsApp: hanging off its bottom
+                  // edge on the inner side, clear of the text and the time.
+                  if (m.reactions.isNotEmpty)
+                    Positioned(
+                      bottom: -22,
+                      right: mine ? 10 : null,
+                      left: mine ? null : 10,
+                      child: GestureDetector(
+                        onTap: onReactionTap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: k.surfaceAlt,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: k.bg, width: 2),
+                          ),
+                          child: Text(
+                            m.reactions.values.toSet().join(' '),
+                            style: const TextStyle(fontSize: 14),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           if (m.failed)
@@ -1143,45 +1160,6 @@ class _Bubble extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.danger = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-        child: Row(
-          children: [
-            Icon(icon, size: 22, color: danger ? k.danger : k.ink),
-            const SizedBox(width: 14),
-            Text(
-              label,
-              style: k.body.copyWith(
-                fontWeight: FontWeight.w700,
-                color: danger ? k.danger : null,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -2253,4 +2253,10 @@ class AppL10nRu extends AppL10n {
   @override
   String get chatEditTooLate =>
       'Сообщение можно изменить только в течение суток';
+
+  @override
+  String get chatRead => 'Прочитано';
+
+  @override
+  String get chatSentState => 'Отправлено';
 }

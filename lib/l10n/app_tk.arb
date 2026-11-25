@@ -662,5 +662,7 @@
   "chatDeleteEveryone": "Hemmeler üçin poz",
   "chatDeleteMe": "Diňe menden poz",
   "chatEdited": "üýtgedildi",
-  "chatEditTooLate": "Haty diňe bir günüň dowamynda üýtgedip bolýar"
+  "chatEditTooLate": "Haty diňe bir günüň dowamynda üýtgedip bolýar",
+  "chatRead": "Okaldy",
+  "chatSentState": "Iberildi"
 }

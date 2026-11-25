@@ -4076,6 +4076,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Messages can be edited for one day only'**
   String get chatEditTooLate;
+
+  /// No description provided for @chatRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get chatRead;
+
+  /// No description provided for @chatSentState.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get chatSentState;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
