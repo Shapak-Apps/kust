@@ -215,7 +215,7 @@ void main() {
     expect(field.focusNode.hasFocus, isTrue);
   });
 
-  testWidgets('the held message stays put; the card opens beside it', (
+  testWidgets('the held message stays put; the card sits over it', (
     tester,
   ) async {
     await tester.pumpWidget(app());
@@ -224,8 +224,13 @@ void main() {
     await tester.longPress(find.textContaining('Salam!'));
     await tester.pumpAndSettle();
     expect(tester.getRect(find.textContaining('Salam!').last), before);
-    // Mine is on the right: the card opens on its left.
-    expect(tester.getRect(find.text('Reply')).right, lessThan(before.left));
+    // Like Telegram the card sits over the message, from its start edge,
+    // ending just below it (the message is low on the screen).
+    final delete = tester.getRect(find.text('Delete'));
+    final reply = tester.getRect(find.text('Reply'));
+    expect(reply.left, lessThan(before.right));
+    expect(delete.bottom, greaterThan(before.top));
+    expect(delete.bottom, lessThan(before.bottom + 60));
     // Telegram's order: reactions on top, right above the card.
     final bar = tester.getRect(find.text('❤️'));
     final header = tester.getRect(find.textContaining('Sent'));
