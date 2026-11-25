@@ -473,7 +473,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
       else
         for (final (i, game) in games.indexed) ...[
           if (i > 0) Divider(height: 1, thickness: 1, color: k.line),
-          GameTile(game: game, readOnly: true),
+          GameTile(game: game, readOnly: true, owner: widget.username),
         ],
     ];
   }
@@ -562,8 +562,11 @@ class _PlayerGamesScreenState extends State<PlayerGamesScreen> {
                     itemCount: games.length,
                     separatorBuilder: (_, _) =>
                         Divider(height: 1, thickness: 1, color: k.line),
-                    itemBuilder: (context, i) =>
-                        GameTile(game: games[i], readOnly: true),
+                    itemBuilder: (context, i) => GameTile(
+                      game: games[i],
+                      readOnly: true,
+                      owner: widget.username,
+                    ),
                   ),
           ),
         ],

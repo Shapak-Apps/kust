@@ -17,6 +17,7 @@ import 'package:kust/features/game/evaluation_bar.dart';
 import 'package:kust/features/history/history_screen.dart';
 import 'package:kust/features/game/game_export.dart';
 import 'package:kust/features/history/pgn.dart';
+import 'package:kust/features/history/replay_players.dart';
 import 'package:kust/features/history/replay_positions.dart';
 import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/ui/kust_action_bar.dart';
@@ -45,9 +46,13 @@ class ReplayScreen extends StatefulWidget {
     this.analyzer,
     this.playSound,
     this.initialPly = 0,
+    this.owner,
   });
 
   final String gameId;
+
+  /// Whose game it is when it is someone else's (their profile's games).
+  final String? owner;
 
   /// The position to open on, as a count of moves from the start.
   final int initialPly;
@@ -463,24 +468,25 @@ class _ReplayScreenState extends State<ReplayScreen> {
                     ),
             ),
           Expanded(
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: PuzzleBoard(
-                  position: position,
-                  flipped: (!game.isLocal && !game.playerIsWhite) != _flip,
-                  interactive: false,
-                  onMove: (_) {},
-                  lastMove: _replay.moves[_ply],
-                  slide: _slide,
-                  slideKey: _slideKey,
-                  badge: review == null || !_feedbackOn
-                      ? null
-                      : (square: _landing(_ply), quality: review.quality),
-                  arrow: showBest
-                      ? (from: review.bestFrom!, to: review.bestTo!)
-                      : null,
-                ),
+            child: ReplayWithPlayers(
+              game: game,
+              owner: widget.owner,
+              position: position,
+              whiteAtBottom: !((!game.isLocal && !game.playerIsWhite) != _flip),
+              board: PuzzleBoard(
+                position: position,
+                flipped: (!game.isLocal && !game.playerIsWhite) != _flip,
+                interactive: false,
+                onMove: (_) {},
+                lastMove: _replay.moves[_ply],
+                slide: _slide,
+                slideKey: _slideKey,
+                badge: review == null || !_feedbackOn
+                    ? null
+                    : (square: _landing(_ply), quality: review.quality),
+                arrow: showBest
+                    ? (from: review.bestFrom!, to: review.bestTo!)
+                    : null,
               ),
             ),
           ),

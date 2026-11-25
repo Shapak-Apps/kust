@@ -132,7 +132,15 @@ class _EmptyHistory extends StatelessWidget {
 /// One finished game as a row: opponent, result, date and accuracy. Opens
 /// the replay; a long press offers to delete it.
 class GameTile extends StatelessWidget {
-  const GameTile({super.key, required this.game, this.readOnly = false});
+  const GameTile({
+    super.key,
+    required this.game,
+    this.readOnly = false,
+    this.owner,
+  });
+
+  /// Whose game it is, when it is someone else's.
+  final String? owner;
 
   final GameRecord game;
 
@@ -184,8 +192,12 @@ class GameTile extends StatelessWidget {
       child: KustListRow(
         // The lists around it put their hairlines between rows.
         divider: false,
-        onTap: () =>
-            context.push('/history/${game.id}', extra: readOnly ? game : null),
+        onTap: () => context.push(
+          owner == null
+              ? '/history/${game.id}'
+              : '/history/${game.id}?owner=${Uri.encodeQueryComponent(owner!)}',
+          extra: readOnly ? game : null,
+        ),
         onLongPress: readOnly ? null : () => _confirmDelete(context),
         leading: Row(
           mainAxisSize: MainAxisSize.min,
