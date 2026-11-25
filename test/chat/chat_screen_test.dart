@@ -60,6 +60,14 @@ void main() {
           'message': _msg(3, 'me', 'ann', (o.data as Map)['body'] as String),
         }, status: 201);
       }
+      if (o.method == 'PATCH' && o.path == '/v1/messages/1') {
+        return jsonBody({
+          'message': {
+            ..._msg(1, 'me', 'ann', (o.data as Map)['body'] as String),
+            'edited': true,
+          },
+        });
+      }
       return jsonBody({'read': 1});
     });
     adapter = t.adapter;
@@ -106,7 +114,10 @@ void main() {
     expect(adapter.requests.any((r) => r.path == '/v1/chats/ann/read'), isTrue);
 
     // Swipe her message right: the reply preview shows.
-    await tester.drag(find.textContaining('Oýun oýnaýarysmy?'), const Offset(120, 0));
+    await tester.drag(
+      find.textContaining('Oýun oýnaýarysmy?'),
+      const Offset(120, 0),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Replying to Ann'), findsOneWidget);
 
@@ -135,5 +146,33 @@ void main() {
     }
     expect(find.text('Reply'), findsOneWidget);
     expect(find.text('Copy'), findsOneWidget);
+  });
+
+  testWidgets('my message can be edited; theirs cannot', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.longPress(find.textContaining('Oýun'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit'), findsNothing);
+    expect(find.text('Delete'), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.textContaining('Salam!'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit'));
+    await tester.pumpAndSettle();
+    expect(find.text('Editing'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'Salam, dost!');
+    await tester.tap(find.byIcon(Icons.check_rounded));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Salam, dost!'), findsOneWidget);
+    expect(find.textContaining('edited'), findsOneWidget);
+    expect(
+      adapter.requests.any(
+        (r) => r.method == 'PATCH' && r.path == '/v1/messages/1',
+      ),
+      isTrue,
+    );
   });
 }

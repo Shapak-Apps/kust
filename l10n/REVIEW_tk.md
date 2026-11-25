@@ -630,3 +630,11 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `chatBeKind` | Please be kind and respectful in your messages. No bad words or insults. | Hatlaryňyzda mähirli we hormatly boluň. Gödek sözler we kemsitmeler bolmasyn. |
 | `challengeButton` | Challenge | Çagyr |
 | `challengeSoon` | Challenges are coming soon | Oýna çagyrmak ýakyn wagtda goşular |
+| `chatEdit` | Edit | Üýtget |
+| `chatEditing` | Editing | Üýtgedilýär |
+| `chatDelete` | Delete | Poz |
+| `chatDeleteTitle` | Delete message? | Hat pozulsynmy? |
+| `chatDeleteEveryone` | Delete for everyone | Hemmeler üçin poz |
+| `chatDeleteMe` | Delete for me | Diňe menden poz |
+| `chatEdited` | edited | üýtgedildi |
+| `chatEditTooLate` | Messages can be edited for one day only | Haty diňe bir günüň dowamynda üýtgedip bolýar |

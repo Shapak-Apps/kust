@@ -4028,6 +4028,54 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Challenges are coming soon'**
   String get challengeSoon;
+
+  /// No description provided for @chatEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get chatEdit;
+
+  /// No description provided for @chatEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing'**
+  String get chatEditing;
+
+  /// No description provided for @chatDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get chatDelete;
+
+  /// No description provided for @chatDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete message?'**
+  String get chatDeleteTitle;
+
+  /// No description provided for @chatDeleteEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for everyone'**
+  String get chatDeleteEveryone;
+
+  /// No description provided for @chatDeleteMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get chatDeleteMe;
+
+  /// No description provided for @chatEdited.
+  ///
+  /// In en, this message translates to:
+  /// **'edited'**
+  String get chatEdited;
+
+  /// No description provided for @chatEditTooLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages can be edited for one day only'**
+  String get chatEditTooLate;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
