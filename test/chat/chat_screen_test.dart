@@ -229,6 +229,12 @@ void main() {
     final delete = tester.getRect(find.text('Delete'));
     final reply = tester.getRect(find.text('Reply'));
     expect(reply.left, lessThan(before.right));
+    // At least 60 % of the message stays in view beside the card.
+    final card = tester.getRect(find.textContaining('Sent'));
+    expect(
+      card.right - 16,
+      lessThanOrEqualTo(before.left + before.width * 0.4 + 1),
+    );
     expect(delete.bottom, greaterThan(before.top));
     expect(delete.bottom, lessThan(before.bottom + 60));
     // Telegram's order: reactions on top, right above the card.

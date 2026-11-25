@@ -179,10 +179,14 @@ class _MessageMenuState extends State<_MessageMenu>
         .clamp(top, bottom - stack);
     final barTop = stackTop;
     final menuTop = stackTop + _barHeight + _gap;
-    final menuLeft = (mine ? rect.left : rect.right - _menuWidth).clamp(
-      _margin,
-      size.width - _menuWidth - _margin,
-    );
+    // It may cover at most 40 % of the message's width, so at least 60 %
+    // of it always shows; the card slides outward for that.
+    final cover = rect.width * 0.4;
+    final menuLeft =
+        (mine ? rect.left + cover - _menuWidth : rect.right - cover).clamp(
+          _margin,
+          size.width - _menuWidth - _margin,
+        );
     final barLeft = (menuLeft + (_menuWidth - barWidth) / 2).clamp(
       _margin,
       size.width - barWidth - _margin,
