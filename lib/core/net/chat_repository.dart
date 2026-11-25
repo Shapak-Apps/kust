@@ -38,6 +38,7 @@ class ChatMessage {
     required this.createdAt,
     this.replyTo,
     this.read = false,
+    this.edited = false,
     this.reactions = const {},
     this.pending = false,
     this.failed = false,
@@ -50,6 +51,7 @@ class ChatMessage {
   final DateTime createdAt;
   final ChatReply? replyTo;
   final bool read;
+  final bool edited;
 
   /// Username → emoji.
   final Map<String, String> reactions;
@@ -66,6 +68,7 @@ class ChatMessage {
         DateTime.now(),
     replyTo: ChatReply.fromJson(json['reply_to']),
     read: json['read'] == true,
+    edited: json['edited'] == true,
     reactions: {
       for (final e in ((json['reactions'] as Map?) ?? const {}).entries)
         if (e.key is String && e.value is String)
@@ -73,18 +76,27 @@ class ChatMessage {
     },
   );
 
+  /// Mine, and recent enough to edit (the server allows a day).
+  bool get editableNow =>
+      id > 0 &&
+      DateTime.now().difference(createdAt) <
+          const Duration(hours: 23, minutes: 59);
+
   ChatMessage copyWith({
     bool? read,
     Map<String, String>? reactions,
     bool? failed,
+    String? body,
+    bool? edited,
   }) => ChatMessage(
     id: id,
     from: from,
     to: to,
-    body: body,
+    body: body ?? this.body,
     createdAt: createdAt,
     replyTo: replyTo,
     read: read ?? this.read,
+    edited: edited ?? this.edited,
     reactions: reactions ?? this.reactions,
     pending: pending,
     failed: failed ?? this.failed,
@@ -234,6 +246,27 @@ class ChatRepository {
     }
     unawaited(refreshUnread());
   }
+
+  /// New text for my message [id] (within a day of sending it).
+  Future<ChatMessage> edit(int id, String body) async {
+    final json = await auth.authed(
+      (token) => auth.api.patch(
+        '/v1/messages/$id',
+        body: {'body': body},
+        token: token,
+      ),
+    );
+    return ChatMessage.fromJson(json['message'] as Map<String, dynamic>);
+  }
+
+  /// Deletes message [id]: for both players when [everyone] (mine only),
+  /// else from my side.
+  Future<void> delete(int id, {required bool everyone}) => auth.authed(
+    (token) => auth.api.delete(
+      everyone ? '/v1/messages/$id?for=everyone' : '/v1/messages/$id',
+      token: token,
+    ),
+  );
 
   /// My reaction to [messageId]; an empty [emoji] takes it back.
   Future<void> react(int messageId, String emoji) => auth.authed(

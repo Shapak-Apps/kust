@@ -1248,5 +1248,13 @@
     }
   },
   "challengeButton": "Challenge",
-  "challengeSoon": "Challenges are coming soon"
+  "challengeSoon": "Challenges are coming soon",
+  "chatEdit": "Edit",
+  "chatEditing": "Editing",
+  "chatDelete": "Delete",
+  "chatDeleteTitle": "Delete message?",
+  "chatDeleteEveryone": "Delete for everyone",
+  "chatDeleteMe": "Delete for me",
+  "chatEdited": "edited",
+  "chatEditTooLate": "Messages can be edited for one day only"
 }
