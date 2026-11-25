@@ -3399,6 +3399,18 @@ abstract class AppL10n {
   /// **'You\'re offline'**
   String get offlineBanner;
 
+  /// No description provided for @onlineReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting…'**
+  String get onlineReconnecting;
+
+  /// No description provided for @onlineConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get onlineConnection;
+
   /// No description provided for @backOnlineBanner.
   ///
   /// In en, this message translates to:
@@ -4190,6 +4202,24 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'You can challenge friends only'**
   String get onlineFriendsOnly;
+
+  /// No description provided for @onlineOfferDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer a draw?'**
+  String get onlineOfferDraw;
+
+  /// No description provided for @onlineOfferDrawSub.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} can accept or decline it.'**
+  String onlineOfferDrawSub(String name);
+
+  /// No description provided for @onlineDrawOffered.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} offers a draw'**
+  String onlineDrawOffered(String name);
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

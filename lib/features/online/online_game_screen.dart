@@ -4,79 +4,98 @@ import 'dart:io' as io;
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/live_socket.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
-import 'package:kust/features/game/chess/sound_service.dart';
+import 'package:kust/features/game/chess/board/chess_board.dart';
+import 'package:kust/features/game/chess/chess_controller.dart';
+import 'package:kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/end_text.dart';
+import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/features/game/time_control.dart';
-import 'package:kust/features/puzzles/puzzle_board.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/widgets/piece_image.dart';
 
-/// A live game with a friend. The board is the same as everywhere; moves
-/// are checked here with the chess rules, sent to the server, and the
-/// friend's arrive over the socket. The server keeps both clocks.
-class OnlineGameScreen extends StatefulWidget {
+/// A live game with a friend, on the same board as a game against a bot
+/// (no practice help): the same sounds, premoves, Back and Forward, Flip
+/// and captured pieces. My moves go to the server; the friend's come back
+/// over the socket. The server keeps the clocks and says how it ends.
+class OnlineGameScreen extends ConsumerStatefulWidget {
   const OnlineGameScreen({super.key, required this.gameId, this.repository});
 
   final int gameId;
   final OnlineRepository? repository;
 
   @override
-  State<OnlineGameScreen> createState() => _OnlineGameScreenState();
+  ConsumerState<OnlineGameScreen> createState() => _OnlineGameScreenState();
 }
 
-class _OnlineGameScreenState extends State<OnlineGameScreen> {
+class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
   OnlineRepository get _repo => widget.repository ?? OnlineRepository.instance;
 
-  OnlineGame? _game;
+  /// Kept from the start: `ref` can't be used while the screen closes.
+  late final ChessController _chess = ref.read(
+    chessControllerProvider.notifier,
+  );
 
-  /// Moves shown: the server's, plus mine while it is on its way.
-  List<String> _moves = const [];
-  Position _position = Chess.initial;
-  List<String> _san = const [];
-  NormalMove? _last;
+  OnlineGame? _game;
   Player? _opponent;
-  bool _sending = false;
-  bool _flagged = false;
+  bool _started = false;
+  bool _ended = false;
   bool _saved = false;
-  Timer? _tick;
+
+  /// Seen while it was played, so its start and end are shown.
+  bool _seenLive = false;
   StreamSubscription<OnlineGame>? _sub;
 
   String get _me => _repo.me ?? '';
   bool get _iAmWhite => _game?.white == _me;
-  bool get _myTurn {
-    final g = _game;
-    if (g == null || !g.active || _sending) return false;
-    return (_moves.length.isEven) == _iAmWhite;
-  }
 
   @override
   void initState() {
     super.initState();
+    boardFlipped.value = false;
+    _chess; // read now, while ref is usable
     _sub = _repo.changes.listen((g) {
       if (g.id == widget.gameId) _show(g);
     });
-    _tick = Timer.periodic(const Duration(milliseconds: 250), (_) => _onTick());
+    LiveSocket.instance.state.addListener(_onLink);
     _load();
+  }
+
+  LiveState _link = LiveSocket.instance.state.value;
+
+  /// Back online: whatever happened meanwhile comes from the server. A lost
+  /// connection never ends the game; only the clock does.
+  void _onLink() {
+    final now = LiveSocket.instance.state.value;
+    if (now == LiveState.connected && _link != LiveState.connected) _load();
+    _link = now;
   }
 
   @override
   void dispose() {
-    _tick?.cancel();
+    LiveSocket.instance.state.removeListener(_onLink);
     _sub?.cancel();
+    final chess = _chess;
+    chess.onOnlineMove = null;
+    chess.onOnlineFlag = null;
     super.dispose();
   }
 
@@ -88,22 +107,103 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     }
   }
 
+  /// The game as the server has it, brought onto the board.
   void _show(OnlineGame g) {
-    final before = _game;
-    _replay(g.moves);
-    setState(() {
-      _game = g;
-      _sending = false;
-    });
+    if (!mounted) return;
+    setState(() => _game = g);
     if (_opponent == null) _loadOpponent(g.opponentOf(_me));
-    // Their move arrived: the sound of it.
-    if (before != null && g.moves.length > before.moves.length) {
-      final lastMine = (g.moves.length.isOdd) == _iAmWhite;
-      if (!lastMine) _playSound(isUser: false);
+    if (g.pending) return;
+    final chess = _chess;
+    final mine = g.white == _me ? Side.white : Side.black;
+    final played = ref.read(chessControllerProvider).moves;
+    final known = [for (final m in played) m.move.uci];
+    final inStep =
+        known.length <= g.moves.length &&
+        Iterable.generate(known.length).every((i) => known[i] == g.moves[i]);
+    if (!_started || !inStep) {
+      // First time, or out of step: the server's game is the truth.
+      _started = true;
+      chess.onOnlineMove = _send;
+      chess.onOnlineFlag = () => _repo.flag(g.id).then(_show, onError: (_) {});
+      chess.startOnlineGame(
+        playerSide: mine,
+        timeControl: TimeControl(
+          baseMinutes: g.baseMs ~/ 60000,
+          incrementSeconds: g.incMs ~/ 1000,
+        ),
+        uciMoves: g.moves,
+      );
+    } else {
+      for (final uci in g.moves.skip(known.length)) {
+        chess.applyOnlineMove(uci);
+      }
     }
-    if (g.over && before != null && !before.over) {
+    if (g.active && !_seenLive) {
+      _seenLive = true;
+      if (g.moves.isEmpty) {
+        showGameStartModal(context, white: mine == Side.white);
+      }
+    }
+    final clocks = g.clocksNow();
+    chess.syncOnlineClocks(white: clocks.white, black: clocks.black);
+    if (g.over && !_ended) {
+      _ended = true;
       HapticFeedback.heavyImpact();
+      chess.endOnline(
+        winner: switch (g.result) {
+          'white' => Side.white,
+          'black' => Side.black,
+          _ => null,
+        },
+        reason: g.reason ?? '',
+      );
       _save(g);
+      if (_seenLive) _showResult(g);
+    }
+  }
+
+  /// The end, as after a bot game: the result, the rating of the moves,
+  /// Review and Rematch.
+  void _showResult(OnlineGame g) {
+    final mate =
+        ref.read(chessControllerProvider).status == GameStatus.checkmate;
+    Future.delayed(Duration(milliseconds: mate ? 1800 : 400), () {
+      if (!mounted) return;
+      final texts = resultHeadline(
+        context.t,
+        ref.read(chessControllerProvider),
+      );
+      showGameResult(
+        context,
+        builder: (dialogContext) => GameResultScreen(
+          title: texts.$1,
+          message: texts.$2,
+          onClose: () => Navigator.of(dialogContext).pop(),
+          onReview: (id) {
+            Navigator.of(dialogContext).pop();
+            context.push('/review/$id');
+          },
+          onRematch: () {
+            Navigator.of(dialogContext).pop();
+            _rematch(g);
+          },
+        ),
+      );
+    });
+  }
+
+  /// The same game again, colours swapped.
+  Future<void> _rematch(OnlineGame g) async {
+    try {
+      final next = await _repo.challenge(
+        g.opponentOf(_me),
+        baseMinutes: g.baseMs ~/ 60000,
+        incrementSeconds: g.incMs ~/ 1000,
+        side: _iAmWhite ? 'black' : 'white',
+      );
+      if (mounted) context.pushReplacement('/online/${next.id}');
+    } on ApiException {
+      // Nothing sent; the finished game stays.
     }
   }
 
@@ -116,84 +216,33 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     }
   }
 
-  /// The position and the move list from the start, move by move.
-  void _replay(List<String> moves) {
-    Position pos = Chess.initial;
-    final san = <String>[];
-    NormalMove? last;
-    for (final uci in moves) {
-      final parsed = Move.parse(uci);
-      if (parsed is! NormalMove) break;
-      final move = pos.normalizeMove(parsed);
-      if (!pos.isLegal(move)) break;
-      final (next, s) = pos.makeSan(move);
-      san.add(s);
-      pos = next;
-      last = parsed;
-    }
-    _moves = moves;
-    _position = pos;
-    _san = san;
-    _last = last;
-  }
-
-  void _onTick() {
+  /// My move (a premove too), as the board played it: to the server, with
+  /// how it ends the game if it does.
+  Future<void> _send(NormalMove move, int ply) async {
     final g = _game;
-    if (g == null || !g.active || !mounted) return;
-    setState(() {}); // the running clock
-    final clocks = g.clocksNow();
-    final left = g.whiteToMove ? clocks.white : clocks.black;
-    if (left == Duration.zero && !_flagged) {
-      _flagged = true;
-      unawaited(_repo.flag(g.id).then(_show, onError: (_) => _flagged = false));
-    }
-  }
-
-  void _playSound({required bool isUser}) {
-    final pos = _position;
-    SoundService.instance.playSfx(
-      pos.isCheck ? 'check.wav' : (isUser ? 'move.wav' : 'move-opponent.wav'),
-    );
-    SoundService.instance.buzz(heavy: pos.isCheck);
-  }
-
-  Future<void> _onMove(NormalMove move) async {
-    final g = _game;
-    if (g == null || !_myTurn) return;
-    final normal = _position.normalizeMove(move);
-    if (!_position.isLegal(normal)) {
-      _say(context.t.onlineNotLegal);
-      return;
-    }
-    final next = _position.play(normal);
-    final end = next.isCheckmate
-        ? 'checkmate'
-        : next.isStalemate
-        ? 'stalemate'
-        : next.isInsufficientMaterial
-        ? 'draw'
-        : null;
-    final ply = _moves.length;
-    setState(() {
-      _replay([..._moves, move.uci]);
-      _sending = true;
-    });
-    _playSound(isUser: true);
+    if (g == null) return;
+    final s = ref.read(chessControllerProvider);
+    final end = switch (s.status) {
+      GameStatus.checkmate => 'checkmate',
+      GameStatus.draw =>
+        s.endReason == EndReason.stalemate ? 'stalemate' : 'draw',
+      _ => null,
+    };
     try {
       _show(await _repo.move(g.id, ply, move.uci, end: end));
     } on ApiException {
-      // Out of step (or offline): the server's game is the truth.
+      // Refused or offline: the server's game is put back on the board.
       await _load();
-      if (mounted) setState(() => _sending = false);
     }
   }
 
-  /// Once over, the game joins my history like any other, which also
-  /// sends it to my profile.
+  /// Once over, the game joins my history like any other (and so my
+  /// profile).
   Future<void> _save(OnlineGame g) async {
-    if (_saved || g.moves.isEmpty) return;
+    if (_saved || g.moves.isEmpty || !AppStorage.isReady) return;
     _saved = true;
     final mine = _iAmWhite ? 'white' : 'black';
+    final moves = ref.read(chessControllerProvider).moves;
     await GameHistoryStore.instance.add(
       GameRecord(
         id: 'online-${g.id}',
@@ -206,8 +255,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
             : GameRecord.loss,
         reason: g.reason ?? '',
         playerIsWhite: _iAmWhite,
-        uciMoves: [for (final uci in g.moves) uci],
-        sanMoves: _san,
+        uciMoves: [for (final m in moves) m.move.uci],
+        sanMoves: [for (final m in moves) m.san],
         botId: 'online',
         botName: g.opponentOf(_me),
         botElo: _opponent?.rating,
@@ -217,9 +266,44 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         ).label,
       ),
     );
+    if (mounted) _chess.markOnlineSaved('online-${g.id}');
   }
 
-  /// Cancelling my challenge: say so, and leave the screen.
+  /// Resign and Offer a draw both ask first.
+  void _confirm({
+    required String title,
+    required String subtitle,
+    required String action,
+    required bool danger,
+    required Future<OnlineGame> Function() then,
+  }) {
+    final t = context.t;
+    showKustSheet<void>(
+      context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KustSheetHeader(title: title, subtitle: subtitle),
+          KustButton(
+            label: action,
+            style: danger ? KustButtonStyle.danger : KustButtonStyle.primary,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              then().then(_show, onError: (_) {});
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.keep,
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheet).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _cancel() async {
     final g = _game;
     if (g == null) return;
@@ -239,50 +323,14 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     context.canPop() ? context.pop() : context.go('/play');
   }
 
-  void _confirmResign() {
-    final g = _game;
-    if (g == null) return;
-    final t = context.t;
-    showKustSheet<void>(
-      context,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          KustSheetHeader(title: t.resignTitle, subtitle: t.resignSubtitle),
-          KustButton(
-            label: t.resign,
-            style: KustButtonStyle.danger,
-            onTap: () {
-              Navigator.of(sheet).pop();
-              _repo.resign(g.id).then(_show, onError: (_) {});
-            },
-          ),
-          const SizedBox(height: 8),
-          KustButton(
-            label: t.keep,
-            style: KustButtonStyle.outline,
-            onTap: () => Navigator.of(sheet).pop(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _say(String text) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
-      );
-  }
-
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     final t = context.t;
     final g = _game;
     final opponent = g?.opponentOf(_me) ?? '';
+    final s = ref.watch(chessControllerProvider);
+    final cursor = s.analysisIndex ?? s.moves.length;
     return Scaffold(
       backgroundColor: k.bg,
       body: SafeArea(
@@ -303,15 +351,19 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                 onTap: () =>
                     context.canPop() ? context.pop() : context.go('/play'),
               ),
+              trailing: const [_Signal()],
             ),
+            const _ReconnectingStrip(),
             if (g == null)
               const Expanded(child: Center(child: CircularProgressIndicator()))
             else ...[
               MoveStrip(
                 labels: [
-                  for (var i = 0; i < _san.length; i++) moveLabel(i, _san[i]),
+                  for (var i = 0; i < s.moves.length; i++)
+                    moveLabel(i, s.moves[i].san),
                 ],
-                selected: _san.length,
+                selected: cursor,
+                onTap: (ply) => _chess.jumpToMove(ply - 1),
               ),
               const SizedBox(height: 8),
               Expanded(
@@ -324,30 +376,43 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
                     return Center(
                       child: SizedBox(
                         width: side,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _bar(context, g, white: !_iAmWhite),
-                            SizedBox(
-                              width: side,
-                              height: side,
-                              child: PuzzleBoard(
-                                position: _position,
-                                flipped: !_iAmWhite,
-                                interactive: _myTurn,
-                                onMove: _onMove,
-                                lastMove: _last,
-                              ),
-                            ),
-                            _bar(context, g, white: _iAmWhite),
-                          ],
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: boardFlipped,
+                          builder: (context, flip, _) {
+                            final top = _bar(
+                              context,
+                              g,
+                              s,
+                              white: !_iAmWhite != flip,
+                            );
+                            final bottom = _bar(
+                              context,
+                              g,
+                              s,
+                              white: _iAmWhite != flip,
+                            );
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                top,
+                                SizedBox(
+                                  width: side,
+                                  height: side,
+                                  child: g.pending
+                                      ? const IgnorePointer(child: ChessBoard())
+                                      : const ChessBoard(),
+                                ),
+                                bottom,
+                              ],
+                            );
+                          },
                         ),
                       ),
                     );
                   },
                 ),
               ),
-              _footer(context, g),
+              _footer(context, g, s),
             ],
           ],
         ),
@@ -355,17 +420,36 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     );
   }
 
-  /// A player: photo, name and flag, and their clock (bright while it
-  /// runs).
-  Widget _bar(BuildContext context, OnlineGame g, {required bool white}) {
+  /// A player: photo, name, flag and captured pieces, and the clock
+  /// (bright while it runs).
+  Widget _bar(
+    BuildContext context,
+    OnlineGame g,
+    GameState s, {
+    required bool white,
+  }) {
     final k = context.k;
     final username = white ? g.white : g.black;
     final isMe = username == _me;
     final p = isMe ? null : _opponent;
-    final clocks = g.clocksNow();
-    final left = white ? clocks.white : clocks.black;
-    final running = g.active && g.whiteToMove == white;
+    final side = white ? Side.white : Side.black;
+    final left = white ? s.whiteTimeLeft : s.blackTimeLeft;
+    final running =
+        s.mode == GameMode.online &&
+        s.status == GameStatus.playing &&
+        g.active &&
+        s.position.turn == side;
     final low = left < const Duration(seconds: 20);
+    final captured = s.mode == GameMode.online
+        ? piecesCapturedBy(side, s.moves)
+        : const <Piece>[];
+    final advantage = s.mode == GameMode.online
+        ? boardMaterialAdvantageFor(s.position, side)
+        : 0;
+    final byRole = <Role, List<Piece>>{};
+    for (final piece in captured) {
+      (byRole[piece.role] ??= []).add(piece);
+    }
     return Container(
       height: 56,
       // A little room at the sides for the photo and the clock.
@@ -388,20 +472,64 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Row(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: Text(
-                    username,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: k.body.copyWith(fontWeight: FontWeight.w800),
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        username,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: k.body.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    if (p?.country != null) ...[
+                      const SizedBox(width: 6),
+                      CountryFlag(p!.country!, height: 14),
+                    ],
+                  ],
                 ),
-                if (p?.country != null) ...[
-                  const SizedBox(width: 6),
-                  CountryFlag(p!.country!, height: 14),
-                ],
+                if (captured.isNotEmpty || advantage > 0)
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final group in byRole.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: SizedBox(
+                              width: 14 + 6.0 * (group.length - 1),
+                              height: 14,
+                              child: Stack(
+                                children: [
+                                  for (var i = 0; i < group.length; i++)
+                                    Positioned(
+                                      left: 6.0 * i,
+                                      child: PieceImage(
+                                        assetForPiece(group[i]),
+                                        width: 14,
+                                        height: 14,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        if (advantage > 0)
+                          Text(
+                            '+$advantage',
+                            style: k.caption.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -415,7 +543,11 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              TimeControl.format(TimeControl.display(left)),
+              TimeControl.format(
+                TimeControl.display(
+                  g.pending ? Duration(milliseconds: g.baseMs) : left,
+                ),
+              ),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
@@ -431,87 +563,168 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     );
   }
 
-  Widget _footer(BuildContext context, OnlineGame g) {
+  Widget _footer(BuildContext context, OnlineGame g, GameState s) {
     final k = context.k;
     final t = context.t;
     final opponent = g.opponentOf(_me);
-    final Widget body;
+    Widget actions({bool playing = false}) => KustActionBar(
+      actions: [
+        if (playing) ...[
+          KustAction(
+            icon: Icons.handshake_outlined,
+            label: t.onlineDraw,
+            onTap: g.drawOffer == _me
+                ? null
+                : () => _confirm(
+                    title: t.onlineOfferDraw,
+                    subtitle: t.onlineOfferDrawSub(opponent),
+                    action: t.onlineOfferDraw,
+                    danger: false,
+                    then: () => _repo.draw(g.id),
+                  ),
+          ),
+          KustAction(
+            icon: Icons.flag_outlined,
+            label: t.resign,
+            onTap: () => _confirm(
+              title: t.resignTitle,
+              subtitle: t.resignSubtitle,
+              action: t.resign,
+              danger: true,
+              then: () => _repo.resign(g.id),
+            ),
+          ),
+        ],
+        KustAction(
+          icon: Icons.chevron_left_rounded,
+          label: t.back,
+          onTap: s.analysisCursor > 0 ? _chess.analysisMoveBack : null,
+        ),
+        KustAction(
+          icon: Icons.chevron_right_rounded,
+          label: t.forward,
+          onTap: s.analysisIndex != null ? _chess.analysisMoveNext : null,
+        ),
+        KustAction(
+          icon: Icons.swap_vert_rounded,
+          label: t.flipBoard,
+          onTap: () => boardFlipped.value = !boardFlipped.value,
+        ),
+      ],
+    );
+
     if (g.pending && g.challenger == _me) {
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            t.onlineWaiting(opponent),
-            textAlign: TextAlign.center,
-            style: k.body.copyWith(color: k.muted),
-          ),
-          const SizedBox(height: 10),
-          KustButton(
-            label: t.onlineCancel,
-            style: KustButtonStyle.secondary,
-            onTap: _cancel,
-          ),
-        ],
-      );
-    } else if (g.pending) {
-      body = Row(
-        children: [
-          Expanded(
-            child: KustButton(
-              label: t.friendAccept,
-              onTap: () => _repo.accept(g.id).then(_show, onError: (_) {}),
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              t.onlineWaiting(opponent),
+              textAlign: TextAlign.center,
+              style: k.body.copyWith(color: k.muted),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: KustButton(
-              label: t.friendDecline,
+            const SizedBox(height: 10),
+            KustButton(
+              label: t.onlineCancel,
               style: KustButtonStyle.secondary,
-              onTap: () => _repo.decline(g.id).then(_show, onError: (_) {}),
+              onTap: _cancel,
             ),
-          ),
-        ],
+          ],
+        ),
       );
-    } else if (g.active) {
-      body = Row(
-        children: [
-          Expanded(
-            child: Text(
-              _myTurn ? t.onlineYourMove : t.onlineTheirMove(opponent),
-              style: k.body.copyWith(
-                fontWeight: FontWeight.w800,
-                color: _myTurn ? k.success : k.muted,
+    }
+    if (g.pending) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: KustButton(
+                label: t.friendAccept,
+                onTap: () => _repo.accept(g.id).then(_show, onError: (_) {}),
               ),
             ),
-          ),
-          TextButton.icon(
-            onPressed: _confirmResign,
-            icon: Icon(Icons.flag_outlined, color: k.danger),
-            label: Text(t.resign, style: TextStyle(color: k.danger)),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: KustButton(
+                label: t.friendDecline,
+                style: KustButtonStyle.secondary,
+                onTap: () => _repo.decline(g.id).then(_show, onError: (_) {}),
+              ),
+            ),
+          ],
+        ),
       );
-    } else {
-      final mine = _iAmWhite ? 'white' : 'black';
-      final title = switch (g.status) {
-        'declined' => t.onlineDeclined(opponent),
-        'cancelled' => t.onlineCancelled,
-        _ =>
-          g.result == 'draw'
-              ? t.onlineDraw
-              : g.result == mine
-              ? t.youWonTitle
-              : t.youLostTitle,
-      };
-      final reason = switch (g.reason) {
-        'checkmate' => t.byCheckmate,
-        'resign' => t.byResignation,
-        'timeout' => t.byTimeout,
-        'stalemate' => t.byStalemate,
-        'draw' => t.byInsufficient,
-        _ => '',
-      };
-      body = Column(
+    }
+    if (g.active) {
+      final theirOffer = g.drawOffer != null && g.drawOffer != _me;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Their draw offer, to answer.
+            if (theirOffer)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t.onlineDrawOffered(opponent),
+                        style: k.body.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          _repo.declineDraw(g.id).then(_show, onError: (_) {}),
+                      child: Text(
+                        t.friendDecline,
+                        style: TextStyle(color: k.muted),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    KustButton(
+                      label: t.friendAccept,
+                      height: 40,
+                      expand: false,
+                      onTap: () =>
+                          _repo.draw(g.id).then(_show, onError: (_) {}),
+                    ),
+                  ],
+                ),
+              ),
+            actions(playing: true),
+          ],
+        ),
+      );
+    }
+    final mine = _iAmWhite ? 'white' : 'black';
+    final title = switch (g.status) {
+      'declined' => t.onlineDeclined(opponent),
+      'cancelled' => t.onlineCancelled,
+      _ =>
+        g.result == 'draw'
+            ? t.onlineDraw
+            : g.result == mine
+            ? t.youWonTitle
+            : t.youLostTitle,
+    };
+    final reason = switch (g.reason) {
+      'checkmate' => t.byCheckmate,
+      'resign' => t.byResignation,
+      'timeout' => t.byTimeout,
+      'stalemate' => t.byStalemate,
+      'agreement' => t.byAgreement,
+      'draw' => t.byInsufficient,
+      _ => '',
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
@@ -525,12 +738,123 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
               textAlign: TextAlign.center,
               style: k.body.copyWith(color: k.muted),
             ),
+          const SizedBox(height: 8),
+          if (s.moves.isNotEmpty) actions(),
         ],
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: body,
+      ),
+    );
+  }
+}
+
+/// The link to the server, top right, as on chess.com: four bars when
+/// connected, bars filling over and over while reconnecting, one red bar
+/// when offline.
+class _Signal extends StatefulWidget {
+  const _Signal();
+
+  @override
+  State<_Signal> createState() => _SignalState();
+}
+
+class _SignalState extends State<_Signal> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder<LiveState>(
+      valueListenable: LiveSocket.instance.state,
+      builder: (context, state, _) {
+        final trying = state == LiveState.connecting;
+        if (trying && !_c.isAnimating) _c.repeat();
+        if (!trying && _c.isAnimating) _c.stop();
+        return Semantics(
+          label: state == LiveState.connected
+              ? context.t.onlineConnection
+              : context.t.onlineReconnecting,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: AnimatedBuilder(
+              animation: _c,
+              builder: (_, _) {
+                final lit = switch (state) {
+                  LiveState.connected => 4,
+                  LiveState.connecting => 1 + (_c.value * 4).floor() % 4,
+                  LiveState.idle => 1,
+                };
+                final on = switch (state) {
+                  LiveState.connected => k.success,
+                  LiveState.connecting => KustTokens.gold,
+                  LiveState.idle => k.danger,
+                };
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (var i = 0; i < 4; i++)
+                      Container(
+                        width: 4,
+                        height: 6.0 + i * 4,
+                        margin: const EdgeInsets.only(left: 2),
+                        decoration: BoxDecoration(
+                          color: i < lit ? on : k.line,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Under the top bar while the link is down: says it is coming back.
+class _ReconnectingStrip extends StatelessWidget {
+  const _ReconnectingStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    final k = context.k;
+    return ValueListenableBuilder<LiveState>(
+      valueListenable: LiveSocket.instance.state,
+      builder: (context, state, _) => AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        child: state == LiveState.connected
+            ? const SizedBox(width: double.infinity)
+            : Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                color: KustTokens.gold.withValues(alpha: 0.15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      context.t.onlineReconnecting,
+                      style: k.caption.copyWith(color: k.ink),
+                    ),
+                  ],
+                ),
+              ),
+      ),
     );
   }
 }

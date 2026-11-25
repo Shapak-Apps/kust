@@ -657,3 +657,8 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `onlineOpen` | Open | Aç |
 | `onlineNotLegal` | That move isn't allowed | Bu göçüm bolmaýar |
 | `onlineFriendsOnly` | You can challenge friends only | Diňe dostlaryňyzy çagyryp bilersiňiz |
+| `onlineOfferDraw` | Offer a draw? | Deňe deň teklip edilsinmi? |
+| `onlineOfferDrawSub` | {name} can accept or decline it. | {name} kabul edip ýa-da ret edip biler. |
+| `onlineDrawOffered` | {name} offers a draw | {name} deňe deň teklip edýär |
+| `onlineReconnecting` | Reconnecting… | Täzeden birikdirilýär… |
+| `onlineConnection` | Connection | Baglanyşyk |

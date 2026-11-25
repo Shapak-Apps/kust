@@ -252,7 +252,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                             onPressed: _confirmRemove,
                             tooltip: t.friendRemove,
                             color: Colors.white,
-                            icon: const Icon(Icons.more_vert_rounded),
+                            icon: const Icon(Icons.person_remove_outlined),
                           ),
                       ],
                     ),

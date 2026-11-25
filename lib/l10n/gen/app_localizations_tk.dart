@@ -1885,6 +1885,12 @@ class AppL10nTk extends AppL10n {
   String get offlineBanner => 'Siz onlaýn däl';
 
   @override
+  String get onlineReconnecting => 'Täzeden birikdirilýär…';
+
+  @override
+  String get onlineConnection => 'Baglanyşyk';
+
+  @override
   String get backOnlineBanner => 'Ýene onlaýn';
 
   @override
@@ -2321,4 +2327,17 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get onlineFriendsOnly => 'Diňe dostlaryňyzy çagyryp bilersiňiz';
+
+  @override
+  String get onlineOfferDraw => 'Deňe deň teklip edilsinmi?';
+
+  @override
+  String onlineOfferDrawSub(String name) {
+    return '$name kabul edip ýa-da ret edip biler.';
+  }
+
+  @override
+  String onlineDrawOffered(String name) {
+    return '$name deňe deň teklip edýär';
+  }
 }
