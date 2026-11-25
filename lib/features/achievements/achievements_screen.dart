@@ -80,11 +80,7 @@ class AchievementTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: k.surface,
           borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          border: Border.all(
-            color: earned
-                ? achievement.tier.color.withValues(alpha: 0.6)
-                : k.line,
-          ),
+          border: Border.all(color: k.line),
         ),
         child: Row(
           children: [
@@ -109,8 +105,8 @@ class AchievementTile extends StatelessWidget {
             Text(
               achievement.tier.labelIn(context.t),
               style: k.caption.copyWith(
-                color: achievement.tier.color,
-                fontWeight: FontWeight.w800,
+                color: earned ? achievement.tier.color : k.muted,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -120,9 +116,9 @@ class AchievementTile extends StatelessWidget {
   }
 }
 
-/// An achievement's picture: its icon on a tile in its tier's colour (green
-/// common, yellow rare, red mythic), raised on a darker lip once earned;
-/// faded in the same colour, with a small lock, until then.
+/// An achievement's picture, kept flat: once earned, its icon in its
+/// tier's colour on a soft tint of it; until then, a grey tile with the
+/// icon faded. No gradients, edges or shadows.
 class AchievementIcon extends StatelessWidget {
   const AchievementIcon({
     super.key,
@@ -139,61 +135,20 @@ class AchievementIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final c = achievement.tier.color;
-    final radius = BorderRadius.circular(size * 0.28);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: earned
-              ? BoxDecoration(
-                  borderRadius: radius,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color.lerp(c, Colors.white, 0.22)!, c],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color.lerp(c, Colors.black, 0.4)!,
-                      offset: Offset(0, size * 0.06),
-                    ),
-                  ],
-                )
-              : BoxDecoration(
-                  borderRadius: radius,
-                  color: Color.alphaBlend(c.withValues(alpha: 0.12), k.surface),
-                  border: Border.all(color: c.withValues(alpha: 0.35)),
-                ),
-          child: Icon(
-            achievement.icon,
-            size: size * 0.47,
-            color: earned
-                ? achievement.tier.onColor
-                : c.withValues(alpha: 0.55),
-          ),
-        ),
-        if (!earned)
-          Positioned(
-            right: -size * 0.06,
-            bottom: -size * 0.06,
-            child: Container(
-              width: size * 0.33,
-              height: size * 0.33,
-              decoration: BoxDecoration(
-                color: k.surfaceAlt,
-                shape: BoxShape.circle,
-                border: Border.all(color: k.bg, width: 2),
-              ),
-              child: Icon(
-                Icons.lock_rounded,
-                size: size * 0.17,
-                color: k.muted,
-              ),
-            ),
-          ),
-      ],
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(size * 0.26),
+        color: earned
+            ? Color.alphaBlend(c.withValues(alpha: 0.16), k.surface)
+            : k.surfaceAlt,
+      ),
+      child: Icon(
+        achievement.icon,
+        size: size * 0.46,
+        color: earned ? c : k.muted.withValues(alpha: 0.45),
+      ),
     );
   }
 }
