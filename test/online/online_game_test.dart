@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:kust/core/net/auth_service.dart';
@@ -87,11 +88,13 @@ void main() {
     );
   }
 
-  Widget app() => MaterialApp(
-    theme: appTheme,
-    supportedLocales: kSupportedLocales,
-    localizationsDelegates: kLocalizationDelegates,
-    home: OnlineGameScreen(gameId: 7, repository: repo),
+  Widget app() => ProviderScope(
+    child: MaterialApp(
+      theme: appTheme,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: kLocalizationDelegates,
+      home: OnlineGameScreen(gameId: 7, repository: repo),
+    ),
   );
 
   test('only the clock of the side to move runs', () {
@@ -110,7 +113,8 @@ void main() {
   testWidgets('an invite can be accepted', (tester) async {
     await tester.runAsync(() => setUpWith(_game(status: 'pending')));
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Accept'), findsOneWidget);
     expect(find.text('Decline'), findsOneWidget);
     await tester.tap(find.text('Accept'));
@@ -121,8 +125,19 @@ void main() {
       adapter.requests.any((r) => r.path == '/v1/online/games/7/accept'),
       isTrue,
     );
-    expect(find.text('Your move'), findsOneWidget);
+    // The "you play as" card shows a moment, then goes.
+    expect(find.text('Game start'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 300));
+    // Playing: draw and resign by the moves, Back, Forward and Flip.
+    expect(find.text('Draw'), findsOneWidget);
+    expect(find.text('Resign'), findsOneWidget);
+    expect(find.text('Flip board'), findsOneWidget);
     expect(find.text('3:00'), findsWidgets);
+    await tester.tap(find.text('Draw'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Offer a draw?'), findsWidgets);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -138,7 +153,8 @@ void main() {
       ),
     );
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('You lost'), findsOneWidget);
     expect(find.text('by checkmate'), findsOneWidget);
     expect(tester.takeException(), isNull);

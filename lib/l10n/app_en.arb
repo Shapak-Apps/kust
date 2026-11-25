@@ -1078,6 +1078,8 @@
   "countryNone": "Not set",
   "searchCountries": "Search countries",
   "offlineBanner": "You're offline",
+  "onlineReconnecting": "Reconnecting…",
+  "onlineConnection": "Connection",
   "backOnlineBanner": "Back online",
   "playersTitle": "Players",
   "playersSearch": "Search players",
@@ -1322,6 +1324,23 @@
     }
   },
   "@onlinePlaying": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineOfferDraw": "Offer a draw?",
+  "onlineOfferDrawSub": "{name} can accept or decline it.",
+  "onlineDrawOffered": "{name} offers a draw",
+  "@onlineOfferDrawSub": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@onlineDrawOffered": {
     "placeholders": {
       "name": {
         "type": "String"

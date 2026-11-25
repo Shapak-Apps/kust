@@ -13,6 +13,8 @@ import 'package:kust/ui/kust_button.dart';
 import 'package:kust/widgets/static_board.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
+import 'package:kust/core/settings.dart';
+import 'package:kust/widgets/piece_image.dart';
 
 /// Opens the result over the whole screen. Closing it (the X or Back)
 /// leaves the finished game on the board to look through.
@@ -392,4 +394,56 @@ List<MoveQuality> pickMoveCounts(Map<MoveQuality, int> counts) {
   }
   // Good ones first, then errors from the mildest to the worst.
   return picked..sort((a, b) => a.index.compareTo(b.index));
+}
+
+/// The game begins: which side the player has, for a moment.
+void showGameStartModal(
+  BuildContext context, {
+  required bool white,
+  String? message,
+}) {
+  final pieceAsset = white
+      ? AppSettings.instance.pieceSet.value.asset('w', 'K')
+      : AppSettings.instance.pieceSet.value.asset('b', 'K');
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) {
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (dialogContext.mounted && Navigator.canPop(dialogContext)) {
+          Navigator.of(dialogContext).pop();
+        }
+      });
+
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PieceImage(pieceAsset, width: 64, height: 64),
+              const SizedBox(height: 16),
+              Text(
+                dialogContext.t.gameStartTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message ??
+                    (white
+                        ? dialogContext.t.youPlayAsWhite
+                        : dialogContext.t.youPlayAsBlack),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

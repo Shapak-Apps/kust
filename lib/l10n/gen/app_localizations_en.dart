@@ -1880,6 +1880,12 @@ class AppL10nEn extends AppL10n {
   String get offlineBanner => 'You\'re offline';
 
   @override
+  String get onlineReconnecting => 'Reconnecting…';
+
+  @override
+  String get onlineConnection => 'Connection';
+
+  @override
   String get backOnlineBanner => 'Back online';
 
   @override
@@ -2314,4 +2320,17 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get onlineFriendsOnly => 'You can challenge friends only';
+
+  @override
+  String get onlineOfferDraw => 'Offer a draw?';
+
+  @override
+  String onlineOfferDrawSub(String name) {
+    return '$name can accept or decline it.';
+  }
+
+  @override
+  String onlineDrawOffered(String name) {
+    return '$name offers a draw';
+  }
 }

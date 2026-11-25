@@ -1888,6 +1888,12 @@ class AppL10nRu extends AppL10n {
   String get offlineBanner => 'Вы не в сети';
 
   @override
+  String get onlineReconnecting => 'Переподключение…';
+
+  @override
+  String get onlineConnection => 'Соединение';
+
+  @override
   String get backOnlineBanner => 'Снова в сети';
 
   @override
@@ -2324,4 +2330,17 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get onlineFriendsOnly => 'Вызывать можно только друзей';
+
+  @override
+  String get onlineOfferDraw => 'Предложить ничью?';
+
+  @override
+  String onlineOfferDrawSub(String name) {
+    return '$name может принять или отклонить.';
+  }
+
+  @override
+  String onlineDrawOffered(String name) {
+    return '$name предлагает ничью';
+  }
 }

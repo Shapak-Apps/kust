@@ -550,6 +550,8 @@
   "countryNone": "Не указана",
   "searchCountries": "Поиск страны",
   "offlineBanner": "Вы не в сети",
+  "onlineReconnecting": "Переподключение…",
+  "onlineConnection": "Соединение",
   "backOnlineBanner": "Снова в сети",
   "playersTitle": "Игроки",
   "playersSearch": "Поиск игроков",
@@ -681,5 +683,8 @@
   "onlinePlaying": "Партия с {name}",
   "onlineOpen": "Открыть",
   "onlineNotLegal": "Такой ход невозможен",
-  "onlineFriendsOnly": "Вызывать можно только друзей"
+  "onlineFriendsOnly": "Вызывать можно только друзей",
+  "onlineOfferDraw": "Предложить ничью?",
+  "onlineOfferDrawSub": "{name} может принять или отклонить.",
+  "onlineDrawOffered": "{name} предлагает ничью"
 }

@@ -134,57 +134,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
     }
   }
 
-  void _showGameStartModal(dynamic playerSide) {
-    final isWhite = playerSide.toString().toLowerCase().contains('white');
-    final pieceAsset = isWhite
-        ? AppSettings.instance.pieceSet.value.asset('w', 'K')
-        : AppSettings.instance.pieceSet.value.asset('b', 'K');
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        Future.delayed(const Duration(milliseconds: 1500), () {
-          if (dialogContext.mounted && Navigator.canPop(dialogContext)) {
-            Navigator.of(dialogContext).pop();
-          }
-        });
-
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PieceImage(pieceAsset, width: 64, height: 64),
-                const SizedBox(height: 16),
-                Text(
-                  dialogContext.t.gameStartTitle,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.isLocal
-                      ? dialogContext.t.whiteMovesFirst
-                      : (isWhite
-                            ? dialogContext.t.youPlayAsWhite
-                            : dialogContext.t.youPlayAsBlack),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   bool _engineSheetOpen = false;
 
   void _showEngineFailed() {
@@ -400,7 +349,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
       switch (next.status) {
         case GameStatus.playing:
           _endDialogTimer?.cancel();
-          _showGameStartModal(next.playerSide);
+          showGameStartModal(
+            context,
+            white: next.playerSide == Side.white,
+            message: widget.isLocal ? context.t.whiteMovesFirst : null,
+          );
           break;
         case GameStatus.checkmate:
         case GameStatus.draw:
