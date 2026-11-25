@@ -2221,5 +2221,11 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get chatBeKind =>
-      'Будьте добры друг к другу. Общайтесь дружелюбно, без грубых слов и оскорблений. Уважение делает игру лучше.';
+      'Пожалуйста, будьте вежливы и уважительны в сообщениях. Без грубых слов и оскорблений.';
+
+  @override
+  String get challengeButton => 'Вызов';
+
+  @override
+  String get challengeSoon => 'Вызовы скоро появятся';
 }

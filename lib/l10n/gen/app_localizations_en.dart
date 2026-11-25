@@ -2212,5 +2212,11 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get chatBeKind =>
-      'Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.';
+      'Please be kind and respectful in your messages. No bad words or insults.';
+
+  @override
+  String get challengeButton => 'Challenge';
+
+  @override
+  String get challengeSoon => 'Challenges are coming soon';
 }

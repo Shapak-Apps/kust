@@ -15,6 +15,9 @@ enum KustButtonStyle {
 
   /// Something that can't be undone lightly, such as logging out.
   danger,
+
+  /// The brand's gold, for a bold second action (Challenge).
+  gold,
 }
 
 class KustButton extends StatelessWidget {
@@ -62,6 +65,9 @@ class KustButton extends StatelessWidget {
         bg = Colors.transparent;
         fg = enabled ? k.ink : k.muted;
         border = Border.all(color: k.line, width: 1.5);
+      case KustButtonStyle.gold:
+        bg = enabled ? KustTokens.gold : k.surfaceAlt;
+        fg = enabled ? const Color(0xFF17181A) : k.muted;
       case KustButtonStyle.danger:
         bg = enabled ? k.danger : k.surfaceAlt;
         fg = enabled ? Colors.white : k.muted;
