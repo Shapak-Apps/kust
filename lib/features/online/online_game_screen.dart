@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' as io;
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
+import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
+import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/game/time_control.dart';
@@ -372,7 +375,16 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
           PlayerAvatar(
             size: 36,
             name: p?.displayName ?? username,
-            photo: avatarImage(avatarUrlFor(p?.avatarKey)),
+            // Mine: the photo on this phone, else my account's.
+            photo: isMe
+                ? (AppStorage.isReady && AppStorage.instance.photoPath != null
+                      ? FileImage(io.File(AppStorage.instance.photoPath!))
+                      : avatarImage(
+                          avatarUrlFor(
+                            AuthService.instance.state.value.account?.avatarKey,
+                          ),
+                        ))
+                : avatarImage(avatarUrlFor(p?.avatarKey)),
           ),
           const SizedBox(width: 10),
           Expanded(
