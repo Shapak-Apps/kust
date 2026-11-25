@@ -4014,8 +4014,20 @@ abstract class AppL10n {
   /// No description provided for @chatBeKind.
   ///
   /// In en, this message translates to:
-  /// **'Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.'**
+  /// **'Please be kind and respectful in your messages. No bad words or insults.'**
   String get chatBeKind;
+
+  /// No description provided for @challengeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge'**
+  String get challengeButton;
+
+  /// No description provided for @challengeSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenges are coming soon'**
+  String get challengeSoon;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

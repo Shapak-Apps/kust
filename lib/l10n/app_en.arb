@@ -1239,12 +1239,14 @@
     }
   },
   "chatTextedYou": "{name} texted you",
-  "chatBeKind": "Be kind here. Keep it friendly, no bad words or insults. Respect makes the game better.",
+  "chatBeKind": "Please be kind and respectful in your messages. No bad words or insults.",
   "@chatTextedYou": {
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
-  }
+  },
+  "challengeButton": "Challenge",
+  "challengeSoon": "Challenges are coming soon"
 }

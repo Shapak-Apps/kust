@@ -244,6 +244,14 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                           color: Colors.white,
                           icon: const Icon(Icons.arrow_back_rounded),
                         ),
+                        const Spacer(),
+                        if (_friendship == Friendship.friends)
+                          IconButton(
+                            onPressed: _confirmRemove,
+                            tooltip: t.friendRemove,
+                            color: Colors.white,
+                            icon: const Icon(Icons.more_vert_rounded),
+                          ),
                       ],
                     ),
                   ),
@@ -343,21 +351,33 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   /// The friend button, which says where things stand, and Message.
+  /// As on chess.com: the friend button on top while there is something to
+  /// do (add, sent, accept), then Message and Challenge side by side.
+  /// Friends need no friend button: Message turns green, Challenge stays
+  /// gold. (Removing a friend is in the ⋮ menu at the top.)
   Widget _actions(BuildContext context) {
     final t = context.t;
+    final friendship = _friendship;
+    final friends = friendship == Friendship.friends;
+    final busy = _busy || friendship == null;
     final message = KustButton(
       label: t.messageButton,
       icon: Icons.chat_bubble_outline_rounded,
-      style: KustButtonStyle.outline,
+      style: friends ? KustButtonStyle.primary : KustButtonStyle.secondary,
       // Friends chat; anyone else is told to add them first.
-      onTap: () => _friendship == Friendship.friends
+      onTap: () => friends
           ? context.push('/chat/${widget.username}', extra: _player)
           : _say(t.chatFriendsOnly),
     );
-    final friendship = _friendship;
-    final busy = _busy || friendship == null;
-    if (friendship == Friendship.incoming) {
-      return Column(
+    final challenge = KustButton(
+      label: t.challengeButton,
+      icon: Icons.sports_esports_rounded,
+      style: KustButtonStyle.gold,
+      onTap: () => _say(t.challengeSoon),
+    );
+    final Widget? top = switch (friendship) {
+      Friendship.friends => null,
+      Friendship.incoming => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(t.wantsToBeFriend, style: context.k.caption),
@@ -383,17 +403,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          message,
         ],
-      );
-    }
-    final friend = switch (friendship) {
-      Friendship.friends => KustButton(
-        label: t.friendFriends,
-        icon: Icons.how_to_reg_rounded,
-        style: KustButtonStyle.secondary,
-        onTap: busy ? null : _confirmRemove,
       ),
       // Sent stays sent: it can't be taken back from here.
       Friendship.outgoing => KustButton(
@@ -408,11 +418,17 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         onTap: busy ? null : () => _act(() => _repo.addFriend(widget.username)),
       ),
     };
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: friend),
-        const SizedBox(width: 10),
-        Expanded(child: message),
+        if (top != null) ...[top, const SizedBox(height: 10)],
+        Row(
+          children: [
+            Expanded(child: message),
+            const SizedBox(width: 10),
+            Expanded(child: challenge),
+          ],
+        ),
       ],
     );
   }
