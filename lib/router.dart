@@ -135,6 +135,11 @@ GoRouter createRouter({required bool onboardingCompleted}) {
       ),
 
       GoRoute(
+        path: '/player/:username/games',
+        builder: (context, state) =>
+            PlayerGamesScreen(username: state.pathParameters['username']!),
+      ),
+      GoRoute(
         path: '/player/:username',
         // Me: my own profile; nobody sees themselves as others do.
         redirect: (context, state) =>
