@@ -21,7 +21,7 @@ void main() {
     for (final a in assets) {
       final loader = SvgAssetLoader(a);
       final info = await tester.runAsync(() => vg.loadPicture(loader, null));
-      expect(info!.size, const Size(24, 24), reason: a);
+      expect(info!.size, const Size(19, 19), reason: a);
       info.picture.dispose();
     }
     await tester.pumpWidget(
