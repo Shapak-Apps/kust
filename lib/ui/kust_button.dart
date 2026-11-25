@@ -40,8 +40,11 @@ class KustButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (style == KustButtonStyle.primary) {
+    if (style == KustButtonStyle.primary || style == KustButtonStyle.gold) {
       return KustButton3D(
+        colors: style == KustButtonStyle.gold
+            ? KustButton3D.gold
+            : KustButton3D.green,
         label: label,
         onTap: onTap,
         expand: expand,
