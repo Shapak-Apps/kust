@@ -159,39 +159,53 @@ class _MessageMenuState extends State<_MessageMenu>
       widget.reactions.length * _emoji + _barPad * 2,
     );
 
-    // Bar, bubble (with what hangs under it) and card stacked: where the
-    // bubble must sit so all fit, as near as can be to where it is.
-    final h = rect.height + widget.belowBubble;
-    final need = _barHeight + _gap + h + _gap + menuHeight;
-    final fits = need <= bottom - top;
-    final double barTop;
-    final double bubbleTop;
-    final double menuTop;
-    if (fits) {
-      barTop = (rect.top - _barHeight - _gap).clamp(top, bottom - need);
-      bubbleTop = barTop + _barHeight + _gap;
-      menuTop = bubbleTop + h + _gap;
-    } else {
-      // Too tall to fit: the message stays put, the bar and card float over
-      // it, centred.
-      bubbleTop = rect.top;
-      final rest = _barHeight + _gap + menuHeight;
-      barTop = ((top + bottom - rest) / 2).clamp(top, bottom - rest);
-      menuTop = barTop + _barHeight + _gap;
-    }
-
-    // Lined up with the message's own side, kept on screen.
+    // As on Telegram the message doesn't move: it is only raised above
+    // the dim. The bar sits just over it (or under, near the top), and the
+    // card opens beside it on the free side, growing up from it when it is
+    // low on the screen and down when it is high. A message too wide to
+    // leave room beside gets the card under it (or over the bar).
+    final below = rect.bottom + widget.belowBubble;
+    final barAbove = rect.top - _gap - _barHeight >= top;
+    final barTop = (barAbove ? rect.top - _gap - _barHeight : below + _gap)
+        .clamp(top, bottom - _barHeight);
     double side(double width) => mine
         ? (rect.right - width).clamp(_margin, size.width - width - _margin)
         : rect.left.clamp(_margin, size.width - width - _margin);
     final barLeft = side(barWidth);
-    final menuLeft = side(_menuWidth);
+
+    final room = mine ? rect.left - _margin : size.width - rect.right - _margin;
+    final beside = room >= _menuWidth + _gap;
+    final low = rect.center.dy > (top + bottom) / 2;
+    final double menuLeft;
+    final double menuTop;
+    final Alignment opensFrom;
+    if (beside) {
+      menuLeft = mine ? rect.left - _gap - _menuWidth : rect.right + _gap;
+      menuTop = (low ? below - menuHeight : rect.top).clamp(
+        top,
+        bottom - menuHeight,
+      );
+      opensFrom = mine
+          ? (low ? Alignment.bottomRight : Alignment.topRight)
+          : (low ? Alignment.bottomLeft : Alignment.topLeft);
+    } else {
+      menuLeft = side(_menuWidth);
+      final under = (barAbove ? below : barTop + _barHeight) + _gap;
+      final over = (barAbove ? barTop : rect.top) - _gap - menuHeight;
+      menuTop = (under + menuHeight <= bottom ? under : over).clamp(
+        top,
+        bottom - menuHeight,
+      );
+      final down = menuTop >= rect.top;
+      opensFrom = mine
+          ? (down ? Alignment.topRight : Alignment.bottomRight)
+          : (down ? Alignment.topLeft : Alignment.bottomLeft);
+    }
     final from = mine ? Alignment.centerRight : Alignment.centerLeft;
 
     final fade = _part(0, 0.6, Curves.easeOut);
-    final glide = _part(0, 0.85, Curves.easeOutCubic);
     final unroll = _part(0.05, 0.75, Curves.easeOutCubic);
-    final curtain = _part(0.15, 1, Curves.easeOutCubic);
+    final open = _part(0.1, 1, Curves.easeOutBack);
 
     final layer = Material(
       type: MaterialType.transparency,
@@ -208,15 +222,11 @@ class _MessageMenuState extends State<_MessageMenu>
               ),
             ),
           ),
-          // The message, lifted and gliding to its place.
-          AnimatedBuilder(
-            animation: glide,
-            builder: (context, child) => Positioned(
-              left: rect.left,
-              top: rect.top + (bubbleTop - rect.top) * glide.value,
-              width: rect.width,
-              child: child!,
-            ),
+          // The message, where it is, raised above the dim.
+          Positioned(
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
             child: IgnorePointer(child: RepaintBoundary(child: widget.bubble)),
           ),
           // The reactions: the bar unrolls from the message's side and the
@@ -281,16 +291,10 @@ class _MessageMenuState extends State<_MessageMenu>
             width: _menuWidth,
             child: FadeTransition(
               opacity: fade,
-              child: AnimatedBuilder(
-                animation: curtain,
-                builder: (context, child) => ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    heightFactor: 0.2 + 0.8 * curtain.value,
-                    child: child,
-                  ),
-                ),
+              // Grows out of the corner nearest the message.
+              child: ScaleTransition(
+                scale: Tween(begin: 0.5, end: 1.0).animate(open),
+                alignment: opensFrom,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
