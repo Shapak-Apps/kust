@@ -9,6 +9,7 @@ import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/quality_badge.dart';
 import 'package:kust/features/play/bot_quote.dart';
 import 'package:kust/l10n/app_locale.dart';
+import 'package:kust/ui/count_up.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_dialog.dart';
 import 'package:kust/widgets/static_board.dart';
@@ -258,13 +259,21 @@ class _RatingAndAccuracy extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                '${PlayerRatingStore.instance.rating}',
+              // The rating counts from what it was to what it is.
+              CountUp(
+                from: PlayerRatingStore.instance.rating - change,
+                to: PlayerRatingStore.instance.rating,
                 style: k.display.copyWith(color: Colors.white, fontSize: 28),
               ),
               const SizedBox(width: 6),
-              Text(
-                '${change > 0 ? '+' : ''}$change',
+              CountUp(
+                from: 0,
+                to: change.abs(),
+                prefix: change > 0
+                    ? '+'
+                    : change < 0
+                    ? '\u2212'
+                    : '',
                 style: k.title.copyWith(
                   color: change > 0
                       ? k.success

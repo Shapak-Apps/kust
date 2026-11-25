@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/achievements/achievement_tracker.dart';
+import 'package:kust/features/game/chess/move_feedback.dart';
 import 'package:kust/features/game/chess/sound_service.dart';
 import 'package:kust/features/puzzles/coach_bubble.dart';
 import 'package:kust/features/puzzles/daily.dart';
@@ -23,6 +24,7 @@ import 'package:kust/features/puzzles/woven_dialog.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_top_bar.dart';
+import 'package:kust/ui/motion.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/more_sheet.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -512,6 +514,13 @@ class _PuzzleGameScreenState extends State<PuzzleGameScreen> {
                           hintTo: hintTo,
                           slide: _slide,
                           slideKey: _slideKey,
+                          // The solving move earns the star of a best move.
+                          badge: _solved && _s.lastMoves[_ply] != null
+                              ? (
+                                  square: _s.lastMoves[_ply]!.to,
+                                  quality: MoveQuality.best,
+                                )
+                              : null,
                         ),
                       ),
                     ],
@@ -735,30 +744,43 @@ class _FinishedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          KustIconButton(
-            icon: Icons.refresh_rounded,
-            label: context.t.retry,
-            size: 52,
-            onTap: busy ? null : onRetry,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: KustButton(
-              label: daily
-                  ? context.t.doneButton
-                  : hasNext
-                  ? context.t.nextPuzzle
-                  : nextLevel
-                  ? context.t.nextLevel
-                  : context.t.backToPuzzles,
-              onTap: busy ? null : onNext,
+    // Slides up 12 px and fades in over 200 ms as the puzzle is solved.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: motion(context, const Duration(milliseconds: 200)),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, 12 * (1 - t)),
+          child: child,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Row(
+          children: [
+            KustIconButton(
+              icon: Icons.refresh_rounded,
+              label: context.t.retry,
+              size: 52,
+              onTap: busy ? null : onRetry,
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: KustButton(
+                label: daily
+                    ? context.t.doneButton
+                    : hasNext
+                    ? context.t.nextPuzzle
+                    : nextLevel
+                    ? context.t.nextLevel
+                    : context.t.backToPuzzles,
+                onTap: busy ? null : onNext,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
