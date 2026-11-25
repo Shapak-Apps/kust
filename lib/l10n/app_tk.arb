@@ -650,5 +650,7 @@
   "chatCopied": "Göçürildi",
   "chatFriendsOnly": "Diňe dostlaryňyza hat ýazyp bilersiňiz. Ilki dost goşuň.",
   "chatNotSent": "Iberilmedi. Gaýtadan synanyşmak üçin basyň.",
-  "chatSend": "Iber"
+  "chatSend": "Iber",
+  "chatTextedYou": "{name} size hat ýazdy",
+  "chatBeKind": "Biri-biriňize mähirli boluň. Dostlukly gürleşiň, gödek sözler we kemsitmeler bolmasyn. Hormat oýny has gowy edýär."
 }

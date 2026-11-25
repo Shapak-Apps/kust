@@ -5,6 +5,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
+import 'package:kust/core/net/chat_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
@@ -73,6 +74,10 @@ class ProfileSync {
   /// rating, so the next account (or guest) doesn't see them. They stay on
   /// the server.
   Future<void> forget() async {
+    PlayersRepository.instance.friendsCache.value = null;
+    PlayersRepository.instance.incoming.value = const [];
+    ChatRepository.instance.summaries.value = const [];
+    ChatRepository.instance.unread.value = 0;
     await GameHistoryStore.instance.clear();
     await AchievementStore.instance.clear();
     await PlayerRatingStore.instance.setStartingRating(
