@@ -638,3 +638,5 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `chatDeleteMe` | Delete for me | Diňe menden poz |
 | `chatEdited` | edited | üýtgedildi |
 | `chatEditTooLate` | Messages can be edited for one day only | Haty diňe bir günüň dowamynda üýtgedip bolýar |
+| `chatRead` | Read | Okaldy |
+| `chatSentState` | Sent | Iberildi |

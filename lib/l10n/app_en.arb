@@ -1256,5 +1256,7 @@
   "chatDeleteEveryone": "Delete for everyone",
   "chatDeleteMe": "Delete for me",
   "chatEdited": "edited",
-  "chatEditTooLate": "Messages can be edited for one day only"
+  "chatEditTooLate": "Messages can be edited for one day only",
+  "chatRead": "Read",
+  "chatSentState": "Sent"
 }

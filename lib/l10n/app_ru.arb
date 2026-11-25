@@ -662,5 +662,7 @@
   "chatDeleteEveryone": "Удалить у всех",
   "chatDeleteMe": "Удалить у меня",
   "chatEdited": "изменено",
-  "chatEditTooLate": "Сообщение можно изменить только в течение суток"
+  "chatEditTooLate": "Сообщение можно изменить только в течение суток",
+  "chatRead": "Прочитано",
+  "chatSentState": "Отправлено"
 }
