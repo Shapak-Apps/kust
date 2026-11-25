@@ -2219,4 +2219,28 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get challengeSoon => 'Challenges are coming soon';
+
+  @override
+  String get chatEdit => 'Edit';
+
+  @override
+  String get chatEditing => 'Editing';
+
+  @override
+  String get chatDelete => 'Delete';
+
+  @override
+  String get chatDeleteTitle => 'Delete message?';
+
+  @override
+  String get chatDeleteEveryone => 'Delete for everyone';
+
+  @override
+  String get chatDeleteMe => 'Delete for me';
+
+  @override
+  String get chatEdited => 'edited';
+
+  @override
+  String get chatEditTooLate => 'Messages can be edited for one day only';
 }

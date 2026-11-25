@@ -2228,4 +2228,29 @@ class AppL10nRu extends AppL10n {
 
   @override
   String get challengeSoon => 'Вызовы скоро появятся';
+
+  @override
+  String get chatEdit => 'Изменить';
+
+  @override
+  String get chatEditing => 'Редактирование';
+
+  @override
+  String get chatDelete => 'Удалить';
+
+  @override
+  String get chatDeleteTitle => 'Удалить сообщение?';
+
+  @override
+  String get chatDeleteEveryone => 'Удалить у всех';
+
+  @override
+  String get chatDeleteMe => 'Удалить у меня';
+
+  @override
+  String get chatEdited => 'изменено';
+
+  @override
+  String get chatEditTooLate =>
+      'Сообщение можно изменить только в течение суток';
 }

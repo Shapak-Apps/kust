@@ -12,6 +12,7 @@ import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/presence.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
@@ -55,6 +56,9 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _more = false;
   bool _loadingMore = false;
   ChatMessage? _replying;
+
+  /// My message being edited: the input holds its text until sent.
+  ChatMessage? _editing;
   int _localId = 0;
   StreamSubscription<LiveEvent>? _sub;
 
@@ -152,6 +156,24 @@ class _ChatScreenState extends State<ChatScreen> {
     switch (e.type) {
       case 'chat_resync':
         _load();
+      case 'chat_edit':
+        if (!_inThisChat(d)) return;
+        final m = ChatMessage.fromJson(d);
+        setState(() {
+          _messages = [
+            for (final x in _messages)
+              x.id == m.id ? x.copyWith(body: m.body, edited: true) : x,
+          ];
+        });
+      case 'chat_delete':
+        final id = (d['id'] as num?)?.toInt();
+        if (id == null) return;
+        setState(() {
+          _messages = [
+            for (final x in _messages)
+              if (x.id != id) x,
+          ];
+        });
       case 'chat_message':
         if (!_inThisChat(d)) return;
         final m = ChatMessage.fromJson(d);
@@ -201,6 +223,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// Shown at once, sent behind; replaced by the server's copy.
   Future<void> _send({ChatMessage? retry}) async {
+    final editing = _editing;
+    if (editing != null && retry == null) return _saveEdit(editing);
     final body = retry?.body ?? _input.text.trim();
     if (body.isEmpty) return;
     final reply = retry?.replyTo ?? _replyOf(_replying);
@@ -253,6 +277,99 @@ class _ChatScreenState extends State<ChatScreen> {
         ];
       });
       if (e.code == 'not_friends') _say(context.t.chatFriendsOnly);
+    }
+  }
+
+  /// The edited text goes in at once and is sent behind; put back if the
+  /// server says no (too old).
+  Future<void> _saveEdit(ChatMessage m) async {
+    final body = _input.text.trim();
+    setState(() {
+      _editing = null;
+      _input.clear();
+    });
+    if (body.isEmpty || body == m.body) return;
+    HapticFeedback.lightImpact();
+    void put(String text, bool edited) => setState(() {
+      _messages = [
+        for (final x in _messages)
+          x.id == m.id ? x.copyWith(body: text, edited: edited) : x,
+      ];
+    });
+    put(body, true);
+    try {
+      await _repo.edit(m.id, body);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      put(m.body, m.edited);
+      if (e.code == 'not_editable') _say(context.t.chatEditTooLate);
+    }
+  }
+
+  void _startEdit(ChatMessage m) {
+    setState(() {
+      _replying = null;
+      _editing = m;
+      _input.text = m.body;
+      _input.selection = TextSelection.collapsed(offset: m.body.length);
+    });
+    _focus.requestFocus();
+  }
+
+  /// Delete: for both (my own messages only) or from my side.
+  void _confirmDelete(ChatMessage m) {
+    final t = context.t;
+    final mine = m.from == _me;
+    showKustSheet<void>(
+      context,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          KustSheetHeader(title: t.chatDeleteTitle),
+          if (mine) ...[
+            KustButton(
+              label: t.chatDeleteEveryone,
+              style: KustButtonStyle.danger,
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _delete(m, everyone: true);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+          KustButton(
+            label: t.chatDeleteMe,
+            style: mine ? KustButtonStyle.secondary : KustButtonStyle.danger,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              _delete(m, everyone: false);
+            },
+          ),
+          const SizedBox(height: 8),
+          KustButton(
+            label: t.keep,
+            style: KustButtonStyle.outline,
+            onTap: () => Navigator.of(sheet).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _delete(ChatMessage m, {required bool everyone}) async {
+    HapticFeedback.mediumImpact();
+    final before = _messages;
+    setState(() {
+      _messages = [
+        for (final x in _messages)
+          if (x.id != m.id) x,
+      ];
+    });
+    try {
+      await _repo.delete(m.id, everyone: everyone);
+    } on ApiException {
+      if (mounted) setState(() => _messages = before);
     }
   }
 
@@ -336,6 +453,24 @@ class _ChatScreenState extends State<ChatScreen> {
               Navigator.of(sheet).pop();
               Clipboard.setData(ClipboardData(text: m.body));
               _say(t.chatCopied);
+            },
+          ),
+          if (m.from == _me && m.editableNow)
+            _MenuRow(
+              icon: Icons.edit_outlined,
+              label: t.chatEdit,
+              onTap: () {
+                Navigator.of(sheet).pop();
+                _startEdit(m);
+              },
+            ),
+          _MenuRow(
+            icon: Icons.delete_outline_rounded,
+            label: t.chatDelete,
+            danger: true,
+            onTap: () {
+              Navigator.of(sheet).pop();
+              _confirmDelete(m);
             },
           ),
         ],
@@ -491,7 +626,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Padding(
               padding: EdgeInsets.only(
                 top: newDay || together(m, older) ? 2 : 10,
-                bottom: (m.reactions.isNotEmpty) ? 14 : 0,
+                bottom: (m.reactions.isNotEmpty) ? 22 : 0,
               ),
               child: _Swipe(
                 onReply: () => _reply(m),
@@ -517,7 +652,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _composer(BuildContext context) {
     final k = context.k;
     final t = context.t;
-    final replying = _replying;
+    // The bar over the input: what is being edited, or answered.
+    final editing = _editing;
+    final replying = editing ?? _replying;
     final canSend = _input.text.trim().isNotEmpty;
     return Material(
       color: k.bg,
@@ -534,6 +671,14 @@ class _ChatScreenState extends State<ChatScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 4, 0),
                       child: Row(
                         children: [
+                          if (editing != null) ...[
+                            const Icon(
+                              Icons.edit_rounded,
+                              size: 18,
+                              color: KustTokens.gold,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
                           Container(
                             width: 3,
                             height: 34,
@@ -548,12 +693,14 @@ class _ChatScreenState extends State<ChatScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  t.chatReplyingTo(
-                                    replying.from == _me
-                                        ? t.chatYou
-                                        : (_player?.displayName ??
-                                              widget.username),
-                                  ),
+                                  editing != null
+                                      ? t.chatEditing
+                                      : t.chatReplyingTo(
+                                          replying.from == _me
+                                              ? t.chatYou
+                                              : (_player?.displayName ??
+                                                    widget.username),
+                                        ),
                                   style: k.caption.copyWith(
                                     color: KustTokens.gold,
                                     fontWeight: FontWeight.w800,
@@ -569,7 +716,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           ),
                           IconButton(
-                            onPressed: () => setState(() => _replying = null),
+                            onPressed: () => setState(() {
+                              if (_editing != null) _input.clear();
+                              _editing = null;
+                              _replying = null;
+                            }),
                             icon: Icon(Icons.close_rounded, color: k.muted),
                           ),
                         ],
@@ -626,7 +777,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               : k.surfaceAlt,
                         ),
                         child: Icon(
-                          Icons.arrow_upward_rounded,
+                          editing != null
+                              ? Icons.check_rounded
+                              : Icons.arrow_upward_rounded,
                           color: canSend ? Colors.white : k.muted,
                         ),
                       ),
@@ -833,6 +986,7 @@ class _Bubble extends StatelessWidget {
     final meta = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (m.edited) Text('${t.chatEdited} ', style: timeStyle),
         Text(_clock(m.createdAt), style: timeStyle),
         if (mine) ...[
           const SizedBox(width: 3),
@@ -855,7 +1009,10 @@ class _Bubble extends StatelessWidget {
       ],
     );
     final painter = TextPainter(
-      text: TextSpan(text: _clock(m.createdAt), style: timeStyle),
+      text: TextSpan(
+        text: '${m.edited ? '${t.chatEdited} ' : ''}${_clock(m.createdAt)}',
+        style: timeStyle,
+      ),
       textDirection: TextDirection.ltr,
       textScaler: MediaQuery.textScalerOf(context),
     )..layout();
@@ -948,11 +1105,13 @@ class _Bubble extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 bubble,
+                // Under the bubble, as on WhatsApp: hanging off its bottom
+                // edge on the inner side, clear of the text and the time.
                 if (m.reactions.isNotEmpty)
                   Positioned(
-                    bottom: -14,
-                    right: mine ? null : -2,
-                    left: mine ? -2 : null,
+                    bottom: -22,
+                    right: mine ? 10 : null,
+                    left: mine ? null : 10,
                     child: GestureDetector(
                       onTap: onReactionTap,
                       child: Container(
@@ -994,11 +1153,13 @@ class _MenuRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.danger = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool danger;
 
   @override
   Widget build(BuildContext context) {
@@ -1010,9 +1171,15 @@ class _MenuRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: k.ink),
+            Icon(icon, size: 22, color: danger ? k.danger : k.ink),
             const SizedBox(width: 14),
-            Text(label, style: k.body.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              label,
+              style: k.body.copyWith(
+                fontWeight: FontWeight.w700,
+                color: danger ? k.danger : null,
+              ),
+            ),
           ],
         ),
       ),

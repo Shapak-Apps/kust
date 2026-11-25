@@ -654,5 +654,13 @@
   "chatTextedYou": "{name} написал(а) вам",
   "chatBeKind": "Пожалуйста, будьте вежливы и уважительны в сообщениях. Без грубых слов и оскорблений.",
   "challengeButton": "Вызов",
-  "challengeSoon": "Вызовы скоро появятся"
+  "challengeSoon": "Вызовы скоро появятся",
+  "chatEdit": "Изменить",
+  "chatEditing": "Редактирование",
+  "chatDelete": "Удалить",
+  "chatDeleteTitle": "Удалить сообщение?",
+  "chatDeleteEveryone": "Удалить у всех",
+  "chatDeleteMe": "Удалить у меня",
+  "chatEdited": "изменено",
+  "chatEditTooLate": "Сообщение можно изменить только в течение суток"
 }

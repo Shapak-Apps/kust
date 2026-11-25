@@ -654,5 +654,13 @@
   "chatTextedYou": "{name} size hat ýazdy",
   "chatBeKind": "Hatlaryňyzda mähirli we hormatly boluň. Gödek sözler we kemsitmeler bolmasyn.",
   "challengeButton": "Çagyr",
-  "challengeSoon": "Oýna çagyrmak ýakyn wagtda goşular"
+  "challengeSoon": "Oýna çagyrmak ýakyn wagtda goşular",
+  "chatEdit": "Üýtget",
+  "chatEditing": "Üýtgedilýär",
+  "chatDelete": "Poz",
+  "chatDeleteTitle": "Hat pozulsynmy?",
+  "chatDeleteEveryone": "Hemmeler üçin poz",
+  "chatDeleteMe": "Diňe menden poz",
+  "chatEdited": "üýtgedildi",
+  "chatEditTooLate": "Haty diňe bir günüň dowamynda üýtgedip bolýar"
 }

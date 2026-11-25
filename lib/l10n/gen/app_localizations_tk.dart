@@ -2226,4 +2226,28 @@ class AppL10nTk extends AppL10n {
 
   @override
   String get challengeSoon => 'Oýna çagyrmak ýakyn wagtda goşular';
+
+  @override
+  String get chatEdit => 'Üýtget';
+
+  @override
+  String get chatEditing => 'Üýtgedilýär';
+
+  @override
+  String get chatDelete => 'Poz';
+
+  @override
+  String get chatDeleteTitle => 'Hat pozulsynmy?';
+
+  @override
+  String get chatDeleteEveryone => 'Hemmeler üçin poz';
+
+  @override
+  String get chatDeleteMe => 'Diňe menden poz';
+
+  @override
+  String get chatEdited => 'üýtgedildi';
+
+  @override
+  String get chatEditTooLate => 'Haty diňe bir günüň dowamynda üýtgedip bolýar';
 }
