@@ -149,7 +149,7 @@ class _OpeningCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      opening.nameIn(t),
+                      opening.shortNameIn(t),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: k.body.copyWith(
@@ -202,7 +202,7 @@ class _OpeningCard extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                t.trainTryFirst,
+                                t.trainTry,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: k.body.copyWith(

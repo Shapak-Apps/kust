@@ -36,60 +36,65 @@ class FeltHeader extends StatelessWidget {
             SafeArea(
               bottom: false,
               child: Padding(
+                // As tall as the home screen's top bar (5 + 44 + 5).
                 padding: EdgeInsets.fromLTRB(
-                  onBack == null ? 24 : 12,
-                  16,
-                  24,
-                  16,
+                  onBack == null ? 20 : 12,
+                  5,
+                  20,
+                  5,
                 ),
-                child: Row(
-                  children: [
-                    if (onBack != null) ...[
-                      Semantics(
-                        button: true,
-                        label: context.t.back,
-                        excludeSemantics: true,
-                        child: Pressable(
-                          onTap: onBack,
-                          scale: 0.88,
-                          // No taller than the title, so every felt header
-                          // is the same height with or without it.
-                          child: const SizedBox(
-                            width: 36,
-                            height: 30,
-                            child: Center(
-                              child: BoldIcon(
-                                Icons.arrow_back_rounded,
-                                size: 26,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: Row(
+                    children: [
+                      if (onBack != null) ...[
+                        Semantics(
+                          button: true,
+                          label: context.t.back,
+                          excludeSemantics: true,
+                          child: Pressable(
+                            onTap: onBack,
+                            scale: 0.88,
+                            // No taller than the title, so every felt header
+                            // is the same height with or without it.
+                            child: const SizedBox(
+                              width: 36,
+                              height: 30,
+                              child: Center(
+                                child: BoldIcon(
+                                  Icons.arrow_back_rounded,
+                                  size: 26,
+                                  color: LoomColors.cream,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                      ],
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          // A long title shrinks to fit; a short one keeps
+                          // its size.
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              style: k.display.copyWith(
+                                fontSize: 22,
                                 color: LoomColors.cream,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.4,
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
                     ],
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        // A long title shrinks to fit; a short one keeps
-                        // its size.
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            style: k.display.copyWith(
-                              color: LoomColors.cream,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.6,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

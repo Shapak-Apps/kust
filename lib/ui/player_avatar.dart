@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -118,24 +119,54 @@ class CachedAvatar extends ImageProvider<CachedAvatar> {
     return File('$dir/avatar_cache/$name');
   }
 
+  /// One client for every photo: its connections (and their TLS) are kept
+  /// and reused, instead of a new handshake per picture.
+  static final HttpClient _client = HttpClient()
+    ..connectionTimeout = const Duration(seconds: 10)
+    ..idleTimeout = const Duration(seconds: 30);
+
+  /// Saves [bytes] as the photo at [url], e.g. right after uploading it, so
+  /// it shows at once everywhere without being downloaded again.
+  static Future<void> store(String url, List<int> bytes) async {
+    try {
+      final file = CachedAvatar(url)._file();
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(bytes, flush: true);
+    } on FileSystemException {
+      // Downloaded when first shown, then.
+    }
+  }
+
+  Future<Uint8List> _download() async {
+    final request = await _client.getUrl(Uri.parse(url));
+    final response = await request.close().timeout(const Duration(seconds: 15));
+    if (response.statusCode != 200) {
+      await response.drain<void>();
+      throw HttpException('avatar ${response.statusCode}', uri: Uri.parse(url));
+    }
+    return consolidateHttpClientResponseBytes(response);
+  }
+
   Future<ui.Codec> _load(ImageDecoderCallback decode) async {
     final file = _file();
     Uint8List bytes;
     if (await file.exists()) {
       bytes = await file.readAsBytes();
     } else {
-      final client = HttpClient();
       try {
-        final response = await (await client.getUrl(Uri.parse(url))).close();
-        if (response.statusCode != 200) {
-          throw HttpException(
-            'avatar ${response.statusCode}',
-            uri: Uri.parse(url),
-          );
+        // A second try for a link that timed out or failed on the way.
+        try {
+          bytes = await _download();
+        } on Object {
+          bytes = await _download();
         }
-        bytes = await consolidateHttpClientResponseBytes(response);
-      } finally {
-        client.close();
+      } on Object {
+        // Not kept as failed: the next time it is shown it is tried again,
+        // rather than staying blank until the screen is left.
+        scheduleMicrotask(
+          () => PaintingBinding.instance.imageCache.evict(this),
+        );
+        rethrow;
       }
       try {
         await file.parent.create(recursive: true);

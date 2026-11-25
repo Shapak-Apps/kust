@@ -17,7 +17,7 @@ class BoardThumbnail extends StatelessWidget {
     required this.position,
     this.flipped = false,
     this.highlight = const [],
-    this.radius = 6,
+    this.radius = 4,
   });
 
   final Position position;

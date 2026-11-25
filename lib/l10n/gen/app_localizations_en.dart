@@ -1457,7 +1457,7 @@ class AppL10nEn extends AppL10n {
   String get lessonBackToMap => 'Back to lessons';
 
   @override
-  String get learnCoachDone => 'That is it! Tap Continue.';
+  String get learnCoachDone => 'That\'s it!';
 
   @override
   String get lessonPerfect => 'Perfect lesson!';
@@ -1766,6 +1766,9 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get trainTryFirst => 'Try the first line';
+
+  @override
+  String get trainTry => 'Try';
 
   @override
   String trainLines(int count) {
@@ -2112,6 +2115,9 @@ class AppL10nEn extends AppL10n {
   String get friendFriends => 'Friends';
 
   @override
+  String get friendsSearch => 'Search friends';
+
+  @override
   String friendRemoveTitle(String name) {
     return 'Remove $name from your friends?';
   }
@@ -2155,7 +2161,13 @@ class AppL10nEn extends AppL10n {
       'Nothing new yet. Friend requests will show up here.';
 
   @override
+  String get notifClearAll => 'Clear all';
+
+  @override
   String get flipBoard => 'Flip board';
+
+  @override
+  String get flipShort => 'Flip';
 
   @override
   String get flipBoardSub => 'See the board from the other side';

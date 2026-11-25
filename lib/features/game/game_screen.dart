@@ -832,7 +832,7 @@ class _ControlsBar extends ConsumerWidget {
           if (!isLocal && !practiceMode)
             KustAction(
               icon: Icons.swap_vert_rounded,
-              label: context.t.flipBoard,
+              label: context.t.flipShort,
               onTap: () => boardFlipped.value = !boardFlipped.value,
             ),
         ],
@@ -887,7 +887,7 @@ class _PlayerBar extends ConsumerWidget {
       avatar: _buildAvatar(theme),
       name: name,
       flag: isYou && AppStorage.isReady && AppStorage.instance.country != null
-          ? CountryFlag(AppStorage.instance.country!, height: 14)
+          ? CountryFlag(AppStorage.instance.country!, height: 18)
           : null,
       rating: subtitle,
       captured: piecesCapturedBy(side, s.moves),

@@ -468,7 +468,12 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
             : avatarImage(avatarUrlFor(p?.avatarKey)),
       ),
       name: username,
-      flag: p?.country != null ? CountryFlag(p!.country!, height: 14) : null,
+      flag: switch (isMe
+          ? (AppStorage.isReady ? AppStorage.instance.country : null)
+          : p?.country) {
+        final c? => CountryFlag(c, height: 18),
+        null => null,
+      },
       rating: rating == null ? null : '$rating',
       captured: online ? piecesCapturedBy(side, s.moves) : const [],
       advantage: online ? boardMaterialAdvantageFor(s.position, side) : 0,
@@ -523,7 +528,7 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         ),
         KustAction(
           icon: Icons.swap_vert_rounded,
-          label: t.flipBoard,
+          label: t.flipShort,
           onTap: () => boardFlipped.value = !boardFlipped.value,
         ),
       ],
