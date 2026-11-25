@@ -214,4 +214,17 @@ void main() {
     expect(find.text('Reply'), findsOneWidget);
     expect(field.focusNode.hasFocus, isTrue);
   });
+
+  testWidgets('the held message stays put; the card opens beside it', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    final before = tester.getRect(find.textContaining('Salam!'));
+    await tester.longPress(find.textContaining('Salam!'));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.textContaining('Salam!').last), before);
+    // Mine is on the right: the card opens on its left.
+    expect(tester.getRect(find.text('Reply')).right, lessThan(before.left));
+  });
 }
