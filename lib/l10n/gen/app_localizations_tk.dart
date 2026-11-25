@@ -1634,6 +1634,11 @@ class AppL10nTk extends AppL10n {
   String get gameHistory => 'Oýunlarym';
 
   @override
+  String playerGamesTitle(String name) {
+    return '$name oýunlary';
+  }
+
+  @override
   String get viewAll => 'Hemmesi';
 
   @override

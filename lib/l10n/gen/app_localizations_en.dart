@@ -1629,6 +1629,11 @@ class AppL10nEn extends AppL10n {
   String get gameHistory => 'Game history';
 
   @override
+  String playerGamesTitle(String name) {
+    return '$name\'s games';
+  }
+
+  @override
   String get viewAll => 'View all';
 
   @override

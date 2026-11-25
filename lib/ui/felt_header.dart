@@ -72,14 +72,19 @@ class FeltHeader extends StatelessWidget {
                     Expanded(
                       child: Semantics(
                         header: true,
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.display.copyWith(
-                            color: LoomColors.cream,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
+                        // A long title shrinks to fit; a short one keeps
+                        // its size.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            style: k.display.copyWith(
+                              color: LoomColors.cream,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.6,
+                            ),
                           ),
                         ),
                       ),

@@ -1636,6 +1636,11 @@ class AppL10nRu extends AppL10n {
   String get gameHistory => 'История партий';
 
   @override
+  String playerGamesTitle(String name) {
+    return 'Партии $name';
+  }
+
+  @override
   String get viewAll => 'Все';
 
   @override
