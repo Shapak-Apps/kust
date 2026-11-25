@@ -426,6 +426,10 @@ const int kBotSwingCp = 300;
 const int kBotSwingMateCp = 50000;
 
 class ChessController extends Notifier<GameState> {
+  /// Set on a board its screen runs: the player's moves go here instead of
+  /// being played (see [ScreenBoardController]).
+  void Function(NormalMove move)? onBoardMove;
+
   int _moveRequestId = 0;
   int _evalRequestId = 0;
   BotPolicy _policy = BotPolicy(elo: 1400);
@@ -2360,13 +2364,27 @@ class ChessController extends Notifier<GameState> {
       return;
     }
 
-    if (!_chargeElapsed(publish: false)) return;
-
     final move = NormalMove(
       from: from,
       to: target,
       promotion: needsPromotion ? promotion : null,
     );
+
+    // A board run by its screen (puzzles, lessons, replays): the move is
+    // handed over, and the screen shows what comes of it.
+    final handOver = onBoardMove;
+    if (handOver != null) {
+      if (!state.position.isLegal(move)) {
+        _playSound('illegal.wav');
+        state = state.copyWith(clearSelection: true);
+        return;
+      }
+      state = state.copyWith(clearSelection: true);
+      handOver(move);
+      return;
+    }
+
+    if (!_chargeElapsed(publish: false)) return;
 
     if (!state.position.isLegal(move)) {
       _playSound('illegal.wav');
@@ -2685,3 +2703,18 @@ final chessControllerProvider =
     NotifierProvider.autoDispose<ChessController, GameState>(
       ChessController.new,
     );
+
+/// The controller of a board its screen runs (puzzles, lessons, replays):
+/// no game behind it, only what the screen shows, so the same board and
+/// its touch handling serve every screen.
+class ScreenBoardController extends ChessController {
+  ScreenBoardController(this._initial);
+
+  final GameState _initial;
+
+  @override
+  GameState build() => _initial;
+
+  /// What the screen shows now.
+  void show(GameState next) => state = next;
+}

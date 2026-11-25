@@ -1,25 +1,14 @@
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:kust/widgets/piece_image.dart';
-import 'package:kust/core/board_theme.dart';
-import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/board_geometry.dart';
-import 'package:kust/features/game/chess/board/board_squares_painter.dart';
-import 'package:kust/features/game/chess/board/chess_board.dart'
-    show glideDuration;
+import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/board/move_arrow.dart';
-import 'package:kust/features/game/chess/chess_helpers.dart';
+import 'package:kust/features/game/chess/chess_controller.dart';
 import 'package:kust/features/game/chess/move_feedback.dart';
-import 'package:kust/features/game/move_feedback_badge.dart';
-import 'package:kust/features/game/chess/castling.dart';
-
-const Color _lastMoveColor = Color(0x66FFBB00);
-const Color _selectedColor = Color(0x99FFBB00);
-const Color _hintFromColor = Color(0x6622C55E);
-const Color _targetDotColor = Color(0x33000000);
 
 /// The glide for stepping from [fromPly] to [toPly] through [positions] and
 /// [moves] (as built by the replay and puzzle screens), or null when the
@@ -56,9 +45,10 @@ const Color _targetDotColor = Color(0x33000000);
   return null;
 }
 
-/// A king in check, on top of its square's colour.
-const Color _checkColor = Color(0xCCE5484D);
-
+/// The board of puzzles, lessons and replays: the very board games use
+/// (the same pieces, glides, captures, coordinates, dragging and promotion),
+/// run by its screen instead of a game. The screen gives the position and
+/// what to mark; the player's moves come back through [onMove].
 class PuzzleBoard extends StatefulWidget {
   const PuzzleBoard({
     super.key,
@@ -85,8 +75,7 @@ class PuzzleBoard extends StatefulWidget {
   final Square? hintTo;
 
   /// Piece to glide into place: it now stands on [slide].to and travels from
-  /// [slide].from. A new [slideKey] starts the animation, so stepping back
-  /// can pass the reversed squares.
+  /// [slide].from. Stepping back passes the reversed squares.
   final ({Square from, Square to})? slide;
   final int slideKey;
 
@@ -103,619 +92,80 @@ class PuzzleBoard extends StatefulWidget {
   State<PuzzleBoard> createState() => _PuzzleBoardState();
 }
 
-class _PuzzleBoardState extends State<PuzzleBoard>
-    with TickerProviderStateMixin {
-  late final AnimationController _slideCtrl = AnimationController(
-    vsync: this,
-    duration: glideDuration(1),
-  );
-  ({Square from, Square to})? _sliding;
-  Square? _selected;
-  Map<Square, NormalMove> _targets = const {};
-
-  /// Dragging: the piece, its square and where the finger is.
-  Square? _dragFrom;
-  Piece? _dragPiece;
-  final ValueNotifier<Offset?> _dragAt = ValueNotifier(null);
-
-  /// The square the dragged piece is over; its own notifier, so crossing
-  /// squares redraws only the ring.
-  final ValueNotifier<Square?> _hover = ValueNotifier(null);
-  double _cell = 0;
-
-  /// The finger on the board, followed by hand so a piece lifts after a few
-  /// pixels instead of after the gesture arena's 36.
-  int? _pointer;
-  Offset? _downAt;
-  bool _moved = false;
-  static const double _dragSlop = 6;
-
-  /// A move made by dropping; its glide is skipped, the piece is there.
-  ({Square from, Square to})? _dropped;
-
-  /// After an illegal drop the piece flies back to its square.
-  late final AnimationController _snapCtrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 170),
-  );
-  Square? _snapSquare;
-  Piece? _snapPiece;
-  Offset _snapStart = Offset.zero;
-
-  /// How far above the finger a dragged piece floats, in squares.
-  static const double _dragLift = 0.3;
-
-  void _onBoardTheme() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    AppSettings.instance.boardTheme.addListener(_onBoardTheme);
-    AppSettings.instance.pieceSet.addListener(_onBoardTheme);
-    // Rebuild once the glide ends so the real piece is drawn again.
-    _slideCtrl.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) setState(() {});
-    });
-    _snapCtrl.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        setState(() {
-          _snapPiece = null;
-          _snapSquare = null;
-        });
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(PuzzleBoard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.slideKey != oldWidget.slideKey) {
-      final slide = widget.slide;
-      final dropped = _dropped;
-      _dropped = null;
-      // A piece dropped on its square is already there: no glide.
-      final wasDropped =
-          slide != null &&
-          dropped != null &&
-          slide.from == dropped.from &&
-          slide.to == dropped.to;
-      _sliding = wasDropped ? null : slide;
-      if (_sliding != null) {
-        final s = _sliding!;
-        final distance = math.sqrt(
-          math.pow(fileOf(s.to) - fileOf(s.from), 2) +
-              math.pow(rankOf(s.to) - rankOf(s.from), 2),
-        );
-        _slideCtrl.duration = glideDuration(distance.toDouble());
-        _slideCtrl.forward(from: 0);
-      } else {
-        _slideCtrl.value = 1;
-      }
-    }
-    if (oldWidget.position.fen != widget.position.fen) {
-      _selected = null;
-      _targets = const {};
-    }
-  }
+class _PuzzleBoardState extends State<PuzzleBoard> {
+  /// Its own: the board needs nothing from the app's providers.
+  final ProviderContainer _container = ProviderContainer();
 
   @override
   void dispose() {
-    AppSettings.instance.boardTheme.removeListener(_onBoardTheme);
-    AppSettings.instance.pieceSet.removeListener(_onBoardTheme);
-    _slideCtrl.dispose();
-    _snapCtrl.dispose();
-    _dragAt.dispose();
-    _hover.dispose();
+    _container.dispose();
     super.dispose();
   }
 
-  bool get _isSliding => _sliding != null && _slideCtrl.isAnimating;
-
-  Map<Square, NormalMove> _destinationsFrom(Square from) {
-    final position = widget.position;
-    final piece = position.board.pieceAt(from);
-    final isPawn = piece?.role == Role.pawn;
-    final targets = <Square, NormalMove>{};
-
-    for (final to in position.legalMovesOf(from).squares) {
-      final target = position.board.pieceAt(to);
-      final isCastle =
-          piece?.role == Role.king &&
-          target != null &&
-          target.color == piece?.color;
-      final promotes = isPawn && (rankOf(to) == 0 || rankOf(to) == 7);
-      final move = NormalMove(
-        from: from,
-        to: to,
-        promotion: promotes ? Role.queen : null,
+  late final NotifierProvider<ChessController, GameState> _board =
+      NotifierProvider.autoDispose<ChessController, GameState>(
+        () =>
+            ScreenBoardController(_state(null))
+              ..onBoardMove = (move) => widget.onMove(move),
       );
-      if (isCastle) {
-        targets[castlingDisplaySquare(to)] = move;
-        // The rook itself is a target too when castling on the rook is on.
-        if (AppSettings.instance.castleOnRook.value) targets[to] = move;
-      } else {
-        targets[to] = move;
+
+  /// What the board shows, from the screen's props; [before] is the
+  /// position shown until now, to see what a glide captures.
+  GameState _state(Position? before) {
+    final w = widget;
+    final slide = w.slide;
+    final last = w.lastMove;
+    Piece? captured;
+    if (slide != null && before != null) {
+      final mover = before.board.pieceAt(slide.from);
+      final taken = before.board.pieceAt(slide.to);
+      if (mover != null && taken != null && taken.color != mover.color) {
+        captured = taken;
       }
     }
-    return targets;
+    return GameState(
+      position: w.position,
+      mode: GameMode.bot,
+      // The side to move is the player's, so its pieces can be picked up.
+      playerSide: w.position.turn,
+      status: w.interactive ? GameStatus.playing : GameStatus.loading,
+      lastMove: slide == null
+          ? null
+          : NormalMove(from: slide.from, to: slide.to),
+      moveSquares: last == null ? const [] : [last.from, last.to],
+      hintSquares: {?w.hintFrom, ?w.hintTo},
+      capturedPiece: captured,
+      capturedSquare: captured == null ? null : slide!.to,
+      practiceMode: false,
+    );
   }
 
-  void _handleTap(Square square) {
-    if (!widget.interactive) return;
-    final position = widget.position;
-
-    if (_selected != null) {
-      final move = _targets[square];
-      if (move != null) {
-        setState(() {
-          _selected = null;
-          _targets = const {};
-        });
-        widget.onMove(move);
-        return;
-      }
-    }
-
-    final piece = position.board.pieceAt(square);
-    if (piece != null && piece.color == position.turn) {
-      setState(() {
-        _selected = square;
-        _targets = _destinationsFrom(square);
-      });
-      return;
-    }
-
-    setState(() {
-      _selected = null;
-      _targets = const {};
+  @override
+  void didUpdateWidget(covariant PuzzleBoard old) {
+    super.didUpdateWidget(old);
+    // Not while the tree builds: the board takes it straight after.
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      final c = _container.read(_board.notifier) as ScreenBoardController;
+      c.show(_state(_container.read(_board).position));
     });
-  }
-
-  Offset _pieceCentre(Offset finger) => finger - Offset(0, _cell * _dragLift);
-
-  Square? _squareUnder(Offset local) {
-    if (_cell <= 0) return null;
-    final col = (local.dx / _cell).floor();
-    final row = (local.dy / _cell).floor();
-    if (col < 0 || col > 7 || row < 0 || row > 7) return null;
-    return _squareAt(local, _cell);
-  }
-
-  void _onPointerDown(PointerDownEvent event) {
-    if (_pointer != null) return;
-    _pointer = event.pointer;
-    _downAt = event.localPosition;
-    _moved = false;
-  }
-
-  void _onPointerMove(PointerMoveEvent event) {
-    if (event.pointer != _pointer) return;
-    if (_dragFrom != null) {
-      _onDragUpdate(event.localPosition);
-      return;
-    }
-    final down = _downAt;
-    if (down == null || _moved) return;
-    if ((event.localPosition - down).distance <= _dragSlop) return;
-    _moved = true;
-    _onDragStart(down);
-    if (_dragFrom != null) _onDragUpdate(event.localPosition);
-  }
-
-  void _onPointerUp(PointerUpEvent event) {
-    if (event.pointer != _pointer) return;
-    final moved = _moved;
-    _pointer = null;
-    _downAt = null;
-    _moved = false;
-    if (_dragFrom != null) {
-      _onDragEnd();
-    } else if (!moved && _cell > 0) {
-      _handleTap(_squareAt(event.localPosition, _cell));
-    }
-  }
-
-  void _onPointerCancel(PointerCancelEvent event) {
-    if (event.pointer != _pointer) return;
-    _pointer = null;
-    _downAt = null;
-    _moved = false;
-    if (_dragFrom != null) _onDragEnd(cancelled: true);
-  }
-
-  void _onDragStart(Offset position) {
-    if (!widget.interactive) return;
-    final square = _squareUnder(position);
-    if (square == null) return;
-    final piece = widget.position.board.pieceAt(square);
-    if (piece == null || piece.color != widget.position.turn) return;
-    _snapCtrl.stop();
-    setState(() {
-      _selected = square;
-      _targets = _destinationsFrom(square);
-      _dragFrom = square;
-      _dragPiece = piece;
-      _snapPiece = null;
-    });
-    _hover.value = square;
-    _dragAt.value = position;
-  }
-
-  void _onDragUpdate(Offset position) {
-    if (_dragFrom == null) return;
-    _dragAt.value = position;
-    _hover.value = _squareUnder(_pieceCentre(position));
-  }
-
-  void _onDragEnd({bool cancelled = false}) {
-    final from = _dragFrom;
-    final piece = _dragPiece;
-    final at = _dragAt.value;
-    if (from == null || piece == null || at == null) return;
-    final target = cancelled ? null : _squareUnder(_pieceCentre(at));
-    final move = target == null || target == from ? null : _targets[target];
-    setState(() {
-      _dragFrom = null;
-      _dragPiece = null;
-      if (move != null) {
-        _selected = null;
-        _targets = const {};
-      } else {
-        _snapSquare = from;
-        _snapPiece = piece;
-        _snapStart = _pieceCentre(at) - Offset(_cell / 2, _cell / 2);
-      }
-    });
-    _hover.value = null;
-    _dragAt.value = null;
-    if (move != null) {
-      _dropped = (from: from, to: target!);
-      widget.onMove(move);
-    } else {
-      _snapCtrl.forward(from: 0);
-    }
-  }
-
-  Square _squareAt(Offset local, double cell) {
-    final col = math.min(7, math.max(0, (local.dx / cell).floor()));
-    final row = math.min(7, math.max(0, (local.dy / cell).floor()));
-    final file = widget.flipped ? 7 - col : col;
-    final rank = widget.flipped ? row : 7 - row;
-    return squareAt(file, rank);
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final boardSize = constraints.biggest.shortestSide;
-        final cell = boardSize / 8;
-        _cell = cell;
-        final hintFrom = widget.hintFrom;
-        final hintTo = widget.hintTo;
-
-        return Listener(
-          behavior: HitTestBehavior.opaque,
-          onPointerDown: _onPointerDown,
-          onPointerMove: _onPointerMove,
-          onPointerUp: _onPointerUp,
-          onPointerCancel: _onPointerCancel,
-          child: SizedBox(
-            width: boardSize,
-            height: boardSize,
-            child: Stack(
-              children: [
-                // Square colours in one pass on whole pixels; the cells
-                // above are transparent and only hold pieces and markers.
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: BoardSquaresPainter(
-                      colors: [for (var i = 0; i < 64; i++) _cellColor(i)],
-                      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-                    ),
-                  ),
-                ),
-                for (var index = 0; index < 64; index++)
-                  _buildCell(index, cell),
-                _buildSlidingPiece(cell),
-                if (widget.arrow != null)
-                  Positioned.fill(
-                    child: MoveArrow(
-                      fromRow: _rowOf(widget.arrow!.from),
-                      fromCol: _colOf(widget.arrow!.from),
-                      toRow: _rowOf(widget.arrow!.to),
-                      toCol: _colOf(widget.arrow!.to),
-                    ),
-                  ),
-                for (final a in widget.arrows)
-                  Positioned.fill(
-                    child: MoveArrow(
-                      key: ValueKey('arrow ${a.from} ${a.to}'),
-                      fromRow: _rowOf(a.from),
-                      fromCol: _colOf(a.from),
-                      toRow: _rowOf(a.to),
-                      toCol: _colOf(a.to),
-                      color: a.color,
-                    ),
-                  ),
-                if (widget.badge != null)
-                  Positioned(
-                    left: _colOf(widget.badge!.square) * cell,
-                    top: _rowOf(widget.badge!.square) * cell,
-                    width: cell,
-                    height: cell,
-                    child: IgnorePointer(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            // On the right-hand file it goes on the left
-                            // corner, so it stays on screen.
-                            right: _colOf(widget.badge!.square) == 7
-                                ? null
-                                : -cell * 0.22,
-                            left: _colOf(widget.badge!.square) == 7
-                                ? -cell * 0.22
-                                : null,
-                            top: -cell * 0.22,
-                            child: MoveFeedbackBadge(
-                              key: ValueKey(widget.badge),
-                              feedback: MoveFeedback(
-                                quality: widget.badge!.quality,
-                                bestSan: '',
-                                playedSan: '',
-                              ),
-                              size: cell * 0.52,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                if (hintFrom != null && hintTo != null)
-                  Positioned.fill(
-                    child: MoveArrow(
-                      fromRow: _rowOf(hintFrom),
-                      fromCol: _colOf(hintFrom),
-                      toRow: _rowOf(hintTo),
-                      toCol: _colOf(hintTo),
-                    ),
-                  ),
-                if (_dragPiece != null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: ValueListenableBuilder<Square?>(
-                        valueListenable: _hover,
-                        builder: (context, hover, _) {
-                          if (hover == null) return const SizedBox.shrink();
-                          return Stack(
-                            children: [
-                              Positioned(
-                                left: _colOf(hover) * cell,
-                                top: _rowOf(hover) * cell,
-                                width: cell,
-                                height: cell,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.75,
-                                      ),
-                                      width: cell * 0.06,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                if (_dragPiece != null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: ValueListenableBuilder<Offset?>(
-                        valueListenable: _dragAt,
-                        child: RepaintBoundary(
-                          child: SizedBox(
-                            width: cell,
-                            height: cell,
-                            child: PieceImage(assetForPiece(_dragPiece!)),
-                          ),
-                        ),
-                        builder: (context, at, child) {
-                          if (at == null) return const SizedBox.shrink();
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Transform.translate(
-                              offset:
-                                  _pieceCentre(at) - Offset(cell / 2, cell / 2),
-                              child: Transform.scale(scale: 1.18, child: child),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                if (_snapPiece != null && _snapSquare != null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: AnimatedBuilder(
-                        animation: _snapCtrl,
-                        child: RepaintBoundary(
-                          child: SizedBox(
-                            width: cell,
-                            height: cell,
-                            child: Padding(
-                              padding: EdgeInsets.all(cell * 0.02),
-                              child: PieceImage(assetForPiece(_snapPiece!)),
-                            ),
-                          ),
-                        ),
-                        builder: (context, child) {
-                          final t = Curves.easeOutCubic.transform(
-                            _snapCtrl.value,
-                          );
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Transform.translate(
-                              offset: Offset.lerp(
-                                _snapStart,
-                                _cellOrigin(_snapSquare!, cell),
-                                t,
-                              )!,
-                              child: Transform.scale(
-                                scale: 1.18 - 0.18 * t,
-                                child: child,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// The square shown at [index], counted row by row from the top left.
-  Square _squareOf(int index) {
-    final row = index ~/ 8;
-    final col = index % 8;
-    final file = widget.flipped ? 7 - col : col;
-    final rank = widget.flipped ? row : 7 - row;
-    return squareAt(file, rank);
-  }
-
-  /// The colour of the square shown at [index], with any highlight on top.
-  Color _cellColor(int index) {
-    final square = _squareOf(index);
-    final isLight = (fileOf(square) + rankOf(square)).isOdd;
-    final lastMove = widget.lastMove;
-    final theme = AppSettings.instance.boardTheme.value;
-    var background = isLight ? theme.light : theme.dark;
-    if (lastMove != null &&
-        (square == lastMove.from || square == lastMove.to)) {
-      background = Color.alphaBlend(_lastMoveColor, background);
-    }
-    // The king in check, in red, as on the game board.
-    final position = widget.position;
-    if (position.isCheck && square == position.board.kingOf(position.turn)) {
-      background = Color.alphaBlend(_checkColor, background);
-    }
-    if (widget.hintFrom == square) {
-      background = Color.alphaBlend(_hintFromColor, background);
-    }
-    // The hinted move itself is drawn as an arrow.
-    if (_selected == square) {
-      background = Color.alphaBlend(_selectedColor, background);
-    }
-    return background;
-  }
-
-  Widget _buildCell(int index, double cell) {
-    final row = index ~/ 8;
-    final col = index % 8;
-    final square = _squareOf(index);
-    final hideForSlide =
-        (_isSliding && _sliding!.to == square) ||
-        _dragFrom == square ||
-        _snapSquare == square;
-    final piece = hideForSlide ? null : widget.position.board.pieceAt(square);
-    final isLight = (fileOf(square) + rankOf(square)).isOdd;
-    final isTarget = _targets.containsKey(square);
-    final theme = AppSettings.instance.boardTheme.value;
-
-    return Positioned(
-      left: col * cell,
-      top: row * cell,
-      width: cell,
-      height: cell,
-      child: SizedBox.expand(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (theme.grain)
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: WoodGrainPainter(seed: square, light: isLight),
-                ),
-              ),
-            if (piece != null)
-              Padding(
-                padding: EdgeInsets.all(cell * 0.02),
-                child: PieceImage(assetForPiece(piece)),
-              ),
-            if (isTarget)
-              Container(
-                width: cell * (piece == null ? 0.3 : 0.9),
-                height: cell * (piece == null ? 0.3 : 0.9),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: piece == null ? _targetDotColor : null,
-                  border: piece != null
-                      ? Border.all(color: _targetDotColor, width: cell * 0.08)
-                      : null,
-                ),
-              ),
-          ],
-        ),
+    final arrow = widget.arrow;
+    return UncontrolledProviderScope(
+      container: _container,
+      child: ChessBoard(
+        controller: _board,
+        flipped: widget.flipped,
+        badge: widget.badge,
+        arrows: [
+          if (arrow != null)
+            (from: arrow.from, to: arrow.to, color: kHintArrowColor),
+          ...widget.arrows,
+        ],
       ),
-    );
-  }
-
-  int _colOf(Square square) =>
-      widget.flipped ? 7 - fileOf(square) : fileOf(square);
-  int _rowOf(Square square) =>
-      widget.flipped ? rankOf(square) : 7 - rankOf(square);
-
-  Offset _cellOrigin(Square square, double cell) {
-    final file = fileOf(square);
-    final rank = rankOf(square);
-    final col = widget.flipped ? 7 - file : file;
-    final row = widget.flipped ? rank : 7 - rank;
-    return Offset(col * cell, row * cell);
-  }
-
-  Widget _buildSlidingPiece(double cell) {
-    final sliding = _sliding;
-    if (sliding == null) return const SizedBox.shrink();
-    final piece = widget.position.board.pieceAt(sliding.to);
-    if (piece == null) return const SizedBox.shrink();
-
-    final from = _cellOrigin(sliding.from, cell);
-    final to = _cellOrigin(sliding.to, cell);
-    // The piece is built once and sits on its own layer; each frame only
-    // moves it, so gliding costs no widget rebuilds or SVG work.
-    return AnimatedBuilder(
-      animation: _slideCtrl,
-      child: IgnorePointer(
-        child: RepaintBoundary(
-          child: Padding(
-            padding: EdgeInsets.all(cell * 0.02),
-            child: PieceImage(assetForPiece(piece)),
-          ),
-        ),
-      ),
-      builder: (context, child) {
-        if (!_slideCtrl.isAnimating) return const SizedBox.shrink();
-        final t = Curves.easeOutCubic.transform(_slideCtrl.value);
-        final at = Offset.lerp(from, to, t)!;
-        return Positioned(
-          left: at.dx,
-          top: at.dy,
-          width: cell,
-          height: cell,
-          child: child!,
-        );
-      },
     );
   }
 }

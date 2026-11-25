@@ -133,6 +133,28 @@ class _BoardView {
     );
   }
 
+  /// The same, with [feedback] pinned on [square].
+  _BoardView withBadge(MoveFeedback feedback, Square square) => _BoardView(
+    position: position,
+    checkedKing: checkedKing,
+    mode: mode,
+    playerSide: playerSide,
+    selected: selected,
+    legal: legal,
+    moveSquares: moveSquares,
+    hints: hints,
+    blocked: blocked,
+    analysis: analysis,
+    wasUndo: wasUndo,
+    badgeFeedback: feedback,
+    badgeSquare: square,
+    badgeIndex: Object.hash(square, feedback.quality),
+    pendingPromotion: pendingPromotion,
+    premoves: premoves,
+    paused: paused,
+    bestArrow: bestArrow,
+  );
+
   final Position position;
   final GameMode mode;
   final Side playerSide;
@@ -223,7 +245,26 @@ class _BoardView {
 final ValueNotifier<bool> boardFlipped = ValueNotifier(false);
 
 class ChessBoard extends ConsumerStatefulWidget {
-  const ChessBoard({super.key});
+  const ChessBoard({
+    super.key,
+    this.controller,
+    this.flipped,
+    this.arrows = const [],
+    this.badge,
+  });
+
+  /// The controller behind it; the game's by default. Puzzles, lessons and
+  /// replays give a [ScreenBoardController].
+  final NotifierProvider<ChessController, GameState>? controller;
+
+  /// Black at the bottom, when the screen decides rather than the game.
+  final bool? flipped;
+
+  /// More arrows, each in its own colour (the lines of a tactic).
+  final List<({Square from, Square to, Color color})> arrows;
+
+  /// A move rating pinned on a square, as the screen gives it.
+  final ({Square square, MoveQuality quality})? badge;
 
   @override
   ConsumerState<ChessBoard> createState() => _ChessBoardState();
@@ -245,6 +286,9 @@ const double _dragLift = 0.3;
 
 class _ChessBoardState extends ConsumerState<ChessBoard>
     with TickerProviderStateMixin {
+  NotifierProvider<ChessController, GameState> get _provider =>
+      widget.controller ?? chessControllerProvider;
+
   late AnimationController _moveController;
   late AnimationController _captureController;
 
@@ -410,7 +454,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   void _handleTap(Offset local) {
     final square = _squareAtOffset(local);
     if (square == null) return;
-    ref.read(chessControllerProvider.notifier).selectSquare(square);
+    ref.read(_provider.notifier).selectSquare(square);
   }
 
   /// Where the dragged piece's centre is for a finger at [finger].
@@ -464,11 +508,11 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   void _onDragStart(Offset position) {
     final square = _squareAtOffset(position);
     if (square == null) return;
-    final controller = ref.read(chessControllerProvider.notifier);
+    final controller = ref.read(_provider.notifier);
     if (!controller.pickUp(square)) return;
     // Where the queued premoves left the pieces, as the board shows them.
     final piece = ref
-        .read(chessControllerProvider)
+        .read(_provider)
         .boardPosition
         .board
         .pieceAt(square);
@@ -500,10 +544,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     var played = false;
     if (target != null && target != from) {
       _dropped = (from: from, to: target);
-      played = ref.read(chessControllerProvider.notifier).dropOn(target);
+      played = ref.read(_provider.notifier).dropOn(target);
       // A drop that only queued a premove leaves the piece where it is;
       // the move glides when it is played.
-      if (!played || ref.read(chessControllerProvider).canPremove) {
+      if (!played || ref.read(_provider).canPremove) {
         _dropped = null;
       }
     }
@@ -583,14 +627,21 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
 
   @override
   Widget build(BuildContext context) {
-    final view = ref.watch(chessControllerProvider.select(_BoardView.from));
+    var view = ref.watch(_provider.select(_BoardView.from));
+    if (widget.badge case final b?) {
+      view = view.withBadge(
+        MoveFeedback(quality: b.quality, bestSan: '', playedSan: ''),
+        b.square,
+      );
+    }
     final displayPosition = view.position;
 
     _flipped =
+        widget.flipped ??
         (view.mode == GameMode.local ? false : view.playerSide == Side.black) !=
-        boardFlipped.value;
+            boardFlipped.value;
 
-    ref.listen<GameState>(chessControllerProvider, (previous, next) {
+    ref.listen<GameState>(_provider, (previous, next) {
       if (previous == null) return;
       _trackEnd(previous, next);
 
@@ -937,6 +988,18 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     ),
                   ),
 
+                for (final (i, a) in widget.arrows.indexed)
+                  Positioned.fill(
+                    key: ValueKey('arrow_$i'),
+                    child: MoveArrow(
+                      fromRow: ranks.indexOf(rankOf(a.from)),
+                      fromCol: files.indexOf(fileOf(a.from)),
+                      toRow: ranks.indexOf(rankOf(a.to)),
+                      toCol: files.indexOf(fileOf(a.to)),
+                      color: a.color,
+                    ),
+                  ),
+
                 if (view.arrow case final arrow?)
                   Positioned.fill(
                     key: const ValueKey('hint_arrow'),
@@ -1057,7 +1120,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                     key: const ValueKey('paused'),
                     child: _PausedCover(
                       onResume: ref
-                          .read(chessControllerProvider.notifier)
+                          .read(_provider.notifier)
                           .resumeClock,
                     ),
                   ),
@@ -1080,10 +1143,10 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
                       col: files.indexOf(fileOf(view.pendingPromotion!.to)),
                       row: ranks.indexOf(rankOf(view.pendingPromotion!.to)),
                       onPick: (role) => ref
-                          .read(chessControllerProvider.notifier)
+                          .read(_provider.notifier)
                           .completePromotion(role),
                       onCancel: () => ref
-                          .read(chessControllerProvider.notifier)
+                          .read(_provider.notifier)
                           .cancelPromotion(),
                     ),
                   ),
