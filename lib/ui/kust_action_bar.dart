@@ -80,14 +80,14 @@ class _Item extends StatelessWidget {
     // A touch softer than the text white.
     final colour = enabled
         ? k.ink.withValues(alpha: 0.95)
-        : k.muted.withValues(alpha: 0.45);
+        : k.muted.withValues(alpha: 0.35);
 
     final Widget icon = action.busy
         // As tall as an icon, so the label does not move while it spins.
         ? SizedBox.square(
-            dimension: 30,
+            dimension: 24,
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               child: CircularProgressIndicator(strokeWidth: 2.8, color: k.ink),
             ),
           )
@@ -95,7 +95,7 @@ class _Item extends StatelessWidget {
             offset: Offset(0, _opticalDrop[action.icon.codePoint] ?? 0),
             child: BoldIcon(
               action.icon,
-              size: 30,
+              size: 24,
               color: colour,
               weight: 0.005,
             ),
@@ -119,8 +119,8 @@ class _Item extends StatelessWidget {
                 .clamp(maxScaleFactor: 1.15),
             style: k.caption.copyWith(
               color: colour,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

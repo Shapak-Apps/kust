@@ -12,8 +12,7 @@ String moveLabel(int index, String san) =>
 
 /// One-line scrolling list of moves, shared by live games and replays.
 ///
-/// The list starts at the left edge. The current move is highlighted in
-/// gold; as play goes on the strip only starts to scroll once the current
+/// The list starts at the left edge. The current move sits in a pill; as play goes on the strip only starts to scroll once the current
 /// move would pass the middle, and from then on keeps it centered.
 class MoveStrip extends StatefulWidget {
   const MoveStrip({
@@ -37,7 +36,7 @@ class MoveStrip extends StatefulWidget {
   /// Shown when there are no moves; "No moves yet" when not given.
   final String? emptyText;
 
-  static const double height = 36;
+  static const double height = 40;
 
   @override
   State<MoveStrip> createState() => _MoveStripState();
@@ -121,10 +120,6 @@ class _MoveStripState extends State<MoveStrip> {
       );
     }
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Pure gold is hard to read on the light background.
-    final gold = isDark ? k.accent : const Color(0xFFD99B00);
-
     // Always the full width, so the moves start at the left edge even in a
     // column that centers its children.
     return SizedBox(
@@ -133,17 +128,17 @@ class _MoveStripState extends State<MoveStrip> {
       child: SingleChildScrollView(
         controller: _scroll,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
             for (var i = 0; i < widget.labels.length; i++) ...[
-              if (i > 0) const SizedBox(width: 16),
+              if (i > 0) const SizedBox(width: 8),
               KeyedSubtree(
                 key: _keys[i],
                 child: _MoveText(
                   label: widget.labels[i],
                   selected: widget.selected == i + 1,
-                  color: widget.selected == i + 1 ? gold : k.muted,
+                  color: widget.selected == i + 1 ? k.ink : k.muted,
                   onTap: widget.onTap == null
                       ? null
                       : () => widget.onTap!(i + 1),
@@ -172,12 +167,21 @@ class _MoveText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The move being looked at sits in a small pill.
     final text = Center(
-      child: Text(
-        label,
-        style: context.k.body.copyWith(
-          fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-          color: color,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: selected ? context.k.surfaceAlt : null,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: context.k.body.copyWith(
+            fontSize: 14,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: color,
+          ),
         ),
       ),
     );

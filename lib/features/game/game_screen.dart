@@ -13,7 +13,6 @@ import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/player_avatar.dart';
-import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/core/settings.dart';
 import 'package:kust/features/game/chess/board/chess_board.dart';
 import 'package:kust/features/game/chess/chess_controller.dart';
@@ -30,6 +29,8 @@ import 'package:kust/features/game/time_control.dart';
 import 'package:kust/features/game/chess/chess_engine.dart';
 import 'package:kust/core/storage/live_game_store.dart';
 import 'package:kust/features/game/game_args.dart';
+import 'package:kust/ui/game_clock.dart';
+import 'package:kust/ui/game_player_bar.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/features/game/chess/board/end_animation.dart';
@@ -45,7 +46,7 @@ import 'package:kust/ui/tokens.dart';
 import 'package:kust/ui/skeleton.dart';
 
 const double kBoardMaxWidth = 480;
-const double kPlayerBarHeight = 56;
+const double kPlayerBarHeight = GamePlayerBar.height;
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({
@@ -882,143 +883,42 @@ class _PlayerBar extends ConsumerWidget {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
 
-    final captured = piecesCapturedBy(side, s.moves);
-    final advantage = boardMaterialAdvantageFor(s.position, side);
-
-    return SizedBox(
-      height: kPlayerBarHeight,
-      child: Row(
-        children: [
-          Padding(padding: const EdgeInsets.all(4), child: _buildAvatar(theme)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+    return GamePlayerBar(
+      avatar: _buildAvatar(theme),
+      name: name,
+      flag: isYou && AppStorage.isReady && AppStorage.instance.country != null
+          ? CountryFlag(AppStorage.instance.country!, height: 14)
+          : null,
+      rating: subtitle,
+      captured: piecesCapturedBy(side, s.moves),
+      advantage: boardMaterialAdvantageFor(s.position, side),
+      thinking: s.thinking
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    if (isYou &&
-                        AppStorage.isReady &&
-                        AppStorage.instance.country != null) ...[
-                      const SizedBox(width: 6),
-                      CountryFlag(AppStorage.instance.country!, height: 18),
-                    ],
-
-                    if (s.thinking) ...[
-                      const SizedBox(width: 8),
-                      const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      if (thinkingText != null) ...[
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            thinkingText!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: muted,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ],
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                const SizedBox(height: 2),
-                // After many captures the row is wider than the room beside the
-                // clock: it shrinks to fit instead of overflowing.
-                // The rating under the name, then what has been taken.
-                Row(
-                  children: [
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: muted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: _withBotQuote(
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // As on chess.com: one group per kind, the
-                              // pieces of a group overlapping.
-                              for (final group in _groups(captured))
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 4),
-                                  child: SizedBox(
-                                    width: 16 + 7.0 * (group.length - 1),
-                                    height: 16,
-                                    child: Stack(
-                                      children: [
-                                        for (var i = 0; i < group.length; i++)
-                                          Positioned(
-                                            left: 7.0 * i,
-                                            child: PieceImage(
-                                              assetForPiece(group[i]),
-                                              width: 16,
-                                              height: 16,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              if (captured.isNotEmpty && advantage > 0)
-                                const SizedBox(width: 5),
-                              if (advantage > 0)
-                                Text(
-                                  '+$advantage',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: muted,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
+                if (thinkingText != null) ...[
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      thinkingText!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(color: muted),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ],
-            ),
-          ),
-          if (s.time != null) ...[
-            const SizedBox(width: 8),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
-              child: _ClockChip(
-                time: s.time!,
-                active: s.clockActive,
-                side: side,
-              ),
-            ),
-          ],
-        ],
-      ),
+            )
+          : null,
+      wrapCaptured: _withBotQuote,
+      clock: s.time == null
+          ? null
+          : GameClock(time: s.time!, active: s.clockActive),
     );
   }
 
@@ -1026,15 +926,6 @@ class _PlayerBar extends ConsumerWidget {
   Widget _withBotQuote(Widget captured) {
     final b = bot;
     return b == null ? captured : BotQuoteSwitcher(bot: b, child: captured);
-  }
-
-  /// Captured pieces in groups of one kind, in the order they come.
-  static List<List<Piece>> _groups(List<Piece> pieces) {
-    final byRole = <Role, List<Piece>>{};
-    for (final p in pieces) {
-      (byRole[p.role] ??= []).add(p);
-    }
-    return byRole.values.toList();
   }
 
   Widget _buildAvatar(ThemeData theme) {
@@ -1055,7 +946,7 @@ class _PlayerBar extends ConsumerWidget {
     }
     if (avatarPath != null && avatarPath!.isNotEmpty) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(KustSpace.rSmall),
+        borderRadius: BorderRadius.circular(4),
         child: Image.asset(
           avatarPath!,
           width: 40,
@@ -1066,69 +957,17 @@ class _PlayerBar extends ConsumerWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(KustSpace.rSmall),
-        ),
-        child: Icon(
-          Icons.person_rounded,
-          size: 24,
-          color: theme.colorScheme.onSurface,
-        ),
-      ),
-    );
-  }
-}
-
-class _ClockChip extends StatelessWidget {
-  const _ClockChip({
-    required this.time,
-    required this.active,
-    required this.side,
-  });
-
-  final Duration time;
-  final bool active;
-  final Side side;
-
-  @override
-  Widget build(BuildContext context) {
-    final isWhite = side == Side.white;
-
-    final base = isWhite ? Colors.white : const Color(0xFF1B1B1B);
-    final foreground = isWhite ? const Color(0xFF1B1B1B) : Colors.white;
-
-    final background = active ? base : base.withValues(alpha: 0.35);
-    final text = active ? foreground : foreground.withValues(alpha: 0.65);
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(KustSpace.rSmall),
-        border: Border.all(color: context.k.line),
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (active) ...[
-            Icon(Icons.schedule_rounded, size: 15, color: text),
-            const SizedBox(width: 6),
-          ],
-          Text(
-            TimeControl.format(time),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: text,
-            ),
-          ),
-        ],
+      child: Icon(
+        Icons.person_rounded,
+        size: 24,
+        color: theme.colorScheme.onSurface,
       ),
     );
   }

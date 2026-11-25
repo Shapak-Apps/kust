@@ -298,8 +298,8 @@ void main() {
 
   test('glides take longer for longer moves, within limits', () {
     expect(glideDuration(1), lessThan(glideDuration(5)));
-    expect(glideDuration(0.5).inMilliseconds, 170);
-    expect(glideDuration(20).inMilliseconds, 320);
+    expect(glideDuration(0.5).inMilliseconds, 130);
+    expect(glideDuration(20).inMilliseconds, 210);
   });
 
   testWidgets('the puzzle board takes a dragged move too', (tester) async {

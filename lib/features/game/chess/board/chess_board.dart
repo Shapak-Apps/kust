@@ -31,7 +31,8 @@ const Color kLastMoveHighlight = Color(0x40FFBB00);
 const Color kPremoveHighlight = Color(0x80D9534F);
 const Color kHintHighlight = Color(0x552ECC71);
 
-final Color kCheckSquareHighlight = Colors.red.withValues(alpha: 0.9);
+/// The glow behind a king in check: red in the middle, gone at the edges.
+const Color kCheckGlow = Color(0xFFE5484D);
 
 /// The king of the side to move when it is in check.
 Square? _checkedKing(Position position) {
@@ -273,7 +274,7 @@ class ChessBoard extends ConsumerStatefulWidget {
 /// How long a piece takes to glide [squares] squares: short hops are
 /// quick, long slides a little longer, so every move feels the same speed.
 Duration glideDuration(double squares) =>
-    Duration(milliseconds: (150 + 28 * squares).clamp(170, 320).round());
+    Duration(milliseconds: (110 + 22 * squares).clamp(130, 210).round());
 
 const Duration _undoDuration = Duration(milliseconds: 120);
 
@@ -725,7 +726,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
             _capPiece = next.capturedPiece;
             _capAtOnce = wasDropped || instant || next.wasUndo;
             _captureController.duration = wasDropped || instant
-                ? const Duration(milliseconds: 140)
+                ? const Duration(milliseconds: 110)
                 : duration;
             _captureController.forward(from: 0);
           } else {
@@ -1301,9 +1302,6 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
     if (view.moveSquares.contains(square)) {
       background = Color.alphaBlend(kLastMoveHighlight, background);
     }
-    if (checkedKing == square) {
-      background = Color.alphaBlend(kCheckSquareHighlight, background);
-    }
     for (final p in view.premoves) {
       if (p.from == square || p.to == square) {
         background = Color.alphaBlend(kPremoveHighlight, background);
@@ -1363,6 +1361,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
               view.selected != null &&
               view.position.board.roleAt(view.selected!) == Role.pawn),
       isLegalTarget: isLegalTarget,
+      isCheck: checkedKing == square,
       rotatePiece:
           view.mode == GameMode.local && view.position.turn == Side.black,
       showRankLabel: fileOf(square) == (_flipped ? 7 : 0),
@@ -1392,6 +1391,7 @@ class BoardSquareProps {
     required this.piece,
     required this.hasPieceUnderneath,
     required this.isLegalTarget,
+    required this.isCheck,
     required this.rotatePiece,
     required this.showRankLabel,
     required this.showFileLabel,
@@ -1412,6 +1412,9 @@ class BoardSquareProps {
   /// Whether a piece stands here at all (changes the legal-move marker).
   final bool hasPieceUnderneath;
   final bool isLegalTarget;
+
+  /// A king in check stands here.
+  final bool isCheck;
   final bool rotatePiece;
   final bool showRankLabel;
   final bool showFileLabel;
@@ -1427,6 +1430,7 @@ class BoardSquareProps {
       other.piece == piece &&
       other.hasPieceUnderneath == hasPieceUnderneath &&
       other.isLegalTarget == isLegalTarget &&
+      other.isCheck == isCheck &&
       other.rotatePiece == rotatePiece &&
       other.showRankLabel == showRankLabel &&
       other.showFileLabel == showFileLabel;
@@ -1441,6 +1445,7 @@ class BoardSquareProps {
     piece,
     hasPieceUnderneath,
     isLegalTarget,
+    isCheck,
     rotatePiece,
     showRankLabel,
     showFileLabel,
@@ -1500,6 +1505,26 @@ class BoardSquareCell extends StatelessWidget {
                 ),
               ),
             ),
+          // Behind the king, fading in over 150 ms.
+          if (props.isCheck)
+            Positioned.fill(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 150),
+                builder: (_, t, _) => DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        kCheckGlow.withValues(alpha: 0.85 * t),
+                        kCheckGlow.withValues(alpha: 0),
+                      ],
+                      stops: const [0.2, 1],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           ?pieceWidget,
 
           if (props.isLegalTarget && !props.hasPieceUnderneath)
