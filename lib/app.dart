@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,6 +9,11 @@ import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/theme.dart';
 import 'package:kust/ui/kust_splash.dart';
 import 'package:kust/widgets/offline_bar.dart';
+
+/// The app's messenger, for toasts from outside any screen (a challenge
+/// arriving while the app is open).
+final GlobalKey<ScaffoldMessengerState> appMessenger =
+    GlobalKey<ScaffoldMessengerState>();
 
 /// Bouncy scrolling everywhere, no Android glow.
 class _KustScrollBehavior extends MaterialScrollBehavior {
@@ -41,6 +47,7 @@ class MyApp extends StatelessWidget {
         final mode = AppSettings.instance.themeMode.value;
         final language = AppSettings.instance.language.value;
         return MaterialApp.router(
+          scaffoldMessengerKey: appMessenger,
           debugShowCheckedModeBanner: false,
           routerConfig: router,
           theme: appTheme,
