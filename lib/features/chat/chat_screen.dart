@@ -417,6 +417,8 @@ class _ChatScreenState extends State<ChatScreen> {
     await showMessageMenu(
       context,
       bubbleRect: rect,
+      // Its reactions hang 22 px under it: the card keeps clear of them.
+      belowBubble: m.reactions.isEmpty ? 0 : 22,
       mine: mine,
       bubble: _Bubble(
         message: m,

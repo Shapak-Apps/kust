@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -21,11 +22,13 @@ class MessageMenuAction {
 }
 
 /// Telegram's hold menu: the chat dims, the held message is lifted above
-/// it (gliding to where everything fits), a bar of reactions pops in over
-/// it one emoji after another, and a card of actions opens under it.
+/// it (gliding to where everything fits), a bar of reactions unrolls from
+/// the message's side with its emojis popping in one after another, and a
+/// compact card of actions opens downward like a curtain.
 ///
-/// Only opacity, scale and position animate, all from one controller, with
-/// no blur: cheap enough for 60 fps on modest phones.
+/// It is a layer over the screen, not a new page, so the keyboard stays
+/// open while it shows. Only clip, opacity, scale and position animate, from
+/// one controller, with no blur: cheap enough for 60 fps.
 Future<void> showMessageMenu(
   BuildContext context, {
   required Rect bubbleRect,
@@ -36,32 +39,34 @@ Future<void> showMessageMenu(
   required ValueChanged<String> onReact,
   required List<MessageMenuAction> actions,
   Widget? header,
+  double belowBubble = 0,
 }) {
   HapticFeedback.mediumImpact();
-  return Navigator.of(context).push(
-    PageRouteBuilder<void>(
-      opaque: false,
-      barrierDismissible: false,
-      transitionDuration: const Duration(milliseconds: 240),
-      reverseTransitionDuration: const Duration(milliseconds: 160),
-      pageBuilder: (context, animation, _) => _MessageMenu(
-        animation: animation,
-        bubbleRect: bubbleRect,
-        bubble: bubble,
-        mine: mine,
-        reactions: reactions,
-        myReaction: myReaction,
-        onReact: onReact,
-        actions: actions,
-        header: header,
-      ),
+  final done = Completer<void>();
+  late final OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (_) => _MessageMenu(
+      bubbleRect: bubbleRect,
+      bubble: bubble,
+      mine: mine,
+      reactions: reactions,
+      myReaction: myReaction,
+      onReact: onReact,
+      actions: actions,
+      header: header,
+      belowBubble: belowBubble,
+      onClosed: () {
+        entry.remove();
+        if (!done.isCompleted) done.complete();
+      },
     ),
   );
+  Overlay.of(context, rootOverlay: true).insert(entry);
+  return done.future;
 }
 
-class _MessageMenu extends StatelessWidget {
+class _MessageMenu extends StatefulWidget {
   const _MessageMenu({
-    required this.animation,
     required this.bubbleRect,
     required this.bubble,
     required this.mine,
@@ -69,10 +74,11 @@ class _MessageMenu extends StatelessWidget {
     required this.myReaction,
     required this.onReact,
     required this.actions,
+    required this.onClosed,
+    required this.belowBubble,
     this.header,
   });
 
-  final Animation<double> animation;
   final Rect bubbleRect;
   final Widget bubble;
   final bool mine;
@@ -82,58 +88,93 @@ class _MessageMenu extends StatelessWidget {
   final List<MessageMenuAction> actions;
   final Widget? header;
 
+  /// What hangs under the bubble (its reactions), kept clear by the card.
+  final double belowBubble;
+  final VoidCallback onClosed;
+
+  @override
+  State<_MessageMenu> createState() => _MessageMenuState();
+}
+
+class _MessageMenuState extends State<_MessageMenu>
+    with SingleTickerProviderStateMixin {
   static const double _margin = 8;
   static const double _gap = 8;
-  static const double _emoji = 44;
-  static const double _barPad = 6;
+  static const double _emoji = 42;
+  static const double _barPad = 5;
   static const double _barHeight = _emoji + _barPad * 2;
-  static const double _menuWidth = 232;
-  static const double _rowHeight = 48;
-  static const double _headerHeight = 40;
+  static const double _menuWidth = 200;
+  static const double _rowHeight = 44;
+  static const double _headerHeight = 38;
 
-  void _close(BuildContext context, [VoidCallback? then]) {
-    Navigator.of(context).pop();
-    // After the menu has started to go, so the next screen or sheet opens
-    // on a calm chat.
-    if (then != null) Future.microtask(then);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    reverseDuration: const Duration(milliseconds: 150),
+  )..forward();
+  bool _closing = false;
+
+  Future<void> _close([VoidCallback? then]) async {
+    if (_closing) return;
+    _closing = true;
+    await _c.reverse();
+    widget.onClosed();
+    then?.call();
   }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  Animation<double> _part(double from, double to, Curve curve) =>
+      CurvedAnimation(
+        parent: _c,
+        curve: Interval(from, to, curve: curve),
+        reverseCurve: Curves.easeInCubic,
+      );
 
   @override
   Widget build(BuildContext context) {
     final k = context.k;
     final media = MediaQuery.of(context);
     final size = media.size;
+    final mine = widget.mine;
+    final rect = widget.bubbleRect;
 
-    // The room there is: below the status bar, above the gesture bar or
-    // the keyboard, with a margin all round.
+    // The room there is: below the status bar, above the gesture bar or the
+    // keyboard (which stays open), with a margin all round.
     final top = media.padding.top + _margin;
     final bottom =
         size.height -
         math.max(media.padding.bottom, media.viewInsets.bottom) -
         _margin;
     final menuHeight =
-        (header == null ? 0 : _headerHeight) + actions.length * _rowHeight + 12;
+        (widget.header == null ? 0 : _headerHeight) +
+        widget.actions.length * _rowHeight +
+        8;
     final barWidth = math.min(
       size.width - _margin * 2,
-      reactions.length * _emoji + _barPad * 2,
+      widget.reactions.length * _emoji + _barPad * 2,
     );
 
-    // Bar, bubble and card stacked: where the bubble must sit so all three
-    // fit, as close as can be to where it already is.
-    final h = bubbleRect.height;
+    // Bar, bubble (with what hangs under it) and card stacked: where the
+    // bubble must sit so all fit, as near as can be to where it is.
+    final h = rect.height + widget.belowBubble;
     final need = _barHeight + _gap + h + _gap + menuHeight;
     final fits = need <= bottom - top;
     final double barTop;
     final double bubbleTop;
     final double menuTop;
     if (fits) {
-      barTop = (bubbleRect.top - _barHeight - _gap).clamp(top, bottom - need);
+      barTop = (rect.top - _barHeight - _gap).clamp(top, bottom - need);
       bubbleTop = barTop + _barHeight + _gap;
       menuTop = bubbleTop + h + _gap;
     } else {
-      // A message taller than the screen: it stays put, and the bar and
-      // the card float over it, centred.
-      bubbleTop = bubbleRect.top;
+      // Too tall to fit: the message stays put, the bar and card float over
+      // it, centred.
+      bubbleTop = rect.top;
       final rest = _barHeight + _gap + menuHeight;
       barTop = ((top + bottom - rest) / 2).clamp(top, bottom - rest);
       menuTop = barTop + _barHeight + _gap;
@@ -141,27 +182,18 @@ class _MessageMenu extends StatelessWidget {
 
     // Lined up with the message's own side, kept on screen.
     double side(double width) => mine
-        ? (bubbleRect.right - width).clamp(
-            _margin,
-            size.width - width - _margin,
-          )
-        : bubbleRect.left.clamp(_margin, size.width - width - _margin);
+        ? (rect.right - width).clamp(_margin, size.width - width - _margin)
+        : rect.left.clamp(_margin, size.width - width - _margin);
     final barLeft = side(barWidth);
     final menuLeft = side(_menuWidth);
+    final from = mine ? Alignment.centerRight : Alignment.centerLeft;
 
-    final ease = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-    final pop = CurvedAnimation(
-      parent: animation,
-      curve: const Interval(0.15, 1, curve: Curves.easeOutBack),
-      reverseCurve: Curves.easeInCubic,
-    );
-    final origin = mine ? Alignment.topRight : Alignment.topLeft;
+    final fade = _part(0, 0.6, Curves.easeOut);
+    final glide = _part(0, 0.85, Curves.easeOutCubic);
+    final unroll = _part(0.05, 0.75, Curves.easeOutCubic);
+    final curtain = _part(0.15, 1, Curves.easeOutCubic);
 
-    return Material(
+    final layer = Material(
       type: MaterialType.transparency,
       child: Stack(
         children: [
@@ -169,68 +201,69 @@ class _MessageMenu extends StatelessWidget {
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => _close(context),
+              onTap: _close,
               child: FadeTransition(
-                opacity: ease,
-                child: const ColoredBox(color: Color(0x8C000000)),
+                opacity: fade,
+                child: const ColoredBox(color: Color(0x80000000)),
               ),
             ),
           ),
           // The message, lifted and gliding to its place.
           AnimatedBuilder(
-            animation: ease,
+            animation: glide,
             builder: (context, child) => Positioned(
-              left: bubbleRect.left,
-              top: bubbleRect.top + (bubbleTop - bubbleRect.top) * ease.value,
-              width: bubbleRect.width,
+              left: rect.left,
+              top: rect.top + (bubbleTop - rect.top) * glide.value,
+              width: rect.width,
               child: child!,
             ),
-            child: IgnorePointer(child: RepaintBoundary(child: bubble)),
+            child: IgnorePointer(child: RepaintBoundary(child: widget.bubble)),
           ),
-          // The reactions, the emojis popping in one after another.
+          // The reactions: the bar unrolls from the message's side and the
+          // emojis pop in one after another, like a ripple.
           Positioned(
             left: barLeft,
             top: barTop,
             width: barWidth,
             height: _barHeight,
             child: FadeTransition(
-              opacity: ease,
-              child: ScaleTransition(
-                scale: Tween(begin: 0.6, end: 1.0).animate(pop),
-                alignment: mine ? Alignment.bottomRight : Alignment.bottomLeft,
+              opacity: fade,
+              child: AnimatedBuilder(
+                animation: unroll,
+                builder: (context, child) => ClipRRect(
+                  borderRadius: BorderRadius.circular(_barHeight / 2),
+                  child: Align(
+                    alignment: from,
+                    widthFactor: 0.35 + 0.65 * unroll.value,
+                    child: child,
+                  ),
+                ),
                 child: Container(
+                  width: barWidth,
                   padding: const EdgeInsets.all(_barPad),
                   decoration: BoxDecoration(
                     color: k.surface,
                     borderRadius: BorderRadius.circular(_barHeight / 2),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x59000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
                   ),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const ClampingScrollPhysics(),
+                    reverse: mine,
                     child: Row(
                       children: [
-                        for (var i = 0; i < reactions.length; i++)
+                        for (var i = 0; i < widget.reactions.length; i++)
                           _EmojiButton(
-                            emoji: reactions[i],
-                            chosen: reactions[i] == myReaction,
-                            animation: CurvedAnimation(
-                              parent: animation,
-                              curve: Interval(
-                                (0.2 + i * 0.07).clamp(0, 0.8),
-                                (0.55 + i * 0.07).clamp(0.4, 1),
-                                curve: Curves.easeOutBack,
-                              ),
+                            emoji: widget.reactions[i],
+                            chosen: widget.reactions[i] == widget.myReaction,
+                            animation: _part(
+                              (0.12 + i * 0.06).clamp(0, 0.7),
+                              (0.5 + i * 0.06).clamp(0.4, 1),
+                              Curves.easeOutBack,
                             ),
                             onTap: () {
                               HapticFeedback.selectionClick();
-                              _close(context, () => onReact(reactions[i]));
+                              final e = widget.reactions[i];
+                              _close(() => widget.onReact(e));
                             },
                           ),
                       ],
@@ -240,70 +273,72 @@ class _MessageMenu extends StatelessWidget {
               ),
             ),
           ),
-          // The actions, opening from the message's corner.
+          // The actions: a compact card opening downward like a curtain
+          // from under the message.
           Positioned(
             left: menuLeft,
             top: menuTop,
             width: _menuWidth,
             child: FadeTransition(
-              opacity: ease,
-              child: ScaleTransition(
-                scale: Tween(begin: 0.85, end: 1.0).animate(ease),
-                alignment: origin,
+              opacity: fade,
+              child: AnimatedBuilder(
+                animation: curtain,
+                builder: (context, child) => ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: 0.2 + 0.8 * curtain.value,
+                    child: child,
+                  ),
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
                     color: k.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x59000000),
-                        blurRadius: 18,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (header != null) ...[
+                      if (widget.header != null) ...[
                         SizedBox(
                           height: _headerHeight - 6,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: header,
+                              child: widget.header,
                             ),
                           ),
                         ),
                         Container(
                           height: 6,
-                          color: k.bg.withValues(alpha: 0.5),
+                          color: k.bg.withValues(alpha: 0.55),
                         ),
                       ],
-                      for (final a in actions)
+                      for (final a in widget.actions)
                         InkWell(
-                          onTap: () => _close(context, a.onTap),
+                          onTap: () => _close(a.onTap),
                           child: SizedBox(
                             height: _rowHeight,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 14,
                               ),
                               child: Row(
                                 children: [
                                   Icon(
                                     a.icon,
-                                    size: 22,
+                                    size: 20,
                                     color: a.danger ? k.danger : k.ink,
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: 14),
                                   Text(
                                     a.label,
                                     style: k.body.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
                                       color: a.danger ? k.danger : k.ink,
                                     ),
                                   ),
@@ -320,6 +355,15 @@ class _MessageMenu extends StatelessWidget {
           ),
         ],
       ),
+    );
+    // The phone's back closes the menu (when the app has a router).
+    if (Router.maybeOf(context) == null) return layer;
+    return BackButtonListener(
+      onBackButtonPressed: () async {
+        unawaited(_close());
+        return true;
+      },
+      child: layer,
     );
   }
 }
@@ -344,14 +388,14 @@ class _EmojiButton extends StatelessWidget {
       child: ScaleTransition(
         scale: animation,
         child: Container(
-          width: _MessageMenu._emoji,
-          height: _MessageMenu._emoji,
+          width: _MessageMenuState._emoji,
+          height: _MessageMenuState._emoji,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: chosen ? KustTokens.gold.withValues(alpha: 0.25) : null,
           ),
-          child: Text(emoji, style: const TextStyle(fontSize: 26)),
+          child: Text(emoji, style: const TextStyle(fontSize: 25)),
         ),
       ),
     );
