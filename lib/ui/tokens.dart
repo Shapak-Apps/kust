@@ -35,11 +35,11 @@ class KustTokens extends ThemeExtension<KustTokens> {
 
   static const dark = KustTokens(
     bg: Color(0xFF1C1A18),
-    surface: Color(0xFF221F1C),
-    surfaceAlt: Color(0xFF2A2724),
+    surface: Color(0xFF262320),
+    surfaceAlt: Color(0xFF34302C),
     ink: Color(0xFFF2F0EA),
-    muted: Color(0xFF8E8C86),
-    line: Color(0xFF2E2B28),
+    muted: Color(0xFFA09D97),
+    line: Color(0xFF332F2B),
     accent: gold,
     accentInk: Color(0xFF17181A),
     success: Color(0xFF3CB77C),
@@ -59,7 +59,7 @@ class KustTokens extends ThemeExtension<KustTokens> {
   final Color danger;
   final Color scrim;
 
-  /// Four sizes only: 28 / 20 / 15 / 12.
+  /// Sizes: 28 / 20 / 17 / 15 / 12.
   TextStyle get display => TextStyle(
     fontSize: 28,
     height: 1.1,
@@ -83,10 +83,34 @@ class KustTokens extends ThemeExtension<KustTokens> {
   TextStyle get caption => TextStyle(
     fontSize: 12,
     height: 1.3,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w500,
     letterSpacing: 0.2,
     color: muted,
   );
+
+  /// The older, heavier caption, for a label that must hold its own.
+  TextStyle get captionStrong => caption.copyWith(fontWeight: FontWeight.w600);
+
+  /// Section headers: "Friends", "Game history".
+  TextStyle get section => TextStyle(
+    fontSize: 17,
+    height: 1.25,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    color: ink,
+  );
+
+  /// The name on a list row.
+  TextStyle get rowTitle => TextStyle(
+    fontSize: 15,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+    color: ink,
+  );
+
+  /// Ratings, clocks and counters: digits of one width, so they don't jitter.
+  TextStyle get number =>
+      rowTitle.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   @override
   KustTokens copyWith() => this;
@@ -125,7 +149,14 @@ class KustSpace {
   static const double xl = 32;
 
   static const double rSmall = 12;
+
+  /// Cards and list containers.
+  static const double rCard = 12;
   static const double rMedium = 16;
   static const double rLarge = 24;
-  static const double rSheet = 28;
+  static const double rSheet = 20;
+
+  /// A standard list row, and a pushed screen's top bar.
+  static const double row = 56;
+  static const double topBar = 52;
 }
