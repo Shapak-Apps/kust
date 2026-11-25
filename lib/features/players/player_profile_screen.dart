@@ -20,6 +20,7 @@ import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
+import 'package:kust/ui/skeleton.dart';
 
 /// Another player's profile, opened by tapping them anywhere: their board
 /// banner and photo, name, flag, rating and bio, then what can be done with
@@ -489,10 +490,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
             : null,
       ),
       if (games == null)
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(child: CircularProgressIndicator()),
-        )
+        const SizedBox(height: 168, child: KustSkeletonRows(count: 3))
       else if (games.isEmpty)
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
@@ -580,7 +578,7 @@ class _PlayerGamesScreenState extends State<PlayerGamesScreen> {
           ),
           Expanded(
             child: games == null
-                ? const Center(child: CircularProgressIndicator())
+                ? const KustSkeletonRows()
                 : games.isEmpty
                 ? Center(
                     child: Text(

@@ -14,7 +14,9 @@ import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
+import 'package:kust/ui/skeleton.dart';
 
 /// The chat icon on Play, with the number of unread messages. Signed-in
 /// players only.
@@ -130,7 +132,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
           ),
           Expanded(
             child: chats == null
-                ? const Center(child: CircularProgressIndicator())
+                ? const KustSkeletonRows()
                 : RefreshIndicator(
                     onRefresh: _load,
                     child: LayoutBuilder(
@@ -204,7 +206,7 @@ class _ChatRow extends StatelessWidget {
     final when = d.year == now.year && d.month == now.month && d.day == now.day
         ? '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'
         : t.dateShort(t.monthsShort.split(',')[d.month - 1], d.day);
-    return InkWell(
+    return PressHighlight(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

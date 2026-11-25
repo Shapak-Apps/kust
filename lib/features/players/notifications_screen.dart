@@ -14,6 +14,7 @@ import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/player_avatar.dart';
+import 'package:kust/ui/press_highlight.dart';
 import 'package:kust/ui/tokens.dart';
 
 /// The bell on the home screen, beside the avatar: a red count of what is
@@ -311,7 +312,7 @@ class _MessageNotice extends StatelessWidget {
     final d = chat.last.createdAt;
     final when =
         '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-    return InkWell(
+    return PressHighlight(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -401,7 +402,7 @@ class _GameNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final k = context.k;
-    return InkWell(
+    return PressHighlight(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

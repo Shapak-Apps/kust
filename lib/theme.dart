@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:kust/ui/page_transition.dart';
 import 'package:kust/ui/tokens.dart';
 
 const Color primaryGold = KustTokens.gold;
@@ -34,14 +35,15 @@ ThemeData _build(KustTokens k, Brightness brightness) {
     hoverColor: Colors.transparent,
     visualDensity: VisualDensity.standard,
     dividerColor: k.line,
-    // Cupertino-style push transition and swipe-back everywhere.
+    // Our own quick slide on Android and desktops; Cupertino's on Apple
+    // devices, for the swipe-back.
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: KustPageTransitionsBuilder(),
         TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: KustPageTransitionsBuilder(),
         TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.windows: KustPageTransitionsBuilder(),
       },
     ),
     textTheme: TextTheme(
