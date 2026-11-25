@@ -11,7 +11,7 @@ import 'package:kust/ui/kust_controls.dart';
 import 'package:kust/ui/kust_sheet.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/felt_header.dart';
-import 'package:kust/ui/press_highlight.dart';
+import 'package:kust/ui/kust_list_row.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/l10n/app_locale.dart';
 
@@ -181,62 +181,52 @@ class GameTile extends StatelessWidget {
           '${describeResult(game, context.t)}'
           '${accuracy == null ? '' : ', ${context.t.semAccuracy(accuracy.toStringAsFixed(1))}'}',
       excludeSemantics: true,
-      child: PressHighlight(
+      child: KustListRow(
+        // The lists around it put their hairlines between rows.
+        divider: false,
         onTap: () =>
             context.push('/history/${game.id}', extra: readOnly ? game : null),
         onLongPress: readOnly ? null : () => _confirmDelete(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Icon(
-                  _kindIcon(game),
-                  size: 22,
-                  color: game.isLocal || game.practice ? k.muted : k.accent,
-                ),
+        leading: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 20,
+              child: Icon(
+                _kindIcon(game),
+                size: 20,
+                color: game.isLocal || game.practice ? k.muted : k.accent,
               ),
-              const SizedBox(width: 12),
-              _Avatar(game: game),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            game.isLocal
-                                ? context.t.passAndPlay
-                                : game.botName ?? 'Bot',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: k.body.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        if (game.botElo != null) ...[
-                          const SizedBox(width: 6),
-                          Text('(${game.botElo})', style: k.caption),
-                        ],
-                        const SizedBox(width: 8),
-                        _ResultBadge(game: game),
-                      ],
-                    ),
-                    Text(
-                      '${formatGameDate(game.date)}'
-                      '${game.practice ? ' · ${context.t.practiceTag}' : ''}'
-                      '${change == null ? '' : ' · ${change > 0 ? '+' : ''}$change'}',
-                      style: k.caption,
-                    ),
-                  ],
-                ),
-              ),
-              _AnalysisSlot(game: game),
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            _Avatar(game: game),
+          ],
         ),
+        title: Row(
+          children: [
+            Flexible(
+              child: Text(
+                game.isLocal ? context.t.passAndPlay : game.botName ?? 'Bot',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: k.rowTitle,
+              ),
+            ),
+            if (game.botElo != null) ...[
+              const SizedBox(width: 6),
+              Text('(${game.botElo})', style: k.caption.copyWith(fontSize: 14)),
+            ],
+            const SizedBox(width: 8),
+            _ResultBadge(game: game),
+          ],
+        ),
+        meta: Text(
+          '${formatGameDate(game.date)}'
+          '${game.practice ? ' · ${context.t.practiceTag}' : ''}'
+          '${change == null ? '' : ' · ${change > 0 ? '+' : ''}$change'}',
+          style: k.caption,
+        ),
+        trailing: _AnalysisSlot(game: game),
       ),
     );
   }
@@ -277,12 +267,7 @@ class _AnalysisSlot extends StatelessWidget {
     );
 
     if (accuracy != null) {
-      return slot(
-        Text(
-          '${accuracy.toStringAsFixed(1)}%',
-          style: k.body.copyWith(fontWeight: FontWeight.w800),
-        ),
-      );
+      return slot(Text('${accuracy.toStringAsFixed(1)}%', style: k.number));
     }
     if (!HistoryAnalysis.canAnalyze(game)) return const SizedBox.shrink();
 
@@ -350,8 +335,8 @@ class _ResultBadge extends StatelessWidget {
       color = k.danger;
     }
     return Container(
-      width: 18,
-      height: 18,
+      width: 20,
+      height: 20,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: color,
@@ -383,7 +368,7 @@ class _Avatar extends StatelessWidget {
       return FutureBuilder<String?>(
         future: PlayersRepository.instance.avatarKeyOf(name),
         builder: (_, snap) => PlayerAvatar(
-          size: 44,
+          size: 36,
           name: name,
           photo: avatarImage(avatarUrlFor(snap.data)),
         ),
@@ -392,16 +377,20 @@ class _Avatar extends StatelessWidget {
     final path = game.botId == null ? null : 'assets/bots/${_asset(game)}.webp';
     // Avatars here are square: no corner rounding.
     if (path == null) {
-      return const KustIconTile(Icons.people_outline_rounded, radius: 0);
+      return const KustIconTile(
+        Icons.people_outline_rounded,
+        radius: 0,
+        size: 36,
+      );
     }
     return Image.asset(
       path,
-      width: 44,
-      height: 44,
-      cacheWidth: 132,
+      width: 36,
+      height: 36,
+      cacheWidth: 108,
       fit: BoxFit.cover,
       errorBuilder: (_, _, _) =>
-          const KustIconTile(Icons.smart_toy_outlined, radius: 0),
+          const KustIconTile(Icons.smart_toy_outlined, radius: 0, size: 36),
     );
   }
 

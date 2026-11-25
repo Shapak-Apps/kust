@@ -14,7 +14,7 @@ import 'package:kust/ui/country_flag.dart';
 import 'package:kust/ui/felt_header.dart';
 import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/player_avatar.dart';
-import 'package:kust/ui/press_highlight.dart';
+import 'package:kust/ui/kust_list_row.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/ui/skeleton.dart';
 
@@ -206,120 +206,86 @@ class _ChatRow extends StatelessWidget {
     final when = d.year == now.year && d.month == now.month && d.day == now.day
         ? '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'
         : t.dateShort(t.monthsShort.split(',')[d.month - 1], d.day);
-    return PressHighlight(
+    return KustListRow(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: [
-            ValueListenableBuilder<Set<String>>(
-              valueListenable: PresenceService.instance.online,
-              builder: (context, online, _) => Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  PlayerAvatar(
-                    size: 52,
-                    name: p.displayName,
-                    photo: avatarImage(avatarUrlFor(p.avatarKey)),
-                  ),
-                  if (online.contains(p.username))
-                    Positioned(
-                      right: -3,
-                      bottom: -3,
-                      child: Container(
-                        width: 15,
-                        height: 15,
-                        decoration: BoxDecoration(
-                          color: k.success,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: k.bg, width: 2.5),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          p.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      if (p.country != null) ...[
-                        const SizedBox(width: 6),
-                        CountryFlag(p.country!, height: 14),
-                      ],
-                      const Spacer(),
-                      Text(
-                        when,
-                        style: k.caption.copyWith(
-                          color: unread ? KustTokens.gold : k.muted,
-                          fontWeight: unread ? FontWeight.w800 : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      if (mine) ...[
-                        Icon(
-                          last.read
-                              ? Icons.done_all_rounded
-                              : Icons.done_rounded,
-                          size: 16,
-                          color: last.read ? KustTokens.gold : k.muted,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Expanded(
-                        child: Text(
-                          last.body,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: k.body.copyWith(
-                            fontSize: 14,
-                            color: unread ? k.ink : k.muted,
-                            fontWeight: unread ? FontWeight.w700 : null,
-                          ),
-                        ),
-                      ),
-                      if (unread)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          constraints: const BoxConstraints(minWidth: 22),
-                          height: 22,
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3CB77C),
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: Text(
-                            '${chat.unread}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+      leading: ValueListenableBuilder<Set<String>>(
+        valueListenable: PresenceService.instance.online,
+        builder: (context, online, _) => OnlineDot(
+          online: online.contains(p.username),
+          child: PlayerAvatar(
+            size: 36,
+            name: p.displayName,
+            photo: avatarImage(avatarUrlFor(p.avatarKey)),
+          ),
         ),
+      ),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              p.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: k.rowTitle,
+            ),
+          ),
+          if (p.country != null) ...[
+            const SizedBox(width: 6),
+            CountryFlag(p.country!, height: 14),
+          ],
+          const Spacer(),
+          Text(
+            when,
+            style: k.caption.copyWith(
+              color: unread ? KustTokens.gold : k.muted,
+              fontWeight: unread ? FontWeight.w700 : null,
+            ),
+          ),
+        ],
+      ),
+      meta: Row(
+        children: [
+          if (mine) ...[
+            Icon(
+              last.read ? Icons.done_all_rounded : Icons.done_rounded,
+              size: 16,
+              color: last.read ? KustTokens.gold : k.muted,
+            ),
+            const SizedBox(width: 4),
+          ],
+          Expanded(
+            child: Text(
+              last.body,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: k.caption.copyWith(
+                fontSize: 13,
+                color: unread ? k.ink : k.muted,
+                fontWeight: unread ? FontWeight.w600 : null,
+              ),
+            ),
+          ),
+          if (unread)
+            Container(
+              margin: const EdgeInsets.only(left: 8),
+              constraints: const BoxConstraints(minWidth: 20),
+              height: 20,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3CB77C),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${chat.unread}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -79,8 +79,7 @@ class AchievementTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rMedium),
-          border: Border.all(color: k.line),
+          borderRadius: BorderRadius.circular(KustSpace.rCard),
         ),
         child: Row(
           children: [

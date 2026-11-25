@@ -27,6 +27,7 @@ import 'package:kust/ui/kust_text_field.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/pressable.dart';
 import 'package:kust/ui/press_highlight.dart';
+import 'package:kust/ui/kust_section_header.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/board_banner.dart';
 
@@ -421,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Container(
         decoration: BoxDecoration(
           color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rMedium),
+          borderRadius: BorderRadius.circular(KustSpace.rCard),
         ),
         child: Column(
           children: [
@@ -573,71 +574,6 @@ class _Stats extends StatelessWidget {
   }
 }
 
-/// A section title with a count beside it and a View all link.
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-    required this.count,
-    required this.onViewAll,
-  });
-
-  final String title;
-  final String count;
-  final VoidCallback onViewAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final k = context.k;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 8, 2),
-      child: Row(
-        children: [
-          // The title takes the room up to View all, and only then is cut.
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    // One size for every section title.
-                    style: k.title.copyWith(fontSize: 20, height: 1.2),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: k.surfaceAlt,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    count,
-                    style: k.caption.copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: onViewAll,
-            // No extra height: the row is as tall as the title.
-            style: TextButton.styleFrom(
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Text(context.t.viewAll, maxLines: 1),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// The last few games, and the way to all of them.
 class _HistorySection extends StatelessWidget {
   const _HistorySection();
@@ -652,7 +588,7 @@ class _HistorySection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _SectionTitle(
+            KustSectionHeader(
               title: context.t.gameHistory,
               count: '${games.length}',
               onViewAll: () => context.push('/history'),
@@ -693,7 +629,7 @@ class _AchievementsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _SectionTitle(
+            KustSectionHeader(
               title: context.t.achievements,
               count: '${unlocked.length}/${kAchievements.length}',
               onViewAll: () => context.push('/achievements'),
@@ -892,7 +828,7 @@ class _FriendsSectionState extends State<_FriendsSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionTitle(
+        KustSectionHeader(
           title: context.t.friendFriends,
           count: '${friends.length}',
           onViewAll: () => context.push('/players'),

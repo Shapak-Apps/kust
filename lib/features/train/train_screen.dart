@@ -131,7 +131,7 @@ class _OpeningCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
+            borderRadius: BorderRadius.circular(KustSpace.rCard),
           ),
           child: Row(
             children: [
