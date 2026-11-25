@@ -23,6 +23,8 @@ import 'package:kust/features/game/game_result_dialog.dart';
 import 'package:kust/features/game/time_control.dart';
 import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/ui/country_flag.dart';
+import 'package:kust/ui/game_clock.dart';
+import 'package:kust/ui/game_player_bar.dart';
 import 'package:kust/ui/kust_action_bar.dart';
 import 'package:kust/ui/kust_button.dart';
 import 'package:kust/ui/kust_sheet.dart';
@@ -30,7 +32,6 @@ import 'package:kust/ui/kust_top_bar.dart';
 import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
-import 'package:kust/widgets/piece_image.dart';
 import 'package:kust/ui/skeleton.dart';
 
 /// A live game with a friend, on the same board as a game against a bot
@@ -429,7 +430,6 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
     GameState s, {
     required bool white,
   }) {
-    final k = context.k;
     final username = white ? g.white : g.black;
     final isMe = username == _me;
     final p = isMe ? null : _opponent;
@@ -440,126 +440,33 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         s.status == GameStatus.playing &&
         g.active &&
         s.position.turn == side;
-    final low = left < const Duration(seconds: 20);
-    final captured = s.mode == GameMode.online
-        ? piecesCapturedBy(side, s.moves)
-        : const <Piece>[];
-    final advantage = s.mode == GameMode.online
-        ? boardMaterialAdvantageFor(s.position, side)
-        : 0;
-    final byRole = <Role, List<Piece>>{};
-    for (final piece in captured) {
-      (byRole[piece.role] ??= []).add(piece);
-    }
-    return Container(
-      height: 56,
-      // A little room at the sides for the photo and the clock.
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          PlayerAvatar(
-            size: 36,
-            name: p?.displayName ?? username,
-            // Mine: the photo on this phone, else my account's.
-            photo: isMe
-                ? (AppStorage.isReady && AppStorage.instance.photoPath != null
-                      ? FileImage(io.File(AppStorage.instance.photoPath!))
-                      : avatarImage(
-                          avatarUrlFor(
-                            AuthService.instance.state.value.account?.avatarKey,
-                          ),
-                        ))
-                : avatarImage(avatarUrlFor(p?.avatarKey)),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        username,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: k.body.copyWith(fontWeight: FontWeight.w800),
+    final online = s.mode == GameMode.online;
+    final rating = isMe
+        ? AuthService.instance.state.value.account?.rating
+        : p?.rating;
+    return GamePlayerBar(
+      avatar: PlayerAvatar(
+        size: 40,
+        name: p?.displayName ?? username,
+        // Mine: the photo on this phone, else my account's.
+        photo: isMe
+            ? (AppStorage.isReady && AppStorage.instance.photoPath != null
+                  ? FileImage(io.File(AppStorage.instance.photoPath!))
+                  : avatarImage(
+                      avatarUrlFor(
+                        AuthService.instance.state.value.account?.avatarKey,
                       ),
-                    ),
-                    if (p?.country != null) ...[
-                      const SizedBox(width: 6),
-                      CountryFlag(p!.country!, height: 14),
-                    ],
-                  ],
-                ),
-                if (captured.isNotEmpty || advantage > 0)
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final group in byRole.values)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: SizedBox(
-                              width: 14 + 6.0 * (group.length - 1),
-                              height: 14,
-                              child: Stack(
-                                children: [
-                                  for (var i = 0; i < group.length; i++)
-                                    Positioned(
-                                      left: 6.0 * i,
-                                      child: PieceImage(
-                                        assetForPiece(group[i]),
-                                        width: 14,
-                                        height: 14,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (advantage > 0)
-                          Text(
-                            '+$advantage',
-                            style: k.caption.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: running
-                  ? (low ? k.danger : const Color(0xFFF2EFE8))
-                  : k.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              TimeControl.format(
-                TimeControl.display(
-                  g.pending ? Duration(milliseconds: g.baseMs) : left,
-                ),
-              ),
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
-                color: running
-                    ? (low ? Colors.white : const Color(0xFF17181A))
-                    : k.muted,
-              ),
-            ),
-          ),
-        ],
+                    ))
+            : avatarImage(avatarUrlFor(p?.avatarKey)),
+      ),
+      name: username,
+      flag: p?.country != null ? CountryFlag(p!.country!, height: 14) : null,
+      rating: rating == null ? null : '$rating',
+      captured: online ? piecesCapturedBy(side, s.moves) : const [],
+      advantage: online ? boardMaterialAdvantageFor(s.position, side) : 0,
+      clock: GameClock(
+        time: g.pending ? Duration(milliseconds: g.baseMs) : left,
+        active: running,
       ),
     );
   }

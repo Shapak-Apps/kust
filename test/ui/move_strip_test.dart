@@ -40,7 +40,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         tester.getTopLeft(find.text('1. x1')).dx,
-        closeTo(20, 1),
+        closeTo(22, 1),
         reason: 'selected $selected',
       );
     }
@@ -57,7 +57,7 @@ void main() {
     await tester.pumpWidget(_strip(labels, 1));
     await tester.pumpAndSettle();
     // Early moves are before the middle: still at the start.
-    expect(tester.getTopLeft(find.text(labels[0])).dx, closeTo(20, 1));
+    expect(tester.getTopLeft(find.text(labels[0])).dx, closeTo(22, 1));
 
     for (final ply in [20, 30, 40]) {
       await tester.pumpWidget(_strip(labels, ply));
@@ -76,7 +76,7 @@ void main() {
     await tester.pumpWidget(_strip(labels, 60));
     await tester.pumpAndSettle();
     final right = tester.getTopRight(find.text(labels.last)).dx;
-    expect(right, closeTo(380, 2)); // 20px end padding, nothing beyond
+    expect(right, closeTo(378, 2)); // 16 + 6 end padding, nothing beyond
   });
 
   testWidgets('highlights only the selected move and reports taps', (
@@ -88,7 +88,7 @@ void main() {
     );
     final selected = tester.widget<Text>(find.text('x2'));
     final other = tester.widget<Text>(find.text('2. x3'));
-    expect(selected.style!.fontWeight, FontWeight.w800);
+    expect(selected.style!.fontWeight, FontWeight.w700);
     expect(other.style!.fontWeight, FontWeight.w600);
     expect(selected.style!.color, isNot(other.style!.color));
 

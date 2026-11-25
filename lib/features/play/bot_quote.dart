@@ -56,9 +56,23 @@ class _BotQuoteSwitcherState extends ConsumerState<BotQuoteSwitcher> {
     });
     final text = _text;
     return SizedBox(
-      height: 18,
+      height: 22,
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        // Pops in over 180 ms, fades out over 150.
+        duration: const Duration(milliseconds: 180),
+        reverseDuration: const Duration(milliseconds: 150),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            alignment: Alignment.centerLeft,
+            scale: Tween(begin: 0.9, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+            ),
+            child: child,
+          ),
+        ),
         layoutBuilder: (current, previous) => Stack(
           alignment: Alignment.centerLeft,
           children: [...previous, ?current],
@@ -72,20 +86,66 @@ class _BotQuoteSwitcherState extends ConsumerState<BotQuoteSwitcher> {
             : Align(
                 key: ValueKey(text),
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
+                child: _Remark(text),
               ),
       ),
     );
   }
+}
+
+/// What a bot says in the game: a light bubble with dark words, its tail
+/// pointing back at the avatar.
+class _Remark extends StatelessWidget {
+  const _Remark(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CustomPaint(size: const Size(6, 10), painter: _TailPainter()),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F0EA),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.25,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF17181A),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawPath(
+      Path()
+        ..moveTo(size.width, 0)
+        ..lineTo(0, size.height / 2)
+        ..lineTo(size.width, size.height)
+        ..close(),
+      Paint()..color = const Color(0xFFF2F0EA),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_TailPainter old) => false;
 }
 
 /// The opponent's portrait with what it says, like a message from it, in
