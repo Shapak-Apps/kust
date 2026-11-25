@@ -216,6 +216,26 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     );
   }
 
+  /// Cancelling my challenge: say so, and leave the screen.
+  Future<void> _cancel() async {
+    final g = _game;
+    if (g == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final text = context.t.onlineCancelled;
+    try {
+      await _repo.decline(g.id);
+    } on ApiException {
+      return;
+    }
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
+      );
+    if (!mounted) return;
+    context.canPop() ? context.pop() : context.go('/play');
+  }
+
   void _confirmResign() {
     final g = _game;
     if (g == null) return;
@@ -266,7 +286,8 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
         child: Column(
           children: [
             KustTopBar(
-              title: g == null ? '' : t.onlinePlaying(opponent),
+              // Just the friend's name: "Game with …" was cut short.
+              title: g == null ? '' : opponent,
               subtitle: g == null
                   ? null
                   : TimeControl(
@@ -342,8 +363,10 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
     final left = white ? clocks.white : clocks.black;
     final running = g.active && g.whiteToMove == white;
     final low = left < const Duration(seconds: 20);
-    return SizedBox(
+    return Container(
       height: 56,
+      // A little room at the sides for the photo and the clock.
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
           PlayerAvatar(
@@ -414,7 +437,7 @@ class _OnlineGameScreenState extends State<OnlineGameScreen> {
           KustButton(
             label: t.onlineCancel,
             style: KustButtonStyle.secondary,
-            onTap: () => _repo.decline(g.id).then(_show, onError: (_) {}),
+            onTap: _cancel,
           ),
         ],
       );
