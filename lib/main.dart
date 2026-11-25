@@ -10,6 +10,7 @@ import 'package:kust/app.dart';
 import 'package:kust/core/error_log.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/chat_repository.dart';
+import 'package:kust/l10n/app_locale.dart';
 import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/net/profile_sync.dart';
@@ -98,7 +99,32 @@ void _startServerLink() {
   AuthService.instance.state.addListener(_syncRating);
   PlayerRatingStore.instance.listenable().addListener(_syncRating);
   ProfileSync.instance.start();
+  OnlineRepository.instance.changes.listen(_announceChallenge);
   unawaited(AuthService.instance.restore());
+}
+
+final Set<int> _announced = {};
+
+/// A challenge arriving while the app is open: the phone shows no banner
+/// then, so the app does, with a button to open it.
+void _announceChallenge(OnlineGame g) {
+  final online = OnlineRepository.instance;
+  if (!g.pending || g.challenger == online.me || !_announced.add(g.id)) return;
+  final t = AppText.now;
+  HapticFeedback.mediumImpact();
+  appMessenger.currentState
+    ?..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 8),
+        content: Text(t.onlineInvite(g.challenger)),
+        action: SnackBarAction(
+          label: t.onlineOpen,
+          onPressed: () => PushService.instance.router?.push('/online/${g.id}'),
+        ),
+      ),
+    );
 }
 
 bool _sendingRating = false;
