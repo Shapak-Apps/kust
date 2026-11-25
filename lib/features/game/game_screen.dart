@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dartchess/dartchess.dart';
 
+import 'package:kust/core/net/account.dart';
+import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
 import 'package:kust/ui/country_flag.dart';
@@ -1000,13 +1002,27 @@ class _PlayerBar extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              for (final piece in captured)
+                              // As on chess.com: one group per kind, the
+                              // pieces of a group overlapping.
+                              for (final group in _groups(captured))
                                 Padding(
-                                  padding: const EdgeInsets.only(right: 1),
-                                  child: PieceImage(
-                                    assetForPiece(piece),
-                                    width: 16,
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: SizedBox(
+                                    width: 16 + 7.0 * (group.length - 1),
                                     height: 16,
+                                    child: Stack(
+                                      children: [
+                                        for (var i = 0; i < group.length; i++)
+                                          Positioned(
+                                            left: 7.0 * i,
+                                            child: PieceImage(
+                                              assetForPiece(group[i]),
+                                              width: 16,
+                                              height: 16,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               if (captured.isNotEmpty && advantage > 0)
@@ -1051,13 +1067,29 @@ class _PlayerBar extends ConsumerWidget {
     return b == null ? captured : BotQuoteSwitcher(bot: b, child: captured);
   }
 
+  /// Captured pieces in groups of one kind, in the order they come.
+  static List<List<Piece>> _groups(List<Piece> pieces) {
+    final byRole = <Role, List<Piece>>{};
+    for (final p in pieces) {
+      (byRole[p.role] ??= []).add(p);
+    }
+    return byRole.values.toList();
+  }
+
   Widget _buildAvatar(ThemeData theme) {
     if (isYou && AppStorage.isReady) {
+      // The photo on this phone, else the account's (uploaded elsewhere).
       final photo = AppStorage.instance.photoPath;
       return PlayerAvatar(
         size: 40,
         name: name,
-        photo: photo == null ? null : FileImage(io.File(photo)),
+        photo: photo != null
+            ? FileImage(io.File(photo))
+            : avatarImage(
+                avatarUrlFor(
+                  AuthService.instance.state.value.account?.avatarKey,
+                ),
+              ),
       );
     }
     if (avatarPath != null && avatarPath!.isNotEmpty) {

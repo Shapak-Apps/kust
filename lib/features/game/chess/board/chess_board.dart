@@ -1300,7 +1300,13 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
       coordinateColor: isLight ? theme.dark : theme.light,
       grain: theme.grain,
       piece: hidePiece ? null : piece,
-      hasPieceUnderneath: piece != null,
+      // En passant takes a pawn that isn't on the square: ring it too.
+      hasPieceUnderneath:
+          piece != null ||
+          (isLegalTarget &&
+              square == view.position.epSquare &&
+              view.selected != null &&
+              view.position.board.roleAt(view.selected!) == Role.pawn),
       isLegalTarget: isLegalTarget,
       rotatePiece:
           view.mode == GameMode.local && view.position.turn == Side.black,
