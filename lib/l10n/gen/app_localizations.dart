@@ -1143,6 +1143,12 @@ abstract class AppL10n {
   /// **'Wood'**
   String get boardWood;
 
+  /// No description provided for @boardSoft.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft'**
+  String get boardSoft;
+
   /// No description provided for @pieceClassic.
   ///
   /// In en, this message translates to:
@@ -1166,6 +1172,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Brushed'**
   String get pieceBrushed;
+
+  /// No description provided for @pieceFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat'**
+  String get pieceFlat;
 
   /// No description provided for @histNoGames.
   ///
