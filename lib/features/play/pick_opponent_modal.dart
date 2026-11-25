@@ -110,7 +110,10 @@ class _PickOpponentModalState extends State<PickOpponentModal> {
           onChanged: (v) => setState(() => _side = v),
         ),
         const SizedBox(height: 16),
-        BotTimeRow(value: _time, onChanged: (v) => setState(() => _time = v)),
+        TimeControlRow(
+          value: _time,
+          onChanged: (v) => setState(() => _time = v),
+        ),
         const SizedBox(height: 8),
         PracticeModeCheckbox(
           value: _practice,

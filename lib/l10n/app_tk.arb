@@ -664,5 +664,22 @@
   "chatEdited": "üýtgedildi",
   "chatEditTooLate": "Haty diňe bir günüň dowamynda üýtgedip bolýar",
   "chatRead": "Okaldy",
-  "chatSentState": "Iberildi"
+  "chatSentState": "Iberildi",
+  "challengeTitle": "{name} oýna çagyr",
+  "challengeSend": "Çagyryş iber",
+  "onlineWaiting": "{name} kabul etmegine garaşylýar…",
+  "onlineCancel": "Çagyryşy ýatyr",
+  "onlineInvite": "{name} sizi oýna çagyrýar",
+  "onlineYouPlay": "Siz {side} oýnaýarsyňyz · {clock}",
+  "onlineYourMove": "Siziň gezegiňiz",
+  "onlineTheirMove": "{name} gezegi",
+  "onlineDraw": "Deňe deň",
+  "onlineDeclined": "{name} çagyryşy ret etdi",
+  "onlineCancelled": "Çagyryş ýatyryldy",
+  "challengesSection": "Çagyryşlar",
+  "onlineGamesSection": "Oýunlaryňyz",
+  "onlinePlaying": "{name} bilen oýun",
+  "onlineOpen": "Aç",
+  "onlineNotLegal": "Bu göçüm bolmaýar",
+  "onlineFriendsOnly": "Diňe dostlaryňyzy çagyryp bilersiňiz"
 }

@@ -125,7 +125,10 @@ class PushService {
     final username = message.data['username'];
     final go = router;
     if (go == null) return;
-    if (type == 'chat_message' && username is String) {
+    final game = message.data['game'];
+    if (type == 'challenge' && game is String) {
+      go.push('/online/$game');
+    } else if (type == 'chat_message' && username is String) {
       go.push('/chat/$username');
     } else if (type == 'friend_accepted' && username is String) {
       go.push('/player/$username');

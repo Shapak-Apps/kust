@@ -6,6 +6,7 @@ import 'package:kust/core/net/account.dart';
 import 'package:kust/core/net/api_client.dart';
 import 'package:kust/core/net/auth_service.dart';
 import 'package:kust/core/net/chat_repository.dart';
+import 'package:kust/core/net/online_repository.dart';
 import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
@@ -78,6 +79,7 @@ class ProfileSync {
     PlayersRepository.instance.incoming.value = const [];
     ChatRepository.instance.summaries.value = const [];
     ChatRepository.instance.unread.value = 0;
+    OnlineRepository.instance.open.value = const [];
     await GameHistoryStore.instance.clear();
     await AchievementStore.instance.clear();
     await PlayerRatingStore.instance.setStartingRating(

@@ -13,6 +13,7 @@ import 'package:kust/features/auth/verify_email_screen.dart';
 import 'package:kust/features/onboarding/onboarding_screen.dart';
 import 'package:kust/features/chat/chat_screen.dart';
 import 'package:kust/features/chat/chats_screen.dart';
+import 'package:kust/features/online/online_game_screen.dart';
 import 'package:kust/features/players/notifications_screen.dart';
 import 'package:kust/features/players/player_profile_screen.dart';
 import 'package:kust/core/net/account.dart';
@@ -120,6 +121,12 @@ GoRouter createRouter({required bool onboardingCompleted}) {
         builder: (context, state) => const PlayersScreen(),
       ),
 
+      GoRoute(
+        path: '/online/:id',
+        builder: (context, state) => OnlineGameScreen(
+          gameId: int.tryParse(state.pathParameters['id']!) ?? 0,
+        ),
+      ),
       GoRoute(path: '/chats', builder: (context, state) => const ChatsScreen()),
       GoRoute(
         path: '/chat/:username',
