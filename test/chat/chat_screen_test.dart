@@ -201,4 +201,17 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('holding a message keeps the keyboard open', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+    final field = tester.widget<EditableText>(find.byType(EditableText));
+    expect(field.focusNode.hasFocus, isTrue);
+    await tester.longPress(find.textContaining('Salam!'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reply'), findsOneWidget);
+    expect(field.focusNode.hasFocus, isTrue);
+  });
 }
