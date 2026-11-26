@@ -143,6 +143,19 @@ class _PuzzleBoardState extends State<PuzzleBoard> {
   @override
   void didUpdateWidget(covariant PuzzleBoard old) {
     super.didUpdateWidget(old);
+    final w = widget;
+    // Only when what the board shows changed: a screen rebuilding for
+    // something else (the coach's line, a timer) must not drop the piece
+    // the player has just picked up.
+    final same =
+        identical(w.position, old.position) &&
+        w.interactive == old.interactive &&
+        w.lastMove == old.lastMove &&
+        w.hintFrom == old.hintFrom &&
+        w.hintTo == old.hintTo &&
+        w.slide == old.slide &&
+        w.slideKey == old.slideKey;
+    if (same) return;
     // Not while the tree builds: the board takes it straight after.
     scheduleMicrotask(() {
       if (!mounted) return;
