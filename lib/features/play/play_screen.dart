@@ -75,8 +75,15 @@ class _PlayScreenState extends State<PlayScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // The app's own mark, bare: the Square K with its gold move.
-            const KustSymbol(height: 52),
+            // The bots around one board: who you will be playing.
+            ClipRSuperellipse(
+              borderRadius: BorderRadius.circular(KustSpace.rCard),
+              child: Image.asset(
+                'assets/images/welcome.webp',
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
             const SizedBox(height: 20),
             Text(sheetContext.t.welcomeTitle, style: k.display),
             const SizedBox(height: 8),
