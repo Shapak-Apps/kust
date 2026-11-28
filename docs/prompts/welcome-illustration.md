@@ -26,7 +26,7 @@ cream white and warm charcoal, flat with a soft top-to-bottom shade.
 Colours: a very dark warm brown background (#262320) that fades smoothly to
 that colour at every edge, so the image melts into a dark app sheet with no
 visible border. Accents only in golden yellow (#FFBB00) and a fresh green
-(#4CC58A). Soft warm lamp light from above the table, gentle shadows, no harsh
+(#3CB77C). Soft warm lamp light from above the table, gentle shadows, no harsh
 contrast.
 
 Composition: characters and table in the middle 70% of the width, clear space
