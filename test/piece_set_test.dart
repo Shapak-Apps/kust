@@ -21,7 +21,7 @@ void main() {
   });
 
   group('sets', () {
-    test('there are five: three drawn and two textured', () {
+    test('there are five: two drawn and three textured', () {
       expect(PieceSet.values.map((s) => s.label), [
         'Classic',
         'Shaded',
@@ -37,6 +37,7 @@ void main() {
       expect(PieceSet.values.where((s) => s.textured), [
         PieceSet.graphite,
         PieceSet.brushed,
+        PieceSet.flat,
       ]);
     });
 

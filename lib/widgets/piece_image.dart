@@ -26,3 +26,11 @@ class PieceImage extends StatelessWidget {
     );
   }
 }
+
+/// A piece standing on a board square: 5% smaller than the square, shrunk
+/// toward its base so it stays on the square.
+Widget boardPiece(String asset) => Transform.scale(
+  scale: 0.95,
+  alignment: const Alignment(0, 0.5),
+  child: PieceImage(asset),
+);

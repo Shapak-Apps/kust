@@ -179,6 +179,18 @@ MoveQuality classifyPlayedMove({
   required bool isBest,
 }) {
   final lost = expectedPointsLost(bestCp: bestCp, playedCp: playedCp);
+  // A sound sacrifice is brilliant even when the engine likes another move
+  // a little more (a trap like Légal's), as long as it is still good.
+  if ((isBest || lost <= 0.05) &&
+      isBrilliantSacrifice(
+        before: before,
+        after: after,
+        move: move,
+        playedCp: playedCp,
+        isBest: true,
+      )) {
+    return MoveQuality.brilliant;
+  }
   if (!isBest && lost > _bestTolerance) {
     final quality = classifyByLoss(lost);
     final costly =
@@ -187,15 +199,6 @@ MoveQuality classifyPlayedMove({
       return MoveQuality.miss;
     }
     return quality;
-  }
-  if (isBrilliantSacrifice(
-    before: before,
-    after: after,
-    move: move,
-    playedCp: playedCp,
-    isBest: true,
-  )) {
-    return MoveQuality.brilliant;
   }
   if (isGreatMove(bestCp: bestCp, secondBestCp: secondBestCp)) {
     return MoveQuality.great;
