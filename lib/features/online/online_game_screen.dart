@@ -36,6 +36,7 @@ import 'package:kust/ui/move_strip.dart';
 import 'package:kust/ui/player_avatar.dart';
 import 'package:kust/ui/tokens.dart';
 import 'package:kust/widgets/piece_image.dart';
+import 'package:kust/widgets/static_board.dart';
 import 'package:kust/ui/skeleton.dart';
 
 /// A live game with a friend, on the same board as a game against a bot
@@ -266,13 +267,10 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         botId: 'online',
         botName: g.opponentOf(_me),
         botElo: _opponent?.rating,
-        timeControl: TimeControl(
-          baseMinutes: g.baseMs ~/ 60000,
-          incrementSeconds: g.incMs ~/ 1000,
-        ).label,
+        timeControl: '${g.baseMs ~/ 60000}+${g.incMs ~/ 1000}',
       ),
     );
-    if (mounted) _chess.markOnlineSaved('online-${g.id}');
+    if (mounted) _chess.markOnlineSaved('online-${g.id}', rate: _seenLive);
   }
 
   /// Resign and Offer a draw both ask first.
@@ -363,14 +361,15 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
             if (g == null)
               const Expanded(child: Center(child: KustLoader()))
             else ...[
-              MoveStrip(
-                labels: [
-                  for (var i = 0; i < s.moves.length; i++)
-                    moveLabel(i, s.moves[i].san),
-                ],
-                selected: cursor,
-                onTap: (ply) => _chess.jumpToMove(ply - 1),
-              ),
+              if (!g.pending)
+                MoveStrip(
+                  labels: [
+                    for (var i = 0; i < s.moves.length; i++)
+                      moveLabel(i, s.moves[i].san),
+                  ],
+                  selected: cursor,
+                  onTap: (ply) => _chess.jumpToMove(ply - 1),
+                ),
               const SizedBox(height: 8),
               Expanded(
                 child: LayoutBuilder(
@@ -409,7 +408,10 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
                                       // blurred, a piece changing over it.
                                       ? const _WaitingBoard()
                                       : g.pending
-                                      ? const IgnorePointer(child: ChessBoard())
+                                      ? StaticBoard(
+                                          position: Chess.initial,
+                                          flipped: !_iAmWhite,
+                                        )
                                       : const ChessBoard(),
                                 ),
                                 bottom,
@@ -448,7 +450,8 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         s.status == GameStatus.playing &&
         g.active &&
         s.position.turn == side;
-    final online = s.mode == GameMode.online;
+    // While a challenge waits, the board still holds the last game.
+    final online = s.mode == GameMode.online && !g.pending;
     final rating = isMe
         ? AuthService.instance.state.value.account?.rating
         : p?.rating;
@@ -598,19 +601,17 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
                         style: k.body.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () =>
+                    KustIconButton(
+                      icon: Icons.close_rounded,
+                      label: t.friendDecline,
+                      onTap: () =>
                           _repo.declineDraw(g.id).then(_show, onError: (_) {}),
-                      child: Text(
-                        t.friendDecline,
-                        style: TextStyle(color: k.muted),
-                      ),
                     ),
-                    const SizedBox(width: 4),
-                    KustButton(
+                    const SizedBox(width: 8),
+                    KustIconButton(
+                      icon: Icons.check_rounded,
                       label: t.friendAccept,
-                      height: 40,
-                      expand: false,
+                      filled: true,
                       onTap: () =>
                           _repo.draw(g.id).then(_show, onError: (_) {}),
                     ),
@@ -648,12 +649,14 @@ class _OnlineGameScreenState extends ConsumerState<OnlineGameScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: k.title.copyWith(fontWeight: FontWeight.w800),
-          ),
-          if (reason.isNotEmpty)
+          // Seen ending live, the result screen said it already.
+          if (!_seenLive)
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: k.title.copyWith(fontWeight: FontWeight.w800),
+            ),
+          if (reason.isNotEmpty && !_seenLive)
             Text(
               reason,
               textAlign: TextAlign.center,
@@ -816,7 +819,7 @@ class _WaitingBoardState extends State<_WaitingBoard> {
       children: [
         ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: const IgnorePointer(child: ChessBoard()),
+          child: StaticBoard(position: Chess.initial),
         ),
         AnimatedSwitcher(
           duration: motion(context, const Duration(milliseconds: 250)),

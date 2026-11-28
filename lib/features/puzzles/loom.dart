@@ -405,11 +405,11 @@ class LoomPainter extends CustomPainter {
 }
 
 /// The Teke göl's chart is the tallest and fills the runner edge to edge,
-/// so it is drawn 5% smaller around its centre.
+/// so it is drawn 10% smaller around its centre, clear of the border.
 void _shrinkTeke(Canvas canvas, GolKind kind, double cx, double cy) {
   if (kind != GolKind.teke) return;
   canvas
     ..translate(cx, cy)
-    ..scale(0.95)
+    ..scale(0.9)
     ..translate(-cx, -cy);
 }

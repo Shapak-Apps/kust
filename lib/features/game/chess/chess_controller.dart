@@ -1465,8 +1465,12 @@ class ChessController extends Notifier<GameState> {
     );
   }
 
-  /// The finished online game is in the history as [id], for Review.
-  void markOnlineSaved(String id) => state = state.copyWith(savedGameId: id);
+  /// The finished online game is in the history as [id], for Review. With
+  /// [rate] its moves are rated for the result screen, as after a bot game.
+  void markOnlineSaved(String id, {bool rate = false}) {
+    state = state.copyWith(savedGameId: id);
+    if (rate) unawaited(_computeAccuracy(state, id));
+  }
 
   Future<void> startLocalGame({TimeControl? timeControl}) async {
     _line = const [];

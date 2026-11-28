@@ -85,4 +85,24 @@ void main() {
     final p = store.load();
     expect(p.solved, isEmpty);
   });
+
+  test('signing in joins the account\'s progress; signing out clears it', () async {
+    await store.recordSolved(_a, clean: true);
+    await store.merge({
+      'solved': ['b'],
+      'attempted': ['b'],
+      'rating': 1200,
+      'highest': 1250,
+    });
+    final p = store.load();
+    expect(p.solved, {'a', 'b'});
+    expect(p.attempts, 2);
+    expect(p.rating, 1200);
+    expect(p.highest, 1250);
+    expect(store.signature(), '2:2:0:1200:1250');
+
+    await store.clear();
+    expect(store.load().solved, isEmpty);
+    expect(store.toMap(), isNull);
+  });
 }

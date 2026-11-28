@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:kust/core/net/connection_service.dart';
 import 'package:kust/l10n/app_locale.dart';
@@ -27,12 +28,20 @@ double bottomGap(BuildContext context, {double min = 8}) {
 /// moves down to make room for it (the screens lay out under a top padding
 /// that grows by the strip). "Back online" shows in green for a moment
 /// when the connection returns. Only signed-in players are ever checked,
-/// so guests never see it.
+/// so guests never see it. Never over a board: a game shows its own link.
 class OfflineInsetHost extends StatefulWidget {
-  const OfflineInsetHost({super.key, required this.child, this.service});
+  const OfflineInsetHost({
+    super.key,
+    required this.child,
+    this.service,
+    this.router,
+  });
 
   final Widget child;
   final ConnectionService? service;
+
+  /// Where the app is, to keep the strip off the board screens.
+  final GoRouter? router;
 
   @override
   State<OfflineInsetHost> createState() => _OfflineInsetHostState();
@@ -42,13 +51,23 @@ class _OfflineInsetHostState extends State<OfflineInsetHost> {
   /// What the strip says while it slides away after coming back online.
   ConnectionStatus _shown = ConnectionStatus.offline;
 
+  static final _boards = RegExp(
+    r'^/(game|online/|puzzle/|review/|history/)',
+  );
+
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ConnectionStatus>(
-      valueListenable: (widget.service ?? ConnectionService.instance).status,
-      builder: (context, status, _) {
-        final visible = status != ConnectionStatus.online;
-        if (visible) _shown = status;
+    final status = (widget.service ?? ConnectionService.instance).status;
+    final router = widget.router;
+    return ListenableBuilder(
+      listenable: Listenable.merge([status, router?.routerDelegate]),
+      builder: (context, _) {
+        final onBoard =
+            router != null &&
+            router.routerDelegate.currentConfiguration.isNotEmpty &&
+            _boards.hasMatch(router.state.matchedLocation);
+        final visible = status.value != ConnectionStatus.online && !onBoard;
+        if (visible) _shown = status.value;
         return TweenAnimationBuilder<double>(
           tween: Tween(end: visible ? kOfflineBarHeight : 0),
           duration: motion(context, const Duration(milliseconds: 250)),
@@ -106,31 +125,28 @@ class _Strip extends StatelessWidget {
   Widget build(BuildContext context) {
     final k = context.k;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    // Like the tab bar, turned over: darkest at the very top, lighter
-    // toward the bottom, so the page shows faintly through its lower edge.
-    final base = restored
-        ? k.success
-        : dark
-        ? const Color(0xFF121110)
-        : k.ink;
+    // Offline: like the tab bar, turned over: darkest at the very top,
+    // fading to nothing at the bottom, so there is no edge line over the
+    // screen below. Back online: a plain mid-dark green.
+    final base = dark ? const Color(0xFF121110) : k.ink;
     // Transparent Material: it gives the text its style above the screens.
     return Material(
       type: MaterialType.transparency,
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            // Fades away to nothing at the bottom, so there is no edge
-            // line over the screen below.
-            colors: [
-              base.withValues(alpha: restored ? 1 : 0.8),
-              base.withValues(alpha: restored ? 0.85 : 0.55),
-              base.withValues(alpha: 0),
-            ],
-            stops: const [0, 0.6, 1],
-          ),
-        ),
+        decoration: restored
+            ? const BoxDecoration(color: Color(0xFF2B8A5A))
+            : BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    base.withValues(alpha: 0.8),
+                    base.withValues(alpha: 0.55),
+                    base.withValues(alpha: 0),
+                  ],
+                  stops: const [0, 0.6, 1],
+                ),
+              ),
         child: ClipRect(
           child: Padding(
             padding: EdgeInsets.only(top: statusBar),

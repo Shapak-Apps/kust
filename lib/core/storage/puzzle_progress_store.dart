@@ -134,6 +134,38 @@ class PuzzleProgressStore implements PuzzleProgressRecorder {
     });
   }
 
+  /// The progress as stored, to send to the account; null before any.
+  Map<String, dynamic>? toMap() {
+    final raw = _box.get(_key);
+    return raw is Map ? Map<String, dynamic>.from(raw) : null;
+  }
+
+  /// What was last sent of the progress: the sets only grow, so their sizes
+  /// and the ratings change whenever it does.
+  String signature() {
+    final p = load();
+    return '${p.solved.length}:${p.attempted.length}:${p.revealed.length}:'
+        '${p.rating}:${p.highest}';
+  }
+
+  /// Signing in: the account's progress joins this phone's. Puzzles done on
+  /// either count; the account's rating wins.
+  Future<void> merge(Map<String, dynamic> account) async {
+    final here = load();
+    final rating = account['rating'];
+    final highest = account['highest'];
+    await _box.put(_key, {
+      'solved': {...here.solved, ..._ids(account['solved'])}.toList(),
+      'revealed': {...here.revealed, ..._ids(account['revealed'])}.toList(),
+      'attempted': {...here.attempted, ..._ids(account['attempted'])}.toList(),
+      'rating': rating is int ? rating : here.rating,
+      'highest': math.max(here.highest, highest is int ? highest : 0),
+    });
+  }
+
+  /// Signing out: the next account (or guest) starts afresh.
+  Future<void> clear() => _box.delete(_key);
+
   int _nextRating(int rating, int puzzleRating, bool won) {
     final expected = 1 / (1 + math.pow(10, (puzzleRating - rating) / 400));
     final score = won ? 1.0 : 0.0;
