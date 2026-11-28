@@ -44,10 +44,7 @@ class KustSectionHeader extends StatelessWidget {
                       horizontal: 7,
                       vertical: 1,
                     ),
-                    decoration: BoxDecoration(
-                      color: k.surfaceAlt,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    decoration: squircle(10, color: k.surfaceAlt),
                     child: Text(count!, style: k.captionStrong),
                   ),
                 ],

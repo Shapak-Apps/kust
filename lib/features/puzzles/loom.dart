@@ -188,6 +188,8 @@ void _paintWoven(Canvas canvas, List<GolKind> gols) {
 
   for (var i = 0; i < n; i++) {
     final chart = GolChart.of(gols[i]);
+    canvas.save();
+    _shrinkTeke(canvas, gols[i], w / 2, LoomMetrics.golCenter(n, i));
     final left = w / 2 - (golCols + 0.5) * k;
     final top = LoomMetrics.golCenter(n, i) - (golRows + 0.5) * k;
     for (var r = 0; r < chart.rows; r++) {
@@ -205,6 +207,7 @@ void _paintWoven(Canvas canvas, List<GolKind> gols) {
         );
       }
     }
+    canvas.restore();
   }
 
   // End band and fringe.
@@ -302,6 +305,8 @@ void _paintWarp(Canvas canvas, List<GolKind> gols) {
   final dot = LoomColors.walnut.withValues(alpha: 0.7);
   for (var i = 0; i < n; i++) {
     final chart = GolChart.of(gols[i]);
+    canvas.save();
+    _shrinkTeke(canvas, gols[i], w / 2, LoomMetrics.golCenter(n, i));
     final left = w / 2 - (golCols + 0.5) * k;
     final top = LoomMetrics.golCenter(n, i) - (golRows + 0.5) * k;
     for (var r = 0; r < chart.rows; r++) {
@@ -311,6 +316,7 @@ void _paintWarp(Canvas canvas, List<GolKind> gols) {
         }
       }
     }
+    canvas.restore();
   }
 
   // The sketch of a small star between göls.
@@ -396,4 +402,14 @@ class LoomPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(LoomPainter old) => old.woven != woven || old.gols != gols;
+}
+
+/// The Teke göl's chart is the tallest and fills the runner edge to edge,
+/// so it is drawn 5% smaller around its centre.
+void _shrinkTeke(Canvas canvas, GolKind kind, double cx, double cy) {
+  if (kind != GolKind.teke) return;
+  canvas
+    ..translate(cx, cy)
+    ..scale(0.95)
+    ..translate(-cx, -cy);
 }

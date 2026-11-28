@@ -255,6 +255,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
             },
           ),
           const SizedBox(height: 8),
+          // A bot game is kept after every move, so leaving keeps it for
+          // Continue on Play. A drilled line is not kept, so it gets no
+          // such button.
+          if (game.mode == GameMode.bot && !game.inLine) ...[
+            KustButton(
+              label: sheetContext.t.continueLater,
+              style: KustButtonStyle.outline,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                context.go('/play');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
           KustButton(
             label: sheetContext.t.keepPlaying,
             style: KustButtonStyle.outline,
@@ -475,7 +489,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ),
                       ),
                     const _HistorySlot(),
-                    const _OpeningSlot(),
+                    // A practised line already names itself in the banner.
+                    if (widget.lineName == null) const _OpeningSlot(),
                     if (screen.practice && screen.feedback && !widget.isLocal)
                       const SizedBox(
                         height: 24,
@@ -1055,19 +1070,19 @@ class _LineBanner extends ConsumerWidget {
       liveRegion: true,
       child: Container(
         width: double.infinity,
-        // A fixed height for one or two lines, so the board under it never
-        // moves when the text changes.
-        height: 60,
+        // A fixed height, so the board under it never moves when the text
+        // changes.
+        height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         color: k.surface,
         child: Row(
           children: [
-            Icon(icon, size: 20, color: colour),
-            const SizedBox(width: 10),
+            Icon(icon, size: 18, color: colour),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 text,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: k.body.copyWith(
                   fontWeight: FontWeight.w700,

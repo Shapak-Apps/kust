@@ -47,10 +47,10 @@ class KustTile extends StatelessWidget {
         child: Container(
           height: height,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            KustSpace.rCard,
             color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rCard),
-            border: Border.all(
+            side: BorderSide(
               color: done ? k.success.withValues(alpha: 0.6) : k.line,
             ),
           ),
@@ -60,10 +60,7 @@ class KustTile extends StatelessWidget {
                 Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(
-                    color: k.success,
-                    borderRadius: BorderRadius.circular(KustSpace.rSmall),
-                  ),
+                  decoration: squircle(KustSpace.rSmall, color: k.success),
                   child: const Icon(
                     Icons.check_rounded,
                     color: Colors.white,

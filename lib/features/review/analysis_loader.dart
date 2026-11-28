@@ -157,10 +157,10 @@ class _AnalysisLoaderState extends State<AnalysisLoader>
               width: double.infinity,
               constraints: const BoxConstraints(minHeight: 76),
               padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
-              decoration: BoxDecoration(
+              decoration: squircle(
+                KustSpace.rMedium,
                 color: k.surface,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                border: Border.all(color: k.line),
+                side: BorderSide(color: k.line),
               ),
               child: Row(
                 children: [

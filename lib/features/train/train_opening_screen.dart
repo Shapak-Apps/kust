@@ -62,11 +62,12 @@ class _TrainOpeningScreenState extends State<TrainOpeningScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.only(bottom: 24),
               children: [
+                // Edge to edge, like the board in a game.
                 Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
+                    constraints: const BoxConstraints(maxWidth: 480),
                     child: StaticBoard(
                       position: positions[_ply],
                       flipped: _o.side == Side.black,
@@ -76,88 +77,102 @@ class _TrainOpeningScreenState extends State<TrainOpeningScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      tooltip: t.toStart,
-                      onPressed: _ply == 0 ? null : () => _go(0),
-                      icon: const Icon(Icons.first_page_rounded),
-                    ),
-                    IconButton(
-                      tooltip: t.back,
-                      onPressed: _ply == 0 ? null : () => _go(_ply - 1),
-                      icon: const Icon(Icons.chevron_left_rounded, size: 32),
-                    ),
-                    IconButton(
-                      tooltip: t.forward,
-                      onPressed: _ply == line.san.length
-                          ? null
-                          : () => _go(_ply + 1),
-                      icon: const Icon(Icons.chevron_right_rounded, size: 32),
-                    ),
-                    IconButton(
-                      tooltip: t.toEnd,
-                      onPressed: _ply == line.san.length
-                          ? null
-                          : () => _go(line.san.length),
-                      icon: const Icon(Icons.last_page_rounded),
-                    ),
-                  ],
-                ),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    for (var i = 0; i < line.san.length; i++)
-                      Pressable(
-                        onTap: () => _go(i + 1),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 4,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            tooltip: t.toStart,
+                            onPressed: _ply == 0 ? null : () => _go(0),
+                            icon: const Icon(Icons.first_page_rounded),
                           ),
-                          decoration: BoxDecoration(
-                            color: i + 1 == _ply
-                                ? k.accent
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '${i.isEven ? '${i ~/ 2 + 1}. ' : ''}${line.san[i]}',
-                            style: k.body.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: i + 1 == _ply
-                                  ? k.accentInk
-                                  : i < _ply
-                                  ? k.ink
-                                  : k.muted,
+                          IconButton(
+                            tooltip: t.back,
+                            onPressed: _ply == 0 ? null : () => _go(_ply - 1),
+                            icon: const Icon(
+                              Icons.chevron_left_rounded,
+                              size: 32,
                             ),
                           ),
-                        ),
+                          IconButton(
+                            tooltip: t.forward,
+                            onPressed: _ply == line.san.length
+                                ? null
+                                : () => _go(_ply + 1),
+                            icon: const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 32,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: t.toEnd,
+                            onPressed: _ply == line.san.length
+                                ? null
+                                : () => _go(line.san.length),
+                            icon: const Icon(Icons.last_page_rounded),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                for (var i = 0; i < _o.lines.length; i++) ...[
-                  _LineChoice(
-                    title: ordinals[i],
-                    name: _o.lines[i].nameIn(t),
-                    selected: i == _line,
-                    onTap: () => _pickLine(i),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          for (var i = 0; i < line.san.length; i++)
+                            Pressable(
+                              onTap: () => _go(i + 1),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: i + 1 == _ply
+                                      ? k.accent
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${i.isEven ? '${i ~/ 2 + 1}. ' : ''}${line.san[i]}',
+                                  style: k.body.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: i + 1 == _ply
+                                        ? k.accentInk
+                                        : i < _ply
+                                        ? k.ink
+                                        : k.muted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      for (var i = 0; i < _o.lines.length; i++) ...[
+                        _LineChoice(
+                          title: ordinals[i],
+                          name: _o.lines[i].nameIn(t),
+                          selected: i == _line,
+                          onTap: () => _pickLine(i),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      const SizedBox(height: 12),
+                      Text(_o.descriptionIn(t), style: k.body),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${t.trainOrigin(_o.originIn(t))} ${_o.flag}',
+                        style: k.caption,
+                      ),
+                      const SizedBox(height: 12),
+                      LineProgress(opening: _o),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                ],
-                const SizedBox(height: 12),
-                Text(_o.descriptionIn(t), style: k.body),
-                const SizedBox(height: 8),
-                Text(
-                  '${t.trainOrigin(_o.originIn(t))} ${_o.flag}',
-                  style: k.caption,
                 ),
-                const SizedBox(height: 12),
-                LineProgress(opening: _o),
               ],
             ),
           ),
@@ -204,10 +219,10 @@ class _LineChoice extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            KustSpace.rCard,
             color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rCard),
-            border: Border.all(
+            side: BorderSide(
               color: selected ? k.accent : k.line,
               width: selected ? 2 : 1,
             ),

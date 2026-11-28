@@ -1,5 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:flutter/material.dart';
+import 'package:kust/ui/tokens.dart';
 
 import 'package:kust/core/board_theme.dart';
 import 'package:kust/core/piece_set.dart';
@@ -34,9 +35,9 @@ class StaticBoard extends StatelessWidget {
       child: AspectRatio(
         aspectRatio: 1,
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            boxShadow: shadow
+          decoration: squircle(
+            radius,
+            shadows: shadow
                 ? const [
                     BoxShadow(
                       color: Color(0x66000000),
@@ -46,7 +47,7 @@ class StaticBoard extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: ClipRRect(
+          child: ClipRSuperellipse(
             borderRadius: BorderRadius.circular(radius),
             child: ValueListenableBuilder<BoardTheme>(
               valueListenable: s.boardTheme,

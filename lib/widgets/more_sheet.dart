@@ -171,14 +171,14 @@ class BoardThemeSwatch extends StatelessWidget {
               aspectRatio: 1,
               child: Container(
                 padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
-                  border: Border.all(
+                decoration: squircle(
+                  KustSpace.rSmall,
+                  side: BorderSide(
                     color: selected ? k.accent : k.line,
                     width: selected ? 2.5 : 1.5,
                   ),
                 ),
-                child: ClipRRect(
+                child: ClipRSuperellipse(
                   borderRadius: BorderRadius.circular(KustSpace.rSmall - 4),
                   child: Column(
                     children: [
@@ -212,13 +212,16 @@ class BoardThemeSwatch extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              theme.labelIn(context.t),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: k.caption.copyWith(
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? k.ink : k.muted,
+            // A long name shrinks a little to fit rather than losing its end.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                theme.labelIn(context.t),
+                maxLines: 1,
+                style: k.caption.copyWith(
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? k.ink : k.muted,
+                ),
               ),
             ),
           ],
@@ -261,14 +264,14 @@ class PieceSetSwatch extends StatelessWidget {
               aspectRatio: 1,
               child: Container(
                 padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(KustSpace.rSmall),
-                  border: Border.all(
+                decoration: squircle(
+                  KustSpace.rSmall,
+                  side: BorderSide(
                     color: selected ? k.accent : k.line,
                     width: selected ? 2.5 : 1.5,
                   ),
                 ),
-                child: ClipRRect(
+                child: ClipRSuperellipse(
                   borderRadius: BorderRadius.circular(KustSpace.rSmall - 4),
                   child: Row(
                     children: [
@@ -284,7 +287,7 @@ class PieceSetSwatch extends StatelessWidget {
                               // little larger here so the previews match.
                               // (On the board it keeps its own size.)
                               child: Transform.scale(
-                                scale: set == PieceSet.flat ? 1.13 : 1,
+                                scale: set == PieceSet.flat ? 1.19 : 1,
                                 child: PieceImage(set.asset(color, role)),
                               ),
                             ),
@@ -296,13 +299,16 @@ class PieceSetSwatch extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            Text(
-              set.labelIn(context.t),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: k.caption.copyWith(
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                color: selected ? k.ink : k.muted,
+            // A long name shrinks a little to fit rather than losing its end.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                set.labelIn(context.t),
+                maxLines: 1,
+                style: k.caption.copyWith(
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? k.ink : k.muted,
+                ),
               ),
             ),
           ],

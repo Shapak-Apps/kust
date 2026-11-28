@@ -231,7 +231,7 @@ class _MessageMenuState extends State<_MessageMenu>
               opacity: fade,
               child: AnimatedBuilder(
                 animation: unroll,
-                builder: (context, child) => ClipRRect(
+                builder: (context, child) => ClipRSuperellipse(
                   borderRadius: BorderRadius.circular(_barHeight / 2),
                   child: Align(
                     alignment: from,
@@ -242,10 +242,7 @@ class _MessageMenuState extends State<_MessageMenu>
                 child: Container(
                   width: barWidth,
                   padding: const EdgeInsets.all(_barPad),
-                  decoration: BoxDecoration(
-                    color: k.surface,
-                    borderRadius: BorderRadius.circular(_barHeight / 2),
-                  ),
+                  decoration: squircle(_barHeight / 2, color: k.surface),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const ClampingScrollPhysics(),
@@ -288,10 +285,7 @@ class _MessageMenuState extends State<_MessageMenu>
                 alignment: opensFrom,
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: k.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  decoration: squircle(12, color: k.surface),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,

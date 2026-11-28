@@ -167,7 +167,8 @@ class _CodeBoxesState extends State<CodeBoxes>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         alignment: Alignment.center,
-        decoration: BoxDecoration(
+        decoration: squircle(
+          10,
           color: verdict == null
               ? k.surfaceAlt
               : Color.lerp(
@@ -175,8 +176,7 @@ class _CodeBoxesState extends State<CodeBoxes>
                   verdict.withValues(alpha: 0.18),
                   reach,
                 ),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: border, width: 2),
+          side: BorderSide(color: border, width: 2),
         ),
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 120),

@@ -124,6 +124,9 @@ class AppL10nRu extends AppL10n {
   String get keepPlaying => 'Продолжить игру';
 
   @override
+  String get continueLater => 'Продолжить позже';
+
+  @override
   String get resignTitle => 'Сдать эту партию?';
 
   @override

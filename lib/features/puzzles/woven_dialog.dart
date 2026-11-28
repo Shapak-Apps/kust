@@ -97,10 +97,10 @@ class _WovenCardState extends State<WovenCard>
         width: 320,
         margin: const EdgeInsets.all(24),
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-        decoration: BoxDecoration(
+        decoration: squircle(
+          KustSpace.rLarge,
           color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rLarge),
-          border: Border.all(color: k.line),
+          side: BorderSide(color: k.line),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -109,21 +109,13 @@ class _WovenCardState extends State<WovenCard>
               label: context.t.golWovenSem(widget.tribe),
               child: AspectRatio(
                 aspectRatio: 1.25,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: LoomColors.wool,
-                    borderRadius: BorderRadius.circular(KustSpace.rMedium),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: AnimatedBuilder(
-                      animation: _weave,
-                      builder: (context, _) => CustomPaint(
-                        painter: GolPainter(
-                          kind: widget.gol,
-                          woven: Curves.easeInOut.transform(_weave.value),
-                        ),
-                      ),
+                // The göl on its own, no wool card around it.
+                child: AnimatedBuilder(
+                  animation: _weave,
+                  builder: (context, _) => CustomPaint(
+                    painter: GolPainter(
+                      kind: widget.gol,
+                      woven: Curves.easeInOut.transform(_weave.value),
                     ),
                   ),
                 ),

@@ -65,7 +65,7 @@ class KustButton extends StatelessWidget {
 
     final Color bg;
     final Color fg;
-    BoxBorder? border;
+    var side = BorderSide.none;
     switch (style) {
       case KustButtonStyle.primary:
         return const SizedBox.shrink(); // drawn by KustButton3D above
@@ -75,7 +75,7 @@ class KustButton extends StatelessWidget {
       case KustButtonStyle.outline:
         bg = Colors.transparent;
         fg = enabled ? k.ink : k.muted;
-        border = Border.all(color: k.line, width: 1.5);
+        side = BorderSide(color: k.line, width: 1.5);
       case KustButtonStyle.gold:
         bg = enabled ? KustTokens.gold : k.surfaceAlt;
         fg = enabled ? const Color(0xFF17181A) : k.muted;
@@ -85,7 +85,7 @@ class KustButton extends StatelessWidget {
       case KustButtonStyle.green:
         bg = enabled ? const Color(0xFF145A3F) : k.surfaceAlt;
         fg = enabled ? const Color(0xFFBFF0D6) : k.muted;
-        border = Border.all(
+        side = BorderSide(
           color: enabled ? const Color(0xFF3CB77C) : k.line,
           width: 1.5,
         );
@@ -94,11 +94,7 @@ class KustButton extends StatelessWidget {
     final child = Container(
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: bg,
-        border: border,
-        borderRadius: BorderRadius.circular(KustSpace.rCard),
-      ),
+      decoration: squircle(KustSpace.rCard, color: bg, side: side),
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,

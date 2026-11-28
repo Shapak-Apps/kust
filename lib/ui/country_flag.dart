@@ -17,7 +17,7 @@ class CountryFlag extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     label: kCountries[code],
     image: true,
-    child: ClipRRect(
+    child: ClipRSuperellipse(
       borderRadius: BorderRadius.circular(height * 0.12),
       child: Image.asset(
         flagAsset(code),

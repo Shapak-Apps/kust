@@ -670,3 +670,7 @@ Opening names are shown in Russian in the Turkmen app (owner's choice); the Russ
 | `flipShort` | Flip | Öwür |
 | `pieceFlat` | Flat | Tekiz |
 | `boardSoft` | Soft | Ýumşak |
+| `continueLater` | Continue later | Soňra dowam et |
+| `resignTitle` | Resign this game? | Bu oýny tabşyrýarsyňyzmy? |
+| `resignLocalTitle` | Does {name} resign? | {name} oýny tabşyrýarmy? |
+| `youResigned` | You resigned. | Siz oýny tabşyrdyňyz. |
