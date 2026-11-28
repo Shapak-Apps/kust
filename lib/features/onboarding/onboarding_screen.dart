@@ -474,10 +474,10 @@ class _PlayerPreview extends StatelessWidget {
     final t = context.t;
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
+      decoration: squircle(
+        20,
         color: k.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: k.line),
+        side: BorderSide(color: k.line),
       ),
       child: Stack(
         children: [
@@ -598,10 +598,7 @@ class _LevelNote extends StatelessWidget {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.fromLTRB(12, 12, 14, 12),
-              decoration: BoxDecoration(
-                color: k.surfaceAlt,
-                borderRadius: BorderRadius.circular(14),
-              ),
+              decoration: squircle(14, color: k.surfaceAlt),
               child: Row(
                 children: [
                   const Icon(
@@ -655,10 +652,10 @@ class _LevelTile extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           height: 172,
-          decoration: BoxDecoration(
+          decoration: squircle(
+            20,
             color: selected ? gold.withValues(alpha: 0.12) : k.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
+            side: BorderSide(
               color: selected ? gold : k.line,
               width: selected ? 2 : 1,
             ),

@@ -124,6 +124,9 @@ class AppL10nEn extends AppL10n {
   String get keepPlaying => 'Keep playing';
 
   @override
+  String get continueLater => 'Continue later';
+
+  @override
   String get resignTitle => 'Resign this game?';
 
   @override

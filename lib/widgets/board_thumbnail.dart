@@ -86,7 +86,7 @@ class BoardThumbnail extends StatelessWidget {
     return ExcludeSemantics(
       child: AspectRatio(
         aspectRatio: 1,
-        child: ClipRRect(
+        child: ClipRSuperellipse(
           borderRadius: BorderRadius.circular(radius),
           child: ValueListenableBuilder<BoardTheme>(
             valueListenable: s.boardTheme,

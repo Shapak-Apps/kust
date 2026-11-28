@@ -315,6 +315,12 @@ abstract class AppL10n {
   /// **'Keep playing'**
   String get keepPlaying;
 
+  /// No description provided for @continueLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue later'**
+  String get continueLater;
+
   /// No description provided for @resignTitle.
   ///
   /// In en, this message translates to:

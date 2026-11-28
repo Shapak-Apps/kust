@@ -55,12 +55,12 @@ class BotCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
           padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            KustSpace.rCard,
             color: selected
                 ? k.accent.withValues(alpha: 0.14)
                 : Color.alphaBlend(const Color(0x0DFFFFFF), k.surface),
-            borderRadius: BorderRadius.circular(KustSpace.rCard),
-            border: Border.all(
+            side: BorderSide(
               color: selected ? k.accent : const Color(0x14FFFFFF),
               width: selected ? 2 : 1,
             ),
@@ -73,7 +73,7 @@ class BotCard extends StatelessWidget {
                   children: [
                     // The backdrop, with the bust standing on its bottom edge.
                     Positioned.fill(
-                      child: ClipRRect(
+                      child: ClipRSuperellipse(
                         borderRadius: BorderRadius.circular(
                           KustSpace.rCard - 4,
                         ),

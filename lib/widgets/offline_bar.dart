@@ -75,9 +75,13 @@ class _OfflineInsetHostState extends State<OfflineInsetHost> {
                     height: top + height,
                     child: ExcludeSemantics(
                       excluding: !visible,
-                      child: _Strip(
-                        restored: _shown == ConnectionStatus.restored,
-                        statusBar: top,
+                      // Fades in and out as it opens and closes.
+                      child: Opacity(
+                        opacity: (height / kOfflineBarHeight).clamp(0, 1),
+                        child: _Strip(
+                          restored: _shown == ConnectionStatus.restored,
+                          statusBar: top,
+                        ),
                       ),
                     ),
                   ),
@@ -117,16 +121,14 @@ class _Strip extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            // Back online: the plain green. Offline: lighter, about two
-            // thirds at the top fading to a third.
-            colors: restored
-                ? [base, base]
-                : [
-                    base.withValues(alpha: 0.67),
-                    base.withValues(alpha: 0.5),
-                    base.withValues(alpha: 0.3),
-                  ],
-            stops: restored ? null : const [0, 0.55, 1],
+            // Fades away to nothing at the bottom, so there is no edge
+            // line over the screen below.
+            colors: [
+              base.withValues(alpha: restored ? 1 : 0.8),
+              base.withValues(alpha: restored ? 0.85 : 0.55),
+              base.withValues(alpha: 0),
+            ],
+            stops: const [0, 0.6, 1],
           ),
         ),
         child: ClipRect(

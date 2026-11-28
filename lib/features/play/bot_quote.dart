@@ -109,10 +109,7 @@ class _Remark extends StatelessWidget {
         Flexible(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F0EA),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            decoration: squircle(10, color: const Color(0xFFF2F0EA)),
             child: Text(
               text,
               maxLines: 1,
@@ -171,7 +168,7 @@ class BotSays extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ClipRRect(
+          ClipRSuperellipse(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
               image,

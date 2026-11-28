@@ -19,10 +19,7 @@ class KustSkeleton extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: width,
     height: height,
-    decoration: BoxDecoration(
-      color: context.k.surfaceAlt,
-      borderRadius: BorderRadius.circular(radius),
-    ),
+    decoration: squircle(radius, color: context.k.surfaceAlt),
   );
 }
 

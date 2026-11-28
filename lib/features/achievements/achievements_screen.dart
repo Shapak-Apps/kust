@@ -136,8 +136,8 @@ class AchievementIcon extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.26),
+      decoration: squircle(
+        size * 0.26,
         color: earned
             ? Color.alphaBlend(c.withValues(alpha: 0.16), k.surface)
             : k.surfaceAlt,

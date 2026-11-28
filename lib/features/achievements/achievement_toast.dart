@@ -168,10 +168,7 @@ class _AchievementCelebrationState extends State<AchievementCelebration>
     final card = Container(
       width: 300,
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-      decoration: BoxDecoration(
-        color: k.surface,
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: squircle(20, color: k.surface),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

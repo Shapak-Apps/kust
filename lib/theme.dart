@@ -56,7 +56,7 @@ ThemeData _build(KustTokens k, Brightness brightness) {
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: k.surface,
-      shape: RoundedRectangleBorder(
+      shape: RoundedSuperellipseBorder(
         borderRadius: BorderRadius.circular(KustSpace.rLarge),
         side: BorderSide(color: k.line),
       ),
@@ -65,7 +65,7 @@ ThemeData _build(KustTokens k, Brightness brightness) {
       behavior: SnackBarBehavior.floating,
       backgroundColor: k.ink,
       contentTextStyle: k.body.copyWith(color: k.bg),
-      shape: RoundedRectangleBorder(
+      shape: RoundedSuperellipseBorder(
         borderRadius: BorderRadius.circular(KustSpace.rMedium),
       ),
     ),

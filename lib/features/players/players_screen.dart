@@ -427,10 +427,7 @@ class FriendRequestCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: k.surface,
-        borderRadius: BorderRadius.circular(KustSpace.rCard),
-      ),
+      decoration: squircle(KustSpace.rCard, color: k.surface),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

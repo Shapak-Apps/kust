@@ -471,7 +471,7 @@ class _Coach extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ClipRRect(
+          ClipRSuperellipse(
             borderRadius: BorderRadius.circular(16),
             child: Image.asset(
               _coachImage,

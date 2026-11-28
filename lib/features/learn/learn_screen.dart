@@ -161,10 +161,7 @@ class _NextLesson extends StatelessWidget {
       onTap: onStart,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rLarge),
-        ),
+        decoration: squircle(KustSpace.rLarge, color: k.surface),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

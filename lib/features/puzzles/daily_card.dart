@@ -161,11 +161,11 @@ class _DailySection extends StatelessWidget {
                           horizontal: 8,
                           vertical: 2,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: squircle(
+                          10,
                           color: solved
                               ? k.success.withValues(alpha: 0.16)
                               : k.surfaceAlt,
-                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           solved ? t.solvedToday : '$rating',
