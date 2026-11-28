@@ -255,10 +255,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
             },
           ),
           const SizedBox(height: 8),
-          // A bot game is kept after every move, so leaving keeps it for
-          // Continue on Play. A drilled line is not kept, so it gets no
-          // such button.
-          if (game.mode == GameMode.bot && !game.inLine) ...[
+          // An untimed bot game is kept after every move, so leaving keeps
+          // it for Continue on Play. On the clock you play on or resign, and
+          // a drilled line is not kept.
+          if (game.mode == GameMode.bot &&
+              game.timeControl == null &&
+              !game.inLine) ...[
             KustButton(
               label: sheetContext.t.continueLater,
               style: KustButtonStyle.outline,
