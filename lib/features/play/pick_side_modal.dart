@@ -54,7 +54,7 @@ class _PickSideModalState extends State<PickSideModal> {
       children: [
         Row(
           children: [
-            ClipRRect(
+            ClipRSuperellipse(
               borderRadius: BorderRadius.circular(KustSpace.rMedium),
               child: Image.asset(
                 bot.imagePath,

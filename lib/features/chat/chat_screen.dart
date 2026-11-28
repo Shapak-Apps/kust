@@ -857,10 +857,7 @@ class _DayLabel extends StatelessWidget {
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: k.surfaceAlt,
-            borderRadius: BorderRadius.circular(10),
-          ),
+          decoration: squircle(10, color: k.surfaceAlt),
           child: Text(
             text,
             style: k.caption.copyWith(fontWeight: FontWeight.w700),
@@ -1138,10 +1135,10 @@ class _Bubble extends StatelessWidget {
                             horizontal: 6,
                             vertical: 2,
                           ),
-                          decoration: BoxDecoration(
+                          decoration: squircle(
+                            12,
                             color: k.surfaceAlt,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: k.bg, width: 2),
+                            side: BorderSide(color: k.bg, width: 2),
                           ),
                           child: Text(
                             m.reactions.values.toSet().join(' '),

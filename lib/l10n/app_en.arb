@@ -50,6 +50,7 @@
   "abortSubtitle": "The game will end without a result.",
   "abort": "Abort",
   "keepPlaying": "Keep playing",
+  "continueLater": "Continue later",
   "resignTitle": "Resign this game?",
   "resignSubtitle": "The game will end and count as a loss.",
   "resignLocalTitle": "{name}: resign?",

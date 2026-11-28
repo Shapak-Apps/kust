@@ -332,10 +332,7 @@ class _MoveCounts extends StatelessWidget {
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: k.surface,
-                borderRadius: BorderRadius.circular(KustSpace.rMedium),
-              ),
+              decoration: squircle(KustSpace.rMedium, color: k.surface),
               child: Column(
                 children: [
                   Row(
@@ -427,7 +424,9 @@ void showGameStartModal(
       });
 
       return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(

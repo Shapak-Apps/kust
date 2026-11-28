@@ -133,7 +133,7 @@ Future<ui.Image> boardImage(
       final rank = flipped ? i : 7 - i;
       _label(
         canvas,
-        String.fromCharCode(97 + file),
+        String.fromCharCode(65 + file),
         Offset((i + 1) * square - square * 0.06, size - square * 0.04),
         square,
         labelOn(file, bottomRank),

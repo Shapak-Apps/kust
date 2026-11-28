@@ -160,3 +160,20 @@ class KustSpace {
   static const double row = 56;
   static const double topBar = 52;
 }
+
+/// A box with Apple-style continuous (squircle) corners.
+ShapeDecoration squircle(
+  double radius, {
+  Color? color,
+  Gradient? gradient,
+  BorderSide side = BorderSide.none,
+  List<BoxShadow>? shadows,
+}) => ShapeDecoration(
+  color: color,
+  gradient: gradient,
+  shadows: shadows,
+  shape: RoundedSuperellipseBorder(
+    borderRadius: BorderRadius.circular(radius),
+    side: side,
+  ),
+);

@@ -57,10 +57,10 @@ class KustOption extends StatelessWidget {
           duration: const Duration(milliseconds: 140),
           constraints: const BoxConstraints(minHeight: 76),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            KustSpace.rMedium,
             color: selected ? k.accent.withValues(alpha: 0.14) : _fill(context),
-            borderRadius: BorderRadius.circular(KustSpace.rMedium),
-            border: Border.all(
+            side: BorderSide(
               color: selected ? k.accent : _edge(context),
               width: 1.5,
             ),
@@ -166,10 +166,7 @@ class KustIconTile extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: k.surfaceAlt,
-        borderRadius: BorderRadius.circular(radius),
-      ),
+      decoration: squircle(radius, color: k.surfaceAlt),
       child: Icon(icon, size: 22, color: k.ink),
     );
   }
@@ -199,10 +196,10 @@ class KustSwitch extends StatelessWidget {
           width: 48,
           height: 28,
           padding: const EdgeInsets.all(3),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            14,
             color: value ? k.accent : k.surfaceAlt,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: value ? k.accent : k.line),
+            side: BorderSide(color: value ? k.accent : k.line),
           ),
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 160),
@@ -300,10 +297,7 @@ class KustSegmented<T> extends StatelessWidget {
     return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: k.surfaceAlt,
-        borderRadius: BorderRadius.circular(KustSpace.rMedium),
-      ),
+      decoration: squircle(KustSpace.rMedium, color: k.surfaceAlt),
       child: LayoutBuilder(
         builder: (context, c) {
           final w = c.maxWidth / keys.length;
@@ -317,10 +311,10 @@ class KustSegmented<T> extends StatelessWidget {
                 top: 0,
                 bottom: 0,
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
+                  decoration: squircle(
+                    12,
                     color: k.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: k.line),
+                    side: BorderSide(color: k.line),
                   ),
                 ),
               ),

@@ -79,10 +79,10 @@ class NotificationsBell extends StatelessWidget {
                               ? const EdgeInsets.symmetric(horizontal: 5)
                               : null,
                           alignment: Alignment.center,
-                          decoration: BoxDecoration(
+                          decoration: squircle(
+                            10,
                             color: k.danger,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: k.bg, width: 2),
+                            side: BorderSide(color: k.bg, width: 2),
                           ),
                           child: Text(
                             count > 9 ? '9+' : '$count',
@@ -404,10 +404,7 @@ class _MessageNotice extends StatelessWidget {
                   height: 20,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3CB77C),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  decoration: squircle(10, color: const Color(0xFF3CB77C)),
                   child: Text(
                     '${chat.unread}',
                     style: const TextStyle(

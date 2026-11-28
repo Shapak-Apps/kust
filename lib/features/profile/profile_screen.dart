@@ -425,10 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SizedBox(height: 8),
       // One group of rows, label on the left and the value beside it.
       Container(
-        decoration: BoxDecoration(
-          color: k.surface,
-          borderRadius: BorderRadius.circular(KustSpace.rCard),
-        ),
+        decoration: squircle(KustSpace.rCard, color: k.surface),
         child: Column(
           children: [
             _FormRow(
@@ -728,10 +725,10 @@ class _AccountCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            decoration: squircle(
+              20,
               color: k.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: k.line),
+              side: BorderSide(color: k.line),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -742,9 +739,9 @@ class _AccountCard extends StatelessWidget {
                     Container(
                       width: 44,
                       height: 44,
-                      decoration: BoxDecoration(
+                      decoration: squircle(
+                        12,
                         color: KustTokens.gold.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.public_rounded,

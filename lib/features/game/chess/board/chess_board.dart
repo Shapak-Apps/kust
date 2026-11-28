@@ -1564,7 +1564,7 @@ class BoardSquareCell extends StatelessWidget {
               bottom: 2,
               right: 3,
               child: Text(
-                String.fromCharCode('a'.codeUnitAt(0) + fileOf(props.square)),
+                String.fromCharCode(65 + fileOf(props.square)),
                 style: labelStyle,
               ),
             ),
@@ -1672,10 +1672,10 @@ class _PromotionPicker extends StatelessWidget {
     final pieces = [for (final role in _roles) piece(role)];
     final column = Container(
       width: squareSize,
-      decoration: BoxDecoration(
+      decoration: squircle(
+        squareSize * 0.08,
         color: Colors.white,
-        borderRadius: BorderRadius.circular(squareSize * 0.08),
-        boxShadow: [
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
             blurRadius: squareSize * 0.3,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kust/ui/tokens.dart';
 import 'package:flutter/services.dart';
 
 /// The big green call to action: a chunky button standing on a darker lip,
@@ -109,14 +110,15 @@ class _KustButton3DState extends State<KustButton3D> {
           curve: _down ? Curves.easeOut : Curves.easeOutCubic,
           margin: EdgeInsets.only(top: _down ? _lip : 0),
           padding: EdgeInsets.only(bottom: _down ? 0 : _lip),
-          decoration: BoxDecoration(
+          decoration: squircle(
+            12,
             color: enabled ? widget.colors.lip : const Color(0xFF2A2724),
-            borderRadius: BorderRadius.circular(12),
           ),
           child: Container(
             height: widget.height,
             padding: const EdgeInsets.symmetric(horizontal: 22),
-            decoration: BoxDecoration(
+            decoration: squircle(
+              12,
               gradient: enabled
                   ? LinearGradient(
                       begin: Alignment.topCenter,
@@ -125,7 +127,6 @@ class _KustButton3DState extends State<KustButton3D> {
                     )
                   : null,
               color: enabled ? null : const Color(0xFF3A3632),
-              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,

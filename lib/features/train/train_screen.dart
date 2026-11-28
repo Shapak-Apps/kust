@@ -129,10 +129,7 @@ class _OpeningCard extends StatelessWidget {
         onTap: () => context.push('/train/${opening.id}'),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: k.surface,
-            borderRadius: BorderRadius.circular(KustSpace.rCard),
-          ),
+          decoration: squircle(KustSpace.rCard, color: k.surface),
           child: Row(
             children: [
               SizedBox(

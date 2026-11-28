@@ -124,14 +124,17 @@ class AppL10nTk extends AppL10n {
   String get keepPlaying => 'Oýny dowam et';
 
   @override
-  String get resignTitle => 'Bu oýny boýnuňyza alýarsyňyzmy?';
+  String get continueLater => 'Soňra dowam et';
+
+  @override
+  String get resignTitle => 'Bu oýny tabşyrýarsyňyzmy?';
 
   @override
   String get resignSubtitle => 'Oýun gutarar we ýeňiliş hasaplanar.';
 
   @override
   String resignLocalTitle(String name) {
-    return '$name boýnuna alýarmy?';
+    return '$name oýny tabşyrýarmy?';
   }
 
   @override
@@ -140,7 +143,7 @@ class AppL10nTk extends AppL10n {
   }
 
   @override
-  String get resign => 'Boýnuňa al';
+  String get resign => 'Oýny tabşyr';
 
   @override
   String get leaveGame => 'Oýundan çyk';
@@ -175,7 +178,7 @@ class AppL10nTk extends AppL10n {
   String get gameEndedOnTime => 'Oýun wagt boýunça gutardy.';
 
   @override
-  String get youResigned => 'Siz boýnuňyza aldyňyz.';
+  String get youResigned => 'Siz oýny tabşyrdyňyz.';
 
   @override
   String get endStalemate => 'Pat sebäpli deňe deň.';

@@ -124,7 +124,7 @@ class _SheetFrameState extends State<_SheetFrame> {
           offset: Offset(0, _drag),
           child: Material(
             color: k.surface,
-            shape: RoundedRectangleBorder(
+            shape: RoundedSuperellipseBorder(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(KustSpace.rSheet),
               ),

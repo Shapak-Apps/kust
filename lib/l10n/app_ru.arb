@@ -36,6 +36,7 @@
   "abortSubtitle": "Партия закончится без результата.",
   "abort": "Прервать",
   "keepPlaying": "Продолжить игру",
+  "continueLater": "Продолжить позже",
   "resignTitle": "Сдать эту партию?",
   "resignSubtitle": "Партия закончится поражением.",
   "resignLocalTitle": "{name}: сдаться?",
