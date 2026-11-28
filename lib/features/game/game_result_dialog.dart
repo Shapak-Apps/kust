@@ -174,7 +174,7 @@ class GameResultScreen extends ConsumerWidget {
                             child: StaticBoard(
                               position: game.position,
                               flipped:
-                                  game.mode == GameMode.bot &&
+                                  game.mode != GameMode.local &&
                                   game.playerSide == Side.black,
                               highlight: game.moveSquares,
                             ),

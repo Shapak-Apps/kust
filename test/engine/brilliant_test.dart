@@ -45,4 +45,26 @@ void main() {
   test('a sacrifice that leaves you lost is never brilliant', () {
     expect(brilliant(-300), isFalse);
   });
+
+  test('a near-best sacrifice that sets a trap is brilliant (Légal)', () {
+    // 1.Nf3 d5 2.c4 dxc4 3.e3 Nf6 4.Bxc4 Bg4 5.Ne5: the queen is left to
+    // Bxd1, which loses to Bxf7#.
+    Position pos = Chess.initial;
+    for (final san in ['Nf3', 'd5', 'c4', 'dxc4', 'e3', 'Nf6', 'Bxc4', 'Bg4']) {
+      pos = pos.play(pos.parseSan(san)!);
+    }
+    final ne5 = pos.parseSan('Ne5')! as NormalMove;
+    expect(
+      classifyPlayedMove(
+        before: pos,
+        after: pos.play(ne5),
+        move: ne5,
+        bestCp: 90,
+        playedCp: 50,
+        secondBestCp: 60,
+        isBest: false,
+      ),
+      MoveQuality.brilliant,
+    );
+  });
 }

@@ -404,6 +404,12 @@ class _Carpet extends StatelessWidget {
     final color = LoomColors.cream.withValues(alpha: dim ? 0.65 : 1);
     final align = alignRight ? TextAlign.right : TextAlign.left;
     final center = LoomMetrics.golCenter(kLoomLevels.length, index);
+    final name = level.themeIn(context.t);
+    final nameStyle = k.body.copyWith(
+      fontSize: 13.5,
+      fontWeight: FontWeight.w800,
+      color: color,
+    );
 
     return Positioned(
       left: left,
@@ -417,17 +423,17 @@ class _Carpet extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            Text(
-              level.themeIn(context.t),
-              textAlign: align,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: k.body.copyWith(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
-                color: color,
+            // Two words wrap ("Ahyrky / oýunlar"); one long word shrinks.
+            if (name.contains(' '))
+              Text(name, textAlign: align, maxLines: 2, style: nameStyle)
+            else
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: alignRight
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Text(name, maxLines: 1, style: nameStyle),
               ),
-            ),
             const SizedBox(height: 4),
             Text(
               progress.statusIn(context.t),

@@ -2,7 +2,7 @@ import 'package:kust/l10n/app_locale.dart';
 
 /// The piece designs the board can be drawn with. Picked in settings and
 /// used by every board in the app. Shaded is drawn by
-/// `tools/pieces/make_pieces.py`; Graphite and Brushed are painted by
+/// `tools/pieces/make_pieces.py`; Graphite, Brushed and Flat are painted by
 /// `tools/pieces/textured.html`, as images because their grain cannot be
 /// drawn as a vector.
 enum PieceSet {
@@ -11,9 +11,9 @@ enum PieceSet {
   graphite('Graphite', 'graphite/', textured: true),
   brushed('Brushed', 'brushed/', textured: true),
 
-  /// Flat figurines drawn in Figma, the same shapes as the captured pieces
-  /// in the player bars, coloured for the board.
-  flat('Flat', 'flat/');
+  /// Rounded figurines (the shapes of the captured pieces in the player
+  /// bars), brushed and lit like the Brushed set.
+  flat('Flat', 'flat/', textured: true);
 
   const PieceSet(this.label, this._folder, {this.textured = false});
 

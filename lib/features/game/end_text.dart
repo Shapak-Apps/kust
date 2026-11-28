@@ -19,9 +19,9 @@ String sideName(AppL10n t, GameState g, Side side) {
   final Side? winner = switch (g.status) {
     GameStatus.checkmate => g.position.turn.opposite,
     GameStatus.resigned =>
-      g.mode == GameMode.local
-          ? g.resignedSide?.opposite
-          : g.playerSide.opposite,
+      g.mode == GameMode.bot
+          ? g.playerSide.opposite
+          : g.resignedSide?.opposite,
     GameStatus.timeout => g.flagFell?.opposite,
     _ => null,
   };

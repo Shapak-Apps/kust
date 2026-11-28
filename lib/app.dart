@@ -74,6 +74,7 @@ class MyApp extends StatelessWidget {
                     ? SystemUiOverlayStyle.light
                     : SystemUiOverlayStyle.dark,
                 child: OfflineInsetHost(
+                  router: router,
                   child: KustSplash(child: AchievementToastHost(child: child!)),
                 ),
               ),

@@ -566,7 +566,7 @@ class _ChessBoardState extends ConsumerState<ChessBoard>
   }
 
   Widget _buildRotatedPiece(Piece piece, _BoardView view) {
-    final Widget svg = PieceImage(_assetForPiece(piece));
+    final Widget svg = boardPiece(_assetForPiece(piece));
 
     if (view.mode == GameMode.local && view.position.turn == Side.black) {
       return RotatedBox(quarterTurns: 2, child: svg);
@@ -1480,7 +1480,7 @@ class BoardSquareCell extends StatelessWidget {
 
     Widget? pieceWidget;
     if (piece != null) {
-      final svg = PieceImage(_assetForPiece(piece));
+      final svg = boardPiece(_assetForPiece(piece));
       pieceWidget = Padding(
         padding: EdgeInsets.all(size * 0.02),
         child: props.rotatePiece

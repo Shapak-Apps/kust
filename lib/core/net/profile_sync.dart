@@ -11,11 +11,12 @@ import 'package:kust/core/net/players_repository.dart';
 import 'package:kust/core/storage/app_storage.dart';
 import 'package:kust/core/storage/game_history_store.dart';
 import 'package:kust/core/storage/player_rating_store.dart';
+import 'package:kust/core/storage/puzzle_progress_store.dart';
 import 'package:kust/features/achievements/achievements.dart';
 import 'package:kust/l10n/app_locale.dart';
 
-/// Sends the player's name, bio, flag, games and achievements to the
-/// server, so other players can see them on their profile. Games against bots are played on
+/// Sends the player's name, bio, flag, games, achievements and puzzle
+/// progress to the server, so other players can see them on their profile. Games against bots are played on
 /// the phone; this copies each one up once (again if its analysis changes),
 /// a moment after it is saved, and only for a verified account.
 class ProfileSync {
@@ -33,6 +34,7 @@ class ProfileSync {
   void start() {
     GameHistoryStore.instance.listenable().addListener(_soon);
     AchievementStore.instance.listenable().addListener(_soon);
+    PuzzleProgressStore.instance.listenable().addListener(_soon);
     AuthService.instance.state.addListener(_soon);
     AppStorage.instance.profileListenable().addListener(_soon);
     _soon();
@@ -41,6 +43,14 @@ class ProfileSync {
   void _soon() {
     _timer?.cancel();
     _timer = Timer(_settle, () => unawaited(sync()));
+  }
+
+  /// [PuzzleProgressStore.signature] of progress as the server has it.
+  static String _signatureOf(Map progress) {
+    int count(String key) =>
+        (progress[key] is List) ? (progress[key] as List).toSet().length : 0;
+    return '${count('solved')}:${count('attempted')}:${count('revealed')}:'
+        '${progress['rating']}:${progress['highest']}';
   }
 
   /// What was sent of a game: it goes again when its analysis changes.
@@ -66,13 +76,26 @@ class ProfileSync {
       final earned = await repo.achievements(account.username);
       await AchievementStore.instance.restore(earned);
       await box.put('synced_achievements_${account.id}', earned.length);
+      final auth = AuthService.instance;
+      final puzzles = await auth.authed(
+        (token) => auth.api.get('/v1/me/puzzles', token: token),
+      );
+      final progress = puzzles['progress'];
+      if (progress is Map) {
+        final store = PuzzleProgressStore.instance;
+        await store.merge(Map<String, dynamic>.from(progress));
+        // Sent again only if this phone added to it.
+        if (store.signature() == _signatureOf(progress)) {
+          await box.put('synced_puzzles_${account.id}', store.signature());
+        }
+      }
     } on ApiException {
       // Not verified yet, or offline: they come with the next sign-in.
     }
   }
 
-  /// Signing out: this phone forgets the account's games, achievements and
-  /// rating, so the next account (or guest) doesn't see them. They stay on
+  /// Signing out: this phone forgets the account's games, achievements,
+  /// rating and puzzle progress, so the next account (or guest) doesn't see them. They stay on
   /// the server.
   Future<void> forget() async {
     PlayersRepository.instance.friendsCache.value = null;
@@ -82,6 +105,7 @@ class ProfileSync {
     OnlineRepository.instance.open.value = const [];
     await GameHistoryStore.instance.clear();
     await AchievementStore.instance.clear();
+    await PuzzleProgressStore.instance.clear();
     await PlayerRatingStore.instance.setStartingRating(
       PlayerRatingStore.startRating,
     );
@@ -157,6 +181,21 @@ class ProfileSync {
           ),
         );
         await box.put(achKey, unlocked.length);
+      }
+
+      final puzzles = PuzzleProgressStore.instance;
+      final puzzlesKey = 'synced_puzzles_${account.id}';
+      final progress = puzzles.toMap();
+      final puzzlesMark = puzzles.signature();
+      if (progress != null && box.get(puzzlesKey) != puzzlesMark) {
+        await auth.authed(
+          (token) => auth.api.put(
+            '/v1/me/puzzles',
+            body: {'progress': progress},
+            token: token,
+          ),
+        );
+        await box.put(puzzlesKey, puzzlesMark);
       }
     } on ApiException {
       // Offline or refused: tried again on the next change or sign-in.

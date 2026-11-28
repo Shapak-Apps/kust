@@ -89,7 +89,7 @@ class StaticBoard extends StatelessWidget {
                           color: colour,
                           child: piece == null
                               ? const SizedBox.expand()
-                              : PieceImage(
+                              : boardPiece(
                                   set.asset(
                                     piece.color == Side.white ? 'w' : 'b',
                                     piece.role.uppercaseLetter,
